@@ -7,6 +7,7 @@ import {
   ExternalLink, Search, Zap, AlertCircle
 } from 'lucide-react';
 import { generateSlug } from '../lib/autolink';
+import RichPostEditor from '../components/RichPostEditor';
 
 interface AdminPortalProps {
   currentUser: User | null;
@@ -166,35 +167,37 @@ export default function AdminPortal({
   };
 
   // GitHub REST API Image Upload Handler
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleImageUploadFile = async (file: File): Promise<string | null> => {
     setUploadingImage(true);
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64Content = reader.result as string;
-      try {
-        const res = await fetch('/api/upload-github', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: file.name,
-            base64Content,
-          }),
-        });
-        const data = await res.json();
-        if (data.url) {
-          setEditorImage(data.url);
-          setEditorMarkdown((prev) => `${prev}\n\n![${file.name}](${data.url})`);
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64Content = reader.result as string;
+        try {
+          const res = await fetch('/api/upload-github', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filename: file.name,
+              base64Content,
+            }),
+          });
+          const data = await res.json();
+          if (data.url) {
+            setEditorImage((prev) => prev || data.url);
+            resolve(data.url);
+          } else {
+            resolve(null);
+          }
+        } catch (err) {
+          console.error('Image upload failed', err);
+          resolve(null);
+        } finally {
+          setUploadingImage(false);
         }
-      } catch (err) {
-        console.error('Image upload failed', err);
-      } finally {
-        setUploadingImage(false);
-      }
-    };
-    reader.readAsDataURL(file);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   // AI Gemini Meta Generator
@@ -512,277 +515,33 @@ export default function AdminPortal({
       {/* TAB 2: RICH WYSIWYG & MARKDOWN EDITOR */}
       {/* ------------------------------------------------------------- */}
       {activeTab === 'editor' && (
-        <div className="space-y-6">
-          
-          {/* AUTO-SAVE STATUS HEADER */}
-          <div className="flex items-center justify-between bg-slate-900 text-white p-4 rounded-2xl shadow-md">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">
-                WYSIWYG Editor Status:
-              </span>
-              {autoSaveStatus === 'saved' && (
-                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Draf Tersimpan Otomatis ke Cloudflare D1
-                </span>
-              )}
-              {autoSaveStatus === 'saving' && (
-                <span className="inline-flex items-center gap-1.5 text-xs text-amber-300 font-medium animate-pulse">
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  Menyimpan draf ke Cloudflare D1...
-                </span>
-              )}
-              {autoSaveStatus === 'dirty' && (
-                <span className="inline-flex items-center gap-1.5 text-xs text-slate-300">
-                  Perubahan belum tersimpan...
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => handlePublishSubmit('draft')}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700"
-              >
-                Simpan Draf
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePublishSubmit('published')}
-                className="px-4 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-md"
-              >
-                Publikasikan Artikel 🚀
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            {/* MAIN EDITOR FORM (LEFT 8 COLS) */}
-            <div className="lg:col-span-8 space-y-4">
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
-                
-                {/* ARTICLE TITLE */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Judul Artikel Parenting
-                  </label>
-                  <input
-                    type="text"
-                    value={editorTitle}
-                    onChange={(e) => setEditorTitle(e.target.value)}
-                    placeholder="Contoh: 5 Tips Mengatasi Tantrum Balita Tanpa Marah..."
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-base font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-                  />
-                </div>
-
-                {/* SLUG & CATEGORY */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      URL Slug
-                    </label>
-                    <input
-                      type="text"
-                      value={editorSlug}
-                      onChange={(e) => setEditorSlug(e.target.value)}
-                      placeholder="tips-mengatasi-tantrum-balita"
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-700 dark:text-slate-300"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Kategori Artikel
-                    </label>
-                    <select
-                      value={editorCategory}
-                      onChange={(e) => setEditorCategory(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
-                    >
-                      <option value="Pola Asuh">Pola Asuh</option>
-                      <option value="Tumbuh Kembang">Tumbuh Kembang</option>
-                      <option value="Kesehatan & Gizi">Kesehatan & Gizi</option>
-                      <option value="Psikologi Ibu">Psikologi Ibu</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* RICH EDITOR TOOLBAR */}
-                <div className="border-t border-b border-slate-200 dark:border-slate-800 py-2 flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-slate-800/40 px-3 rounded-xl">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => insertToolbar('**', '**')}
-                      className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-                      title="Bold (**teks**)"
-                    >
-                      <Bold className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => insertToolbar('*', '*')}
-                      className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-                      title="Italic (*teks*)"
-                    >
-                      <Italic className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => insertToolbar('## ')}
-                      className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-                      title="Subjudul (H2)"
-                    >
-                      <Heading2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => insertToolbar('### ')}
-                      className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-                      title="Subjudul (H3)"
-                    >
-                      <Heading3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => insertToolbar('> ')}
-                      className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-                      title="Kutipan (Blockquote)"
-                    >
-                      <Quote className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => insertToolbar('- ')}
-                      className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-                      title="Bullet List"
-                    >
-                      <List className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* IMAGE UPLOAD VIA GITHUB API */}
-                  <div className="flex items-center gap-2">
-                    <label className="cursor-pointer px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 hover:bg-rose-200 text-xs font-bold inline-flex items-center gap-1">
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>{uploadingImage ? 'Mengunggah...' : 'Upload Gambar ke GitHub'}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                {/* MARKDOWN CONTENT TEXTAREA */}
-                <div>
-                  <textarea
-                    rows={16}
-                    value={editorMarkdown}
-                    onChange={(e) => setEditorMarkdown(e.target.value)}
-                    placeholder="Tulis artikel parenting dalam bahasa Indonesia di sini..."
-                    className="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-800 font-mono text-sm leading-relaxed text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* SIDEBAR METADATA & AI ASSISTANT (RIGHT 4 COLS) */}
-            <div className="lg:col-span-4 space-y-4">
-              
-              {/* GEMINI AI ASSISTANT BOX */}
-              <div className="bg-gradient-to-br from-rose-500 to-pink-600 text-white rounded-3xl p-6 shadow-md space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300" />
-                    Parenting AI Assistant
-                  </span>
-                </div>
-                <p className="text-xs text-rose-100">
-                  Otomatis hasilkan Meta Title, Meta Description, & Tag SEO menggunakan Gemini AI.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleAiGenerateMeta}
-                  disabled={isAiLoading || !editorTitle}
-                  className="w-full py-2.5 rounded-xl bg-white text-rose-600 font-bold text-xs shadow-sm hover:bg-rose-50 transition-all flex items-center justify-center gap-2"
-                >
-                  {isAiLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-rose-600" />}
-                  <span>Generate SEO Meta dengan AI</span>
-                </button>
-              </div>
-
-              {/* METADATA & FEATURED IMAGE */}
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
-                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Meta SEO & Gambar Sampul
-                </h4>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    URL Gambar Sampul (Featured Image)
-                  </label>
-                  <input
-                    type="text"
-                    value={editorImage}
-                    onChange={(e) => setEditorImage(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono"
-                  />
-                  {editorImage && (
-                    <img
-                      src={editorImage}
-                      alt="Preview"
-                      className="mt-2 w-full h-32 object-cover rounded-xl border"
-                    />
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Meta Title SEO
-                  </label>
-                  <input
-                    type="text"
-                    value={editorMetaTitle}
-                    onChange={(e) => setEditorMetaTitle(e.target.value)}
-                    placeholder="Judul SEO..."
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Meta Description SEO
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={editorMetaDesc}
-                    onChange={(e) => setEditorMetaDesc(e.target.value)}
-                    placeholder="Ringkasan SEO..."
-                    className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Tags (Dipisahkan koma)
-                  </label>
-                  <input
-                    type="text"
-                    value={editorTags}
-                    onChange={(e) => setEditorTags(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
-                  />
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
+        <RichPostEditor
+          title={editorTitle}
+          setTitle={setEditorTitle}
+          slug={editorSlug}
+          setSlug={setEditorSlug}
+          category={editorCategory}
+          setCategory={setEditorCategory}
+          markdown={editorMarkdown}
+          setMarkdown={setEditorMarkdown}
+          excerpt={editorExcerpt}
+          setExcerpt={setEditorExcerpt}
+          featuredImage={editorImage}
+          setFeaturedImage={setEditorImage}
+          metaTitle={editorMetaTitle}
+          setMetaTitle={setEditorMetaTitle}
+          metaDesc={editorMetaDesc}
+          setMetaDesc={setEditorMetaDesc}
+          tags={editorTags}
+          setTags={setEditorTags}
+          autoSaveStatus={autoSaveStatus}
+          isAiLoading={isAiLoading}
+          onAiGenerateMeta={handleAiGenerateMeta}
+          onPublishSubmit={handlePublishSubmit}
+          uploadingImage={uploadingImage}
+          onImageUpload={handleImageUploadFile}
+          autolinks={autolinks}
+        />
       )}
 
       {/* ------------------------------------------------------------- */}
