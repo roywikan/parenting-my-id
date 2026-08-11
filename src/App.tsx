@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Post, AutoLink, User } from './types';
+import { INITIAL_POSTS, INITIAL_AUTOLINKS } from './data/initialData';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomeView from './views/HomeView';
@@ -10,8 +11,8 @@ export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'article' | 'admin'>('home');
   const [activeSlug, setActiveSlug] = useState<string>('');
 
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [autolinks, setAutolinks] = useState<AutoLink[]>([]);
+  const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
+  const [autolinks, setAutolinks] = useState<AutoLink[]>(INITIAL_AUTOLINKS);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Fetch Posts & Autolinks on initial mount
@@ -36,7 +37,9 @@ export default function App() {
       const contentType = res.headers.get('content-type');
       if (res.ok && contentType && contentType.includes('application/json')) {
         const data = await res.json();
-        setPosts(data);
+        if (Array.isArray(data) && data.length > 0) {
+          setPosts(data);
+        }
       }
     } catch (err) {
       console.error('Error fetching posts:', err);
@@ -49,7 +52,9 @@ export default function App() {
       const contentType = res.headers.get('content-type');
       if (res.ok && contentType && contentType.includes('application/json')) {
         const data = await res.json();
-        setAutolinks(data);
+        if (Array.isArray(data) && data.length > 0) {
+          setAutolinks(data);
+        }
       }
     } catch (err) {
       console.error('Error fetching autolinks:', err);
