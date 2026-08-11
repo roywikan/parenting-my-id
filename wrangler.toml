@@ -15,7 +15,7 @@ bucket = "./dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "parenting-db"
-database_id = "ISI_DENGAN_DATABASE_ID_D1_ANDA"
+database_id = "1571067b-8c59-4c1e-bc2f-6181aa6e2966"
 
 # Environment Variables
 [vars]
