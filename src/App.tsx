@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Post, AutoLink, User } from './types';
-import { INITIAL_POSTS, INITIAL_AUTOLINKS } from './data/initialData';
+import { INITIAL_POSTS, INITIAL_AUTOLINKS, INITIAL_USERS } from './data/initialData';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomeView from './views/HomeView';
@@ -69,7 +69,8 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: pass }),
       });
-      if (res.ok) {
+      const contentType = res.headers.get('content-type');
+      if (res.ok && contentType && contentType.includes('application/json')) {
         const data = await res.json();
         if (data.user) {
           setCurrentUser(data.user);
@@ -80,6 +81,20 @@ export default function App() {
     } catch (err) {
       console.error('Login error:', err);
     }
+
+    // Client-side fallback (e.g. for static Cloudflare Pages / GitHub Pages)
+    if (email === 'admin@parenting.my.id' && pass === 'admin123') {
+      const adminUser = INITIAL_USERS[0];
+      setCurrentUser(adminUser);
+      localStorage.setItem('parenting_user', JSON.stringify(adminUser));
+      return true;
+    } else if (email === 'penulis@parenting.my.id' && pass === 'writer123') {
+      const writerUser = INITIAL_USERS[1];
+      setCurrentUser(writerUser);
+      localStorage.setItem('parenting_user', JSON.stringify(writerUser));
+      return true;
+    }
+
     return false;
   };
 
