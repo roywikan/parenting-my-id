@@ -26,10 +26,18 @@ export default function ArticleDetailView({
     return posts.find((p) => p.slug === slug);
   }, [posts, slug]);
 
-  // Render markdown to HTML + apply Auto-Links
+  // Render markdown to HTML + apply Auto-Links & Heading IDs
   const parsedHtml = useMemo(() => {
     if (!post) return '';
-    const rawHtml = marked.parse(post.contentMarkdown, { async: false }) as string;
+    let rawHtml = marked.parse(post.contentMarkdown, { async: false }) as string;
+
+    // Inject id attributes into <h2> and <h3> tags for TOC scrolling
+    rawHtml = rawHtml.replace(/<(h[23])>(.*?)<\/\1>/gi, (match, tag, content) => {
+      const cleanText = content.replace(/<[^>]+>/g, '').trim();
+      const id = cleanText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      return `<${tag} id="${id}" class="scroll-mt-24">${content}</${tag}>`;
+    });
+
     return applyAutoLinks(rawHtml, autolinks);
   }, [post, autolinks]);
 
