@@ -1,5 +1,5 @@
 # ============================================================
-# CLOUDFLARE WORKERS & PAGES CONFIGURATION FOR PARENTING.MY.ID
+# CLOUDFLARE WORKERS CONFIGURATION FOR PARENTING.MY.ID
 # ============================================================
 
 name = "parenting-my-id-blog"
@@ -7,7 +7,7 @@ main = "src/index.ts"
 compatibility_date = "2024-09-25"
 compatibility_flags = ["nodejs_compat"]
 
-# Direct Static Asset Serving
+# Static Asset Serving (Cloudflare Workers)
 [site]
 bucket = "./dist"
 
@@ -15,17 +15,17 @@ bucket = "./dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "parenting-db"
-database_id = "YOUR_CLOUDFLARE_D1_DATABASE_ID_HERE"
+database_id = "ISI_DENGAN_DATABASE_ID_D1_ANDA"
 
 # Environment Variables
 [vars]
 SITE_NAME = "Parenting.my.id"
 SITE_URL = "https://parenting.my.id"
-GITHUB_OWNER = "your-github-username"
+GITHUB_OWNER = "roywikan"
 GITHUB_REPO = "parenting-my-id"
 GITHUB_BRANCH = "main"
 
-# Custom Domain Route Configuration
+# Custom Domain Route Configuration (Opsional)
 # [[routes]]
 # pattern = "parenting.my.id/*"
 # zone_name = "parenting.my.id"
