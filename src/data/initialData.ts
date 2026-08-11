@@ -42,15 +42,17 @@ Pola asuh demokratis (*authoritative parenting*) hadir sebagai jalan tengah yang
 ---
 
 ### Ciri-Ciri Utama Pola Asuh Demokratis:
+
 1. **Mendengarkan Pendapat Anak:** Orang tua bersedia mendengarkan keluh kesah dan sudut pandang si kecil tanpa langsung menghakimi.
 2. **Aturan yang Jelas dan Beralasan:** Ketika membuat aturan, orang tua menjelaskan *mengapa* aturan tersebut penting.
 3. **Pemberian Apresiasi & Konsekuensi Logis:** Menghargai usaha anak serta menerapkan konsekuensi yang mendidik, bukan hukuman fisik.
 
 ---
 
-### Manfaat Utama bagi Tumbuh Kembang Anak
+## Manfaat Utama bagi Tumbuh Kembang Anak
 
 Penelitian psikologi anak menunjukkan bahwa anak yang dibesarkan dengan **pola asuh** demokratis cenderung:
+
 - Memiliki tingkat kecerdasan emosional (EQ) dan percaya diri yang tinggi.
 - Lebih mandiri dalam memecahkan masalah sehari-hari.
 - Terhindar dari perilaku terisolasi atau kecemasan berlebih di sekolah.
@@ -59,10 +61,13 @@ Untuk kelompok usia **balita**, penerapan komunikasi terbuka sangat efektif jika
 
 ---
 
-> *"Anak-anak tidak membutuhkan orang tua yang sempurna, melainkan orang tua yang hadir, mau mendengarkan, dan konsisten memandu langkah mereka."* - Dr. Ratna Sari
+> *"Anak-anak tidak membutuhkan orang tua yang sempurna, melainkan orang tua yang hadir, mau mendengarkan, dan konsisten memandu langkah mereka."* — **Dr. Ratna Sari**
 
-### Langkah Praktis Memulai Hari Ini
-- **Jadwatchan Waktu Bicara 15 Menit:** Luangkan waktu khusus tanpa *gadget* untuk mengobrol dengan anak sebelum tidur.
+---
+
+## Langkah Praktis Memulai Hari Ini
+
+- **Jadwalkan Waktu Bicara 15 Menit:** Luangkan waktu khusus tanpa *gadget* untuk mengobrol dengan anak sebelum tidur.
 - **Libatkan dalam Keputusan Kecil:** Biarkan si kecil memilih baju atau menu bekal sekolahnya sendiri.
 - **Validasi Emosi:** Saat anak menangis atau marah, katakan *"Ibu tahu kamu kecewa, mari kita tenang dulu lalu cari solusinya bersama."*`,
     excerpt: 'Pola asuh demokratis menggabungkan kasih sayang, aturan yang konsisten, dan komunikasi terbuka. Simak strategi praktis penerapannya di rumah.',
