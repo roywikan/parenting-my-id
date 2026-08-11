@@ -510,6 +510,80 @@ app.get('/feed.xml', (req, res) => {
   res.send(rss);
 });
 
+// 8. SSR / STATIC HTML PRE-RENDERING FOR ARTICLE PAGES (/baca/:slug) FOR GOOGLEBOT & CRAWLERS
+app.get('/baca/:slug', (req, res, next) => {
+  const { slug } = req.params;
+  const post = mockPosts.find((p) => p.slug === slug && p.status === 'published');
+
+  if (!post) {
+    return next(); // Pass to SPA fallback if not matching mock post
+  }
+
+  try {
+    const siteUrl = 'https://parenting.my.id';
+    const pageTitle = `${post.metaTitle || post.title} | Parenting.my.id`;
+    const pageDesc = post.metaDescription || post.excerpt;
+    const canonicalUrl = `${siteUrl}/baca/${post.slug}`;
+
+    // Convert Markdown to basic HTML
+    let bodyHtml = post.contentMarkdown
+      .replace(/## (.*)/g, '<h2 class="text-2xl font-bold text-slate-900 mt-8 mb-4">$1</h2>')
+      .replace(/### (.*)/g, '<h3 class="text-xl font-bold text-slate-900 mt-6 mb-3">$1</h3>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/^> (.*)/gm, '<blockquote class="border-l-4 border-rose-500 pl-4 py-2 my-4 italic bg-rose-50 text-slate-700">$1</blockquote>')
+      .replace(/\n\n/g, '</p><p class="my-4 leading-relaxed">');
+
+    bodyHtml = `<p class="my-4 leading-relaxed">${bodyHtml}</p>`;
+
+    const preRenderedBody = `
+      <div class="min-h-screen bg-slate-50 text-slate-900 font-sans">
+        <header class="bg-white border-b border-slate-200 p-4">
+          <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <a href="/" class="text-rose-600 font-black text-xl">👶 Parenting.my.id</a>
+          </div>
+        </header>
+        <main class="max-w-4xl mx-auto px-4 py-8">
+          <span class="inline-block px-3 py-1 bg-rose-100 text-rose-700 font-bold text-xs rounded-full mb-3">${post.category}</span>
+          <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-4">${post.title}</h1>
+          <p class="text-slate-600 italic border-l-4 border-rose-500 pl-3 py-1 mb-6">${post.excerpt}</p>
+          <img src="${post.featuredImage}" alt="${post.title}" class="w-full max-h-[450px] object-cover rounded-2xl mb-8 border border-slate-200" />
+          <article class="prose prose-rose max-w-none text-slate-800 leading-relaxed">
+            ${bodyHtml}
+          </article>
+        </main>
+      </div>
+    `;
+
+    const seoTags = `
+      <title>${pageTitle}</title>
+      <meta name="description" content="${pageDesc}" />
+      <link rel="canonical" href="${canonicalUrl}" />
+      <meta property="og:title" content="${pageTitle}" />
+      <meta property="og:description" content="${pageDesc}" />
+      <meta property="og:image" content="${post.featuredImage}" />
+      <meta property="og:url" content="${canonicalUrl}" />
+      <meta property="og:type" content="article" />
+      <meta name="twitter:card" content="summary_large_image" />
+    `;
+
+    let htmlFilePath = path.join(process.cwd(), 'dist', 'index.html');
+    if (!require('fs').existsSync(htmlFilePath)) {
+      htmlFilePath = path.join(process.cwd(), 'index.html');
+    }
+
+    let htmlTemplate = require('fs').readFileSync(htmlFilePath, 'utf-8');
+    htmlTemplate = htmlTemplate.replace(/<title>.*?<\/title>/i, seoTags);
+    htmlTemplate = htmlTemplate.replace(/<div id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
+
+    res.header('Content-Type', 'text/html; charset=utf-8');
+    return res.send(htmlTemplate);
+  } catch (e) {
+    console.error('Error pre-rendering HTML:', e);
+    return next();
+  }
+});
+
 // START EXPRESS + VITE SERVER
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
