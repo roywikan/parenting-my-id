@@ -33,7 +33,8 @@ export default function App() {
   const fetchPosts = async () => {
     try {
       const res = await fetch('/api/posts');
-      if (res.ok) {
+      const contentType = res.headers.get('content-type');
+      if (res.ok && contentType && contentType.includes('application/json')) {
         const data = await res.json();
         setPosts(data);
       }
@@ -45,7 +46,8 @@ export default function App() {
   const fetchAutolinks = async () => {
     try {
       const res = await fetch('/api/autolinks');
-      if (res.ok) {
+      const contentType = res.headers.get('content-type');
+      if (res.ok && contentType && contentType.includes('application/json')) {
         const data = await res.json();
         setAutolinks(data);
       }
