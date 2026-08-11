@@ -1,0 +1,6 @@
+{
+  "name": "Parenting.my.id - Modern Edge Blog Engine",
+  "description": "Sistem Blog Engine Cloudflare D1 & GitHub CMS modern, ultra-cepat, dan SEO-friendly untuk parenting.my.id",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
