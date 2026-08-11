@@ -26,37 +26,36 @@ export default function ArticleDetailView({
     return posts.find((p) => p.slug === slug);
   }, [posts, slug]);
 
-  // Render markdown to HTML + apply Auto-Links & Heading IDs
-  const parsedHtml = useMemo(() => {
-    if (!post) return '';
-    let rawHtml = marked.parse(post.contentMarkdown, { async: false }) as string;
+  // Render markdown to HTML + extract TOC items + apply Auto-Links & Heading IDs
+  const { parsedHtml, tocItems } = useMemo(() => {
+    if (!post) return { parsedHtml: '', tocItems: [] };
 
-    // Inject id attributes into <h2> and <h3> tags for TOC scrolling
+    let rawHtml = marked.parse(post.contentMarkdown, { async: false }) as string;
+    const items: { id: string; text: string; level: number }[] = [];
+
+    // Inject id attributes into <h2> and <h3> tags for TOC scrolling, and build tocItems
     rawHtml = rawHtml.replace(/<(h[23])>(.*?)<\/\1>/gi, (match, tag, content) => {
       const cleanText = content.replace(/<[^>]+>/g, '').trim();
+
+      // Safety check: headings must be reasonable in length (e.g. <= 120 chars)
+      if (!cleanText || cleanText.length > 120) {
+        return match;
+      }
+
+      const level = tag.toLowerCase() === 'h2' ? 2 : 3;
       const id = cleanText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+      // Avoid duplicates in TOC
+      if (!items.some((item) => item.id === id)) {
+        items.push({ id, text: cleanText, level });
+      }
+
       return `<${tag} id="${id}" class="scroll-mt-24">${content}</${tag}>`;
     });
 
-    return applyAutoLinks(rawHtml, autolinks);
+    const finalHtml = applyAutoLinks(rawHtml, autolinks);
+    return { parsedHtml: finalHtml, tocItems: items };
   }, [post, autolinks]);
-
-  // Table of Contents generator
-  const tocItems = useMemo(() => {
-    if (!post) return [];
-    const lines = post.contentMarkdown.split('\n');
-    const items: { id: string; text: string; level: number }[] = [];
-    lines.forEach((line) => {
-      if (line.startsWith('## ')) {
-        const text = line.replace('## ', '').trim();
-        items.push({ id: text.toLowerCase().replace(/[^a-z0-9]+/g, '-'), text, level: 2 });
-      } else if (line.startsWith('### ')) {
-        const text = line.replace('### ', '').trim();
-        items.push({ id: text.toLowerCase().replace(/[^a-z0-9]+/g, '-'), text, level: 3 });
-      }
-    });
-    return items;
-  }, [post]);
 
   // Handle Autolink Clicks inside article body
   useEffect(() => {
