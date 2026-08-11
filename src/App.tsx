@@ -148,16 +148,44 @@ export default function App() {
     }
   };
 
+  // Parse route from URL on mount and popstate
+  useEffect(() => {
+    const syncRouteFromUrl = () => {
+      const path = window.location.pathname;
+      if (path === '/admin') {
+        setCurrentView('admin');
+      } else if (path.startsWith('/baca/')) {
+        const slug = path.replace('/baca/', '');
+        if (slug) {
+          setActiveSlug(slug);
+          setCurrentView('article');
+        } else {
+          setCurrentView('home');
+        }
+      } else {
+        setCurrentView('home');
+        setActiveSlug('');
+      }
+    };
+
+    syncRouteFromUrl();
+    window.addEventListener('popstate', syncRouteFromUrl);
+    return () => window.removeEventListener('popstate', syncRouteFromUrl);
+  }, []);
+
   // Navigation Helper
   const handleNavigate = (view: string, param?: string) => {
     if (view === 'article' && param) {
       setActiveSlug(param);
       setCurrentView('article');
+      window.history.pushState({}, '', `/baca/${param}`);
     } else if (view === 'admin') {
       setCurrentView('admin');
+      window.history.pushState({}, '', '/admin');
     } else {
       setCurrentView('home');
       setActiveSlug('');
+      window.history.pushState({}, '', '/');
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
