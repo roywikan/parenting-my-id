@@ -1,6 +1,19 @@
 import { Heart, ShieldCheck, Zap, Database, GitBranch, ArrowUpRight } from 'lucide-react';
+import { SiteConfig } from '../types';
 
-export default function Footer() {
+interface FooterProps {
+  siteConfig?: SiteConfig;
+}
+
+export default function Footer({ siteConfig }: FooterProps) {
+  const siteName = siteConfig?.site_name || 'Parenting.my.id';
+  const aboutText = siteConfig?.footer_about_text || 'Parenting.my.id menghadirkan bacaan berkualitas seputar dunia pengasuhan anak, kesehatan keluarga, dan pendidikan anak usia dini.';
+  const copyrightText = siteConfig?.footer_copyright_text || `© ${new Date().getFullYear()} Parenting.my.id. Hak Cipta Dilindungi Undang-Undang.`;
+  const footerLinks = siteConfig?.footer_menu_links || [
+    { label: 'Dynamic Sitemap.xml', url: '/sitemap.xml' },
+    { label: 'Dynamic RSS Feed', url: '/feed.xml' },
+  ];
+
   return (
     <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 pt-12 pb-8 mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -13,11 +26,11 @@ export default function Footer() {
                 <Heart className="w-5 h-5 fill-current" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">
-                Parenting<span className="text-rose-400">.my.id</span>
+                {siteName}
               </span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed max-w-md">
-              Platform media edukasi parenting terpercaya di Indonesia. Didesain dengan arsitektur Edge Serverless Cloudflare D1 & GitHub CMS yang ultra-cepat, responsif, dan 100% SEO-friendly.
+              {aboutText}
             </p>
 
             {/* TECH STACK BADGES */}
@@ -66,40 +79,26 @@ export default function Footer() {
           {/* SEO & INFRASTRUCTURE */}
           <div>
             <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider mb-4">
-              Otomatisasi SEO
+              Tautan Navigasi & SEO
             </h4>
             <ul className="space-y-2.5 text-sm">
-              <li>
-                <a
-                  href="/sitemap.xml"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-slate-400 hover:text-rose-400 transition-colors inline-flex items-center gap-1"
-                >
-                  <span>Dynamic Sitemap.xml</span>
-                  <ArrowUpRight className="w-3 h-3 opacity-60" />
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/feed.xml"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-slate-400 hover:text-rose-400 transition-colors inline-flex items-center gap-1"
-                >
-                  <span>Dynamic RSS Feed</span>
-                  <ArrowUpRight className="w-3 h-3 opacity-60" />
-                </a>
-              </li>
+              {footerLinks.map((item, idx) => (
+                <li key={idx}>
+                  <a
+                    href={item.url}
+                    target={item.url.startsWith('http') || item.url.endsWith('.xml') ? '_blank' : '_self'}
+                    rel="noreferrer"
+                    className="text-slate-400 hover:text-rose-400 transition-colors inline-flex items-center gap-1"
+                  >
+                    <span>{item.label}</span>
+                    <ArrowUpRight className="w-3 h-3 opacity-60" />
+                  </a>
+                </li>
+              ))}
               <li>
                 <span className="text-slate-400 inline-flex items-center gap-1">
                   <span>Auto-Linking Engine On-Page</span>
                   <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                </span>
-              </li>
-              <li>
-                <span className="text-slate-400">
-                  Image WebP Pipeline Edge
                 </span>
               </li>
             </ul>
@@ -109,11 +108,18 @@ export default function Footer() {
 
         {/* BOTTOM COPYRIGHT */}
         <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} Parenting.my.id. Hak Cipta Dilindungi Undang-Undang.</p>
-          <p className="flex items-center gap-1">
-            <span>Serverless Edge Architecture on</span>
-            <span className="text-slate-300 font-semibold">Cloudflare Workers & D1</span>
-          </p>
+          <p>{copyrightText}</p>
+          <div className="flex items-center gap-4">
+            {siteConfig?.social_facebook && (
+              <a href={siteConfig.social_facebook} target="_blank" rel="noreferrer" className="hover:text-rose-400">Facebook</a>
+            )}
+            {siteConfig?.social_instagram && (
+              <a href={siteConfig.social_instagram} target="_blank" rel="noreferrer" className="hover:text-rose-400">Instagram</a>
+            )}
+            {siteConfig?.social_twitter && (
+              <a href={siteConfig.social_twitter} target="_blank" rel="noreferrer" className="hover:text-rose-400">Twitter/X</a>
+            )}
+          </div>
         </div>
       </div>
     </footer>
