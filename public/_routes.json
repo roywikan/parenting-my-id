@@ -8,8 +8,8 @@
     "/feed.xml",
     "/robots.txt",
         "/balita/*",
-        "/makanan/*",
-        "/*"
+        "/makanan/*"
+        
   ],
   "exclude": [
     "/assets/*"
