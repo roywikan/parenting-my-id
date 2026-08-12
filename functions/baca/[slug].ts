@@ -215,10 +215,28 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#039;');
 }
 
+function preprocessMarkdownLineBreaks(markdown: string): string {
+  if (!markdown) return '';
+  let normalized = markdown.replace(/\r\n/g, '\n');
+  const parts = normalized.split(/(```[\s\S]*?```)/g);
+  return parts
+    .map((part, index) => {
+      if (index % 2 === 1) return part;
+      let text = part.replace(/\n[ \t]+\n/g, '\n\n');
+      text = text.replace(/\n{3,}/g, (match) => {
+        const extraLines = match.length - 2;
+        return '\n\n' + '<br />'.repeat(extraLines) + '\n\n';
+      });
+      return text;
+    })
+    .join('');
+}
+
 function renderMarkdownToHtml(markdown: string): string {
   if (!markdown) return '';
   try {
-    return marked.parse(markdown, { async: false, gfm: true, breaks: true }) as string;
+    const preparedMd = preprocessMarkdownLineBreaks(markdown);
+    return marked.parse(preparedMd, { async: false, gfm: true, breaks: true }) as string;
   } catch (e) {
     // Simple regex fallback parser
     let html = markdown;
