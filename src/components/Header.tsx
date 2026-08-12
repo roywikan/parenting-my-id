@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Search, ShieldCheck, Zap, Menu, X, UserCheck, FileText, Rss } from 'lucide-react';
+import { Heart, Zap, Menu, X, FileText, Rss } from 'lucide-react';
 import { User } from '../types';
 
 interface HeaderProps {
@@ -9,7 +9,7 @@ interface HeaderProps {
   onLogout: () => void;
 }
 
-export default function Header({ currentView, onNavigate, currentUser, onLogout }: HeaderProps) {
+export default function Header({ currentView, onNavigate }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -75,40 +75,6 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout 
               <Rss className="w-3.5 h-3.5 text-amber-500" />
               <span>RSS Feed</span>
             </a>
-
-            <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
-
-            {/* ADMIN PORTAL BUTTON */}
-            {currentUser ? (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => onNavigate('admin')}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-sm transition-all ${
-                    currentView === 'admin'
-                      ? 'bg-rose-600 text-white shadow-rose-500/25'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-600'
-                  }`}
-                >
-                  <ShieldCheck className="w-4 h-4 text-rose-500" />
-                  <span>Portal Admin ({currentUser.role.toUpperCase()})</span>
-                </button>
-                <button
-                  onClick={onLogout}
-                  className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800"
-                  title="Keluar"
-                >
-                  Keluar
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => onNavigate('admin')}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-500/20 transition-all hover:scale-[1.02]"
-              >
-                <UserCheck className="w-4 h-4" />
-                <span>Masuk Admin / Penulis</span>
-              </button>
-            )}
           </nav>
 
           {/* MOBILE MENU TOGGLE */}
@@ -152,18 +118,6 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout 
           >
             📡 Live RSS Feed.xml
           </a>
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-            <button
-              onClick={() => {
-                onNavigate('admin');
-                setMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold bg-rose-600 text-white shadow-md"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Portal Admin & Editor</span>
-            </button>
-          </div>
         </div>
       )}
     </header>
