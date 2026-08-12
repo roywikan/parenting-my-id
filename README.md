@@ -77,7 +77,7 @@ Penulis dapat mengunggah gambar langsung di Editor WYSIWYG, yang akan disimpan s
 ## 🔑 AKSED PORTAL ADMIN (`/admin`) & CARA PENGGUNAAN
 Situs Anda kini aktif di **https://parenting.my.id**!
 Akses portal admin berbasis web di:
-👉 **`https://parenting.my.id/admin`**
+ 
 
 ### Kredensial Login Default:
 - **Akun Admin (Akses Penuh):**
