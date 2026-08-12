@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Post, AutoLink } from '../types';
+import { Post, AutoLink, SiteConfig } from '../types';
 import { Search, Clock, Eye, Sparkles, ArrowRight, ShieldCheck, Zap, BookOpen, Tag } from 'lucide-react';
 import SEOHelper from '../components/SEOHelper';
 
@@ -8,11 +8,22 @@ interface HomeViewProps {
   autolinks: AutoLink[];
   onSelectPost: (slug: string) => void;
   onSelectCategory: (category: string) => void;
+  siteConfig?: SiteConfig;
 }
 
-export default function HomeView({ posts, autolinks, onSelectPost, onSelectCategory }: HomeViewProps) {
+export default function HomeView({ posts, autolinks, onSelectPost, onSelectCategory, siteConfig }: HomeViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
+
+  const showHero = siteConfig?.show_hero_section ?? true;
+  const heroTitle = siteConfig?.hero_title || 'Panduan Pengasuhan Anak Terpercaya';
+  const heroSubtitle = siteConfig?.hero_subtitle || 'Temukan artikel, tips nutrisi, dan edukasi tumbuh kembang anak untuk orang tua modern.';
+  const heroCtaText = siteConfig?.hero_cta_text || 'Jelajahi Artikel';
+  const heroCtaLink = siteConfig?.hero_cta_link || '#artikel-terbaru';
+
+  const metaTitle = siteConfig?.seo_meta_title || 'Parenting.my.id - Edukasi Pola Asuh & Kesehatan Anak Indonesia';
+  const metaDesc = siteConfig?.seo_meta_description || 'Portal artikel parenting modern, panduan pola asuh, nutrisi balita, dan pencegahan stunting. Cepat, akurat, dan terpercaya.';
+  const ogImage = siteConfig?.seo_default_og_image || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1200&h=630';
 
   const publishedPosts = useMemo(() => {
     return posts.filter((p) => p.status === 'published');
@@ -39,44 +50,58 @@ export default function HomeView({ posts, autolinks, onSelectPost, onSelectCateg
   return (
     <div className="space-y-12 pb-16">
       <SEOHelper
-        title="Parenting.my.id - Edukasi Pola Asuh & Kesehatan Anak Indonesia"
-        description="Portal artikel parenting modern, panduan pola asuh, nutrisi balita, dan pencegahan stunting. Cepat, akurat, dan terpercaya."
+        title={metaTitle}
+        description={metaDesc}
+        image={ogImage}
       />
 
-      {/* LIGHTHOUSE & EDGE METRIC BANNER */}
-      <section className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-500/15 relative overflow-hidden">
-        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-rose-100 border border-white/20">
-              <Zap className="w-3.5 h-3.5 text-amber-300 fill-current" />
-              <span>Cloudflare D1 Edge Architecture • TTFB &lt; 20ms</span>
+      {/* HERO BANNER SECTION */}
+      {showHero && (
+        <section className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-500/15 relative overflow-hidden">
+          <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-3 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-rose-100 border border-white/20">
+                <Zap className="w-3.5 h-3.5 text-amber-300 fill-current" />
+                <span>Cloudflare D1 Edge Architecture • TTFB &lt; 20ms</span>
+              </div>
+              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                {heroTitle}
+              </h1>
+              <p className="text-rose-100 text-sm sm:text-base leading-relaxed">
+                {heroSubtitle}
+              </p>
+              {heroCtaText && (
+                <div className="pt-2">
+                  <a
+                    href={heroCtaLink}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-rose-600 font-extrabold text-xs shadow-lg hover:bg-rose-50 transition-all hover:scale-105"
+                  >
+                    <span>{heroCtaText}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                </div>
+              )}
             </div>
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-              Edukasi Pola Asuh & Tumbuh Kembang Anak Terpercaya
-            </h1>
-            <p className="text-rose-100 text-sm sm:text-base leading-relaxed">
-              Disajikan dengan tampilan modern, super cepat, tanpa ribet, serta dilengkapi otomatisasi internal link untuk pemahaman orang tua yang lebih komprehensif.
-            </p>
-          </div>
 
-          {/* LIGHTHOUSE SCORES */}
-          <div className="grid grid-cols-3 gap-3 bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-center w-full md:w-auto shrink-0">
-            <div>
-              <div className="text-xl sm:text-2xl font-black text-emerald-400">99+</div>
-              <div className="text-[10px] text-rose-200 uppercase font-semibold">Performance</div>
-            </div>
-            <div>
-              <div className="text-xl sm:text-2xl font-black text-emerald-400">100</div>
-              <div className="text-[10px] text-rose-200 uppercase font-semibold">SEO Score</div>
-            </div>
-            <div>
-              <div className="text-xl sm:text-2xl font-black text-emerald-400">0ms</div>
-              <div className="text-[10px] text-rose-200 uppercase font-semibold">Edge Delay</div>
+            {/* LIGHTHOUSE SCORES */}
+            <div className="grid grid-cols-3 gap-3 bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-center w-full md:w-auto shrink-0">
+              <div>
+                <div className="text-xl sm:text-2xl font-black text-emerald-400">99+</div>
+                <div className="text-[10px] text-rose-200 uppercase font-semibold">Performance</div>
+              </div>
+              <div>
+                <div className="text-xl sm:text-2xl font-black text-emerald-400">100</div>
+                <div className="text-[10px] text-rose-200 uppercase font-semibold">SEO Score</div>
+              </div>
+              <div>
+                <div className="text-xl sm:text-2xl font-black text-emerald-400">0ms</div>
+                <div className="text-[10px] text-rose-200 uppercase font-semibold">Edge Delay</div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* TRENDING AUTOLINK KEYWORD TICKER */}
       {autolinks.length > 0 && (
