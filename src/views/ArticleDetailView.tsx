@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Post, AutoLink } from '../types';
-import { applyAutoLinks } from '../lib/autolink';
+import { applyAutoLinks, preprocessMarkdownLineBreaks } from '../lib/autolink';
 import { marked } from 'marked';
 import { Clock, Eye, Calendar, ArrowLeft, Share2, Check, Bookmark, Sparkles, MessageCircle, Twitter, Facebook, Copy } from 'lucide-react';
 import SEOHelper from '../components/SEOHelper';
@@ -30,7 +30,8 @@ export default function ArticleDetailView({
   const { parsedHtml, tocItems } = useMemo(() => {
     if (!post) return { parsedHtml: '', tocItems: [] };
 
-    let rawHtml = marked.parse(post.contentMarkdown, { async: false, gfm: true, breaks: true }) as string;
+    const preparedMd = preprocessMarkdownLineBreaks(post.contentMarkdown);
+    let rawHtml = marked.parse(preparedMd, { async: false, gfm: true, breaks: true }) as string;
     const items: { id: string; text: string; level: number }[] = [];
 
     // Inject id attributes into <h2> and <h3> tags for TOC scrolling, and build tocItems
