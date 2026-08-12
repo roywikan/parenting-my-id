@@ -225,7 +225,7 @@ export default function RichPostEditor({
   // HTML Preview Renderer with Auto-Links
   const parsedPreviewHtml = useMemo(() => {
     if (!markdown) return '';
-    let rawHtml = marked.parse(markdown, { async: false }) as string;
+    let rawHtml = marked.parse(markdown, { async: false, gfm: true, breaks: true }) as string;
 
     // Inject id attributes into <h2> and <h3> tags for TOC
     rawHtml = rawHtml.replace(/<(h[23])>(.*?)<\/\1>/gi, (match, tag, content) => {
@@ -615,7 +615,7 @@ export default function RichPostEditor({
                         Auto-Links Active
                       </span>
                     </div>
-                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 max-h-[440px] overflow-y-auto prose prose-rose dark:prose-invert prose-xs text-slate-800 dark:text-slate-200">
+                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 max-h-[440px] overflow-y-auto prose prose-rose max-w-none dark:prose-invert prose-sm text-slate-800 dark:text-slate-200">
                       <div dangerouslySetInnerHTML={{ __html: parsedPreviewHtml || '<p class="text-slate-400 italic">Pratinjau artikel akan muncul di sini saat Anda mengetik...</p>' }} />
                     </div>
                   </div>
