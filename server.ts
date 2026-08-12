@@ -555,6 +555,39 @@ app.get('/baca/:slug', (req, res, next) => {
       </div>
     `;
 
+    const datePub = post.createdAt ? new Date(post.createdAt).toISOString() : new Date().toISOString();
+    const dateMod = post.updatedAt ? new Date(post.updatedAt).toISOString() : datePub;
+
+    const schemaArticle = {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      'mainEntityOfPage': {
+        '@type': 'WebPage',
+        '@id': canonicalUrl,
+      },
+      'headline': post.title,
+      'description': pageDesc,
+      'image': [post.featuredImage],
+      'datePublished': datePub,
+      'dateModified': dateMod,
+      'author': {
+        '@type': 'Person',
+        'name': 'Dr. Ratna Sari, M.Psi',
+        'url': `${siteUrl}/#penulis`,
+      },
+      'publisher': {
+        '@type': 'Organization',
+        'name': 'Parenting.my.id',
+        'url': siteUrl,
+        'logo': {
+          '@type': 'ImageObject',
+          'url': `${siteUrl}/favicon.ico`,
+        },
+      },
+      'articleSection': post.category,
+      'keywords': post.tags,
+    };
+
     const seoTags = `
       <title>${pageTitle}</title>
       <meta name="description" content="${pageDesc}" />
@@ -565,6 +598,7 @@ app.get('/baca/:slug', (req, res, next) => {
       <meta property="og:url" content="${canonicalUrl}" />
       <meta property="og:type" content="article" />
       <meta name="twitter:card" content="summary_large_image" />
+      <script type="application/ld+json">${JSON.stringify(schemaArticle)}</script>
     `;
 
     let htmlFilePath = path.join(process.cwd(), 'dist', 'index.html');
