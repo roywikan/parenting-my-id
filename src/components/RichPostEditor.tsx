@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { marked } from 'marked';
-import { applyAutoLinks, calculateReadTime } from '../lib/autolink';
+import { applyAutoLinks, calculateReadTime, preprocessMarkdownLineBreaks } from '../lib/autolink';
 import { AutoLink } from '../types';
 import { 
   Bold, Italic, Strikethrough, Heading1, Heading2, Heading3, 
@@ -225,7 +225,8 @@ export default function RichPostEditor({
   // HTML Preview Renderer with Auto-Links
   const parsedPreviewHtml = useMemo(() => {
     if (!markdown) return '';
-    let rawHtml = marked.parse(markdown, { async: false, gfm: true, breaks: true }) as string;
+    const preparedMd = preprocessMarkdownLineBreaks(markdown);
+    let rawHtml = marked.parse(preparedMd, { async: false, gfm: true, breaks: true }) as string;
 
     // Inject id attributes into <h2> and <h3> tags for TOC
     rawHtml = rawHtml.replace(/<(h[23])>(.*?)<\/\1>/gi, (match, tag, content) => {
