@@ -1,0 +1,16 @@
+# ============================================================
+# 301 PERMANENT REDIRECTS FOR PARENTING.MY.ID
+# ============================================================
+
+# Specific requested redirects
+/makanan/hal-yang-perlu-dicermati-dalam-memberikan-nutrisi-untuk-anak-kecil/ https://parenting.my.id/baca/hal-yang-perlu-dicermati-dalam-memberikan-nutrisi-untuk-anak-kecil/ 301!
+/makanan/hal-yang-perlu-dicermati-dalam-memberikan-nutrisi-untuk-anak-kecil https://parenting.my.id/baca/hal-yang-perlu-dicermati-dalam-memberikan-nutrisi-untuk-anak-kecil/ 301!
+
+/balita/kiat-merawat-gigi-bayi/ https://parenting.my.id/baca/kiat-merawat-gigi-bayi/ 301!
+/balita/kiat-merawat-gigi-bayi https://parenting.my.id/baca/kiat-merawat-gigi-bayi/ 301!
+
+# Category wildcard redirects
+/makanan/* https://parenting.my.id/baca/:splat 301!
+/balita/* https://parenting.my.id/baca/:splat 301!
+/kesehatan/* https://parenting.my.id/baca/:splat 301!
+/parenting/* https://parenting.my.id/baca/:splat 301!
