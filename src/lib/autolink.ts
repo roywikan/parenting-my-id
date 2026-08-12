@@ -102,7 +102,7 @@ export function preprocessMarkdownLineBreaks(markdown: string): string {
 
       // Convert 3 or more consecutive newlines (i.e. 2 or more blank lines) into
       // paragraph breaks with <br /> tags
-      text = text.replace(/\n{3,}/g, (match) => {
+      text = text.replace(/\n{2,}/g, (match) => {
         const extraLines = match.length - 2;
         return '\n\n' + '<br />'.repeat(extraLines) + '\n\n';
       });
