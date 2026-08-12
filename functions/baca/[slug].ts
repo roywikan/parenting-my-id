@@ -218,7 +218,7 @@ function escapeHtml(str: string): string {
 function renderMarkdownToHtml(markdown: string): string {
   if (!markdown) return '';
   try {
-    return marked.parse(markdown, { async: false }) as string;
+    return marked.parse(markdown, { async: false, gfm: true, breaks: true }) as string;
   } catch (e) {
     // Simple regex fallback parser
     let html = markdown;
