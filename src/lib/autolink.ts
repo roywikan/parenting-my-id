@@ -1,331 +1,113 @@
-import { useMemo, useState, useEffect } from 'react';
-import { Post, AutoLink } from '../types';
-import { applyAutoLinks, preprocessMarkdownLineBreaks } from '../lib/autolink';
-import { marked } from 'marked';
-import { Clock, Eye, Calendar, ArrowLeft, Share2, Check, Bookmark, Sparkles, MessageCircle, Twitter, Facebook, Copy } from 'lucide-react';
-import SEOHelper from '../components/SEOHelper';
+import { AutoLink } from '../types';
 
-interface ArticleDetailViewProps {
-  slug: string;
-  posts: Post[];
-  autolinks: AutoLink[];
-  onBack: () => void;
-  onSelectPost: (slug: string) => void;
-}
+/**
+ * Automatically converts keywords in HTML content to internal links.
+ */
+export function applyAutoLinks(html: string, autolinks: AutoLink[]): string {
+  if (!html || !autolinks || autolinks.length === 0) return html;
 
-export default function ArticleDetailView({
-  slug,
-  posts,
-  autolinks,
-  onBack,
-  onSelectPost,
-}: ArticleDetailViewProps) {
-  const [copied, setCopied] = useState(false);
+  // Sort autolinks by keyword length descending (longer keywords first)
+  const sortedAutolinks = [...autolinks].sort((a, b) => b.keyword.length - a.keyword.length);
 
-  const post = useMemo(() => {
-    return posts.find((p) => p.slug === slug);
-  }, [posts, slug]);
+  // Split HTML by tags to avoid replacing keywords inside HTML attributes or existing <a> tags
+  const tokenRegex = /(<[^>]+>)/gi;
+  const parts = html.split(tokenRegex);
 
-  // Render markdown to HTML + extract TOC items + apply Auto-Links & Heading IDs
-  const { parsedHtml, tocItems } = useMemo(() => {
-    if (!post) return { parsedHtml: '', tocItems: [] };
+  let inAnchor = false;
 
-    const preparedMd = preprocessMarkdownLineBreaks(post.contentMarkdown);
-    let rawHtml = marked.parse(preparedMd, { async: false, gfm: true, breaks: true }) as string;
-    const items: { id: string; text: string; level: number }[] = [];
-
-    // Inject id attributes into <h2> and <h3> tags for TOC scrolling, and build tocItems
-    rawHtml = rawHtml.replace(/<(h[23])>(.*?)<\/\1>/gi, (match, tag, content) => {
-      const cleanText = content.replace(/<[^>]+>/g, '').trim();
-
-      // Safety check: headings must be reasonable in length (e.g. <= 120 chars)
-      if (!cleanText || cleanText.length > 120) {
-        return match;
+  return parts
+    .map((part) => {
+      // Check if this part is an HTML tag
+      if (part.startsWith('<') && part.endsWith('>')) {
+        const tagName = part.replace(/^<\/?([a-z0-9]+)/i, '$1').toLowerCase();
+        if (tagName === 'a') {
+          inAnchor = !part.startsWith('</');
+        }
+        return part;
       }
 
-      const level = tag.toLowerCase() === 'h2' ? 2 : 3;
-      const id = cleanText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      // Skip text inside existing <a> tags
+      if (inAnchor) return part;
 
-      // Avoid duplicates in TOC
-      if (!items.some((item) => item.id === id)) {
-        items.push({ id, text: cleanText, level });
-      }
+      // Apply autolinks to text nodes
+      let modifiedText = part;
 
-      return `<${tag} id="${id}" class="scroll-mt-24">${content}</${tag}>`;
-    });
+      for (const item of sortedAutolinks) {
+        if (!item.keyword) continue;
 
-    const finalHtml = applyAutoLinks(rawHtml, autolinks);
-    return { parsedHtml: finalHtml, tocItems: items };
-  }, [post, autolinks]);
+        // Case-insensitive boundary match for keywords
+        const escapedKeyword = item.keyword.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+        const regex = new RegExp(`\\b(${escapedKeyword})\\b`, 'gi');
 
-  // Handle Autolink Clicks inside article body
-  useEffect(() => {
-    const handleAutolinkClick = (e: MouseEvent) => {
-      const target = (e.target as HTMLElement).closest('a');
-      if (target && target.getAttribute('href')?.startsWith('/baca/')) {
-        e.preventDefault();
-        const targetSlug = target.getAttribute('href')?.replace('/baca/', '');
-        if (targetSlug) {
-          onSelectPost(targetSlug);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Only replace first occurrence per text node to avoid over-linking
+        if (regex.test(modifiedText)) {
+          modifiedText = modifiedText.replace(regex, (match) => {
+            const tooltipAttr = item.description ? ` title="${item.description.replace(/"/g, '&quot;')}"` : '';
+            return `<a href="${item.targetUrl}" class="autolink-item font-semibold text-rose-600 dark:text-rose-400 underline decoration-rose-300 hover:decoration-rose-600 transition-colors"${tooltipAttr}>${match}</a>`;
+          });
+          break; // Stop after first matched keyword in this text segment
         }
       }
-    };
 
-    document.addEventListener('click', handleAutolinkClick);
-    return () => document.removeEventListener('click', handleAutolinkClick);
-  }, [onSelectPost]);
+      return modifiedText;
+    })
+    .join('');
+}
 
-  if (!post) {
-    return (
-      <div className="max-w-3xl mx-auto py-16 text-center space-y-4">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Artikel Tidak Ditemukan</h2>
-        <p className="text-slate-600">Artikel dengan slug "{slug}" mungkin telah dihapus atau dipindahkan.</p>
-        <button
-          onClick={onBack}
-          className="px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs inline-flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" /> Kembali ke Beranda
-        </button>
-      </div>
-    );
-  }
+/**
+ * Calculates estimated read time in minutes.
+ */
+export function calculateReadTime(markdown: string): number {
+  if (!markdown) return 1;
+  const wordsPerMinute = 200;
+  const cleanText = markdown.replace(/<[^>]*>/g, '').replace(/[#*`_~-]/g, '');
+  const wordCount = cleanText.trim().split(/\s+/).length;
+  return Math.max(1, Math.ceil(wordCount / wordsPerMinute));
+}
 
-  const articleUrl = `https://parenting.my.id/baca/${post.slug}`;
+/**
+ * Generates a clean URL slug from title.
+ */
+export function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(articleUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+/**
+ * Preprocesses markdown string so that multiple blank lines (consecutive newlines)
+ * are preserved as visible line breaks (<br />) in rendered HTML preview and output.
+ */
+export function preprocessMarkdownLineBreaks(markdown: string): string {
+  if (!markdown) return '';
 
-  const relatedPosts = posts.filter((p) => p.slug !== post.slug && p.status === 'published').slice(0, 2);
+  // Normalize \r\n to \n
+  let normalized = markdown.replace(/\r\n/g, '\n');
 
-  return (
-    <article className="max-w-4xl mx-auto space-y-8 pb-16">
-      <SEOHelper
-        title={`${post.title} | Parenting.my.id`}
-        description={post.metaDescription || post.excerpt}
-        image={post.featuredImage}
-        canonicalUrl={articleUrl}
-      />
+  // Split by code blocks (```...```) so we don't alter whitespace inside code blocks
+  const parts = normalized.split(/(```[\s\S]*?```)/g);
 
-      {/* BREADCRUMB & BACK BUTTON */}
-      <div className="flex items-center justify-between text-xs text-slate-500">
-        <button
-          onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-rose-600 font-medium transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Kembali ke Beranda</span>
-        </button>
-        <div className="hidden sm:flex items-center gap-2">
-          <span>Parenting.my.id</span>
-          <span>/</span>
-          <span className="text-rose-600 font-semibold">{post.category}</span>
-        </div>
-      </div>
+  return parts
+    .map((part, index) => {
+      // Odd indices are code blocks
+      if (index % 2 === 1) {
+        return part;
+      }
 
-      {/* ARTICLE HEADER */}
-      <header className="space-y-4 border-b border-slate-200 dark:border-slate-800 pb-8">
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold text-xs">
-            {post.category}
-          </span>
-          <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-0.5 rounded-md">
-            <Sparkles className="w-3 h-3" /> Auto-Linking Active
-          </span>
-        </div>
+      // Replace lines containing only spaces or tabs with clean newlines
+      let text = part.replace(/\n[ \t]+\n/g, '\n\n');
 
-        <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">
-          {post.title}
-        </h1>
+      // Convert 3 or more consecutive newlines (i.e. 2 or more blank lines) into
+      // paragraph breaks with <br /> tags
+      text = text.replace(/\n{3,}/g, (match) => {
+        const extraLines = match.length - 2;
+        return '\n\n' + '<br />'.repeat(extraLines) + '\n\n';
+      });
 
-        <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed italic border-l-4 border-rose-500 pl-4 py-1 bg-rose-50/50 dark:bg-slate-800/40 rounded-r-xl">
-          "{post.excerpt}"
-        </p>
-
-        {/* AUTHOR & METADATA BAR */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 text-xs text-slate-500 border-t border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <img
-              src={post.authorAvatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80'}
-              alt={post.authorName}
-              className="w-10 h-10 rounded-full object-cover border-2 border-rose-300"
-            />
-            <div>
-              <div className="font-bold text-slate-900 dark:text-white text-sm">
-                {post.authorName || 'Dr. Ratna Sari, M.Psi'}
-              </div>
-              <div className="text-[11px] text-rose-600 font-medium">
-                Pakar & Penulis Parenting • {post.authorRole || 'admin'}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 text-slate-500">
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" />
-              {new Date(post.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              {post.readTimeMinutes} Mnt Baca
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <Eye className="w-3.5 h-3.5" />
-              {post.views} Dibaca
-            </span>
-          </div>
-        </div>
-      </header>
-
-      {/* FEATURED IMAGE */}
-      <div className="rounded-3xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800">
-        <img
-          src={post.featuredImage}
-          alt={post.title}
-          className="w-full max-h-[480px] object-cover"
-        />
-      </div>
-
-      {/* TABLE OF CONTENTS (IF HEADINGS EXIST) */}
-      {tocItems.length > 0 && (
-        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-2">
-          <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-            <Bookmark className="w-4 h-4 text-rose-500" />
-            <span>Daftar Isi Artikel</span>
-          </h3>
-          <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
-            {tocItems.map((item, idx) => (
-              <li key={idx} className={item.level === 3 ? 'pl-4' : ''}>
-                <a
-                  href={`#${item.id}`}
-                  className="hover:text-rose-600 hover:underline transition-colors block py-0.5"
-                >
-                  • {item.text}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* ARTICLE CONTENT BODY WITH AUTO-LINKING */}
-      <div
-        className="prose prose-rose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 leading-relaxed text-sm sm:text-base space-y-4"
-        dangerouslySetInnerHTML={{ __html: parsedHtml }}
-      />
-
-      {/* TAGS & SHARE SECTION */}
-      <div className="pt-8 border-t border-slate-200 dark:border-slate-800 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          
-          {/* TAGS */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-500">Kata Kunci:</span>
-            <div className="flex flex-wrap gap-1.5">
-              {post.tags.split(',').map((tag) => (
-                <span
-                  key={tag}
-                  className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] text-slate-700 dark:text-slate-300 font-medium"
-                >
-                  #{tag.trim()}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* SHARE BUTTONS */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
-              <Share2 className="w-3.5 h-3.5" /> Bagikan:
-            </span>
-            
-            <a
-              href={`https://api.whatsapp.com/send?text=${encodeURIComponent(post.title + ' ' + articleUrl)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="p-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
-              title="Bagikan ke WhatsApp"
-            >
-              <MessageCircle className="w-4 h-4" />
-            </a>
-
-            <a
-              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(articleUrl)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="p-2 rounded-xl bg-sky-50 text-sky-600 hover:bg-sky-100 transition-colors"
-              title="Bagikan ke Twitter"
-            >
-              <Twitter className="w-4 h-4" />
-            </a>
-
-            <button
-              onClick={handleCopyLink}
-              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition-colors relative"
-              title="Salin Link"
-            >
-              {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* AUTHOR PROFILE CARD */}
-      <div className="bg-gradient-to-r from-rose-50 to-pink-50 dark:from-slate-900 dark:to-slate-800/80 rounded-3xl p-6 border border-rose-100 dark:border-slate-800 flex flex-col sm:flex-row items-center sm:items-start gap-4">
-        <img
-          src={post.authorAvatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80'}
-          alt={post.authorName}
-          className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-md shrink-0"
-        />
-        <div className="space-y-1 text-center sm:text-left">
-          <h4 className="text-base font-bold text-slate-900 dark:text-white">
-            {post.authorName || 'Dr. Ratna Sari, M.Psi'}
-          </h4>
-          <p className="text-xs text-rose-600 font-semibold">Spesialis Psikologi Anak & Praktisi Parenting</p>
-          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pt-1">
-            Berkomitmen memberikan edukasi berbasis riset medis dan psikologi untuk membantu orang tua Indonesia membesarkan anak dengan penuh kasih sayang dan pemahaman gizi yang tepat.
-          </p>
-        </div>
-      </div>
-
-      {/* RELATED POSTS */}
-      {relatedPosts.length > 0 && (
-        <div className="space-y-4 pt-6">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Artikel Terkait Lainnya</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {relatedPosts.map((rel) => (
-              <div
-                key={rel.id}
-                onClick={() => {
-                  onSelectPost(rel.slug);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all cursor-pointer flex items-center gap-4 group"
-              >
-                <img
-                  src={rel.featuredImage}
-                  alt={rel.title}
-                  className="w-20 h-20 rounded-xl object-cover shrink-0"
-                />
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">
-                    {rel.category}
-                  </span>
-                  <h5 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors line-clamp-2">
-                    {rel.title}
-                  </h5>
-                  <div className="text-[10px] text-slate-500">{rel.readTimeMinutes} mnt baca</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </article>
-  );
+      return text;
+    })
+    .join('');
 }
