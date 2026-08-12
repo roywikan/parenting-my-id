@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Post, AutoLink, User } from '../types';
+import { Post, AutoLink, User, SiteConfig } from '../types';
 import { 
   ShieldCheck, FileText, Link as LinkIcon, Plus, Trash2, Edit3, Save, 
   Upload, Eye, Sparkles, CheckCircle2, RefreshCw, Bold, Italic, Heading2, 
   Heading3, List, ListOrdered, Quote, Image as ImageIcon, Code, UserCheck, 
-  ExternalLink, Search, Zap, AlertCircle
+  ExternalLink, Search, Zap, AlertCircle, Settings, Key, Copy, Check, 
+  LogOut, Globe, Palette, Layout, MessageSquare
 } from 'lucide-react';
 import { generateSlug } from '../lib/autolink';
 import RichPostEditor from '../components/RichPostEditor';
@@ -12,23 +13,31 @@ import RichPostEditor from '../components/RichPostEditor';
 interface AdminPortalProps {
   currentUser: User | null;
   onLogin: (email: string, pass: string) => Promise<boolean>;
+  onLogout?: () => void;
   posts: Post[];
   autolinks: AutoLink[];
   onSavePost: (postData: Partial<Post>) => Promise<Post | void>;
   onDeletePost: (id: number) => Promise<void>;
   onAddAutolink: (link: Partial<AutoLink>) => Promise<void>;
   onDeleteAutolink: (id: number) => Promise<void>;
+  siteConfig?: SiteConfig;
+  onSaveConfig?: (config: SiteConfig) => Promise<boolean>;
+  onUpdateCredentials?: (id: number, data: { name: string; email: string; password?: string; avatar?: string; bio?: string }) => Promise<{ success: boolean; user?: User; error?: string }>;
 }
 
 export default function AdminPortal({
   currentUser,
   onLogin,
+  onLogout,
   posts,
   autolinks,
   onSavePost,
   onDeletePost,
   onAddAutolink,
   onDeleteAutolink,
+  siteConfig,
+  onSaveConfig,
+  onUpdateCredentials,
 }: AdminPortalProps) {
   // Login form state
   const [emailInput, setEmailInput] = useState('');
@@ -36,8 +45,8 @@ export default function AdminPortal({
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Admin tabs: 'posts' | 'editor' | 'autolinks' | 'sitemap' | 'users'
-  const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'autolinks' | 'sitemap' | 'users'>('posts');
+  // Admin tabs: 'posts' | 'editor' | 'autolinks' | 'sitemap' | 'config' | 'security'
+  const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'autolinks' | 'sitemap' | 'config' | 'security'>('posts');
 
   // Editor State
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
@@ -63,10 +72,112 @@ export default function AdminPortal({
   const [newTargetUrl, setNewTargetUrl] = useState('');
   const [newDescription, setNewDescription] = useState('');
 
+  // Credentials / Account Edit State
+  const [credName, setCredName] = useState(currentUser?.name || '');
+  const [credEmail, setCredEmail] = useState(currentUser?.email || '');
+  const [credPassword, setCredPassword] = useState('');
+  const [credAvatar, setCredAvatar] = useState(currentUser?.avatar || '');
+  const [credBio, setCredBio] = useState(currentUser?.bio || '');
+  const [credSuccessMsg, setCredSuccessMsg] = useState('');
+  const [credErrMsg, setCredErrMsg] = useState('');
+  const [isSavingCreds, setIsSavingCreds] = useState(false);
+  const [copiedLogoutLink, setCopiedLogoutLink] = useState(false);
+
+  // Site Config Form State
+  const [cfgSiteName, setCfgSiteName] = useState(siteConfig?.site_name || 'Parenting.my.id');
+  const [cfgSiteTagline, setCfgSiteTagline] = useState(siteConfig?.site_tagline || 'Edukasi & Pengasuhan Anak Modern');
+  const [cfgSiteDescription, setCfgSiteDescription] = useState(siteConfig?.site_description || 'Portal informasi dan panduan pengasuhan anak modern.');
+  const [cfgSiteLogoUrl, setCfgSiteLogoUrl] = useState(siteConfig?.site_logo_url || '');
+  const [cfgSiteLogoIcon, setCfgSiteLogoIcon] = useState(siteConfig?.site_logo_icon || 'Heart');
+  const [cfgSiteFaviconUrl, setCfgSiteFaviconUrl] = useState(siteConfig?.site_favicon_url || '/favicon.ico');
+  const [cfgHeaderNavLinks, setCfgHeaderNavLinks] = useState(JSON.stringify(siteConfig?.header_nav_links || [], null, 2));
+  const [cfgEnableSearchBar, setCfgEnableSearchBar] = useState(siteConfig?.enable_search_bar ?? true);
+  const [cfgEnableThemeToggle, setCfgEnableThemeToggle] = useState(siteConfig?.enable_theme_toggle ?? true);
+
+  const [cfgSeoMetaTitle, setCfgSeoMetaTitle] = useState(siteConfig?.seo_meta_title || 'Parenting.my.id - Edukasi & Pengasuhan Anak');
+  const [cfgSeoMetaDesc, setCfgSeoMetaDesc] = useState(siteConfig?.seo_meta_description || 'Portal informasi & panduan pengasuhan anak modern.');
+  const [cfgSeoDefaultOgImage, setCfgSeoDefaultOgImage] = useState(siteConfig?.seo_default_og_image || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=1200&h=630');
+
+  const [cfgShowHeroSection, setCfgShowHeroSection] = useState(siteConfig?.show_hero_section ?? true);
+  const [cfgHeroTitle, setCfgHeroTitle] = useState(siteConfig?.hero_title || 'Panduan Pengasuhan Anak Terpercaya');
+  const [cfgHeroSubtitle, setCfgHeroSubtitle] = useState(siteConfig?.hero_subtitle || 'Temukan artikel, tips nutrisi, dan edukasi tumbuh kembang anak.');
+  const [cfgHeroCtaText, setCfgHeroCtaText] = useState(siteConfig?.hero_cta_text || 'Jelajahi Artikel');
+  const [cfgHeroCtaLink, setCfgHeroCtaLink] = useState(siteConfig?.hero_cta_link || '#artikel-terbaru');
+
+  const [cfgPostsPerPage, setCfgPostsPerPage] = useState(siteConfig?.posts_per_page || 9);
+  const [cfgEnableFeaturedPost, setCfgEnableFeaturedPost] = useState(siteConfig?.enable_featured_post ?? true);
+  const [cfgPaginationType, setCfgPaginationType] = useState<'load_more' | 'infinite_scroll' | 'numbered'>(siteConfig?.pagination_type || 'load_more');
+
+  const [cfgShowSidebar, setCfgShowSidebar] = useState(siteConfig?.show_sidebar ?? true);
+  const [cfgPopularPostsCount, setCfgPopularPostsCount] = useState(siteConfig?.popular_posts_count || 5);
+  const [cfgCategoriesWidgetLimit, setCfgCategoriesWidgetLimit] = useState(siteConfig?.categories_widget_limit || 8);
+  const [cfgSidebarBannerCode, setCfgSidebarBannerCode] = useState(siteConfig?.sidebar_banner_code || '');
+
+  const [cfgFooterAboutText, setCfgFooterAboutText] = useState(siteConfig?.footer_about_text || 'Parenting.my.id menghadirkan bacaan berkualitas seputar dunia pengasuhan anak.');
+  const [cfgFooterCopyrightText, setCfgFooterCopyrightText] = useState(siteConfig?.footer_copyright_text || '© 2026 Parenting.my.id. Hak Cipta Dilindungi.');
+  const [cfgSocialFacebook, setCfgSocialFacebook] = useState(siteConfig?.social_facebook || 'https://facebook.com/parentingmyid');
+  const [cfgSocialInstagram, setCfgSocialInstagram] = useState(siteConfig?.social_instagram || 'https://instagram.com/parentingmyid');
+  const [cfgSocialTwitter, setCfgSocialTwitter] = useState(siteConfig?.social_twitter || 'https://x.com/parentingmyid');
+  const [cfgFooterMenuLinks, setCfgFooterMenuLinks] = useState(JSON.stringify(siteConfig?.footer_menu_links || [], null, 2));
+
+  const [configSuccessMsg, setConfigSuccessMsg] = useState('');
+  const [configErrMsg, setConfigErrMsg] = useState('');
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+
+  // Sync state when props arrive
+  useEffect(() => {
+    if (currentUser) {
+      setCredName(currentUser.name);
+      setCredEmail(currentUser.email);
+      setCredAvatar(currentUser.avatar || '');
+      setCredBio(currentUser.bio || '');
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (siteConfig) {
+      setCfgSiteName(siteConfig.site_name);
+      setCfgSiteTagline(siteConfig.site_tagline);
+      setCfgSiteDescription(siteConfig.site_description);
+      setCfgSiteLogoUrl(siteConfig.site_logo_url || '');
+      setCfgSiteLogoIcon(siteConfig.site_logo_icon || 'Heart');
+      setCfgSiteFaviconUrl(siteConfig.site_favicon_url || '/favicon.ico');
+      setCfgHeaderNavLinks(JSON.stringify(siteConfig.header_nav_links || [], null, 2));
+      setCfgEnableSearchBar(siteConfig.enable_search_bar ?? true);
+      setCfgEnableThemeToggle(siteConfig.enable_theme_toggle ?? true);
+
+      setCfgSeoMetaTitle(siteConfig.seo_meta_title);
+      setCfgSeoMetaDesc(siteConfig.seo_meta_description);
+      setCfgSeoDefaultOgImage(siteConfig.seo_default_og_image);
+
+      setCfgShowHeroSection(siteConfig.show_hero_section ?? true);
+      setCfgHeroTitle(siteConfig.hero_title);
+      setCfgHeroSubtitle(siteConfig.hero_subtitle);
+      setCfgHeroCtaText(siteConfig.hero_cta_text);
+      setCfgHeroCtaLink(siteConfig.hero_cta_link);
+
+      setCfgPostsPerPage(siteConfig.posts_per_page || 9);
+      setCfgEnableFeaturedPost(siteConfig.enable_featured_post ?? true);
+      setCfgPaginationType(siteConfig.pagination_type || 'load_more');
+
+      setCfgShowSidebar(siteConfig.show_sidebar ?? true);
+      setCfgPopularPostsCount(siteConfig.popular_posts_count || 5);
+      setCfgCategoriesWidgetLimit(siteConfig.categories_widget_limit || 8);
+      setCfgSidebarBannerCode(siteConfig.sidebar_banner_code || '');
+
+      setCfgFooterAboutText(siteConfig.footer_about_text);
+      setCfgFooterCopyrightText(siteConfig.footer_copyright_text);
+      setCfgSocialFacebook(siteConfig.social_facebook || '');
+      setCfgSocialInstagram(siteConfig.social_instagram || '');
+      setCfgSocialTwitter(siteConfig.social_twitter || '');
+      setCfgFooterMenuLinks(JSON.stringify(siteConfig.footer_menu_links || [], null, 2));
+    }
+  }, [siteConfig]);
+
   // Auto-Save Draft Debounce Timer
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Handle Login
+  // Handle Login Submit
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
@@ -78,7 +189,7 @@ export default function AdminPortal({
     }
   };
 
-  // 1-Click Quick Login Credentials helper
+  // Quick Login
   const handleQuickLogin = async (role: 'admin' | 'writer') => {
     if (role === 'admin') {
       setEmailInput('admin@parenting.my.id');
@@ -89,6 +200,117 @@ export default function AdminPortal({
       setPasswordInput('writer123');
       await onLogin('penulis@parenting.my.id', 'writer123');
     }
+  };
+
+  // Save Config Handler
+  const handleSaveConfigSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onSaveConfig) return;
+    setIsSavingConfig(true);
+    setConfigSuccessMsg('');
+    setConfigErrMsg('');
+
+    try {
+      let navParsed = [];
+      let footerParsed = [];
+      try {
+        navParsed = JSON.parse(cfgHeaderNavLinks);
+      } catch (err) {
+        throw new Error('Format JSON Header Nav Links tidak valid.');
+      }
+      try {
+        footerParsed = JSON.parse(cfgFooterMenuLinks);
+      } catch (err) {
+        throw new Error('Format JSON Footer Menu Links tidak valid.');
+      }
+
+      const updatedCfg: SiteConfig = {
+        site_name: cfgSiteName,
+        site_tagline: cfgSiteTagline,
+        site_description: cfgSiteDescription,
+        site_logo_url: cfgSiteLogoUrl,
+        site_logo_icon: cfgSiteLogoIcon,
+        site_favicon_url: cfgSiteFaviconUrl,
+        header_nav_links: navParsed,
+        enable_search_bar: cfgEnableSearchBar,
+        enable_theme_toggle: cfgEnableThemeToggle,
+
+        seo_meta_title: cfgSeoMetaTitle,
+        seo_meta_description: cfgSeoMetaDesc,
+        seo_default_og_image: cfgSeoDefaultOgImage,
+
+        show_hero_section: cfgShowHeroSection,
+        hero_title: cfgHeroTitle,
+        hero_subtitle: cfgHeroSubtitle,
+        hero_cta_text: cfgHeroCtaText,
+        hero_cta_link: cfgHeroCtaLink,
+
+        posts_per_page: Number(cfgPostsPerPage),
+        enable_featured_post: cfgEnableFeaturedPost,
+        pagination_type: cfgPaginationType,
+
+        show_sidebar: cfgShowSidebar,
+        popular_posts_count: Number(cfgPopularPostsCount),
+        categories_widget_limit: Number(cfgCategoriesWidgetLimit),
+        sidebar_banner_code: cfgSidebarBannerCode,
+
+        footer_about_text: cfgFooterAboutText,
+        footer_copyright_text: cfgFooterCopyrightText,
+        social_facebook: cfgSocialFacebook,
+        social_instagram: cfgSocialInstagram,
+        social_twitter: cfgSocialTwitter,
+        footer_menu_links: footerParsed,
+      };
+
+      const ok = await onSaveConfig(updatedCfg);
+      if (ok) {
+        setConfigSuccessMsg('Semua konfigurasi situs berhasil diperbarui dan disimpan!');
+      } else {
+        setConfigErrMsg('Gagal menyimpan konfigurasi situs.');
+      }
+    } catch (err: any) {
+      setConfigErrMsg(err.message || 'Terjadi kesalahan saat menyimpan config.');
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
+
+  // Update Credentials Handler
+  const handleUpdateCredsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser || !onUpdateCredentials) return;
+    setIsSavingCreds(true);
+    setCredSuccessMsg('');
+    setCredErrMsg('');
+
+    try {
+      const res = await onUpdateCredentials(currentUser.id, {
+        name: credName,
+        email: credEmail,
+        password: credPassword.trim() ? credPassword.trim() : undefined,
+        avatar: credAvatar,
+        bio: credBio,
+      });
+
+      if (res.success) {
+        setCredSuccessMsg('Kredensial dan profil admin berhasil diperbarui!');
+        setCredPassword('');
+      } else {
+        setCredErrMsg(res.error || 'Gagal memperbarui kredensial.');
+      }
+    } catch (err: any) {
+      setCredErrMsg(err.message || 'Gagal memperbarui kredensial.');
+    } finally {
+      setIsSavingCreds(false);
+    }
+  };
+
+  const logoutHardLink = typeof window !== 'undefined' ? `${window.location.origin}/admin?logout=true` : 'https://parenting.my.id/admin?logout=true';
+
+  const copyLogoutLink = () => {
+    navigator.clipboard.writeText(logoutHardLink);
+    setCopiedLogoutLink(true);
+    setTimeout(() => setCopiedLogoutLink(false), 2000);
   };
 
   // Open Post in Editor
@@ -437,8 +659,36 @@ export default function AdminPortal({
           }`}
         >
           <Zap className="w-4 h-4" />
-          <span>SEO & Sitemap Inspector</span>
+          <span>SEO Inspector</span>
         </button>
+
+        {currentUser?.role === 'admin' && (
+          <>
+            <button
+              onClick={() => setActiveTab('config')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === 'config'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+              <span>⚙️ Configs Situs</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('security')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === 'security'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Key className="w-4 h-4 text-amber-400" />
+              <span>🔐 Akun Admin & Hard Logout</span>
+            </button>
+          </>
+        )}
       </div>
 
       {/* ------------------------------------------------------------- */}
@@ -692,6 +942,475 @@ export default function AdminPortal({
               </a>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 5: CENTRALIZED CONFIGS FORM */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'config' && (
+        <form onSubmit={handleSaveConfigSubmit} className="space-y-8">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-rose-500" />
+                  <span>Pengaturan Terpusat (Admin Site Configs)</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Kelola variabel global website (Header, Brand, SEO Meta, Hero, Layout, & Footer). Disimpan di Cloudflare D1 + synced to site_config.json
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSavingConfig}
+                className="px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-500/20 flex items-center gap-2 disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isSavingConfig ? 'Memproses...' : 'Simpan Semua Konfigurasi'}</span>
+              </button>
+            </div>
+
+            {configSuccessMsg && (
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{configSuccessMsg}</span>
+              </div>
+            )}
+
+            {configErrMsg && (
+              <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-700 dark:text-rose-300 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                <span>{configErrMsg}</span>
+              </div>
+            )}
+
+            {/* SECTION 1: HEADER & IDENTITY */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Globe className="w-4 h-4" />
+                <span>1. Identitas Website & Header</span>
+              </h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Nama Utama Situs (site_name)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgSiteName}
+                    onChange={(e) => setCfgSiteName(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Tagline Situs (site_tagline)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgSiteTagline}
+                    onChange={(e) => setCfgSiteTagline(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Icon Logo (site_logo_icon: Heart, Baby, Sparkles, BookOpen)
+                  </label>
+                  <select
+                    value={cfgSiteLogoIcon}
+                    onChange={(e) => setCfgSiteLogoIcon(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="Heart">Heart (Default)</option>
+                    <option value="Baby">Baby</option>
+                    <option value="Sparkles">Sparkles</option>
+                    <option value="BookOpen">BookOpen</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Favicon URL (site_favicon_url)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgSiteFaviconUrl}
+                    onChange={(e) => setCfgSiteFaviconUrl(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Deskripsi Singkat Website (site_description)
+                </label>
+                <textarea
+                  value={cfgSiteDescription}
+                  onChange={(e) => setCfgSiteDescription(e.target.value)}
+                  rows={2}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Menu Navigasi Header (header_nav_links dalam Format JSON)
+                </label>
+                <textarea
+                  value={cfgHeaderNavLinks}
+                  onChange={(e) => setCfgHeaderNavLinks(e.target.value)}
+                  rows={4}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+            </div>
+
+            {/* SECTION 2: SEO & DEFAULT OG */}
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Palette className="w-4 h-4" />
+                <span>2. SEO Meta & Og Image Default</span>
+              </h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Meta Title Default (seo_meta_title)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgSeoMetaTitle}
+                    onChange={(e) => setCfgSeoMetaTitle(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Default Open Graph Image URL (seo_default_og_image)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgSeoDefaultOgImage}
+                    onChange={(e) => setCfgSeoDefaultOgImage(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Meta Description Default (seo_meta_description)
+                </label>
+                <textarea
+                  value={cfgSeoMetaDesc}
+                  onChange={(e) => setCfgSeoMetaDesc(e.target.value)}
+                  rows={2}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+            </div>
+
+            {/* SECTION 3: HERO BANNER */}
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Layout className="w-4 h-4" />
+                <span>3. Hero Banner Homepage</span>
+              </h4>
+
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="show_hero"
+                  checked={cfgShowHeroSection}
+                  onChange={(e) => setCfgShowHeroSection(e.target.checked)}
+                  className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500"
+                />
+                <label htmlFor="show_hero" className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Tampilkan Hero Section Banner di Homepage (show_hero_section)
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Judul Hero Banner (hero_title)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgHeroTitle}
+                    onChange={(e) => setCfgHeroTitle(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Teks Tombol CTA Hero (hero_cta_text)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgHeroCtaText}
+                    onChange={(e) => setCfgHeroCtaText(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Sub-Judul Hero Banner (hero_subtitle)
+                </label>
+                <textarea
+                  value={cfgHeroSubtitle}
+                  onChange={(e) => setCfgHeroSubtitle(e.target.value)}
+                  rows={2}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+            </div>
+
+            {/* SECTION 4: FOOTER */}
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                <MessageSquare className="w-4 h-4" />
+                <span>4. Footer & Social Media Links</span>
+              </h4>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Teks Tentang di Footer (footer_about_text)
+                </label>
+                <textarea
+                  value={cfgFooterAboutText}
+                  onChange={(e) => setCfgFooterAboutText(e.target.value)}
+                  rows={2}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Teks Hak Cipta (footer_copyright_text)
+                </label>
+                <input
+                  type="text"
+                  value={cfgFooterCopyrightText}
+                  onChange={(e) => setCfgFooterCopyrightText(e.target.value)}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Facebook URL</label>
+                  <input
+                    type="text"
+                    value={cfgSocialFacebook}
+                    onChange={(e) => setCfgSocialFacebook(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Instagram URL</label>
+                  <input
+                    type="text"
+                    value={cfgSocialInstagram}
+                    onChange={(e) => setCfgSocialInstagram(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Twitter / X URL</label>
+                  <input
+                    type="text"
+                    value={cfgSocialTwitter}
+                    onChange={(e) => setCfgSocialTwitter(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <button
+                type="submit"
+                disabled={isSavingConfig}
+                className="px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-lg shadow-rose-500/25 flex items-center gap-2 disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isSavingConfig ? 'Memproses...' : 'Simpan Semua Konfigurasi'}</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 6: SECURITY, ACCOUNT CREDENTIALS & HARD LOGOUT LINK */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'security' && (
+        <div className="space-y-8">
+          
+          {/* HARD LOGOUT DIRECT LINK INFO BOX */}
+          <div className="bg-gradient-to-r from-rose-900 via-slate-900 to-rose-950 text-white p-6 rounded-3xl border border-rose-800 shadow-xl space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-[11px] font-bold border border-rose-500/30">
+                  <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Hard Link Admin Logout</span>
+                </div>
+                <h3 className="text-lg font-bold text-white">
+                  URL Logout Langsung (Hard Link)
+                </h3>
+                <p className="text-xs text-slate-300">
+                  Anda bisa logout langsung kapan saja tanpa menekan tombol di UI dengan membuka URL hard link berikut di browser:
+                </p>
+              </div>
+
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="px-4 py-2 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md transition-all shrink-0 flex items-center gap-1.5"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout Sekarang</span>
+                </button>
+              )}
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-between gap-3 font-mono text-xs text-rose-300">
+              <span className="truncate">{logoutHardLink}</span>
+              <button
+                type="button"
+                onClick={copyLogoutLink}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-sans font-bold flex items-center gap-1.5 transition-colors shrink-0"
+              >
+                {copiedLogoutLink ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Tersalin!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Salin Link</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* EDIT CREDENTIALS FORM */}
+          <form onSubmit={handleUpdateCredsSubmit} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+              <h3 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <Key className="w-5 h-5 text-amber-500" />
+                <span>Ubah Username, Email, & Password Admin</span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                Kredensial disimpan dengan aman di Cloudflare D1 SQLite Database (bebas dari file hardcoded di GitHub).
+              </p>
+            </div>
+
+            {credSuccessMsg && (
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{credSuccessMsg}</span>
+              </div>
+            )}
+
+            {credErrMsg && (
+              <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-700 dark:text-rose-300 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                <span>{credErrMsg}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Nama Lengkap Admin / Penulis
+                </label>
+                <input
+                  type="text"
+                  value={credName}
+                  onChange={(e) => setCredName(e.target.value)}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Email / Username Login
+                </label>
+                <input
+                  type="email"
+                  value={credEmail}
+                  onChange={(e) => setCredEmail(e.target.value)}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Password Baru (Biarkan kosong jika tidak ingin diubah)
+                </label>
+                <input
+                  type="password"
+                  value={credPassword}
+                  onChange={(e) => setCredPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Foto Avatar URL
+                </label>
+                <input
+                  type="text"
+                  value={credAvatar}
+                  onChange={(e) => setCredAvatar(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Bio Singkat Penulis
+              </label>
+              <textarea
+                value={credBio}
+                onChange={(e) => setCredBio(e.target.value)}
+                rows={2}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={isSavingCreds}
+                className="px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-lg shadow-rose-500/25 flex items-center gap-2 disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isSavingCreds ? 'Menyimpan...' : 'Simpan Kredensial Baru'}</span>
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
