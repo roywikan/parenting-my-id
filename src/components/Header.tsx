@@ -31,7 +31,7 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout 
                   Parenting<span className="text-rose-500 font-extrabold">.my.id</span>
                 </span>
                 <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">
-                  PORTAL EDUKASI POLA ASUH & GIZI ANAK
+                  EDUKASI ANAK DAN ORTU
                 </span>
               </div>
             </button>
