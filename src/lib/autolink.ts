@@ -1,72 +1,64 @@
 import { AutoLink } from '../types';
 
 /**
- * Automatically converts keywords in HTML content to internal links.
+ * Applies auto-linking for registered keywords on HTML content.
+ * Intelligently avoids replacing keywords inside existing <a> tags, headings, attributes, or code blocks.
  */
-export function applyAutoLinks(html: string, autolinks: AutoLink[]): string {
-  if (!html || !autolinks || autolinks.length === 0) return html;
+export function applyAutoLinks(htmlContent: string, autolinks: AutoLink[]): string {
+  if (!htmlContent || !autolinks || autolinks.length === 0) {
+    return htmlContent;
+  }
 
-  // Sort autolinks by keyword length descending (longer keywords first)
-  const sortedAutolinks = [...autolinks].sort((a, b) => b.keyword.length - a.keyword.length);
+  // Sort autolinks by keyword length descending so longer phrases match first (e.g. "pola asuh anak" before "pola asuh")
+  const sortedLinks = [...autolinks].sort((a, b) => b.keyword.length - a.keyword.length);
 
-  // Split HTML by tags to avoid replacing keywords inside HTML attributes or existing <a> tags
-  const tokenRegex = /(<[^>]+>)/gi;
-  const parts = html.split(tokenRegex);
+  let processedHtml = htmlContent;
 
-  let inAnchor = false;
+  for (const link of sortedLinks) {
+    if (!link.keyword || !link.targetUrl) continue;
 
-  return parts
-    .map((part) => {
-      // Check if this part is an HTML tag
-      if (part.startsWith('<') && part.endsWith('>')) {
-        const tagName = part.replace(/^<\/?([a-z0-9]+)/i, '$1').toLowerCase();
-        if (tagName === 'a') {
-          inAnchor = !part.startsWith('</');
-        }
-        return part;
+    const keywordEscaped = link.keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    // Match the keyword outside of existing HTML tags or inside <a> tags
+    // Regex matches HTML tags OR the keyword
+    const tagOrKeywordRegex = new RegExp(
+      `(<a\\b[^>]*?>[\\s\\S]*?<\\/a>|<code\\b[^>]*?>[\\s\\S]*?<\\/code>|<h[1-6]\\b[^>]*?>[\\s\\S]*?<\\/h[1-6]>|<[^>]+>)|(\\b${keywordEscaped}\\b)`,
+      'gi'
+    );
+
+    let replacedCount = 0;
+    const maxReplacementsPerKeyword = 2; // Prevent link spamming, max 2 links per keyword per post
+
+    processedHtml = processedHtml.replace(tagOrKeywordRegex, (match, htmlTag, keywordMatch) => {
+      if (htmlTag) {
+        // Leave existing tags, links, headings, code intact
+        return htmlTag;
       }
 
-      // Skip text inside existing <a> tags
-      if (inAnchor) return part;
-
-      // Apply autolinks to text nodes
-      let modifiedText = part;
-
-      for (const item of sortedAutolinks) {
-        if (!item.keyword) continue;
-
-        // Case-insensitive boundary match for keywords
-        const escapedKeyword = item.keyword.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-        const regex = new RegExp(`\\b(${escapedKeyword})\\b`, 'gi');
-
-        // Only replace first occurrence per text node to avoid over-linking
-        if (regex.test(modifiedText)) {
-          modifiedText = modifiedText.replace(regex, (match) => {
-            const tooltipAttr = item.description ? ` title="${item.description.replace(/"/g, '&quot;')}"` : '';
-            return `<a href="${item.targetUrl}" class="autolink-item font-semibold text-rose-600 dark:text-rose-400 underline decoration-rose-300 hover:decoration-rose-600 transition-colors"${tooltipAttr}>${match}</a>`;
-          });
-          break; // Stop after first matched keyword in this text segment
-        }
+      if (keywordMatch && replacedCount < maxReplacementsPerKeyword) {
+        replacedCount++;
+        return `<a href="${link.targetUrl}" class="inline-flex items-center gap-0.5 text-rose-600 dark:text-rose-400 font-medium underline decoration-rose-300 dark:decoration-rose-600 underline-offset-4 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-1 py-0.5 rounded transition-all group/autolink" title="Artikel terkait: ${link.description || link.keyword}" data-autolink-id="${link.id}">${keywordMatch}<span class="inline-block text-[10px] opacity-70 group-hover/autolink:translate-x-0.5 transition-transform">↗</span></a>`;
       }
 
-      return modifiedText;
-    })
-    .join('');
+      return match;
+    });
+  }
+
+  return processedHtml;
 }
 
 /**
- * Calculates estimated read time in minutes.
+ * Calculates estimated reading time based on word count.
  */
-export function calculateReadTime(markdown: string): number {
-  if (!markdown) return 1;
-  const wordsPerMinute = 200;
-  const cleanText = markdown.replace(/<[^>]*>/g, '').replace(/[#*`_~-]/g, '');
-  const wordCount = cleanText.trim().split(/\s+/).length;
-  return Math.max(1, Math.ceil(wordCount / wordsPerMinute));
+export function calculateReadTime(text: string): number {
+  if (!text) return 1;
+  const words = text.trim().split(/\s+/).length;
+  const wpm = 200; // average reading speed
+  return Math.max(1, Math.ceil(words / wpm));
 }
 
 /**
- * Generates a clean URL slug from title.
+ * Generates clean URL slug from title.
  */
 export function generateSlug(title: string): string {
   return title
@@ -100,10 +92,10 @@ export function preprocessMarkdownLineBreaks(markdown: string): string {
       // Replace lines containing only spaces or tabs with clean newlines
       let text = part.replace(/\n[ \t]+\n/g, '\n\n');
 
-      // Convert 3 or more consecutive newlines (i.e. 2 or more blank lines) into
+      // Convert 2 or more consecutive newlines (i.e. 1 or more blank lines) into
       // paragraph breaks with <br /> tags
       text = text.replace(/\n{2,}/g, (match) => {
-        const extraLines = match.length - 2;
+        const extraLines = match.length - 1;
         return '\n\n' + '<br />'.repeat(extraLines) + '\n\n';
       });
 
