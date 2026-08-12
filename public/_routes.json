@@ -8,7 +8,10 @@
     "/feed.xml",
     "/robots.txt",
         "/balita/*",
-        "/makanan/*"
+        "/makanan/*",
+    "/kesehatan/*",
+    "/parenting/*"
+
         
   ],
   "exclude": [
