@@ -10,6 +10,49 @@ export interface User {
   createdAt?: string;
 }
 
+export interface NavLink {
+  label: string;
+  url: string;
+}
+
+export interface SiteConfig {
+  site_name: string;
+  site_tagline: string;
+  site_description: string;
+  site_logo_url: string;
+  site_logo_icon: string;
+  site_favicon_url: string;
+  header_nav_links: NavLink[];
+  enable_search_bar: boolean;
+  enable_theme_toggle: boolean;
+  
+  seo_meta_title: string;
+  seo_meta_description: string;
+  seo_default_og_image: string;
+
+  show_hero_section: boolean;
+  hero_title: string;
+  hero_subtitle: string;
+  hero_cta_text: string;
+  hero_cta_link: string;
+
+  posts_per_page: number;
+  enable_featured_post: boolean;
+  pagination_type: 'load_more' | 'infinite_scroll' | 'numbered';
+
+  show_sidebar: boolean;
+  popular_posts_count: number;
+  categories_widget_limit: number;
+  sidebar_banner_code: string;
+
+  footer_about_text: string;
+  footer_copyright_text: string;
+  social_facebook: string;
+  social_instagram: string;
+  social_twitter: string;
+  footer_menu_links: NavLink[];
+}
+
 export type PostStatus = 'draft' | 'published';
 
 export interface Post {
