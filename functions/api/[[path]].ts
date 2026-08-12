@@ -195,14 +195,204 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       return jsonResponse({ success: true, message: 'Autolink berhasil dihapus' });
     }
 
-    // 7. POST /api/auth/login
+    // 7. GET /api/config
+    if (path === '/api/config' && method === 'GET') {
+      if (env.DB) {
+        try {
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS configs (
+              key TEXT PRIMARY KEY,
+              value TEXT
+            )
+          `).run();
+
+          const { results } = await env.DB.prepare('SELECT key, value FROM configs').all();
+          if (results && results.length > 0) {
+            const configObj: Record<string, any> = {};
+            for (const row of results) {
+              try {
+                configObj[row.key] = JSON.parse(row.value);
+              } catch {
+                configObj[row.key] = row.value;
+              }
+            }
+            return jsonResponse(configObj);
+          }
+        } catch (e) {
+          console.error('Error fetching site configs from D1:', e);
+        }
+      }
+      return jsonResponse({});
+    }
+
+    // 8. POST /api/config
+    if (path === '/api/config' && method === 'POST') {
+      const body = await request.json() as Record<string, any>;
+      if (!body || typeof body !== 'object') {
+        return jsonResponse({ error: 'Data konfigurasi tidak valid.' }, 400);
+      }
+
+      if (env.DB) {
+        try {
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS configs (
+              key TEXT PRIMARY KEY,
+              value TEXT
+            )
+          `).run();
+
+          for (const [key, value] of Object.entries(body)) {
+            const strVal = typeof value === 'object' ? JSON.stringify(value) : String(value);
+            await env.DB.prepare(`
+              INSERT INTO configs (key, value) VALUES (?, ?)
+              ON CONFLICT(key) DO UPDATE SET value = excluded.value
+            `).bind(key, strVal).run();
+          }
+        } catch (e: any) {
+          console.error('Error saving site configs to D1:', e);
+        }
+      }
+
+      // Sync to public/site_config.json via GitHub API if GITHUB_TOKEN exists
+      const token = env.GITHUB_TOKEN;
+      if (token) {
+        try {
+          const owner = env.GITHUB_OWNER || 'roywikan';
+          const repo = env.GITHUB_REPO || 'parenting-my-id';
+          const branch = env.GITHUB_BRANCH || 'main';
+          const filePath = 'public/site_config.json';
+          const ghUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+
+          // Get existing file SHA if available
+          let sha = '';
+          const getRes = await fetch(ghUrl, {
+            headers: {
+              'Authorization': `token ${token}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'User-Agent': 'CloudflarePages-ParentingApp',
+            }
+          });
+          if (getRes.ok) {
+            const getData: any = await getRes.json();
+            sha = getData.sha;
+          }
+
+          const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(body, null, 2))));
+          await fetch(ghUrl, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `token ${token}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'User-Agent': 'CloudflarePages-ParentingApp',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: 'update: site_config.json via Admin Portal',
+              content: contentBase64,
+              branch,
+              ...(sha ? { sha } : {})
+            }),
+          });
+        } catch (err) {
+          console.error('Failed to sync site_config.json to GitHub:', err);
+        }
+      }
+
+      return jsonResponse({ success: true, message: 'Konfigurasi situs berhasil diperbarui.' });
+    }
+
+    // 9. POST /api/auth/update-credentials
+    if (path === '/api/auth/update-credentials' && method === 'POST') {
+      const { id, name, email, password, avatar, bio } = await request.json() as any;
+
+      if (!email || !id) {
+        return jsonResponse({ error: 'ID dan Email wajib diisi.' }, 400);
+      }
+
+      if (env.DB) {
+        try {
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS users (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              email TEXT UNIQUE,
+              password TEXT,
+              name TEXT,
+              role TEXT,
+              avatar TEXT,
+              bio TEXT,
+              created_at TEXT
+            )
+          `).run();
+
+          const existingUser = await env.DB.prepare('SELECT id FROM users WHERE id = ?').bind(id).first();
+
+          if (existingUser) {
+            if (password && password.trim().length > 0) {
+              await env.DB.prepare(`
+                UPDATE users SET name = ?, email = ?, password = ?, avatar = ?, bio = ?
+                WHERE id = ?
+              `).bind(name || 'Admin', email, password, avatar || '', bio || '', id).run();
+            } else {
+              await env.DB.prepare(`
+                UPDATE users SET name = ?, email = ?, avatar = ?, bio = ?
+                WHERE id = ?
+              `).bind(name || 'Admin', email, avatar || '', bio || '', id).run();
+            }
+          } else {
+            await env.DB.prepare(`
+              INSERT INTO users (id, email, password, name, role, avatar, bio, created_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `).bind(id, email, password || 'admin123', name || 'Admin', 'admin', avatar || '', bio || '', new Date().toISOString()).run();
+          }
+
+          const updatedUser = await env.DB.prepare('SELECT id, email, name, role, avatar, bio FROM users WHERE id = ?').bind(id).first();
+
+          return jsonResponse({
+            success: true,
+            user: updatedUser,
+            message: 'Kredensial berhasil diperbarui di D1 Database.'
+          });
+        } catch (e: any) {
+          console.error('Error updating user credentials in D1:', e);
+          return jsonResponse({ error: 'Gagal memperbarui kredensial: ' + e.message }, 500);
+        }
+      }
+
+      return jsonResponse({
+        success: true,
+        user: { id, email, name, role: 'admin', avatar, bio },
+        message: 'Kredensial diperbarui secara lokal.'
+      });
+    }
+
+    // 10. POST /api/auth/login
     if (path === '/api/auth/login' && method === 'POST') {
       const { email, password } = await request.json() as any;
 
       if (env.DB) {
         try {
-          const user = await env.DB.prepare('SELECT id, email, name, role, avatar, bio FROM users WHERE email = ?').bind(email).first();
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS users (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              email TEXT UNIQUE,
+              password TEXT,
+              name TEXT,
+              role TEXT,
+              avatar TEXT,
+              bio TEXT,
+              created_at TEXT
+            )
+          `).run();
+
+          // Query user by email
+          const user = await env.DB.prepare('SELECT id, email, password, name, role, avatar, bio FROM users WHERE LOWER(email) = LOWER(?)').bind(email).first();
+          
           if (user) {
+            // Check password if set in D1
+            if (user.password && password && user.password !== password) {
+              return jsonResponse({ error: 'Password yang Anda masukkan salah.' }, 401);
+            }
+
             return jsonResponse({
               success: true,
               user: {
@@ -221,8 +411,38 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
       }
 
-      // Hardcoded fallback
-      if (email === 'admin@parenting.my.id' && (password === 'admin123' || password === 'admin')) {
+      // Check D1 config override if set
+      if (env.DB) {
+        try {
+          const customEmail = await env.DB.prepare("SELECT value FROM configs WHERE key = 'admin_email'").first();
+          const customPass = await env.DB.prepare("SELECT value FROM configs WHERE key = 'admin_password'").first();
+
+          if (customEmail?.value && customPass?.value) {
+            const cleanEmail = String(customEmail.value).replace(/^"|"$/g, '');
+            const cleanPass = String(customPass.value).replace(/^"|"$/g, '');
+
+            if (email.toLowerCase() === cleanEmail.toLowerCase() && password === cleanPass) {
+              return jsonResponse({
+                success: true,
+                user: {
+                  id: 1,
+                  email: cleanEmail,
+                  name: 'Admin Utama',
+                  role: 'admin',
+                  avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
+                  bio: 'Administrator Utama Parenting.my.id'
+                },
+                token: `session_1_${Date.now()}`
+              });
+            }
+          }
+        } catch (e) {
+          console.error('Error checking config credentials:', e);
+        }
+      }
+
+      // Default initial login check
+      if (email.toLowerCase() === 'admin@parenting.my.id' && (password === 'admin123' || password === 'admin')) {
         return jsonResponse({
           success: true,
           user: {
@@ -235,7 +455,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           },
           token: `session_1_${Date.now()}`
         });
-      } else if (email === 'penulis@parenting.my.id' && (password === 'writer123' || password === 'writer')) {
+      } else if (email.toLowerCase() === 'penulis@parenting.my.id' && (password === 'writer123' || password === 'writer')) {
         return jsonResponse({
           success: true,
           user: {
