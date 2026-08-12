@@ -2,6 +2,7 @@
   "version": 1,
   "include": [
     "/api/*",
+    "/baca/*",
     "/sitemap.xml",
     "/feed.xml",
     "/robots.txt"
