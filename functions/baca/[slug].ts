@@ -223,8 +223,8 @@ function preprocessMarkdownLineBreaks(markdown: string): string {
     .map((part, index) => {
       if (index % 2 === 1) return part;
       let text = part.replace(/\n[ \t]+\n/g, '\n\n');
-      text = text.replace(/\n{3,}/g, (match) => {
-        const extraLines = match.length - 2;
+      text = text.replace(/\n{2,}/g, (match) => {
+        const extraLines = match.length - 1;
         return '\n\n' + '<br />'.repeat(extraLines) + '\n\n';
       });
       return text;
