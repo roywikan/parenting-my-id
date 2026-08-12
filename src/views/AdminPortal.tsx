@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Post, AutoLink, User } from '../types';
 import { 
   ShieldCheck, FileText, Link as LinkIcon, Plus, Trash2, Edit3, Save, 
@@ -182,7 +182,7 @@ export default function AdminPortal({
               base64Content,
             }),
           });
-          const data = await res.json();
+          const data: any = await res.json();
           if (data.url) {
             setEditorImage((prev) => prev || data.url);
             resolve(data.url);
@@ -213,7 +213,7 @@ export default function AdminPortal({
           content: editorMarkdown,
         }),
       });
-      const data = await res.json();
+      const data: any = await res.json();
       if (data.metaTitle) setEditorMetaTitle(data.metaTitle);
       if (data.metaDescription) setEditorMetaDesc(data.metaDescription);
       if (data.excerpt) setEditorExcerpt(data.excerpt);
