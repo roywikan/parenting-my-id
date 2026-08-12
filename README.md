@@ -81,11 +81,11 @@ Akses portal admin berbasis web di:
 
 ### Kredensial Login Default:
 - **Akun Admin (Akses Penuh):**
-  - Email: `admin@parenting.my.id`
-  - Password: `admin123`
+  - Email: 
+  - Password:  
 - **Akun Penulis / Writer (Editor Artikel):**
-  - Email: `penulis@parenting.my.id`
-  - Password: `writer123`
+  - Email: 
+  - Password: 
 
 ---
 
