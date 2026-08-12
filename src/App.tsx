@@ -71,7 +71,7 @@ export default function App() {
       });
       const contentType = res.headers.get('content-type');
       if (res.ok && contentType && contentType.includes('application/json')) {
-        const data = await res.json();
+        const data: any = await res.json();
         if (data.user) {
           setCurrentUser(data.user);
           localStorage.setItem('parenting_user', JSON.stringify(data.user));
@@ -114,7 +114,7 @@ export default function App() {
         body: JSON.stringify(postData),
       });
       if (res.ok) {
-        const data = await res.json();
+        const data: any = await res.json();
         await fetchPosts();
         return data.post;
       }
