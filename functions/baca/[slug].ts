@@ -194,6 +194,17 @@ Ajak juga **balita** aktif bergerak lewat permainan ringan seperti **sensory pla
   },
 ];
 
+function formatIsoWithTimezone(dateStr?: string): string {
+  if (!dateStr) return new Date().toISOString();
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return new Date().toISOString();
+    return d.toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
 function escapeHtml(str: string): string {
   if (!str) return '';
   return str
@@ -387,6 +398,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     .join(' ');
 
   // Schema.org JSON-LD (BlogPosting + Breadcrumb)
+  const datePub = formatIsoWithTimezone(post.createdAt);
+  const dateMod = formatIsoWithTimezone(post.updatedAt || post.createdAt);
+
   const schemaArticle = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -397,11 +411,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     'headline': post.title,
     'description': pageDesc,
     'image': [post.featuredImage],
-    'datePublished': post.createdAt,
-    'dateModified': post.updatedAt || post.createdAt,
+    'datePublished': datePub,
+    'dateModified': dateMod,
     'author': {
       '@type': 'Person',
       'name': post.authorName || 'Dr. Ratna Sari, M.Psi',
+      'url': `${siteUrl}/#penulis`,
     },
     'publisher': {
       '@type': 'Organization',
