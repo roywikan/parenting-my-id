@@ -30,7 +30,7 @@ export default function ArticleDetailView({
   const { parsedHtml, tocItems } = useMemo(() => {
     if (!post) return { parsedHtml: '', tocItems: [] };
 
-    let rawHtml = marked.parse(post.contentMarkdown, { async: false }) as string;
+    let rawHtml = marked.parse(post.contentMarkdown, { async: false, gfm: true, breaks: true }) as string;
     const items: { id: string; text: string; level: number }[] = [];
 
     // Inject id attributes into <h2> and <h3> tags for TOC scrolling, and build tocItems
