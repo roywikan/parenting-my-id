@@ -324,19 +324,35 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             )
           `).run();
 
-          const existingUser = await env.DB.prepare('SELECT id FROM users WHERE id = ?').bind(id).first();
+          // Ensure missing columns exist in existing D1 table
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN password TEXT").run(); } catch {}
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN bio TEXT").run(); } catch {}
+
+          // Also save credentials to configs table as backup/fallback
+          try {
+            await env.DB.prepare("CREATE TABLE IF NOT EXISTS configs (key TEXT PRIMARY KEY, value TEXT)").run();
+            await env.DB.prepare("INSERT INTO configs (key, value) VALUES ('admin_email', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(email).run();
+            if (password && password.trim().length > 0) {
+              await env.DB.prepare("INSERT INTO configs (key, value) VALUES ('admin_password', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(password).run();
+            }
+          } catch (cfgErr) {
+            console.error('Error syncing config credentials:', cfgErr);
+          }
+
+          const existingUser = await env.DB.prepare('SELECT id FROM users WHERE id = ? OR LOWER(email) = LOWER(?)').bind(id, email).first();
 
           if (existingUser) {
             if (password && password.trim().length > 0) {
               await env.DB.prepare(`
                 UPDATE users SET name = ?, email = ?, password = ?, avatar = ?, bio = ?
                 WHERE id = ?
-              `).bind(name || 'Admin', email, password, avatar || '', bio || '', id).run();
+              `).bind(name || 'Admin', email, password, avatar || '', bio || '', existingUser.id).run();
             } else {
               await env.DB.prepare(`
                 UPDATE users SET name = ?, email = ?, avatar = ?, bio = ?
                 WHERE id = ?
-              `).bind(name || 'Admin', email, avatar || '', bio || '', id).run();
+              `).bind(name || 'Admin', email, avatar || '', bio || '', existingUser.id).run();
             }
           } else {
             await env.DB.prepare(`
@@ -345,11 +361,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             `).bind(id, email, password || 'admin123', name || 'Admin', 'admin', avatar || '', bio || '', new Date().toISOString()).run();
           }
 
-          const updatedUser = await env.DB.prepare('SELECT id, email, name, role, avatar, bio FROM users WHERE id = ?').bind(id).first();
+          const updatedUser = await env.DB.prepare('SELECT id, email, name, role, avatar, bio FROM users WHERE id = ? OR LOWER(email) = LOWER(?)').bind(id, email).first();
 
           return jsonResponse({
             success: true,
-            user: updatedUser,
+            user: updatedUser || { id, email, name, role: 'admin', avatar, bio },
             message: 'Kredensial berhasil diperbarui di D1 Database.'
           });
         } catch (e: any) {
@@ -383,6 +399,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
               created_at TEXT
             )
           `).run();
+
+          // Ensure missing columns exist in existing D1 table
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN password TEXT").run(); } catch {}
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN bio TEXT").run(); } catch {}
 
           // Query user by email
           const user = await env.DB.prepare('SELECT id, email, password, name, role, avatar, bio FROM users WHERE LOWER(email) = LOWER(?)').bind(email).first();
