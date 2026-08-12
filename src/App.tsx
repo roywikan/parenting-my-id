@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Post, AutoLink, User } from './types';
+import { Post, AutoLink, User, SiteConfig } from './types';
 import { INITIAL_POSTS, INITIAL_AUTOLINKS, INITIAL_USERS } from './data/initialData';
+import { getSiteConfig, saveSiteConfig } from './lib/config';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomeView from './views/HomeView';
@@ -14,11 +15,13 @@ export default function App() {
   const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
   const [autolinks, setAutolinks] = useState<AutoLink[]>(INITIAL_AUTOLINKS);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [siteConfig, setSiteConfig] = useState<SiteConfig | undefined>(undefined);
 
-  // Fetch Posts & Autolinks on initial mount
+  // Fetch Posts, Autolinks & Config on initial mount
   useEffect(() => {
     fetchPosts();
     fetchAutolinks();
+    fetchConfig();
 
     // Check saved session
     const savedUser = localStorage.getItem('parenting_user');
@@ -30,6 +33,15 @@ export default function App() {
       }
     }
   }, []);
+
+  const fetchConfig = async () => {
+    try {
+      const cfg = await getSiteConfig();
+      setSiteConfig(cfg);
+    } catch (err) {
+      console.error('Error fetching site config:', err);
+    }
+  };
 
   const fetchPosts = async () => {
     try {
@@ -105,6 +117,38 @@ export default function App() {
     setCurrentView('home');
   };
 
+  // Handle Save Config
+  const handleSaveConfig = async (newConfig: SiteConfig): Promise<boolean> => {
+    const ok = await saveSiteConfig(newConfig);
+    if (ok) {
+      setSiteConfig(newConfig);
+    }
+    return ok;
+  };
+
+  // Handle Update Admin Credentials in D1
+  const handleUpdateCredentials = async (id: number, data: { name: string; email: string; password?: string; avatar?: string; bio?: string }) => {
+    try {
+      const res = await fetch('/api/auth/update-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...data }),
+      });
+      const contentType = res.headers.get('content-type');
+      if (res.ok && contentType && contentType.includes('application/json')) {
+        const result: any = await res.json();
+        if (result.user) {
+          setCurrentUser(result.user);
+          localStorage.setItem('parenting_user', JSON.stringify(result.user));
+          return { success: true, user: result.user };
+        }
+      }
+      return { success: false, error: 'Gagal memperbarui kredensial.' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Terjadi kesalahan jaringan.' };
+    }
+  };
+
   // Handle Save Post (Create / Update / Draft)
   const handleSavePost = async (postData: Partial<Post>): Promise<Post | void> => {
     try {
@@ -166,6 +210,14 @@ export default function App() {
   // Parse route from URL on mount and popstate
   useEffect(() => {
     const syncRouteFromUrl = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('logout') === 'true') {
+        handleLogout();
+        window.history.replaceState({}, '', '/admin');
+        setCurrentView('admin');
+        return;
+      }
+
       const path = window.location.pathname;
       if (path === '/admin') {
         setCurrentView('admin');
@@ -212,6 +264,7 @@ export default function App() {
         onNavigate={handleNavigate}
         currentUser={currentUser}
         onLogout={handleLogout}
+        siteConfig={siteConfig}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
@@ -221,6 +274,7 @@ export default function App() {
             autolinks={autolinks}
             onSelectPost={(slug) => handleNavigate('article', slug)}
             onSelectCategory={() => {}}
+            siteConfig={siteConfig}
           />
         )}
 
@@ -238,17 +292,21 @@ export default function App() {
           <AdminPortal
             currentUser={currentUser}
             onLogin={handleLogin}
+            onLogout={handleLogout}
             posts={posts}
             autolinks={autolinks}
             onSavePost={handleSavePost}
             onDeletePost={handleDeletePost}
             onAddAutolink={handleAddAutolink}
             onDeleteAutolink={handleDeleteAutolink}
+            siteConfig={siteConfig}
+            onSaveConfig={handleSaveConfig}
+            onUpdateCredentials={handleUpdateCredentials}
           />
         )}
       </main>
 
-      <Footer />
+      <Footer siteConfig={siteConfig} />
     </div>
   );
 }
