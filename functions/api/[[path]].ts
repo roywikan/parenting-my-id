@@ -195,7 +195,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       return jsonResponse({ success: true, message: 'Autolink berhasil dihapus' });
     }
 
-    // 7. GET /api/config
+    // 7. GET /api/config (Public site settings ONLY)
     if (path === '/api/config' && method === 'GET') {
       if (env.DB) {
         try {
@@ -206,10 +206,21 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             )
           `).run();
 
+          // SECURITY PURGE: Remove any sensitive credential keys accidentally saved in configs table
+          try {
+            await env.DB.prepare("DELETE FROM configs WHERE key LIKE 'admin_%' OR key LIKE '%password%' OR key LIKE '%secret%' OR key LIKE '%token%'").run();
+          } catch {}
+
           const { results } = await env.DB.prepare('SELECT key, value FROM configs').all();
           if (results && results.length > 0) {
             const configObj: Record<string, any> = {};
+            const SENSITIVE_KEYS = ['admin_email', 'admin_password', 'admin_name', 'admin_avatar', 'admin_bio', 'password', 'secret', 'token'];
+            
             for (const row of results) {
+              const kLower = String(row.key).toLowerCase();
+              if (SENSITIVE_KEYS.includes(row.key) || kLower.startsWith('admin_') || kLower.includes('password') || kLower.includes('secret')) {
+                continue; // STRIKT: Exclude all credential keys from public site config response
+              }
               try {
                 configObj[row.key] = JSON.parse(row.value);
               } catch {
@@ -232,6 +243,63 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         return jsonResponse({ error: 'Data konfigurasi tidak valid.' }, 400);
       }
 
+      // If body contains admin user credentials, update the users table directly instead of storing in configs
+      if (body.admin_email || body.admin_password || body.admin_name) {
+        if (env.DB) {
+          try {
+            await env.DB.prepare(`
+              CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE,
+                password TEXT,
+                name TEXT,
+                role TEXT,
+                avatar TEXT,
+                bio TEXT,
+                created_at TEXT
+              )
+            `).run();
+            try { await env.DB.prepare("ALTER TABLE users ADD COLUMN password TEXT").run(); } catch {}
+            try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
+            try { await env.DB.prepare("ALTER TABLE users ADD COLUMN bio TEXT").run(); } catch {}
+
+            const email = body.admin_email;
+            const password = body.admin_password;
+            const name = body.admin_name;
+            const avatar = body.admin_avatar;
+            const bio = body.admin_bio;
+
+            const existing = await env.DB.prepare('SELECT id FROM users WHERE LOWER(email) = LOWER(?) OR role = "admin"').bind(email || '').first();
+            if (existing) {
+              if (password && String(password).trim().length > 0) {
+                await env.DB.prepare('UPDATE users SET name = ?, email = ?, password = ?, avatar = ?, bio = ? WHERE id = ?')
+                  .bind(name || 'Admin', email || 'admin@parenting.my.id', String(password), avatar || '', bio || '', existing.id).run();
+              } else {
+                await env.DB.prepare('UPDATE users SET name = ?, email = ?, avatar = ?, bio = ? WHERE id = ?')
+                  .bind(name || 'Admin', email || 'admin@parenting.my.id', avatar || '', bio || '', existing.id).run();
+              }
+            } else {
+              await env.DB.prepare('INSERT INTO users (email, password, name, role, avatar, bio, created_at) VALUES (?, ?, ?, "admin", ?, ?, ?)')
+                .bind(email || 'admin@parenting.my.id', String(password || 'admin123'), name || 'Admin', avatar || '', bio || '', new Date().toISOString()).run();
+            }
+          } catch (uErr) {
+            console.error('Error syncing admin user from config payload:', uErr);
+          }
+        }
+      }
+
+      // Filter out sensitive credential keys from being written to configs table or public/site_config.json
+      const safeConfigObj: Record<string, any> = {};
+      const SENSITIVE_KEYS = ['admin_email', 'admin_password', 'admin_name', 'admin_avatar', 'admin_bio', 'password', 'secret', 'token'];
+
+      for (const [key, value] of Object.entries(body)) {
+        const kLower = key.toLowerCase();
+        if (SENSITIVE_KEYS.includes(key) || kLower.startsWith('admin_') || kLower.includes('password') || kLower.includes('secret')) {
+          continue; // DO NOT SAVE SENSITIVE KEYS INTO CONFIGS TABLE
+        }
+        safeConfigObj[key] = value;
+      }
+
       if (env.DB) {
         try {
           await env.DB.prepare(`
@@ -241,7 +309,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             )
           `).run();
 
-          for (const [key, value] of Object.entries(body)) {
+          // Delete any existing credential keys in DB
+          try {
+            await env.DB.prepare("DELETE FROM configs WHERE key LIKE 'admin_%' OR key LIKE '%password%' OR key LIKE '%secret%'").run();
+          } catch {}
+
+          for (const [key, value] of Object.entries(safeConfigObj)) {
             const strVal = typeof value === 'object' ? JSON.stringify(value) : String(value);
             await env.DB.prepare(`
               INSERT INTO configs (key, value) VALUES (?, ?)
@@ -253,7 +326,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
       }
 
-      // Sync to public/site_config.json via GitHub API if GITHUB_TOKEN exists
+      // Sync ONLY safeConfigObj to public/site_config.json via GitHub API if GITHUB_TOKEN exists
       const token = env.GITHUB_TOKEN;
       if (token) {
         try {
@@ -263,7 +336,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           const filePath = 'public/site_config.json';
           const ghUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
 
-          // Get existing file SHA if available
           let sha = '';
           const getRes = await fetch(ghUrl, {
             headers: {
@@ -277,7 +349,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             sha = getData.sha;
           }
 
-          const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(body, null, 2))));
+          const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(safeConfigObj, null, 2))));
           await fetch(ghUrl, {
             method: 'PUT',
             headers: {
@@ -329,16 +401,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
           try { await env.DB.prepare("ALTER TABLE users ADD COLUMN bio TEXT").run(); } catch {}
 
-          // Also save credentials to configs table as backup/fallback
+          // SECURITY PURGE: Purge any sensitive keys from configs table
           try {
-            await env.DB.prepare("CREATE TABLE IF NOT EXISTS configs (key TEXT PRIMARY KEY, value TEXT)").run();
-            await env.DB.prepare("INSERT INTO configs (key, value) VALUES ('admin_email', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(email).run();
-            if (password && password.trim().length > 0) {
-              await env.DB.prepare("INSERT INTO configs (key, value) VALUES ('admin_password', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(password).run();
-            }
-          } catch (cfgErr) {
-            console.error('Error syncing config credentials:', cfgErr);
-          }
+            await env.DB.prepare("DELETE FROM configs WHERE key LIKE 'admin_%' OR key LIKE '%password%' OR key LIKE '%secret%'").run();
+          } catch {}
 
           const existingUser = await env.DB.prepare('SELECT id FROM users WHERE id = ? OR LOWER(email) = LOWER(?)').bind(id, email).first();
 
