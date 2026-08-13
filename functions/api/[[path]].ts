@@ -529,7 +529,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       }
 
       // Default initial login check
-      if (email.toLowerCase() === 'admin@parenting.my.id' && (password === 'admin123' || password === 'admin')) {
+      if (email.toLowerCase() === 'admin@parenting.my.id' && (password === 'admin123456' || password === 'admin')) {
         return jsonResponse({
           success: true,
           user: {
@@ -542,7 +542,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           },
           token: `session_1_${Date.now()}`
         });
-      } else if (email.toLowerCase() === 'penulis@parenting.my.id' && (password === 'writer123' || password === 'writer')) {
+      } else if (email.toLowerCase() === 'penulis@parenting.my.id' && (password === 'writer123456' || password === 'writer')) {
         return jsonResponse({
           success: true,
           user: {
