@@ -189,19 +189,6 @@ export default function AdminPortal({
     }
   };
 
-  // Quick Login
-  const handleQuickLogin = async (role: 'admin' | 'writer') => {
-    if (role === 'admin') {
-      setEmailInput('admin@parenting.my.id');
-      setPasswordInput('admin123');
-      await onLogin('admin@parenting.my.id', 'admin123');
-    } else {
-      setEmailInput('penulis@parenting.my.id');
-      setPasswordInput('writer123');
-      await onLogin('penulis@parenting.my.id', 'writer123');
-    }
-  };
-
   // Save Config Handler
   const handleSaveConfigSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -498,31 +485,8 @@ export default function AdminPortal({
               Portal Admin Parenting.my.id
             </h2>
             <p className="text-xs text-slate-500">
-              Sistem Login HTTP-Only Session Cloudflare D1
+              Sistem Otentikasi Cloudflare D1
             </p>
-          </div>
-
-          {/* QUICK DEMO LOGIN BUTTONS */}
-          <div className="bg-rose-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-rose-100 dark:border-slate-700 space-y-2">
-            <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wide block text-center">
-              ⚡ Test Login 1-Klik Kredensial:
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('admin')}
-                className="py-2 rounded-xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-slate-700 text-xs font-bold text-rose-600 hover:bg-rose-600 hover:text-white transition-colors shadow-2xs"
-              >
-                1. Account Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('writer')}
-                className="py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-800 hover:text-white transition-colors shadow-2xs"
-              >
-                2. Account Writer
-              </button>
-            </div>
           </div>
 
           <form onSubmit={handleLoginSubmit} className="space-y-4">
