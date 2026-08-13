@@ -280,7 +280,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
               }
             } else {
               await env.DB.prepare('INSERT INTO users (email, password, name, role, avatar, bio, created_at) VALUES (?, ?, ?, "admin", ?, ?, ?)')
-                .bind(email || 'admin@parenting.my.id', String(password || 'admin123'), name || 'Admin', avatar || '', bio || '', new Date().toISOString()).run();
+                .bind(email || 'admin@parenting.my.id', String(password || 'admin123456'), name || 'Admin', avatar || '', bio || '', new Date().toISOString()).run();
             }
           } catch (uErr) {
             console.error('Error syncing admin user from config payload:', uErr);
@@ -424,7 +424,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             await env.DB.prepare(`
               INSERT INTO users (id, email, password, name, role, avatar, bio, created_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            `).bind(id, email, password || 'admin123', name || 'Admin', 'admin', avatar || '', bio || '', new Date().toISOString()).run();
+            `).bind(id, email, password || 'admin123456', name || 'Admin', 'admin', avatar || '', bio || '', new Date().toISOString()).run();
           }
 
           const updatedUser = await env.DB.prepare('SELECT id, email, name, role, avatar, bio FROM users WHERE id = ? OR LOWER(email) = LOWER(?)').bind(id, email).first();
