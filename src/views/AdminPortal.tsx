@@ -627,32 +627,30 @@ export default function AdminPortal({
         </button>
 
         {currentUser?.role === 'admin' && (
-          <>
-            <button
-              onClick={() => setActiveTab('config')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                activeTab === 'config'
-                  ? 'bg-rose-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              <Settings className="w-4 h-4" />
-              <span>⚙️ Configs Situs</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('security')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                activeTab === 'security'
-                  ? 'bg-rose-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              <Key className="w-4 h-4 text-amber-400" />
-              <span>🔐 Akun Admin & Hard Logout</span>
-            </button>
-          </>
+          <button
+            onClick={() => setActiveTab('config')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              activeTab === 'config'
+                ? 'bg-rose-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            <span>⚙️ Configs Situs</span>
+          </button>
         )}
+
+        <button
+          onClick={() => setActiveTab('security')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            activeTab === 'security'
+              ? 'bg-rose-600 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Key className="w-4 h-4 text-amber-400" />
+          <span>🔐 {currentUser?.role === 'admin' ? 'Akun Admin & Hard Logout' : 'Profil & Password Saya'}</span>
+        </button>
       </div>
 
       {/* ------------------------------------------------------------- */}
@@ -1278,7 +1276,7 @@ export default function AdminPortal({
             <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
               <h3 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 <Key className="w-5 h-5 text-amber-500" />
-                <span>Ubah Username, Email, & Password Admin</span>
+                <span>{currentUser?.role === 'admin' ? 'Ubah Username, Email, & Password Admin' : 'Ubah Nama, Email, & Password Saya'}</span>
               </h3>
               <p className="text-xs text-slate-500">
                 Kredensial disimpan dengan aman di Cloudflare D1 SQLite Database (bebas dari file hardcoded di GitHub).
