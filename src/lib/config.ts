@@ -39,7 +39,24 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
     { label: 'Syarat & Ketentuan', url: '/terms' },
     { label: 'Sitemap XML', url: '/sitemap.xml' },
     { label: 'RSS Feed', url: '/feed.xml' }
-  ]
+  ],
+  admin_login_title: 'Portal Admin Parenting.my.id',
+  admin_login_subtitle: 'Sistem Otentikasi Cloudflare D1',
+  admin_login_btn_text: 'Masuk Portal CMS',
+  mobile_admin_btn_label: 'Portal Admin & Editor',
+  mobile_show_logged_username: false,
+  active_theme_preset: 'corp-blue',
+  site_domain: 'parenting.my.id',
+  default_theme_mode: 'auto',
+  font_density_scale: 'standard',
+  age_accessibility_preset: '29-38',
+  header_badge_text: 'Beta v1.0',
+  hero_badge_text: 'Portal Nomor 1',
+  autolink_ticker_label: 'Trending:',
+  footer_autolink_label: 'Tautan Populer',
+  footer_badge_1: 'Aman & Terpercaya',
+  footer_badge_2: 'Diperbarui Rutin',
+  footer_badge_3: '100% Gratis'
 };
 
 export async function loadSiteConfig(): Promise<SiteConfig> {

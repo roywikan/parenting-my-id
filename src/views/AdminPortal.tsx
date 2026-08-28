@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Post, AutoLink, User, SiteConfig } from '../types';
+import { THEME_PRESETS } from '../lib/themes';
 import { 
   ShieldCheck, FileText, Link as LinkIcon, Plus, Trash2, Edit3, Save, 
   Upload, Eye, Sparkles, CheckCircle2, RefreshCw, Bold, Italic, Heading2, 
   Heading3, List, ListOrdered, Quote, Image as ImageIcon, Code, UserCheck, 
   ExternalLink, Search, Zap, AlertCircle, Settings, Key, Copy, Check, 
   LogOut, Globe, Palette, Layout, MessageSquare
-} from 'lucide-react';
+, Droplet } from 'lucide-react';
 import { generateSlug } from '../lib/autolink';
 import RichPostEditor from '../components/RichPostEditor';
 
@@ -84,7 +85,23 @@ export default function AdminPortal({
   const [copiedLogoutLink, setCopiedLogoutLink] = useState(false);
 
   // Site Config Form State
+  const [cfgActiveThemePreset, setCfgActiveThemePreset] = useState(siteConfig?.active_theme_preset || 'corp-blue');
   const [cfgSiteName, setCfgSiteName] = useState(siteConfig?.site_name || 'Parenting.my.id');
+  const [cfgMobileAdminBtnLabel, setCfgMobileAdminBtnLabel] = useState(siteConfig?.mobile_admin_btn_label || 'Portal Admin & Editor');
+  const [cfgMobileShowLoggedUsername, setCfgMobileShowLoggedUsername] = useState(siteConfig?.mobile_show_logged_username || false);
+
+  const [cfgSiteDomain, setCfgSiteDomain] = useState(siteConfig?.site_domain || 'parenting.my.id');
+  const [cfgDefaultThemeMode, setCfgDefaultThemeMode] = useState<'light'|'dark'|'auto'>(siteConfig?.default_theme_mode || 'auto');
+  const [cfgFontDensityScale, setCfgFontDensityScale] = useState<'compact'|'standard'|'spacious'>(siteConfig?.font_density_scale || 'standard');
+  const [cfgAgeAccessibilityPreset, setCfgAgeAccessibilityPreset] = useState<'18-28'|'29-38'|'39-48'|'49-58'>(siteConfig?.age_accessibility_preset || '29-38');
+  const [cfgHeaderBadgeText, setCfgHeaderBadgeText] = useState(siteConfig?.header_badge_text || 'Beta v1.0');
+  const [cfgHeroBadgeText, setCfgHeroBadgeText] = useState(siteConfig?.hero_badge_text || 'Portal Nomor 1');
+  const [cfgAutolinkTickerLabel, setCfgAutolinkTickerLabel] = useState(siteConfig?.autolink_ticker_label || 'Trending:');
+  const [cfgFooterAutolinkLabel, setCfgFooterAutolinkLabel] = useState(siteConfig?.footer_autolink_label || 'Tautan Populer');
+  const [cfgFooterBadge1, setCfgFooterBadge1] = useState(siteConfig?.footer_badge_1 || 'Aman & Terpercaya');
+  const [cfgFooterBadge2, setCfgFooterBadge2] = useState(siteConfig?.footer_badge_2 || 'Diperbarui Rutin');
+  const [cfgFooterBadge3, setCfgFooterBadge3] = useState(siteConfig?.footer_badge_3 || '100% Gratis');
+
   const [cfgSiteTagline, setCfgSiteTagline] = useState(siteConfig?.site_tagline || 'Edukasi & Pengasuhan Anak Modern');
   const [cfgSiteDescription, setCfgSiteDescription] = useState(siteConfig?.site_description || 'Portal informasi dan panduan pengasuhan anak modern.');
   const [cfgSiteLogoUrl, setCfgSiteLogoUrl] = useState(siteConfig?.site_logo_url || '');
@@ -119,6 +136,11 @@ export default function AdminPortal({
   const [cfgSocialInstagram, setCfgSocialInstagram] = useState(siteConfig?.social_instagram || 'https://instagram.com/parentingmyid');
   const [cfgSocialTwitter, setCfgSocialTwitter] = useState(siteConfig?.social_twitter || 'https://x.com/parentingmyid');
   const [cfgFooterMenuLinks, setCfgFooterMenuLinks] = useState(JSON.stringify(siteConfig?.footer_menu_links || [], null, 2));
+
+  // Admin Login Text Config
+  const [cfgAdminLoginTitle, setCfgAdminLoginTitle] = useState(siteConfig?.admin_login_title || 'Portal Admin Parenting.my.id');
+  const [cfgAdminLoginSubtitle, setCfgAdminLoginSubtitle] = useState(siteConfig?.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1');
+  const [cfgAdminLoginBtnText, setCfgAdminLoginBtnText] = useState(siteConfig?.admin_login_btn_text || 'Masuk Portal CMS');
 
   const [configSuccessMsg, setConfigSuccessMsg] = useState('');
   const [configErrMsg, setConfigErrMsg] = useState('');
@@ -171,6 +193,10 @@ export default function AdminPortal({
       setCfgSocialInstagram(siteConfig.social_instagram || '');
       setCfgSocialTwitter(siteConfig.social_twitter || '');
       setCfgFooterMenuLinks(JSON.stringify(siteConfig.footer_menu_links || [], null, 2));
+      
+      setCfgAdminLoginTitle(siteConfig.admin_login_title || 'Portal Admin Parenting.my.id');
+      setCfgAdminLoginSubtitle(siteConfig.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1');
+      setCfgAdminLoginBtnText(siteConfig.admin_login_btn_text || 'Masuk Portal CMS');
     }
   }, [siteConfig]);
 
@@ -212,7 +238,23 @@ export default function AdminPortal({
       }
 
       const updatedCfg: SiteConfig = {
+        active_theme_preset: cfgActiveThemePreset,
         site_name: cfgSiteName,
+        mobile_admin_btn_label: cfgMobileAdminBtnLabel,
+        mobile_show_logged_username: cfgMobileShowLoggedUsername,
+
+        site_domain: cfgSiteDomain,
+        default_theme_mode: cfgDefaultThemeMode,
+        font_density_scale: cfgFontDensityScale,
+        age_accessibility_preset: cfgAgeAccessibilityPreset,
+        header_badge_text: cfgHeaderBadgeText,
+        hero_badge_text: cfgHeroBadgeText,
+        autolink_ticker_label: cfgAutolinkTickerLabel,
+        footer_autolink_label: cfgFooterAutolinkLabel,
+        footer_badge_1: cfgFooterBadge1,
+        footer_badge_2: cfgFooterBadge2,
+        footer_badge_3: cfgFooterBadge3,
+
         site_tagline: cfgSiteTagline,
         site_description: cfgSiteDescription,
         site_logo_url: cfgSiteLogoUrl,
@@ -247,6 +289,9 @@ export default function AdminPortal({
         social_instagram: cfgSocialInstagram,
         social_twitter: cfgSocialTwitter,
         footer_menu_links: footerParsed,
+        admin_login_title: cfgAdminLoginTitle,
+        admin_login_subtitle: cfgAdminLoginSubtitle,
+        admin_login_btn_text: cfgAdminLoginBtnText
       };
 
       const ok = await onSaveConfig(updatedCfg);
@@ -482,10 +527,10 @@ export default function AdminPortal({
               <ShieldCheck className="w-6 h-6" />
             </div>
             <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-              Portal Admin Parenting.my.id
+              {siteConfig?.admin_login_title || 'Portal Admin Parenting.my.id'}
             </h2>
             <p className="text-xs text-slate-500">
-              Sistem Otentikasi Cloudflare D1
+              {siteConfig?.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1'}
             </p>
           </div>
 
@@ -530,7 +575,7 @@ export default function AdminPortal({
               className="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
             >
               {isLoggingIn ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />}
-              <span>Masuk Portal CMS</span>
+              <span>{siteConfig?.admin_login_btn_text || 'Masuk Portal CMS'}</span>
             </button>
           </form>
         </div>
@@ -948,6 +993,91 @@ export default function AdminPortal({
               </div>
             )}
 
+            
+            {/* SECTION 0: TEMA (TAMPILAN & PALET) */}
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Droplet className="w-4 h-4" />
+                <span>0. Tema, Tampilan & Tipografi</span>
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {THEME_PRESETS.map((preset) => (
+                  <label
+                    key={preset.id}
+                    className={`cursor-pointer border-2 rounded-xl p-3 flex items-center gap-3 transition-all ${cfgActiveThemePreset === preset.id ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 shadow-md' : 'border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-700'}`}
+                  >
+                    <input
+                      type="radio"
+                      name="theme_preset"
+                      value={preset.id}
+                      checked={cfgActiveThemePreset === preset.id}
+                      onChange={(e) => setCfgActiveThemePreset(e.target.value)}
+                      className="hidden"
+                    />
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-sm text-slate-800 dark:text-slate-100">{preset.name}</span>
+                        <div className="flex">
+                          <span className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: preset.colors.primary }}></span>
+                          <span className="w-4 h-4 rounded-full border border-black/10 -ml-1" style={{ backgroundColor: preset.colors.secondary }}></span>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-slate-500 font-mono flex items-center justify-between">
+                        <span>{preset.category.replace('_', ' ').toUpperCase()}</span>
+                        <span className="truncate max-w-[80px]" title={preset.fonts.sans.split(',')[0].replace(/"/g, '')}>{preset.fonts.sans.split(',')[0].replace(/"/g, '')}</span>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Mode Tema Default (default_theme_mode)
+                  </label>
+                  <select
+                    value={cfgDefaultThemeMode}
+                    onChange={(e) => setCfgDefaultThemeMode(e.target.value as any)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="auto">Auto Detect OS</option>
+                    <option value="light">Bright Mode (Light)</option>
+                    <option value="dark">Dark Mode (Night)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Skala Kerapatan Tipografi (font_density_scale)
+                  </label>
+                  <select
+                    value={cfgFontDensityScale}
+                    onChange={(e) => setCfgFontDensityScale(e.target.value as any)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="compact">Dense & Compact</option>
+                    <option value="standard">Standard Balanced</option>
+                    <option value="spacious">Spacious & Accessible</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Preset Aksesibilitas Usia Pembaca (age_accessibility_preset)
+                  </label>
+                  <select
+                    value={cfgAgeAccessibilityPreset}
+                    onChange={(e) => setCfgAgeAccessibilityPreset(e.target.value as any)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="18-28">18–28 Tahun (Muda/Compact)</option>
+                    <option value="29-38">29–38 Tahun (Dewasa/Standar)</option>
+                    <option value="39-48">39–48 Tahun (Nyaman/Lega)</option>
+                    <option value="49-58">49–58+ Tahun (Mata Tua / Senior Accessible)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             {/* SECTION 1: HEADER & IDENTITY */}
             <div className="space-y-4">
               <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -980,6 +1110,29 @@ export default function AdminPortal({
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
                   />
                 </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Domain Website (site_domain)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgSiteDomain}
+                    onChange={(e) => setCfgSiteDomain(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                    placeholder="parenting.my.id"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Label/Badge Header (header_badge_text)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgHeaderBadgeText}
+                    onChange={(e) => setCfgHeaderBadgeText(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -1007,6 +1160,67 @@ export default function AdminPortal({
                     onChange={(e) => setCfgSiteFaviconUrl(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
                   />
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Label Tombol Admin Mobile (mobile_admin_btn_label)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgMobileAdminBtnLabel}
+                    onChange={(e) => setCfgMobileAdminBtnLabel(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                    placeholder="Portal Admin & Editor"
+                  />
+                </div>
+                <div className="flex items-center pt-5">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cfgMobileShowLoggedUsername}
+                      onChange={(e) => setCfgMobileShowLoggedUsername(e.target.checked)}
+                      className="w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500 dark:border-slate-700 dark:bg-slate-900"
+                    />
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Tampilkan Nama User Saat Login di Tombol Admin Mobile (mobile_show_logged_username)
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Logo URL (site_logo_url)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgSiteLogoUrl}
+                    onChange={(e) => setCfgSiteLogoUrl(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                    placeholder="https://.../logo.png"
+                  />
+                </div>
+                <div className="flex flex-col gap-2 pt-2">
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={cfgEnableSearchBar}
+                      onChange={(e) => setCfgEnableSearchBar(e.target.checked)}
+                      className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500"
+                    />
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Aktifkan Kolom Pencarian (enable_search_bar)</span>
+                  </label>
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={cfgEnableThemeToggle}
+                      onChange={(e) => setCfgEnableThemeToggle(e.target.checked)}
+                      className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500"
+                    />
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Aktifkan Toggle Tema (enable_theme_toggle)</span>
+                  </label>
                 </div>
               </div>
 
@@ -1104,6 +1318,16 @@ export default function AdminPortal({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Badge/Label Hero (hero_badge_text)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgHeroBadgeText}
+                    onChange={(e) => setCfgHeroBadgeText(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500 mb-4"
+                  />
+                  
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Judul Hero Banner (hero_title)
                   </label>
                   <input
@@ -1125,6 +1349,18 @@ export default function AdminPortal({
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  URL Tujuan CTA Hero (hero_cta_link)
+                </label>
+                <input
+                  type="text"
+                  value={cfgHeroCtaLink}
+                  onChange={(e) => setCfgHeroCtaLink(e.target.value)}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                />
               </div>
 
               <div>
@@ -1171,6 +1407,46 @@ export default function AdminPortal({
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Menu Footer (footer_menu_links dalam Format JSON)
+                </label>
+                <textarea
+                  value={cfgFooterMenuLinks}
+                  onChange={(e) => setCfgFooterMenuLinks(e.target.value)}
+                  rows={4}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Label Autolink Footer (footer_autolink_label)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgFooterAutolinkLabel}
+                    onChange={(e) => setCfgFooterAutolinkLabel(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Badge 1</label>
+                    <input type="text" value={cfgFooterBadge1} onChange={(e) => setCfgFooterBadge1(e.target.value)} className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Badge 2</label>
+                    <input type="text" value={cfgFooterBadge2} onChange={(e) => setCfgFooterBadge2(e.target.value)} className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Badge 3</label>
+                    <input type="text" value={cfgFooterBadge3} onChange={(e) => setCfgFooterBadge3(e.target.value)} className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500" />
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Facebook URL</label>
@@ -1196,6 +1472,168 @@ export default function AdminPortal({
                     type="text"
                     value={cfgSocialTwitter}
                     onChange={(e) => setCfgSocialTwitter(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 5: LAYOUT & ARTIKEL */}
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                <FileText className="w-4 h-4" />
+                <span>5. Pengaturan Artikel & Layout</span>
+              </h4>
+              
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Label Ticker Autolink (autolink_ticker_label)
+                </label>
+                <input
+                  type="text"
+                  value={cfgAutolinkTickerLabel}
+                  onChange={(e) => setCfgAutolinkTickerLabel(e.target.value)}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Jumlah Artikel Per Halaman (posts_per_page)
+                  </label>
+                  <input
+                    type="number"
+                    value={cfgPostsPerPage}
+                    onChange={(e) => setCfgPostsPerPage(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Tipe Pagination (pagination_type)
+                  </label>
+                  <select
+                    value={cfgPaginationType}
+                    onChange={(e) => setCfgPaginationType(e.target.value as 'load_more' | 'infinite_scroll' | 'numbered')}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="load_more">Load More Button</option>
+                    <option value="numbered">Numbered Pages (1, 2, 3)</option>
+                    <option value="infinite_scroll">Infinite Scroll</option>
+                  </select>
+                </div>
+                <div className="flex items-center pt-5">
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={cfgEnableFeaturedPost}
+                      onChange={(e) => setCfgEnableFeaturedPost(e.target.checked)}
+                      className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500"
+                    />
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Tampilkan Artikel Pilihan (enable_featured_post)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 6: SIDEBAR */}
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Layout className="w-4 h-4" />
+                <span>6. Pengaturan Sidebar</span>
+              </h4>
+              
+              <div className="flex items-center mb-2">
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={cfgShowSidebar}
+                    onChange={(e) => setCfgShowSidebar(e.target.checked)}
+                    className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500"
+                  />
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Tampilkan Sidebar (show_sidebar)</span>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Jumlah Artikel Populer Widget (popular_posts_count)
+                  </label>
+                  <input
+                    type="number"
+                    value={cfgPopularPostsCount}
+                    onChange={(e) => setCfgPopularPostsCount(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Batas Widget Kategori (categories_widget_limit)
+                  </label>
+                  <input
+                    type="number"
+                    value={cfgCategoriesWidgetLimit}
+                    onChange={(e) => setCfgCategoriesWidgetLimit(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Kode HTML Banner Iklan Sidebar (sidebar_banner_code)
+                </label>
+                <textarea
+                  value={cfgSidebarBannerCode}
+                  onChange={(e) => setCfgSidebarBannerCode(e.target.value)}
+                  rows={3}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                  placeholder="<!-- Masukkan Script Banner HTML/Adsense disini -->"
+                />
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2 mb-4">
+                <ShieldCheck className="w-5 h-5 text-rose-500" />
+                <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Teks Halaman Login Admin</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Judul Portal (admin_login_title)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgAdminLoginTitle}
+                    onChange={(e) => setCfgAdminLoginTitle(e.target.value)}
+                    placeholder="Portal Admin Parenting.my.id"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Sub-judul (admin_login_subtitle)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgAdminLoginSubtitle}
+                    onChange={(e) => setCfgAdminLoginSubtitle(e.target.value)}
+                    placeholder="Sistem Otentikasi Cloudflare D1"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Teks Tombol Login (admin_login_btn_text)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgAdminLoginBtnText}
+                    onChange={(e) => setCfgAdminLoginBtnText(e.target.value)}
+                    placeholder="Masuk Portal CMS"
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
                   />
                 </div>

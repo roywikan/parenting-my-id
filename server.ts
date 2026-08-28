@@ -1,4 +1,5 @@
 import express from 'express';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
@@ -473,8 +474,8 @@ app.get('/sitemap.xml', (req, res) => {
   ${urls}
 </urlset>`;
 
-  res.header('Content-Type', 'application/xml');
-  res.send(xml);
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.status(200).send(xml.trim());
 });
 
 // 7. DYNAMIC RSS FEED.XML
@@ -506,8 +507,8 @@ app.get('/feed.xml', (req, res) => {
   </channel>
 </rss>`;
 
-  res.header('Content-Type', 'application/xml');
-  res.send(rss);
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.status(200).send(rss.trim());
 });
 
 // 8. SSR / STATIC HTML PRE-RENDERING FOR ARTICLE PAGES (/baca/:slug) FOR GOOGLEBOT & CRAWLERS
@@ -602,11 +603,11 @@ app.get('/baca/:slug', (req, res, next) => {
     `;
 
     let htmlFilePath = path.join(process.cwd(), 'dist', 'index.html');
-    if (!require('fs').existsSync(htmlFilePath)) {
+    if (!fs.existsSync(htmlFilePath)) {
       htmlFilePath = path.join(process.cwd(), 'index.html');
     }
 
-    let htmlTemplate = require('fs').readFileSync(htmlFilePath, 'utf-8');
+    let htmlTemplate = fs.readFileSync(htmlFilePath, 'utf-8');
     htmlTemplate = htmlTemplate.replace(/<title>.*?<\/title>/i, seoTags);
     htmlTemplate = htmlTemplate.replace(/<div id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
 

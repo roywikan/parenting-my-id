@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Post, AutoLink, User, SiteConfig } from './types';
 import { INITIAL_POSTS, INITIAL_AUTOLINKS, INITIAL_USERS } from './data/initialData';
 import { getSiteConfig, saveSiteConfig } from './lib/config';
+import { THEME_PRESETS } from './lib/themes';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomeView from './views/HomeView';
@@ -33,6 +34,50 @@ export default function App() {
       }
     }
   }, []);
+
+  
+
+// Manage Dark Mode
+  useEffect(() => {
+    if (!siteConfig) return;
+    const mode = siteConfig.default_theme_mode || 'auto';
+    const root = document.documentElement;
+    const override = localStorage.getItem('theme_override');
+    
+    if (override === 'dark') {
+      root.classList.add('dark');
+    } else if (override === 'light') {
+      root.classList.remove('dark');
+    } else if (mode === 'dark') {
+      root.classList.add('dark');
+    } else if (mode === 'light') {
+      root.classList.remove('dark');
+    } else {
+      // Auto
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    }
+  }, [siteConfig?.default_theme_mode]);
+
+  useEffect(() => {
+    if (siteConfig?.active_theme_preset) {
+      const theme = THEME_PRESETS.find(t => t.id === siteConfig.active_theme_preset);
+      if (theme) {
+        document.documentElement.style.setProperty('--color-primary', theme.colors.primary);
+        document.documentElement.style.setProperty('--color-secondary', theme.colors.secondary);
+        document.documentElement.style.setProperty('--font-sans', theme.fonts.sans);
+        document.documentElement.style.setProperty('--font-heading', theme.fonts.heading);
+      }
+    } else {
+      document.documentElement.style.removeProperty('--color-primary');
+      document.documentElement.style.removeProperty('--color-secondary');
+      document.documentElement.style.removeProperty('--font-sans');
+      document.documentElement.style.removeProperty('--font-heading');
+    }
+  }, [siteConfig?.active_theme_preset]);
 
   const fetchConfig = async () => {
     try {
@@ -257,8 +302,62 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Terapkan Skala Tipografi
+  let densityClass = 'text-base leading-relaxed tracking-normal'; // Standard
+  if (siteConfig?.font_density_scale === 'compact') {
+    densityClass = 'text-sm leading-snug tracking-tight';
+  } else if (siteConfig?.font_density_scale === 'spacious') {
+    densityClass = 'text-[17px] md:text-lg leading-loose tracking-wide';
+  }
+
+
+  // Terapkan Preset Aksesibilitas Usia Pembaca (Age Accessibility Preset)
+  let ageStyle = '';
+  switch (siteConfig?.age_accessibility_preset) {
+    case '18-28':
+      ageStyle = `
+        .article-body { font-size: 16px; line-height: 1.625; }
+        .main-nav, .main-nav a, .main-nav button { font-size: 16px !important; }
+        .text-secondary { font-size: 12px; opacity: 0.8; }
+      `;
+      break;
+    case '29-38':
+      ageStyle = `
+        .article-body { font-size: 18px; line-height: 1.625; }
+        .main-nav, .main-nav a, .main-nav button { font-size: 16px !important; }
+        .text-secondary { font-size: 14px; }
+      `;
+      break;
+    case '39-48':
+      ageStyle = `
+        .article-body { font-size: 20px; line-height: 2; }
+        .main-nav, .main-nav a, .main-nav button { font-size: 18px !important; font-weight: bold; }
+        .text-secondary { font-size: 14px; }
+      `;
+      break;
+    case '49-58':
+      ageStyle = `
+        .article-body { font-size: 24px; line-height: 2; }
+        .dark .article-body { color: #ffffff !important; }
+        .article-body p, .article-body li { color: #000000; }
+        .dark .article-body p, .dark .article-body li { color: #ffffff; }
+        .main-nav, .main-nav a, .main-nav button { font-size: 20px !important; padding: 12px 16px !important; }
+        .text-secondary { font-size: 16px; }
+      `;
+      break;
+    default:
+      // Default to 29-38
+      ageStyle = `
+        .article-body { font-size: 18px; line-height: 1.625; }
+        .main-nav, .main-nav a, .main-nav button { font-size: 16px !important; }
+        .text-secondary { font-size: 14px; }
+      `;
+      break;
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors antialiased">
+    <div className={`min-h-screen bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors antialiased ${densityClass}`}>
+      <style>{`${ageStyle}`}</style>
       <Header
         currentView={currentView}
         onNavigate={handleNavigate}

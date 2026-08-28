@@ -51,6 +51,23 @@ export interface SiteConfig {
   social_instagram: string;
   social_twitter: string;
   footer_menu_links: NavLink[];
+  admin_login_title?: string;
+  admin_login_subtitle?: string;
+  admin_login_btn_text?: string;
+  mobile_admin_btn_label?: string;
+  mobile_show_logged_username?: boolean;
+  active_theme_preset?: string;
+  site_domain?: string;
+  default_theme_mode?: 'light' | 'dark' | 'auto';
+  font_density_scale?: 'compact' | 'standard' | 'spacious';
+  age_accessibility_preset?: '18-28' | '29-38' | '39-48' | '49-58';
+  header_badge_text?: string;
+  hero_badge_text?: string;
+  autolink_ticker_label?: string;
+  footer_autolink_label?: string;
+  footer_badge_1?: string;
+  footer_badge_2?: string;
+  footer_badge_3?: string;
 }
 
 export type PostStatus = 'draft' | 'published';

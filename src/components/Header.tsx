@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, ShieldCheck, Zap, Menu, X, UserCheck, FileText, Rss, Baby, Sparkles, BookOpen } from 'lucide-react';
+import { Heart, ShieldCheck, Zap, Menu, X, UserCheck, FileText, Rss, Baby, Sparkles, BookOpen, Moon, Sun } from 'lucide-react';
 import { User, SiteConfig } from '../types';
 
 interface HeaderProps {
@@ -20,6 +20,18 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
     { label: 'Sitemap', url: '/sitemap.xml' },
     { label: 'RSS Feed', url: '/feed.xml' }
   ];
+
+  
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    if (root.classList.contains('dark')) {
+      root.classList.remove('dark');
+      localStorage.setItem('theme_override', 'light');
+    } else {
+      root.classList.add('dark');
+      localStorage.setItem('theme_override', 'dark');
+    }
+  };
 
   const renderIcon = (iconName?: string) => {
     switch (iconName) {
@@ -62,7 +74,7 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
           </div>
 
           {/* DESKTOP NAVIGATION */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="main-nav hidden md:flex items-center gap-1">
             {navLinks.map((link, idx) => {
               if (link.url === '/' || link.url === '#') {
                 return (
@@ -92,10 +104,23 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
               );
             })}
 
+            
+            {siteConfig?.enable_theme_toggle !== false && (
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ml-2"
+                aria-label="Toggle Theme"
+              >
+                <Sun className="w-5 h-5 hidden dark:block" />
+                <Moon className="w-5 h-5 block dark:hidden" />
+              </button>
+            )}
+            
             <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
 
+
             {/* ADMIN PORTAL BUTTON */}
-            {currentUser ? (
+            {currentUser && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onNavigate('admin')}
@@ -116,14 +141,6 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
                   Keluar
                 </button>
               </div>
-            ) : (
-              <button
-                onClick={() => onNavigate('admin')}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-500/20 transition-all hover:scale-[1.02]"
-              >
-                <UserCheck className="w-4 h-4" />
-                <span>Masuk Admin</span>
-              </button>
             )}
           </nav>
 
@@ -153,18 +170,20 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
               {link.label}
             </a>
           ))}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
-            <button
-              onClick={() => {
-                onNavigate('admin');
-                setMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold bg-rose-600 text-white shadow-md"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Portal Admin & Editor</span>
-            </button>
-            {currentUser && (
+          {currentUser && (
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  onNavigate('admin');
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold bg-rose-600 text-white shadow-md"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>
+                  {siteConfig?.mobile_show_logged_username && currentUser ? `${currentUser.name} (${currentUser.role.toUpperCase()})` : siteConfig?.mobile_admin_btn_label || 'Portal Admin & Editor'}
+                </span>
+              </button>
               <button
                 onClick={() => {
                   onLogout();
@@ -174,8 +193,8 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
               >
                 Logout / Keluar
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </header>

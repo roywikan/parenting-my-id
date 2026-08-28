@@ -111,7 +111,7 @@ export default function ArticleDetailView({
       />
 
       {/* BREADCRUMB & BACK BUTTON */}
-      <div className="flex items-center justify-between text-xs text-slate-500">
+      <div className="flex items-center justify-between text-secondary text-slate-500">
         <button
           onClick={onBack}
           className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-rose-600 font-medium transition-colors"
@@ -146,7 +146,7 @@ export default function ArticleDetailView({
         </p>
 
         {/* AUTHOR & METADATA BAR */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 text-xs text-slate-500 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 text-secondary text-slate-500 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <img
               src={post.authorAvatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80'}
@@ -215,7 +215,7 @@ export default function ArticleDetailView({
 
       {/* ARTICLE CONTENT BODY WITH AUTO-LINKING */}
       <div
-        className="prose prose-rose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 leading-relaxed text-sm sm:text-base space-y-4"
+        className="article-body prose prose-rose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 space-y-4"
         dangerouslySetInnerHTML={{ __html: parsedHtml }}
       />
 

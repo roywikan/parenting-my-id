@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:is(.dark, .dark *));
+
+@theme {
+  --color-rose-50: color-mix(in srgb, var(--color-primary, #e11d48) 5%, white);
+  --color-rose-100: color-mix(in srgb, var(--color-primary, #e11d48) 15%, white);
+  --color-rose-200: color-mix(in srgb, var(--color-primary, #e11d48) 25%, white);
+  --color-rose-300: color-mix(in srgb, var(--color-primary, #e11d48) 40%, white);
+  --color-rose-400: color-mix(in srgb, var(--color-secondary, #f43f5e) 80%, white);
+  --color-rose-500: var(--color-secondary, #f43f5e);
+  --color-rose-600: var(--color-primary, #e11d48);
+  --color-rose-700: color-mix(in srgb, var(--color-primary, #e11d48) 85%, black);
+  --color-rose-800: color-mix(in srgb, var(--color-primary, #e11d48) 70%, black);
+  --color-rose-900: color-mix(in srgb, var(--color-primary, #e11d48) 55%, black);
+  --color-rose-950: color-mix(in srgb, var(--color-primary, #e11d48) 40%, black);
+  
+  --font-sans: var(--font-sans, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");
+  --font-heading: var(--font-heading, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");
+}
