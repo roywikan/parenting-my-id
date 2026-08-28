@@ -111,7 +111,82 @@ CREATE TABLE IF NOT EXISTS site_config (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
+atau yang sudah terisi:
 
+```sql
+CREATE TABLE IF NOT EXISTS _cf_KV (
+  key TEXT PRIMARY KEY,
+  value BLOB
+) WITHOUT ROWID;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  name TEXT NOT NULL,
+  role TEXT CHECK(role IN ('admin', 'writer')) NOT NULL DEFAULT 'writer',
+  avatar TEXT DEFAULT '[https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80](https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80)',
+  bio TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  password TEXT,
+  title TEXT,
+  social_instagram TEXT,
+  social_linkedin TEXT,
+  social_website TEXT
+);
+
+CREATE TABLE IF NOT EXISTS posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  content_markdown TEXT NOT NULL,
+  excerpt TEXT NOT NULL,
+  featured_image TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'Pola Asuh',
+  read_time_minutes INTEGER DEFAULT 5,
+  author_id INTEGER NOT NULL,
+  status TEXT CHECK(status IN ('draft', 'published')) NOT NULL DEFAULT 'draft',
+  meta_title TEXT,
+  meta_description TEXT,
+  tags TEXT DEFAULT 'parenting, anak, keluarga',
+  views INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  co_author_ids TEXT,
+  revisions TEXT,
+  FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS autolinks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  keyword TEXT UNIQUE NOT NULL,
+  target_url TEXT NOT NULL,
+  description TEXT,
+  click_count INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS configs (
+  key TEXT PRIMARY KEY,
+  value TEXT
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_slug TEXT NOT NULL,
+  user_name TEXT NOT NULL,
+  user_email TEXT NOT NULL,
+  user_avatar TEXT NOT NULL,
+  content TEXT NOT NULL,
+  status TEXT DEFAULT 'approved',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS site_config (
+  id INTEGER PRIMARY KEY DEFAULT 1,
+  config_json TEXT NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 *(Catatan: Jika Anda meng-upgrade D1 dari versi terdahulu, jalankan `ALTER TABLE users ADD COLUMN title TEXT;` dsb jika ada kolom yang belum tersedia).*
 
 ### C. Deploy ke Cloudflare Pages / Workers
