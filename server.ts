@@ -216,6 +216,44 @@ Ajak juga **balita** aktif bergerak lewat permainan ringan seperti **sensory pla
 
 // API ROUTE HANDLERS
 
+// 0. Site Config Handlers
+app.get('/api/config', (req, res) => {
+  try {
+    const configPath = path.join(process.cwd(), 'public', 'site_config.json');
+    if (fs.existsSync(configPath)) {
+      const fileData = fs.readFileSync(configPath, 'utf-8');
+      const parsed = JSON.parse(fileData);
+      return res.json(parsed);
+    }
+  } catch (err) {
+    console.error('Error reading site_config.json:', err);
+  }
+  return res.json({});
+});
+
+app.post('/api/config', (req, res) => {
+  try {
+    const newConfig = req.body;
+    if (!newConfig || typeof newConfig !== 'object') {
+      return res.status(400).json({ error: 'Data config tidak valid' });
+    }
+
+    const configPath = path.join(process.cwd(), 'public', 'site_config.json');
+    fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2), 'utf-8');
+
+    // Sync to dist/site_config.json if built
+    const distConfigPath = path.join(process.cwd(), 'dist', 'site_config.json');
+    if (fs.existsSync(path.dirname(distConfigPath))) {
+      fs.writeFileSync(distConfigPath, JSON.stringify(newConfig, null, 2), 'utf-8');
+    }
+
+    return res.json({ success: true, message: 'Konfigurasi situs berhasil disimpan!', config: newConfig });
+  } catch (err: any) {
+    console.error('Error writing site_config.json:', err);
+    return res.status(500).json({ error: 'Gagal menyimpan konfigurasi situs: ' + err.message });
+  }
+});
+
 // 1. GET Posts
 app.get('/api/posts', (req, res) => {
   res.json(mockPosts);
@@ -571,6 +609,11 @@ app.post('/api/auth/login', (req, res) => {
 // 4. GITHUB IMAGE UPLOAD PIPELINE
 app.post('/api/upload-github', async (req, res) => {
   const { filename, base64Content } = req.body;
+  if (!filename || !base64Content) {
+    return res.status(400).json({ error: 'Filename dan Base64 content dibutuhkan' });
+  }
+
+  const cleanBase64 = base64Content.replace(/^data:.*?;base64,/, '');
 
   const githubToken = process.env.GITHUB_TOKEN;
   const owner = process.env.GITHUB_OWNER;
@@ -591,7 +634,7 @@ app.post('/api/upload-github', async (req, res) => {
         },
         body: JSON.stringify({
           message: `upload: ${filename} via Parenting.my.id CMS`,
-          content: base64Content.replace(/^data:image\/\w+;base64,/, ''),
+          content: cleanBase64,
           branch,
         }),
       });
@@ -605,20 +648,27 @@ app.post('/api/upload-github', async (req, res) => {
     }
   }
 
-  // Fallback WebP optimized URL preview
-  const sampleImages = [
-    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=1000&q=80',
-    'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=1000&q=80',
-  ];
-  const randomImg = sampleImages[Math.floor(Math.random() * sampleImages.length)];
+  // Local filesystem save fallback for Dev environment
+  try {
+    const safeName = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    const localFilePath = path.join(uploadsDir, safeName);
+    fs.writeFileSync(localFilePath, Buffer.from(cleanBase64, 'base64'));
 
+    const localUrl = `/uploads/${safeName}`;
+    return res.json({ success: true, url: localUrl, source: 'local' });
+  } catch (err) {
+    console.error('Local upload error:', err);
+  }
+
+  const sampleUrl = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1000&q=80';
   res.json({
     success: true,
-    url: randomImg,
-    source: 'webp_optimized_proxy',
-    message: 'Image WebP optimized & proxy simulated. (Isi GITHUB_TOKEN di env untuk simpan fisik ke repo GitHub).',
+    url: sampleUrl,
+    source: 'fallback',
   });
 });
 

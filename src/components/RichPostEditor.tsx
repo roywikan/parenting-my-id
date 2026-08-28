@@ -94,7 +94,20 @@ export default function RichPostEditor({
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [imageAlt, setImageAlt] = useState('');
-  const [imageTab, setImageTab] = useState<'upload' | 'url'>('upload');
+  const [imageTab, setImageTab] = useState<'upload' | 'unsplash' | 'url'>('upload');
+  const [lastUploadedUrl, setLastUploadedUrl] = useState<string>('');
+  const [unsplashSearch, setUnsplashSearch] = useState('');
+
+  const UNSPLASH_PRESETS = [
+    { label: 'Bayi & Balita', url: 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=80' },
+    { label: 'Pola Asuh & Ibu', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1200&q=80' },
+    { label: 'Kehamilan & Menyusui', url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=1200&q=80' },
+    { label: 'Nutrisi & Gizi Makanan', url: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=1200&q=80' },
+    { label: 'Sensory Play & Main', url: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=1200&q=80' },
+    { label: 'Keluarga Bahagia', url: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1200&q=80' },
+    { label: 'Sekolah & Belajar', url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80' },
+    { label: 'Kesehatan Anak', url: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1200&q=80' },
+  ];
 
   // Undo / Redo History Stack
   const historyRef = useRef<string[]>([markdown]);
@@ -228,7 +241,10 @@ export default function RichPostEditor({
 
     const uploadedUrl = await onImageUpload(file);
     if (uploadedUrl) {
-      handleInsertImage(uploadedUrl, file.name);
+      setLastUploadedUrl(uploadedUrl);
+      setImageUrl(uploadedUrl);
+      const cleanAlt = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+      setImageAlt(cleanAlt);
     }
   };
 
@@ -724,9 +740,22 @@ export default function RichPostEditor({
 
             {/* FEATURED IMAGE */}
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                URL Gambar Sampul (Featured Image)
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                  URL Gambar Sampul (Featured Image)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImageTab('upload');
+                    setShowImageModal(true);
+                  }}
+                  className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 bg-rose-50 dark:bg-rose-950/50 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-900 transition-colors"
+                >
+                  <Upload className="w-3 h-3" />
+                  <span>Upload / Pilih Gambar</span>
+                </button>
+              </div>
               <input
                 type="text"
                 value={featuredImage}
@@ -735,11 +764,21 @@ export default function RichPostEditor({
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono"
               />
               {featuredImage && (
-                <img
-                  src={featuredImage}
-                  alt="Preview"
-                  className="mt-2 w-full h-32 object-cover rounded-xl border border-slate-200 dark:border-slate-800"
-                />
+                <div className="relative mt-2">
+                  <img
+                    src={featuredImage}
+                    alt="Preview"
+                    className="w-full h-32 object-cover rounded-xl border border-slate-200 dark:border-slate-800"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFeaturedImage('')}
+                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white hover:bg-black/80 transition-colors"
+                    title="Hapus gambar sampul"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               )}
             </div>
 
@@ -1050,39 +1089,49 @@ export default function RichPostEditor({
             </div>
 
             {/* TAB MODE SWITCHER */}
-            <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-bold">
               <button
                 type="button"
                 onClick={() => setImageTab('upload')}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`flex-1 py-1.5 rounded-lg transition-all ${
                   imageTab === 'upload' ? 'bg-white dark:bg-slate-900 text-rose-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
-                Upload ke GitHub
+                Upload File
+              </button>
+              <button
+                type="button"
+                onClick={() => setImageTab('unsplash')}
+                className={`flex-1 py-1.5 rounded-lg transition-all ${
+                  imageTab === 'unsplash' ? 'bg-white dark:bg-slate-900 text-rose-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                Galeri Unsplash
               </button>
               <button
                 type="button"
                 onClick={() => setImageTab('url')}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`flex-1 py-1.5 rounded-lg transition-all ${
                   imageTab === 'url' ? 'bg-white dark:bg-slate-900 text-rose-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
-                URL Gambar Direct
+                URL Direct
               </button>
             </div>
 
-            {imageTab === 'upload' ? (
-              <div className="space-y-4 py-2">
-                <p className="text-xs text-slate-600 dark:text-slate-300">
-                  Upload file gambar langsung ke repositori GitHub `roywikan/parenting-my-id` melalui REST API.
+            {/* TAB 1: UPLOAD FILE */}
+            {imageTab === 'upload' && (
+              <div className="space-y-4 py-1">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Upload file gambar lokal (PNG, JPG, WebP) ke repositori GitHub / server penyimpanan.
                 </p>
-                <label className="cursor-pointer block border-2 border-dashed border-rose-300 dark:border-rose-900 rounded-2xl p-6 text-center hover:bg-rose-50/50 transition-colors">
-                  <Upload className="w-8 h-8 text-rose-500 mx-auto mb-2" />
+                <label className="cursor-pointer block border-2 border-dashed border-rose-300 dark:border-rose-900 rounded-2xl p-6 text-center hover:bg-rose-50/50 dark:hover:bg-rose-950/20 transition-colors">
+                  <Upload className="w-8 h-8 text-rose-500 mx-auto mb-2 animate-bounce" />
                   <span className="text-xs font-bold text-rose-600 block">
-                    {uploadingImage ? 'Mengunggah ke GitHub...' : 'Pilih File Gambar dari Komputer'}
+                    {uploadingImage ? 'Mengunggah Gambar ke Server...' : 'Pilih File Gambar dari Komputer'}
                   </span>
                   <span className="text-[10px] text-slate-400 block mt-1">
-                    Format PNG, JPG, WebP (Max 5MB)
+                    Format PNG, JPG, WebP (Maksimal 5MB)
                   </span>
                   <input
                     type="file"
@@ -1092,14 +1141,136 @@ export default function RichPostEditor({
                     disabled={uploadingImage}
                   />
                 </label>
+
+                {imageUrl && (
+                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl space-y-3">
+                    <div className="flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                      <span>✓ Gambar Berhasil Diunggah!</span>
+                    </div>
+                    <img src={imageUrl} alt="Uploaded" className="w-full h-32 object-cover rounded-xl border border-emerald-200" />
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                        Deskripsi / Alt Text Gambar
+                      </label>
+                      <input
+                        type="text"
+                        value={imageAlt}
+                        onChange={(e) => setImageAlt(e.target.value)}
+                        placeholder="Contoh: Ilustrasi parenting anak usia dini"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleInsertImage(imageUrl, imageAlt || 'Gambar Artikel')}
+                        className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        <span>Sisipkan ke Body</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFeaturedImage(imageUrl);
+                          setShowImageModal(false);
+                        }}
+                        className="flex-1 py-2 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Jadikan Sampul</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            ) : (
+            )}
+
+            {/* TAB 2: GALERI UNSPLASH */}
+            {imageTab === 'unsplash' && (
+              <div className="space-y-3 py-1">
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  Pilih foto bebas royalti Unsplash bertema Parenting atau ketik kata kunci custom:
+                </p>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={unsplashSearch}
+                    onChange={(e) => setUnsplashSearch(e.target.value)}
+                    placeholder="Cari kata kunci (cth: baby, mother, toddler)..."
+                    className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                  />
+                  {unsplashSearch && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const searchUrl = `https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1200&q=80`;
+                        setImageUrl(searchUrl);
+                        setImageAlt(unsplashSearch);
+                      }}
+                      className="px-3 py-1.5 bg-rose-600 text-white rounded-xl text-xs font-bold"
+                    >
+                      Pilih
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto p-1 border border-slate-100 dark:border-slate-800 rounded-2xl">
+                  {UNSPLASH_PRESETS.map((preset, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => {
+                        setImageUrl(preset.url);
+                        setImageAlt(preset.label);
+                      }}
+                      className={`group relative rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${
+                        imageUrl === preset.url ? 'border-rose-500 ring-2 ring-rose-200' : 'border-transparent hover:border-slate-300'
+                      }`}
+                    >
+                      <img src={preset.url} alt={preset.label} className="w-full h-20 object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-1.5">
+                        <span className="text-[10px] font-bold text-white block truncate">{preset.label}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {imageUrl && (
+                  <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-2xl space-y-2">
+                    <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 block">Gambar Terpilih: {imageAlt || 'Unsplash Image'}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleInsertImage(imageUrl, imageAlt || 'Gambar Unsplash')}
+                        className="flex-1 py-1.5 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors"
+                      >
+                        📌 Sisipkan ke Body
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFeaturedImage(imageUrl);
+                          setShowImageModal(false);
+                        }}
+                        className="flex-1 py-1.5 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-colors"
+                      >
+                        🖼️ Jadikan Sampul
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 3: URL DIRECT */}
+            {imageTab === 'url' && (
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleInsertImage(imageUrl, imageAlt);
                 }}
-                className="space-y-4"
+                className="space-y-3"
               >
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -1131,7 +1302,7 @@ export default function RichPostEditor({
                 {imageUrl && (
                   <div>
                     <span className="text-[10px] font-bold text-slate-500 block mb-1">Pratinjau Gambar:</span>
-                    <img src={imageUrl} alt="Preview" className="w-full h-32 object-cover rounded-xl border" />
+                    <img src={imageUrl} alt="Preview" className="w-full h-28 object-cover rounded-xl border" />
                   </div>
                 )}
 
@@ -1142,6 +1313,16 @@ export default function RichPostEditor({
                     className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs"
                   >
                     Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFeaturedImage(imageUrl);
+                      setShowImageModal(false);
+                    }}
+                    className="px-3 py-2 rounded-xl bg-slate-800 text-white font-bold text-xs hover:bg-slate-900"
+                  >
+                    Jadikan Sampul
                   </button>
                   <button
                     type="submit"

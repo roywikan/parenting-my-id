@@ -54,7 +54,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   font_density_scale: 'standard',
   font_size_scale: 'normal',
   age_accessibility_preset: '29-38',
-  header_badge_text: 'Beta v1.0',
+  header_badge_text: 'Cloudflare D1 Edge Engine',
   hero_badge_text: 'Portal Nomor 1',
   autolink_ticker_label: 'Topik Trending:',
   footer_autolink_label: 'Tautan Populer',

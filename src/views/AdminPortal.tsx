@@ -287,6 +287,17 @@ export default function AdminPortal({
       setCfgAdminLoginTitle(siteConfig.admin_login_title || 'Portal Admin Parenting.my.id');
       setCfgAdminLoginSubtitle(siteConfig.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1');
       setCfgAdminLoginBtnText(siteConfig.admin_login_btn_text || 'Masuk Portal CMS');
+
+      setCfgSiteDomain(siteConfig.site_domain || 'parenting.my.id');
+      setCfgHeaderBadgeText(siteConfig.header_badge_text || 'Cloudflare D1 Edge Engine');
+      setCfgMobileAdminBtnLabel(siteConfig.mobile_admin_btn_label || 'Portal Admin & Editor');
+      setCfgMobileShowLoggedUsername(siteConfig.mobile_show_logged_username ?? false);
+      setCfgHeroBadgeText(siteConfig.hero_badge_text || 'Portal Nomor 1');
+      setCfgAutolinkTickerLabel(siteConfig.autolink_ticker_label || 'Topik Trending:');
+      setCfgFooterAutolinkLabel(siteConfig.footer_autolink_label || 'Tautan Populer');
+      setCfgFooterBadge1(siteConfig.footer_badge_1 || 'Aman & Terpercaya');
+      setCfgFooterBadge2(siteConfig.footer_badge_2 || 'Diperbarui Rutin');
+      setCfgFooterBadge3(siteConfig.footer_badge_3 || '100% Gratis');
     }
   }, [siteConfig]);
 
@@ -1810,12 +1821,13 @@ export default function AdminPortal({
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Label/Badge Header (header_badge_text)
+                    Teks Badge Samping Logo Header (header_badge_text)
                   </label>
                   <input
                     type="text"
                     value={cfgHeaderBadgeText}
                     onChange={(e) => setCfgHeaderBadgeText(e.target.value)}
+                    placeholder="Cloudflare D1 Edge Engine"
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
                   />
                 </div>
@@ -1850,7 +1862,7 @@ export default function AdminPortal({
                 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Label Tombol Admin Mobile (mobile_admin_btn_label)
+                    Label Tombol Portal Admin Header & Mobile (mobile_admin_btn_label)
                   </label>
                   <input
                     type="text"

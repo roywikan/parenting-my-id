@@ -1,37 +1,61 @@
-# 🚀 Panduan Setup Cloud-Native Blog Engine `parenting.my.id` (100% Browser / Tanpa Terminal / Tanpa Software Lokal)
+# 🚀 Panduan Lengkap Setup & Penggunaan Blog Engine `parenting.my.id`
 
-Sistem Blog Engine modern, ultra-cepat, dan SEO-friendly ini beroperasi sepenuhnya secara **cloud-native** menggunakan **Cloudflare Pages / Workers**, **Cloudflare D1 (Serverless SQLite)**, dan **GitHub API**. 
+Sistem Blog Engine modern, ultra-cepat, dan SEO-friendly ini beroperasi sepenuhnya secara **Cloud-Native** menggunakan **Cloudflare Pages / Workers**, **Cloudflare D1 (Serverless SQLite)**, **Unsplash API/Integration**, dan **GitHub REST API**.
 
-Penulis dan Admin dapat mengelola artikel, gambar, SEO meta, serta sistem auto-linking langsung dari browser tanpa pernah menginstall Node.js, npm, Git, atau Terminal di laptop.
+Penulis dan Admin dapat mengelola artikel, gambar, SEO meta, serta konfigurasi situs secara interaktif dari browser desktop maupun mobile.
 
 ---
 
-## 📋 Prasyarat (Semua Gratis)
+## 📋 Prasyarat (100% Gratis)
 1. Akun **GitHub** ([github.com](https://github.com))
 2. Akun **Cloudflare** ([cloudflare.com](https://cloudflare.com))
-3. Domain **parenting.my.id** yang DNS-nya sudah terhubung ke Cloudflare.
+3. Domain **parenting.my.id** (atau domain pribadi Anda) yang DNS-nya diarahkan ke Cloudflare.
 
 ---
 
-## 🛠️ LANGKAH 1: Duplikasi Repository di GitHub (1 Menit)
-1. Buka repositori kode ini di GitHub.
+## 🍴 LANGKAH 1: Cloning / Fork Repo GitHub & Token Akses
+
+### A. Fork / Clone Repositori
+1. Buka repositori kode di GitHub ([github.com/roywikan/parenting-my-id](https://github.com/roywikan/parenting-my-id)).
 2. Klik tombol **Fork** di pojok kanan atas untuk menyalin repositori ke akun GitHub Anda.
-3. Beri nama repositori, contoh: `parenting-my-id`.
-4. Selesai! Repositori Anda sekarang siap digunakan sebagai sumber deployment otomatis.
+3. Beri nama repositori, misalnya `parenting-my-id`.
+4. *(Opsional)* Jika ingin mengedit kode di laptop secara lokal, jalankan perintah clone di terminal Anda:
+   ```bash
+   git clone https://github.com/<username-github-anda>/parenting-my-id.git
+   cd parenting-my-id
+   npm install
+   npm run dev
+   ```
+
+### B. Membuat Personal Access Token (PAT) GitHub
+Personal Access Token digunakan agar backend CMS di Cloudflare Worker dapat mengunggah file gambar fisik ke `/public/uploads/` dan menyinkronkan file konfigurasi (`site_config.json`, `llms.txt`) secara otomatis ke GitHub.
+
+1. Buka [github.com/settings/tokens](https://github.com/settings/tokens).
+2. Klik **Generate new token (classic)**.
+3. Isikan Note: `Cloudflare Parenting CMS Token`.
+4. Beri centang pada centang hak akses **`repo`** (Full control of private repositories).
+5. Klik **Generate token**.
+6. Salin kode token yang muncul (contoh: `ghp_xxxxxxxxxxxxxxxxxxxx`). *Simpan token ini karena tidak akan ditampilkan lagi.*
 
 ---
 
-## 🗄️ LANGKAH 2: Buat Database Cloudflare D1 via Browser (2 Menit)
-1. Buka Dashboard Cloudflare ([dash.cloudflare.com](https://dash.cloudflare.com)).
-2. Pilih menu **Workers & Pages** -> **D1 SQL Database**.
-3. Klik tombol **Create Database**.
-4. Isi Nama Database: `parenting-db`, lalu klik **Create**.
-5. Salin **Database ID** yang muncul (contoh: `a1b2c3d4-e5f6-7890-abcd-1234567890ab`).
-6. Masuk ke tab **Console** di dalam halaman database `parenting-db` tersebut.
+## ☁️ LANGKAH 2: Instalasi di Cloudflare (DNS, D1, Workers/Pages, Secrets)
 
-### 📜 Skrip Pembuatan Database & Migrasi Kolom Baru (Execute di D1 Console):
+### A. Konfigurasi DNS & Custom Domain
+1. Masuk ke Dashboard Cloudflare ([dash.cloudflare.com](https://dash.cloudflare.com)).
+2. Tambahkan domain Anda (contoh: `parenting.my.id`) dan ikuti petunjuk pengubahan Nameservers di registrar domain Anda.
+3. Pastikan SSL/TLS Encryption Mode disetel ke **Full** atau **Flexible**.
+
+### B. Membuat Database Cloudflare D1
+1. Di Dashboard Cloudflare, buka menu **Workers & Pages** -> **D1 SQL Database**.
+2. Klik tombol **Create Database**.
+3. Isi Nama Database: `parenting-db`, lalu klik **Create**.
+4. Salin **Database ID** yang dibuat (contoh: `a1b2c3d4-e5f6-7890-abcd-1234567890ab`).
+5. Masuk ke tab **Console** pada database `parenting-db` Anda.
+6. Tempel skrip SQL berikut untuk membuat skema tabel awal, lalu klik **Execute**:
+
 ```sql
--- Tabel Users / Penulis & Tim Editorial
+-- 1. Tabel Users / Penulis & Tim Editorial
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT UNIQUE NOT NULL,
@@ -47,7 +71,7 @@ CREATE TABLE IF NOT EXISTS users (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabel Posts / Artikel CMS
+-- 2. Tabel Posts / Artikel CMS
 CREATE TABLE IF NOT EXISTS posts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
@@ -58,8 +82,8 @@ CREATE TABLE IF NOT EXISTS posts (
   category TEXT,
   read_time_minutes INTEGER DEFAULT 5,
   author_id INTEGER,
-  co_author_ids TEXT, -- Array JSON ID Penulis Bersama
-  revisions TEXT, -- Array JSON Snapshot Histori Revisi (Max 3)
+  co_author_ids TEXT,
+  revisions TEXT,
   status TEXT DEFAULT 'draft',
   meta_title TEXT,
   meta_description TEXT,
@@ -70,7 +94,7 @@ CREATE TABLE IF NOT EXISTS posts (
   FOREIGN KEY (author_id) REFERENCES users(id)
 );
 
--- Tabel Autolinks
+-- 3. Tabel Autolinks
 CREATE TABLE IF NOT EXISTS autolinks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   keyword TEXT UNIQUE NOT NULL,
@@ -80,7 +104,7 @@ CREATE TABLE IF NOT EXISTS autolinks (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabel Site Config / Pengaturan Global Website
+-- 4. Tabel Site Config / Pengaturan Global Website
 CREATE TABLE IF NOT EXISTS site_config (
   id INTEGER PRIMARY KEY DEFAULT 1,
   config_json TEXT NOT NULL,
@@ -88,79 +112,109 @@ CREATE TABLE IF NOT EXISTS site_config (
 );
 ```
 
-### 💡 Catatan Tambahan bagi Admin (Migrasi Database D1 Opsional):
-Jika Anda meng-upgrade D1 dari versi terdahulu, jalankan perintah `ALTER TABLE` berikut di Cloudflare D1 Console untuk menambahkan kolom kredensial penulis dan multi-author:
-```sql
-ALTER TABLE users ADD COLUMN title TEXT;
-ALTER TABLE users ADD COLUMN bio TEXT;
-ALTER TABLE users ADD COLUMN social_instagram TEXT;
-ALTER TABLE users ADD COLUMN social_linkedin TEXT;
-ALTER TABLE users ADD COLUMN social_website TEXT;
-ALTER TABLE posts ADD COLUMN co_author_ids TEXT;
-ALTER TABLE posts ADD COLUMN revisions TEXT;
-```
+*(Catatan: Jika Anda meng-upgrade D1 dari versi terdahulu, jalankan `ALTER TABLE users ADD COLUMN title TEXT;` dsb jika ada kolom yang belum tersedia).*
 
----
-
-## 🔑 LANGKAH 3: Buat Personal Access Token GitHub untuk Unggah Gambar (1 Menit)
-Penulis dapat mengunggah gambar langsung di Editor WYSIWYG, yang akan disimpan secara otomatis ke repositori GitHub `/public/uploads/`:
-1. Buka [github.com/settings/tokens](https://github.com/settings/tokens).
-2. Klik **Generate new token (classic)**.
-3. Beri nama Note: `Cloudflare Image Uploader`.
-4. Beri centang pada centang hak akses **`repo`** (Full control of private repositories).
-5. Klik **Generate token** dan salin kode tokennya (contoh: `ghp_xxxxxxx`).
-
----
-
-## ⚡ LANGKAH 4: Deploy ke Cloudflare Pages / Workers via Browser (3 Menit)
-1. Kembali ke Dashboard Cloudflare -> **Workers & Pages**.
+### C. Deploy ke Cloudflare Pages / Workers
+1. Kembali ke Cloudflare Dashboard -> **Workers & Pages**.
 2. Klik **Create application** -> Tab **Pages** -> **Connect to Git**.
-3. Pilih akun GitHub Anda dan pilih repositori `parenting-my-id`.
+3. Hubungkan akun GitHub Anda dan pilih repositori `parenting-my-id`.
 4. Klik **Begin setup**.
 5. Pada bagian **Build settings**:
    - **Framework preset**: `Vite` (atau `None`)
    - **Build command**: `npm run build`
    - **Build output directory**: `dist`
-6. Buka bagian **Environment variables (advanced)** dan tambahkan variabel berikut:
+6. Buka bagian **Environment variables (advanced)** dan tambahkan variabel rahasia berikut:
    - `SITE_URL`: `https://parenting.my.id`
-   - `GITHUB_TOKEN`: *(Paste Token GitHub dari Langkah 3)*
+   - `GITHUB_TOKEN`: *(Kode token GitHub `ghp_...` dari Langkah 1B)*
    - `GITHUB_OWNER`: *(Username GitHub Anda)*
    - `GITHUB_REPO`: `parenting-my-id`
    - `GITHUB_BRANCH`: `main`
-7. Klik **Save and Deploy**. Cloudflare akan membangun dan mempublikasikan situs Anda secara otomatis!
+   - `JWT_SECRET`: *(String acak rahasia untuk otentikasi session)*
+7. Klik **Save and Deploy**.
 
----
-
-## 🔗 LANGKAH 5: Hubungkan Binding Database D1 & Domain `parenting.my.id`
+### D. Menghubungkan D1 Binding & Custom Domain
 1. Setelah deployment pertama selesai, buka proyek Pages Anda di Cloudflare -> Tab **Settings** -> **Functions**.
 2. Gulir ke bawah ke bagian **D1 database bindings**.
 3. Klik **Add binding**:
    - **Variable name**: `DB`
    - **D1 database**: Pilih `parenting-db`
-4. Simpan perubahan.
+4. Klik **Save**. *(Lakukan re-deploy project di tab Deployments jika diperlukan agar binding aktif).*
 5. Masuk ke tab **Custom domains** -> Klik **Set up a custom domain**.
-6. Ketik `parenting.my.id` dan klik **Continue**. Cloudflare akan mengurus sertifikat SSL HTTPS secara otomatis!
+6. Ketik `parenting.my.id` dan klik **Continue**. Cloudflare akan memverifikasi DNS dan mengaktifkan sertifikat SSL HTTPS.
 
 ---
 
-## 🤖 OTOMATISASI `llms.txt` UNTUK AI SEARCH ENGINE
-Setiap kali ada artikel baru yang dipublikasikan atau diperbarui lewat CMS:
-1. Endpoint `/llms.txt` secara otomatis ter-generate secara real-time dari database.
-2. File fisik `public/llms.txt` dan `dist/llms.txt` langsung diperbarui secara otomatis.
-3. Jika `GITHUB_TOKEN` diisi, file `public/llms.txt` dan `public/sitemap.xml` akan otomatis di-commit kembali ke repositori GitHub.
+## ⚙️ LANGKAH 3: Kustomisasi Pengaturan di Admin Panel (`/admin`)
+
+1. Akses halaman admin di web Anda: `https://parenting.my.id/#admin` (atau klik tombol **Portal Admin** di header).
+2. Login dengan akun bawaan atau akun admin yang dibuat di database D1.
+3. Buka tab **⚙️ Configs Situs**:
+   - **Badge Samping Logo Header (`header_badge_text`)**: Ubah teks badge hijau di header desktop (misal: `"Cloudflare D1 Edge Engine"` atau `"Portal Resmi"`).
+   - **Label Tombol Portal Admin (`mobile_admin_btn_label`)**: Ubah label tombol admin di header/mobile drawer.
+   - **Teks Halaman Login Admin**: Sesuaikan judul dan sub-judul portal admin.
+   - **Domain Situs (`site_domain`)**: Setel domain utama situs.
+   - **Metrik Performa Situs**: Sesuaikan angka metrik seperti *Jumlah Artikel Terverifikasi*, *Traffic Bulanan*, *Skor Kecepatan CDN*, dsb.
+   - **Footer & Running Ticker**: Atur teksrunning ticker topik trending dan badge jaminan footer.
+4. Klik tombol **Simpan Konfigurasi Situs**. Perubahan akan langsung tersimpan di database **Cloudflare D1** dan tersinkronisasi ke file `public/site_config.json`.
 
 ---
 
-## ✨ FITUR UNGGULAN ENGINE
-1. **Auto In-Page SEO Engine (Di Belakang Layar & Muka Layar):**
-   - **In-Code / JSON-LD Structured Data Schema.org**: Otomatis menghasilkan skema `BlogPosting`, `BreadcrumbList`, `FAQPage` (di-parse otomatis dari heading pertanyaan), `WebSite`, dan `Organization`.
-   - **Canonical & Hreflang Dynamic Injection**: Injeksi otomatis `<link rel="canonical">` dan `<link rel="alternate" hreflang="id-ID">`.
-   - **Admin Real-Time SEO Auditor (0-100%)**: Panel auditor di editor artikel yang menguji panjang judul, meta desc, kedalaman kata, struktur heading, gambar utama, tag topik, dan keyword focus secara real-time.
-   - **Optimasikan Meta SEO Otomatis**: Tombol 1-klik untuk membangun Meta Title & Meta Description standar Google Search.
-   - **Daftar Isi Otomatis (Interactive Table of Contents)**: Navigasi daftar isi interaktif dengan fragment anchor links (`#heading-id`) untuk memicu Google Sitelinks / Fragment Snippets.
-   - **Smart Related Articles**: Menghitung relevansi artikel berdasarkan kesamaan kategori dan tag untuk mengoptimalkan internal link juice dan dwell time.
-2. **Otomatisasi Tautan (Autolinks):** Semua kata kunci terdaftar (seperti *"pola asuh"*, *"balita"*, *"stunting"*) secara otomatis menjadi internal link aktif.
-3. **Fitur Bagikan Multi-Platform:** Mendukung berbagi artikel ke WhatsApp, Facebook, Instagram, Twitter/X, dan Salin Link.
-4. **Pencatatan Pembaca Real-Human:** Penghitung dibaca hanya bertambah jika pengunjung manusia (bukan bot) membaca hingga pertengahan artikel.
-5. **Kustomisasi Box Metrik Performa:** Admin dapat mengatur angka dan label metrik performa di halaman utama sesuai kebutuhan.
-6. **Autosave & Histori Revisi (Snapshot Rollback):** Menyimpan otomatis draf artikel serta 3 histori revisi terakhir untuk kemudahan rollback.
+## ✍️ LANGKAH 4: Panduan Penulis — Mengisi Artikel & Gambar dari Unsplash.com
+
+Penulis artikel memiliki akses ke **Editor WYSIWYG Rich Editor** lengkap dengan AI Assistant, SEO Auditor, dan Pengelola Gambar.
+
+### A. Menentukan Gambar Sampul (Featured Image)
+Gambar sampul akan muncul sebagai kartu di halaman depan, header artikel, dan pratinjau sosial media (Open Graph).
+
+#### Metode 1: Menggunakan Galeri Unsplash.com Terintegrasi (Rekomendasi Utama)
+1. Di halaman editor artikel, lihat kartu **Meta SEO & Gambar Sampul** di kolom kanan.
+2. Klik tombol **Upload / Pilih Gambar**.
+3. Buka tab **Galeri Unsplash**.
+4. Anda dapat:
+   - Memilih salah satu preset kategori parenting yang tersedia (seperti *Bayi & Balita*, *Pola Asuh*, *Kehamilan*, *Nutrisi & Makanan*, *Sensory Play*, *Keluarga Bahagia*).
+   - Atau mengetik kata kunci custom pada kolom pencarian (misal: `toddler`, `breastfeeding`, `parenting`).
+5. Klik foto pilihan Anda, lalu klik tombol **🖼️ Jadikan Sampul**. URL Unsplash beresolusi tinggi otomatis terpasang sebagai Gambar Sampul.
+
+#### Metode 2: Menggunakan Direct URL Unsplash.com
+1. Buka situs [unsplash.com](https://unsplash.com) di tab baru.
+2. Cari foto berkualitas tinggi terkait topik artikel Anda.
+3. Klik kanan pada foto -> **Copy image address** (Salin alamat gambar), contoh: `https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1200&q=80`.
+4. Tempelkan URL tersebut pada input **URL Gambar Sampul (Featured Image)** di editor.
+
+#### Metode 3: Mengunggah File Gambar dari Komputer
+1. Klik tombol **Upload / Pilih Gambar** -> Buka tab **Upload File**.
+2. Klik area unggah atau pilih file PNG, JPG, atau WebP dari laptop/HP Anda.
+3. Setelah proses unggah selesai, klik tombol **🖼️ Jadikan Sampul**. Gambar akan tersimpan ke repositori GitHub `/public/uploads/` / Cloudflare D1.
+
+---
+
+### B. Mengunggah & Menyisipkan Gambar ke Dalam Body Artikel
+Untuk memasukkan gambar di tengah-tengah teks tulisan artikel:
+
+1. Tempatkan kursor teks di baris tempat Anda ingin menyisipkan gambar.
+2. Pada toolbar editor bagian atas, klik icon **Gambar** (Sisipkan Gambar Artikel).
+3. Pilih opsi sumber gambar:
+   - **Upload File**: Unggah gambar fisik dari komputer Anda.
+   - **Galeri Unsplash**: Pilih dari pustaka gambar Unsplash bebas royalti.
+   - **URL Direct**: Tempel alamat URL gambar eksternal.
+4. Ketik **Deskripsi / Alt Text** gambar (penting untuk SEO & aksesibilitas).
+5. Klik tombol **📌 Sisipkan ke Body**. Tag markdown gambar (contoh: `![Deskripsi Gambar](https://...)`) otomatis tersisip tepat di posisi kursor.
+
+---
+
+### C. Alur Kerja Penulisan Artikel yang Optimal
+1. **Isi Judul & Kategori Artikel**: Pilih kategori utama (Pola Asuh, Kesehatan, Nutrisi, Pendidikan, Kehamilan, Gaya Hidup).
+2. **Gunakan AI Gemini Meta Generator**: Klik tombol **Generate SEO Meta dengan AI** untuk secara otomatis menghasilkan *Excerpt*, *Meta Title*, dan *Meta Description* berstandar Google Search.
+3. **Periksa SEO Audit Widget**: Perhatikan skor SEO Audit (0-100%). Pastikan indikator berwarna hijau (Panjang Judul, Meta Desc, Kedalaman Kata > 300 kata, Gambar Sampul, Tag Topik).
+4. **Pratinjau Artikel (Tab Preview)**: Buka tab **Pratinjau Artikel** untuk melihat tampilan akhir artikel lengkap dengan Daftar Isi Otomatis (*Table of Contents*) dan Rantai Tautan Otomatis (*Autolinks*).
+5. **Publikasikan Artikel**: Pilih status **Dipublikasikan** dan klik **Simpan & Publikasikan Artikel**.
+
+---
+
+## 🛠️ Ringkasan Fitur Unggulan Engine
+
+1. **Dual Storage Cloudflare D1 + GitHub REST API**: Menyimpan artikel dan konfigurasi situs di database SQLite serverless D1 berkecepatan edge, sekaligus menyinkronkan file aset ke GitHub.
+2. **In-Page SEO & Structured Data Auto-Generator**: Menghasilkan skema JSON-LD `BlogPosting`, `BreadcrumbList`, `<link rel="canonical">`, dan `<link rel="alternate">` secara otomatis.
+3. **Automated `llms.txt` Generator**: Secara otomatis membuat & meng-update endpoint `/llms.txt` untuk optimasi keterbacaan oleh AI Search Engine (Perplexity, ChatGPT, Gemini).
+4. **Autolinks Engine**: Otomatis mengubah kata kunci tertentu di seluruh artikel menjadi internal link aktif tanpa perlu mengedit artikel satu per satu.
+5. **Histori Revisi & Autosave**: Menyimpan draf artikel dan 3 histori revisi terakhir untuk perlindungan data tulisan penulis.

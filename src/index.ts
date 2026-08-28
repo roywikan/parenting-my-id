@@ -140,6 +140,106 @@ ${articleLinks}
 
     // 3. API ENDPOINTS FOR FRONTEND / ADMIN
     if (path.startsWith('/api/')) {
+      // GET /api/config
+      if (path === '/api/config' && request.method === 'GET') {
+        try {
+          await env.DB.prepare(
+            `CREATE TABLE IF NOT EXISTS site_config (
+              id INTEGER PRIMARY KEY,
+              config_json TEXT NOT NULL,
+              updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`
+          ).run();
+
+          const result: any = await env.DB.prepare('SELECT config_json FROM site_config WHERE id = 1 LIMIT 1').first();
+          if (result && result.config_json) {
+            return new Response(result.config_json, {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          return new Response(JSON.stringify({}), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (err: any) {
+          return new Response(JSON.stringify({ error: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // POST /api/config
+      if (path === '/api/config' && request.method === 'POST') {
+        try {
+          const configData = await request.json() as any;
+          const configJson = JSON.stringify(configData);
+
+          await env.DB.prepare(
+            `CREATE TABLE IF NOT EXISTS site_config (
+              id INTEGER PRIMARY KEY,
+              config_json TEXT NOT NULL,
+              updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`
+          ).run();
+
+          await env.DB.prepare(
+            `INSERT INTO site_config (id, config_json, updated_at)
+             VALUES (1, ?, CURRENT_TIMESTAMP)
+             ON CONFLICT(id) DO UPDATE SET config_json = excluded.config_json, updated_at = CURRENT_TIMESTAMP`
+          ).bind(configJson).run();
+
+          // GitHub REST API Sync for public/site_config.json if token is provided
+          if (env.GITHUB_TOKEN && env.GITHUB_OWNER && env.GITHUB_REPO) {
+            try {
+              const owner = env.GITHUB_OWNER;
+              const repo = env.GITHUB_REPO;
+              const branch = env.GITHUB_BRANCH || 'main';
+              const filePath = 'public/site_config.json';
+              const githubApiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+
+              let currentSha = '';
+              const getShaRes = await fetch(`${githubApiUrl}?ref=${branch}`, {
+                headers: {
+                  'Authorization': `Bearer ${env.GITHUB_TOKEN}`,
+                  'User-Agent': 'Parenting-Cloudflare-Worker'
+                }
+              });
+              if (getShaRes.ok) {
+                const shaData: any = await getShaRes.json();
+                currentSha = shaData.sha;
+              }
+
+              const base64Content = btoa(unescape(encodeURIComponent(JSON.stringify(configData, null, 2))));
+              await fetch(githubApiUrl, {
+                method: 'PUT',
+                headers: {
+                  'Authorization': `Bearer ${env.GITHUB_TOKEN}`,
+                  'Content-Type': 'application/json',
+                  'User-Agent': 'Parenting-Cloudflare-Worker'
+                },
+                body: JSON.stringify({
+                  message: 'chore(config): update site_config.json via Admin Portal',
+                  content: base64Content,
+                  sha: currentSha || undefined,
+                  branch
+                })
+              });
+            } catch (ghErr) {
+              console.warn('GitHub site_config sync warning:', ghErr);
+            }
+          }
+
+          return new Response(JSON.stringify({ success: true, message: 'Konfigurasi berhasil disimpan ke Cloudflare D1 & synced!' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (err: any) {
+          return new Response(JSON.stringify({ success: false, error: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
       // GET /api/posts
       if (path === '/api/posts' && request.method === 'GET') {
         const { results } = await env.DB.prepare(
@@ -194,7 +294,7 @@ ${articleLinks}
             },
             body: JSON.stringify({
               message: `upload: ${filename} via Parenting.my.id CMS`,
-              content: base64Content.replace(/^data:image\/\w+;base64,/, ''),
+              content: base64Content.replace(/^data:.*?;base64,/, ''),
               branch
             })
           });
