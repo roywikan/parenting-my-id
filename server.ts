@@ -555,6 +555,15 @@ ${articleLinks}
   res.status(200).send(content);
 });
 
+//7.B. favicon:
+app.get('/favicon.ico', (req, res) => {
+  const faviconPath = path.join(process.cwd(), 'public', 'favicon.ico');
+  if (fs.existsSync(faviconPath)) {
+    return res.sendFile(faviconPath);
+  }
+  return res.status(204).end();
+});
+
 
 
 // 8. SSR / STATIC HTML PRE-RENDERING FOR ARTICLE PAGES (/baca/:slug) FOR GOOGLEBOT & CRAWLERS
@@ -699,9 +708,14 @@ async function startServer() {
     app.use('*', async (req, res, next) => {
       const url = req.originalUrl;
       // Abort jika URL adalah API, sitemap, feed, atau llms.txt
-      if (url.startsWith('/api') || url.includes('.xml') || url.includes('llms.txt')) {
-        return next();
-      }
+      const isStaticOrApi = url.startsWith('/api') || 
+                      url.includes('.xml') || 
+                      url.includes('llms.txt') || 
+                      url.includes('favicon.ico') || 
+                      url.includes('/uploads/');
+if (isStaticOrApi) {
+  return next();
+}
       try {
         let template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
         template = await vite.transformIndexHtml(url, template);
@@ -720,9 +734,14 @@ async function startServer() {
     // Fallback SPA khusus mode Production
     app.use('*', (req, res, next) => {
       const url = req.originalUrl;
-      if (url.startsWith('/api') || url.includes('.xml') || url.includes('llms.txt')) {
-        return next();
-      }
+      const isStaticOrApi = url.startsWith('/api') || 
+                      url.includes('.xml') || 
+                      url.includes('llms.txt') || 
+                      url.includes('favicon.ico') || 
+                      url.includes('/uploads/');
+if (isStaticOrApi) {
+  return next();
+}
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
@@ -732,6 +751,6 @@ async function startServer() {
   });
 }
 
-startServer();
+
 
 startServer();
