@@ -54,6 +54,7 @@ Personal Access Token digunakan agar backend CMS di Cloudflare Worker dapat meng
 5. Masuk ke tab **Console** pada database `parenting-db` Anda.
 6. Tempel skrip SQL berikut untuk membuat skema tabel awal, lalu klik **Execute**:
 
+
 ```sql
 -- 1. Tabel Users / Penulis & Tim Editorial
 CREATE TABLE IF NOT EXISTS users (
@@ -110,7 +111,9 @@ CREATE TABLE IF NOT EXISTS site_config (
   config_json TEXT NOT NULL,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
 ```
+
 atau yang sudah terisi:
 
 ```sql
@@ -187,6 +190,9 @@ CREATE TABLE IF NOT EXISTS site_config (
   config_json TEXT NOT NULL,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+```
+
 *(Catatan: Jika Anda meng-upgrade D1 dari versi terdahulu, jalankan `ALTER TABLE users ADD COLUMN title TEXT;` dsb jika ada kolom yang belum tersedia).*
 
 ### C. Deploy ke Cloudflare Pages / Workers
