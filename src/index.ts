@@ -251,6 +251,100 @@ ${articleLinks}
         });
       }
 
+      // GET /api/comments
+      if (path === '/api/comments' && request.method === 'GET') {
+        try {
+          await env.DB.prepare(
+            `CREATE TABLE IF NOT EXISTS comments (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              post_slug TEXT NOT NULL,
+              user_name TEXT NOT NULL,
+              user_email TEXT NOT NULL,
+              user_avatar TEXT NOT NULL,
+              content TEXT NOT NULL,
+              status TEXT DEFAULT 'approved',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`
+          ).run();
+
+          const { results } = await env.DB.prepare('SELECT * FROM comments ORDER BY created_at DESC LIMIT 100').all();
+          return new Response(JSON.stringify(results), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (err: any) {
+          return new Response(JSON.stringify([]), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // DELETE /api/comments/:id
+      if (path.startsWith('/api/comments/') && request.method === 'DELETE') {
+        try {
+          const id = path.split('/')[3];
+          await env.DB.prepare('DELETE FROM comments WHERE id = ?').bind(id).run();
+          return new Response(JSON.stringify({ success: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (err: any) {
+          return new Response(JSON.stringify({ error: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // POST /api/webhooks/cusdis or POST /api/cusdis-webhook (Cusdis Comment Webhook Auto-Sync to D1 DB)
+      if ((path === '/api/webhooks/cusdis' || path === '/api/cusdis-webhook') && request.method === 'POST') {
+        try {
+          const payload = await request.json() as any;
+          if (payload && payload.type === 'new_comment' && payload.data) {
+            const { by_nickname, by_email, content, page_id } = payload.data;
+            const avatarName = encodeURIComponent(by_nickname || 'Pembaca');
+            const avatar = `https://ui-avatars.com/api/?name=${avatarName}&background=f43f5e&color=fff`;
+
+            await env.DB.prepare(
+              `CREATE TABLE IF NOT EXISTS comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                post_slug TEXT NOT NULL,
+                user_name TEXT NOT NULL,
+                user_email TEXT NOT NULL,
+                user_avatar TEXT NOT NULL,
+                content TEXT NOT NULL,
+                status TEXT DEFAULT 'approved',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+              )`
+            ).run();
+
+            await env.DB.prepare(
+              `INSERT INTO comments (post_slug, user_name, user_email, user_avatar, content, status)
+               VALUES (?, ?, ?, ?, ?, 'approved')`
+            ).bind(
+              page_id || '',
+              by_nickname || 'Pembaca Anonim',
+              by_email || '',
+              avatar,
+              content || ''
+            ).run();
+
+            return new Response(
+              JSON.stringify({ success: true, message: 'Komentar Cusdis berhasil disinkronisasi ke D1 Database via Webhook!' }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          return new Response(
+            JSON.stringify({ success: true, message: 'Webhook payload diterima.' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (err: any) {
+          return new Response(
+            JSON.stringify({ success: false, error: err.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
       // POST /api/upload-github (Direct GitHub REST API Commit for Images)
       if (path === '/api/upload-github' && request.method === 'POST') {
         try {

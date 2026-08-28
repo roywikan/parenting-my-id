@@ -8,6 +8,7 @@ import Breadcrumbs from '../components/Breadcrumbs';
 import AutoTableOfContents from '../components/AutoTableOfContents';
 import SmartRelatedArticles from '../components/SmartRelatedArticles';
 import AdSlot from '../components/AdSlot';
+import { CusdisComments } from '../components/CusdisComments';
 
 interface ArticleDetailViewProps {
   slug: string;
@@ -509,6 +510,13 @@ export default function ArticleDetailView({
           </div>
         )}
       </div>
+
+      {/* CUSDIS COMMENTS SECTION */}
+      <CusdisComments
+        pageId={post.slug || String(post.id)}
+        pageUrl={articleUrl}
+        pageTitle={post.title}
+      />
 
       {/* SMART RELATED ARTICLES (AUTO RELEVANCE & INTERNAL LINK JUICE) */}
       <SmartRelatedArticles

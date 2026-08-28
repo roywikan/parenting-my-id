@@ -49,8 +49,36 @@ export default function AdminPortal({
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Admin tabs: 'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security'
-  const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security'>('posts');
+  // Admin tabs: 'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security' | 'comments'
+  const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security' | 'comments'>('posts');
+
+  // Comments & Cusdis Webhook State
+  const [comments, setComments] = useState<any[]>([]);
+  const [webhookCopied, setWebhookCopied] = useState(false);
+
+  const fetchComments = async () => {
+    try {
+      const res = await fetch('/api/comments');
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch comments:', err);
+    }
+  };
+
+  const handleDeleteComment = async (id: number) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus komentar ini dari database?')) return;
+    try {
+      const res = await fetch(`/api/comments/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setComments((prev) => prev.filter((c) => c.id !== id));
+      }
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
+    }
+  };
 
   // Writers / Editorial Team State
   const [writers, setWriters] = useState<User[]>([]);
@@ -88,6 +116,7 @@ export default function AdminPortal({
 
   useEffect(() => {
     fetchWriters();
+    fetchComments();
   }, []);
 
   // Editor State
@@ -1007,6 +1036,21 @@ export default function AdminPortal({
         >
           <Zap className="w-4 h-4" />
           <span>SEO Inspector</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab('comments');
+            fetchComments();
+          }}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            activeTab === 'comments'
+              ? 'bg-rose-600 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span>💬 Cusdis Komentar & Webhook ({comments.length})</span>
         </button>
 
         {currentUser?.role === 'admin' && (
@@ -2739,6 +2783,160 @@ export default function AdminPortal({
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 8: CUSDIS COMMENTS & WEBHOOK MANAGEMENT */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'comments' && (
+        <div className="space-y-8">
+          {/* CUSDIS WEBHOOK CONFIG & INSTRUCTIONS BOX */}
+          <div className="bg-gradient-to-br from-slate-900 via-rose-950 to-slate-900 text-white p-6 sm:p-8 rounded-3xl border border-rose-800/80 shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-[11px] font-bold border border-rose-500/30">
+                  <MessageSquare className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Cusdis Webhook Endpoint</span>
+                </div>
+                <h3 className="text-xl font-extrabold text-white">
+                  Integrasi Webhook Auto-Sync Komentar Cusdis
+                </h3>
+                <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                  Setiap kali pembaca mengirim komentar baru di widget Cusdis, Webhook ini secara cerdas akan menyimpan backup data komentar secara otomatis ke database Cloudflare D1 / SQLite Anda.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  const url = 'https://parenting.my.id/api/webhooks/cusdis';
+                  navigator.clipboard.writeText(url);
+                  setWebhookCopied(true);
+                  setTimeout(() => setWebhookCopied(false), 2500);
+                }}
+                className="px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md transition-all shrink-0 flex items-center gap-2"
+              >
+                {webhookCopied ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
+                <span>{webhookCopied ? 'Webhook URL Tersalin!' : 'Salin Webhook URL'}</span>
+              </button>
+            </div>
+
+            {/* WEBHOOK URL DISPLAY BOX */}
+            <div className="p-4 rounded-2xl bg-black/50 border border-white/10 space-y-2">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Webhook URL Produksi (Paste ke Cusdis Dashboard):
+              </span>
+              <div className="font-mono text-xs text-rose-300 font-bold break-all">
+                https://parenting.my.id/api/webhooks/cusdis
+              </div>
+            </div>
+
+            {/* INTEGRATION STEPS */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-white/10">
+              <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-1.5">
+                <div className="text-xs font-bold text-rose-400">1. Buka Cusdis Settings</div>
+                <p className="text-[11px] text-slate-300 leading-snug">
+                  Masuk ke dashboard Cusdis di <strong>cusdis.com</strong> dan pilih proyek situs Anda.
+                </p>
+              </div>
+
+              <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-1.5">
+                <div className="text-xs font-bold text-rose-400">2. Paste Webhook URL</div>
+                <p className="text-[11px] text-slate-300 leading-snug">
+                  Buka menu <strong>Project -&gt; Settings</strong>, lalu tempel URL Webhook di atas ke kolom <strong>Webhook URL</strong>.
+                </p>
+              </div>
+
+              <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-1.5">
+                <div className="text-xs font-bold text-rose-400">3. Aktifkan &amp; Simpan</div>
+                <p className="text-[11px] text-slate-300 leading-snug">
+                  Nyalakan toggle saklar <strong>Enable Webhook</strong> lalu klik <strong>Save</strong>. Komentar baru akan otomatis tersinkron.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* LIST OF SYNCED COMMENTS */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-rose-600" />
+                  <span>Daftar Komentar Tersinkronisasi ({comments.length})</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Data komentar pembaca yang diterima dari Cusdis Webhook &amp; tersimpan di Database situs.
+                </p>
+              </div>
+
+              <button
+                onClick={fetchComments}
+                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 text-xs font-bold transition-colors"
+              >
+                🔄 Refresh Komentar
+              </button>
+            </div>
+
+            {comments.length === 0 ? (
+              <div className="text-center py-12 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-3">
+                <MessageSquare className="w-10 h-10 text-slate-400 mx-auto" />
+                <p className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                  Belum ada komentar yang tersinkronisasi.
+                </p>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  Komentar baru dari pembaca akan muncul secara otomatis di sini setelah Webhook Cusdis aktif.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {comments.map((comment) => (
+                  <div
+                    key={comment.id}
+                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-start justify-between gap-4"
+                  >
+                    <div className="flex items-start gap-3 min-w-0">
+                      <img
+                        src={comment.user_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user_name || 'U')}`}
+                        alt={comment.user_name}
+                        className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
+                      />
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-extrabold text-xs text-slate-900 dark:text-white">
+                            {comment.user_name}
+                          </span>
+                          {comment.user_email && (
+                            <span className="text-[11px] text-slate-400">
+                              ({comment.user_email})
+                            </span>
+                          )}
+                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold">
+                            {comment.status || 'approved'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 leading-relaxed font-medium">
+                          {comment.content}
+                        </p>
+                        <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-1">
+                          <span>Artikel: <strong className="text-rose-600 dark:text-rose-400">/baca/{comment.post_slug}</strong></span>
+                          <span>•</span>
+                          <span>{new Date(comment.created_at).toLocaleString('id-ID')}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleDeleteComment(comment.id)}
+                      className="p-2 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 hover:bg-rose-100 text-xs font-bold transition-colors shrink-0 self-start sm:self-auto"
+                      title="Hapus Komentar dari DB"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

@@ -68,6 +68,29 @@ let mockAutolinks = [
   { id: 6, keyword: 'gizi anak', targetUrl: '/baca/mengenal-bahaya-stunting-dan-cara-pencegahannya-sejak-1000-hpk', description: 'Nutrisi seimbang untuk tumbuh kembang optimal.', clickCount: 50 },
 ];
 
+let mockComments = [
+  {
+    id: 1,
+    post_slug: '5-aktivitas-sensory-play-seru-untuk-melatih-motorik-balita',
+    user_name: 'Ibu Rahma',
+    user_email: 'rahma@example.com',
+    user_avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80',
+    content: 'Artikel yang sangat bermanfaat! Saya sudah mencoba ide sensory play dengan beras berwarna di rumah, si kecil sangat antusias.',
+    status: 'approved',
+    created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
+  },
+  {
+    id: 2,
+    post_slug: 'mengenal-bahaya-stunting-dan-cara-pencegahannya-sejak-1000-hpk',
+    user_name: 'Budi Santoso',
+    user_email: 'budi.s@example.com',
+    user_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80',
+    content: 'Penjelasan mengenai 1000 HPK dan ASI eksklusif sangat jelas dan berbasis ilmiah. Terima kasih tim Parenting.my.id!',
+    status: 'approved',
+    created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
+  }
+];
+
 let mockPosts: any[] = [
   {
     id: 1,
@@ -257,6 +280,53 @@ app.post('/api/config', (req, res) => {
 // 1. GET Posts
 app.get('/api/posts', (req, res) => {
   res.json(mockPosts);
+});
+
+// GET Comments
+app.get('/api/comments', (req, res) => {
+  res.json(mockComments);
+});
+
+// DELETE Comment
+app.delete('/api/comments/:id', (req, res) => {
+  const commentId = Number(req.params.id);
+  mockComments = mockComments.filter((c) => c.id !== commentId);
+  res.json({ success: true, message: 'Komentar berhasil dihapus' });
+});
+
+// POST Cusdis Webhook Endpoint (Auto Sync Webhook)
+app.post(['/api/webhooks/cusdis', '/api/cusdis-webhook'], (req, res) => {
+  try {
+    const payload = req.body;
+    console.log('[Cusdis Webhook Received]:', JSON.stringify(payload, null, 2));
+
+    if (payload && payload.type === 'new_comment' && payload.data) {
+      const { by_nickname, by_email, content, page_id } = payload.data;
+      const avatarName = encodeURIComponent(by_nickname || 'Pembaca');
+      const newComment = {
+        id: Date.now(),
+        post_slug: page_id || '',
+        user_name: by_nickname || 'Pembaca Anonim',
+        user_email: by_email || '',
+        user_avatar: `https://ui-avatars.com/api/?name=${avatarName}&background=f43f5e&color=fff`,
+        content: content || '',
+        status: 'approved',
+        created_at: new Date().toISOString(),
+      };
+
+      mockComments.unshift(newComment);
+      return res.json({
+        success: true,
+        message: 'Komentar Cusdis berhasil diterima dan disinkronkan via Webhook!',
+        comment: newComment,
+      });
+    }
+
+    return res.json({ success: true, message: 'Webhook payload received' });
+  } catch (err: any) {
+    console.error('Cusdis webhook error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // GET Post by Slug (Does NOT auto-increment views, handled via midpoint scroll endpoint)
