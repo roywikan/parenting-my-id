@@ -448,7 +448,7 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
 });
 
 // 6. DYNAMIC SITEMAP.XML
-app.get('/sitemap.xml', (req, res) => {
+app.get('/sitemapper.xml', (req, res) => {
   const siteUrl = 'https://parenting.my.id';
   const publishedPosts = mockPosts.filter((p) => p.status === 'published');
 
@@ -477,6 +477,27 @@ app.get('/sitemap.xml', (req, res) => {
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   res.status(200).send(xml.trim());
 });
+
+// 6. DYNAMIC SITEMAP.XML
+app.get('/sitemap.xml', (req, res) => {
+  const siteUrl = 'https://parenting.my.id';
+  const publishedPosts = mockPosts.filter((p) => p.status === 'published');
+  
+  const urls = publishedPosts
+    .map((p) => {
+      const cleanSlug = encodeURIComponent(p.slug);
+      const lastMod = p.updatedAt ? p.updatedAt.split('T')[0] : new Date().toISOString().split('T')[0];
+      return `<url><loc>${siteUrl}/baca/${cleanSlug}</loc><lastmod>${lastMod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
+    })
+    .join('');
+
+  // Deklarasi XML diletakkan tepat di baris/karakter pertama tanpa newline di depannya
+  const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${siteUrl}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>${urls}</urlset>`.trim();
+
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.status(200).send(xml);
+});
+
 
 // 7. DYNAMIC RSS FEED.XML
 app.get('/feed.xml', (req, res) => {
