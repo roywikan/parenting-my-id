@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = typeof import.meta !== 'undefined' && import.meta.url ? fileURLToPath(import.meta.url) : (typeof __filename !== 'undefined' ? __filename : '');
+const __dirname = typeof import.meta !== 'undefined' && import.meta.url ? path.dirname(__filename) : (typeof __dirname !== 'undefined' ? __dirname : process.cwd());
 const rootDir = path.resolve(__dirname, '..');
 
 const SITE_URL = 'https://parenting.my.id';
