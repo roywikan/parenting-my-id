@@ -282,9 +282,67 @@ app.get('/api/posts', (req, res) => {
   res.json(mockPosts);
 });
 
-// GET Comments
+// GET Comments (Filtered by post_slug and status if provided)
 app.get('/api/comments', (req, res) => {
-  res.json(mockComments);
+  const postSlug = req.query.post_slug as string | undefined;
+  const statusParam = req.query.status as string | undefined;
+
+  let filtered = [...mockComments];
+
+  if (postSlug) {
+    filtered = filtered.filter((c) => c.post_slug === postSlug);
+  }
+
+  if (statusParam) {
+    filtered = filtered.filter((c) => c.status === statusParam);
+  } else if (postSlug) {
+    // For reader article view, default to approved comments only
+    filtered = filtered.filter((c) => c.status === 'approved');
+  }
+
+  res.json(filtered);
+});
+
+// POST Native Comment (Reader submits comment, saved as 'pending')
+app.post('/api/comments', (req, res) => {
+  const { post_slug, user_name, user_email, content } = req.body;
+
+  if (!post_slug || !user_name || !content) {
+    return res.status(400).json({ error: 'Nama, komentar, dan artikel tujuan wajib diisi.' });
+  }
+
+  const avatarName = encodeURIComponent(String(user_name).trim());
+  const newComment = {
+    id: Date.now(),
+    post_slug: String(post_slug),
+    user_name: String(user_name).trim(),
+    user_email: String(user_email || '').trim(),
+    user_avatar: `https://ui-avatars.com/api/?name=${avatarName}&background=f43f5e&color=fff`,
+    content: String(content).trim(),
+    status: 'pending',
+    created_at: new Date().toISOString(),
+  };
+
+  mockComments.unshift(newComment);
+
+  res.json({
+    success: true,
+    message: 'Terima kasih! Komentar Anda telah berhasil dikirim dan sedang menunggu persetujuan (moderasi) admin.',
+    comment: newComment,
+  });
+});
+
+// PUT Comment (Admin approve / status update)
+app.put('/api/comments/:id', (req, res) => {
+  const commentId = Number(req.params.id);
+  const newStatus = req.body?.status || 'approved';
+
+  const comment = mockComments.find((c) => c.id === commentId);
+  if (comment) {
+    comment.status = newStatus;
+  }
+
+  res.json({ success: true, message: `Komentar #${commentId} diupdate.` });
 });
 
 // DELETE Comment

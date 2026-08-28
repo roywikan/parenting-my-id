@@ -28,7 +28,134 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return jsonResponse({ ok: true }, 200);
   }
 
+  const siteUrl = 'https://parenting.my.id';
+
   try {
+    // 0a. DYNAMIC LLMS.TXT
+    if (path === '/llms.txt' && method === 'GET') {
+      try {
+        let postsList: any[] = [];
+        if (env.DB) {
+          const { results } = await env.DB.prepare(
+            "SELECT title, slug, excerpt FROM posts WHERE status = 'published' ORDER BY created_at DESC"
+          ).all();
+          postsList = results || [];
+        }
+
+        const articleLinks = postsList.map(
+          (post: any) => `* [${post.title}](${siteUrl}/baca/${post.slug}): ${post.excerpt || ''}`
+        ).join('\n');
+
+        const content = `# Parenting.my.id
+
+> Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.
+
+## Artikel Terkait & Panduan Utama
+
+${articleLinks || '* [Panduan Parenting Utama](' + siteUrl + '): Edukasi pola asuh anak dan kesehatan.'}
+`.trim();
+
+        return new Response(content, {
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      } catch (err: any) {
+        return new Response('Error generating llms.txt: ' + err.message, { status: 500 });
+      }
+    }
+
+    // 0b. DYNAMIC SITEMAP.XML
+    if (path === '/sitemap.xml' && method === 'GET') {
+      try {
+        let postsList: any[] = [];
+        if (env.DB) {
+          const { results } = await env.DB.prepare(
+            "SELECT slug, updated_at FROM posts WHERE status = 'published' ORDER BY updated_at DESC"
+          ).all();
+          postsList = results || [];
+        }
+
+        const urls = postsList.map(
+          (post: any) => `<url><loc>${siteUrl}/baca/${post.slug}</loc><lastmod>${new Date(post.updated_at || Date.now()).toISOString().split('T')[0]}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`
+        ).join('');
+
+        const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${siteUrl}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>${urls}</urlset>`.trim();
+
+        return new Response(xml, {
+          headers: {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      } catch (err: any) {
+        return new Response('Error generating sitemap.xml', { status: 500 });
+      }
+    }
+
+    // 0c. DYNAMIC RSS FEED.XML
+    if ((path === '/feed.xml' || path === '/rss.xml') && method === 'GET') {
+      try {
+        let postsList: any[] = [];
+        if (env.DB) {
+          const { results } = await env.DB.prepare(
+            "SELECT title, slug, excerpt, created_at FROM posts WHERE status = 'published' ORDER BY created_at DESC LIMIT 25"
+          ).all();
+          postsList = results || [];
+        }
+
+        const items = postsList.map(
+          (post: any) => `
+    <item>
+      <title><![CDATA[${post.title}]]></title>
+      <link>${siteUrl}/baca/${post.slug}</link>
+      <guid>${siteUrl}/baca/${post.slug}</guid>
+      <description><![CDATA[${post.excerpt}]]></description>
+      <pubDate>${new Date(post.created_at || Date.now()).toUTCString()}</pubDate>
+    </item>`
+        ).join('');
+
+        const rss = `<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Parenting.my.id - Edukasi &amp; Pola Asuh Anak Modern</title>
+    <link>${siteUrl}</link>
+    <description>Portal artikel parenting, gizi anak, stimulasi balita, dan pencegahan stunting di Indonesia.</description>
+    <language>id-id</language>
+    ${items}
+  </channel>
+</rss>`;
+
+        return new Response(rss, {
+          headers: {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      } catch (err: any) {
+        return new Response('Error generating RSS feed.xml', { status: 500 });
+      }
+    }
+
+    // 0d. ROBOTS.TXT
+    if (path === '/robots.txt' && method === 'GET') {
+      const robots = `User-agent: *
+Allow: /
+Sitemap: ${siteUrl}/sitemap.xml
+`.trim();
+      return new Response(robots, {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+      });
+    }
+
     // 1. GET /api/posts
     if (path === '/api/posts' && method === 'GET') {
       if (env.DB) {
@@ -614,14 +741,39 @@ export const onRequest: PagesFunction<Env> = async (context) => {
               user_email TEXT NOT NULL,
               user_avatar TEXT NOT NULL,
               content TEXT NOT NULL,
-              status TEXT DEFAULT 'approved',
+              status TEXT DEFAULT 'pending',
               created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
           `).run();
 
-          const { results } = await env.DB.prepare(
-            'SELECT * FROM comments ORDER BY created_at DESC LIMIT 100'
-          ).all();
+          const postSlug = url.searchParams.get('post_slug');
+          const statusParam = url.searchParams.get('status');
+
+          let query = 'SELECT * FROM comments';
+          const bindings: any[] = [];
+          const whereClauses: string[] = [];
+
+          if (postSlug) {
+            whereClauses.push('post_slug = ?');
+            bindings.push(postSlug);
+          }
+
+          if (statusParam) {
+            whereClauses.push('status = ?');
+            bindings.push(statusParam);
+          } else if (postSlug) {
+            // For public article view, default to showing only approved comments
+            whereClauses.push("status = 'approved'");
+          }
+
+          if (whereClauses.length > 0) {
+            query += ' WHERE ' + whereClauses.join(' AND ');
+          }
+
+          query += ' ORDER BY created_at DESC LIMIT 100';
+
+          const stmt = env.DB.prepare(query);
+          const { results } = bindings.length > 0 ? await stmt.bind(...bindings).all() : await stmt.all();
 
           return jsonResponse(results || []);
         } catch (e: any) {
@@ -630,6 +782,71 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
       }
       return jsonResponse([]);
+    }
+
+    // 9b. POST /api/comments (Native Comment Submission from Readers)
+    if (path === '/api/comments' && method === 'POST') {
+      try {
+        const body = await request.json() as any;
+        const { post_slug, user_name, user_email, content } = body;
+
+        if (!post_slug || !user_name || !content) {
+          return jsonResponse({ error: 'Nama, komentar, dan artikel tujuan wajib diisi.' }, 400);
+        }
+
+        const avatarName = encodeURIComponent(user_name.trim());
+        const avatar = `https://ui-avatars.com/api/?name=${avatarName}&background=f43f5e&color=fff`;
+
+        if (env.DB) {
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS comments (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              post_slug TEXT NOT NULL,
+              user_name TEXT NOT NULL,
+              user_email TEXT NOT NULL,
+              user_avatar TEXT NOT NULL,
+              content TEXT NOT NULL,
+              status TEXT DEFAULT 'pending',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `).run();
+
+          await env.DB.prepare(`
+            INSERT INTO comments (post_slug, user_name, user_email, user_avatar, content, status)
+            VALUES (?, ?, ?, ?, ?, 'pending')
+          `).bind(
+            post_slug,
+            user_name.trim(),
+            (user_email || '').trim(),
+            avatar,
+            content.trim()
+          ).run();
+        }
+
+        return jsonResponse({
+          success: true,
+          message: 'Terima kasih! Komentar Anda telah berhasil dikirim dan sedang menunggu persetujuan (moderasi) admin.',
+        });
+      } catch (err: any) {
+        return jsonResponse({ error: err.message }, 500);
+      }
+    }
+
+    // 9c. PUT /api/comments/:id or /api/comments/:id/approve (Admin Approve / Update Comment)
+    if (path.startsWith('/api/comments/') && method === 'PUT') {
+      if (env.DB) {
+        try {
+          const id = path.split('/')[3];
+          const body = await request.json().catch(() => ({})) as any;
+          const newStatus = body.status || 'approved';
+
+          await env.DB.prepare('UPDATE comments SET status = ? WHERE id = ?').bind(newStatus, id).run();
+          return jsonResponse({ success: true, message: `Komentar #${id} berhasil diupdate menjadi ${newStatus}.` });
+        } catch (e: any) {
+          return jsonResponse({ error: e.message }, 500);
+        }
+      }
+      return jsonResponse({ success: true });
     }
 
     // 10. DELETE /api/comments/:id

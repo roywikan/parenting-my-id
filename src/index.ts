@@ -358,6 +358,148 @@ ${articleLinks}
         }
       }
 
+      // GET /api/comments (Fetch comments from D1 DB with filtering)
+      if (path === '/api/comments' && request.method === 'GET') {
+        try {
+          await env.DB.prepare(
+            `CREATE TABLE IF NOT EXISTS comments (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              post_slug TEXT NOT NULL,
+              user_name TEXT NOT NULL,
+              user_email TEXT NOT NULL,
+              user_avatar TEXT NOT NULL,
+              content TEXT NOT NULL,
+              status TEXT DEFAULT 'pending',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`
+          ).run();
+
+          const postSlug = url.searchParams.get('post_slug');
+          const statusParam = url.searchParams.get('status');
+
+          let query = 'SELECT * FROM comments';
+          const bindings: any[] = [];
+          const whereClauses: string[] = [];
+
+          if (postSlug) {
+            whereClauses.push('post_slug = ?');
+            bindings.push(postSlug);
+          }
+
+          if (statusParam) {
+            whereClauses.push('status = ?');
+            bindings.push(statusParam);
+          } else if (postSlug) {
+            whereClauses.push("status = 'approved'");
+          }
+
+          if (whereClauses.length > 0) {
+            query += ' WHERE ' + whereClauses.join(' AND ');
+          }
+
+          query += ' ORDER BY created_at DESC LIMIT 100';
+
+          const stmt = env.DB.prepare(query);
+          const { results } = bindings.length > 0 ? await stmt.bind(...bindings).all() : await stmt.all();
+
+          return new Response(JSON.stringify(results || []), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (err: any) {
+          return new Response(JSON.stringify([]), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // POST /api/comments (Native reader comment submission)
+      if (path === '/api/comments' && request.method === 'POST') {
+        try {
+          const body = (await request.json()) as any;
+          const { post_slug, user_name, user_email, content } = body;
+
+          if (!post_slug || !user_name || !content) {
+            return new Response(
+              JSON.stringify({ error: 'Nama, komentar, dan artikel tujuan wajib diisi.' }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          const avatarName = encodeURIComponent(user_name.trim());
+          const avatar = `https://ui-avatars.com/api/?name=${avatarName}&background=f43f5e&color=fff`;
+
+          await env.DB.prepare(
+            `CREATE TABLE IF NOT EXISTS comments (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              post_slug TEXT NOT NULL,
+              user_name TEXT NOT NULL,
+              user_email TEXT NOT NULL,
+              user_avatar TEXT NOT NULL,
+              content TEXT NOT NULL,
+              status TEXT DEFAULT 'pending',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`
+          ).run();
+
+          await env.DB.prepare(
+            `INSERT INTO comments (post_slug, user_name, user_email, user_avatar, content, status)
+             VALUES (?, ?, ?, ?, ?, 'pending')`
+          ).bind(post_slug, user_name.trim(), (user_email || '').trim(), avatar, content.trim()).run();
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              message: 'Terima kasih! Komentar Anda telah berhasil dikirim dan sedang menunggu persetujuan (moderasi) admin.',
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (err: any) {
+          return new Response(
+            JSON.stringify({ error: err.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
+      // PUT /api/comments/:id (Admin Approve / Status Update)
+      if (path.startsWith('/api/comments/') && request.method === 'PUT') {
+        try {
+          const id = path.split('/')[3];
+          const body = (await request.json().catch(() => ({}))) as any;
+          const newStatus = body.status || 'approved';
+
+          await env.DB.prepare('UPDATE comments SET status = ? WHERE id = ?').bind(newStatus, id).run();
+
+          return new Response(
+            JSON.stringify({ success: true, message: `Komentar #${id} berhasil diupdate.` }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (err: any) {
+          return new Response(
+            JSON.stringify({ error: err.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
+      // DELETE /api/comments/:id (Admin Delete Comment)
+      if (path.startsWith('/api/comments/') && request.method === 'DELETE') {
+        try {
+          const id = path.split('/')[3];
+          await env.DB.prepare('DELETE FROM comments WHERE id = ?').bind(id).run();
+
+          return new Response(
+            JSON.stringify({ success: true, message: 'Komentar berhasil dihapus.' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (err: any) {
+          return new Response(
+            JSON.stringify({ error: err.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
       // POST /api/upload-github (Direct GitHub REST API Commit for Images)
       if (path === '/api/upload-github' && request.method === 'POST') {
         try {

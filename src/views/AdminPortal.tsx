@@ -54,6 +54,7 @@ export default function AdminPortal({
 
   // Comments & Cusdis Webhook State
   const [comments, setComments] = useState<any[]>([]);
+  const [commentFilter, setCommentFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [webhookCopied, setWebhookCopied] = useState(false);
 
   const fetchComments = async () => {
@@ -65,6 +66,23 @@ export default function AdminPortal({
       }
     } catch (err) {
       console.error('Failed to fetch comments:', err);
+    }
+  };
+
+  const handleApproveComment = async (id: number) => {
+    try {
+      const res = await fetch(`/api/comments/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'approved' }),
+      });
+      if (res.ok) {
+        setComments((prev) =>
+          prev.map((c) => (c.id === id ? { ...c, status: 'approved' } : c))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to approve comment:', err);
     }
   };
 
@@ -2856,86 +2874,166 @@ export default function AdminPortal({
             </div>
           </div>
 
-          {/* LIST OF SYNCED COMMENTS */}
+          {/* LIST OF SYNCED & NATIVE COMMENTS WITH MODERATION */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   <MessageSquare className="w-5 h-5 text-rose-600" />
-                  <span>Daftar Komentar Tersinkronisasi ({comments.length})</span>
+                  <span>Moderasi Komentar Pembaca ({comments.length})</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Data komentar pembaca yang diterima dari Cusdis Webhook &amp; tersimpan di Database situs.
+                  Kelola komentar masuk dari form native website maupun webhook Cusdis. Setujui komentar untuk menampilkannya di artikel.
                 </p>
               </div>
 
-              <button
-                onClick={fetchComments}
-                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 text-xs font-bold transition-colors"
-              >
-                🔄 Refresh Komentar
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* FILTER TABS */}
+                <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-xs font-bold">
+                  <button
+                    onClick={() => setCommentFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      commentFilter === 'all'
+                        ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    Semua ({comments.length})
+                  </button>
+                  <button
+                    onClick={() => setCommentFilter('pending')}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                      commentFilter === 'pending'
+                        ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    <span>Pending</span>
+                    {comments.filter((c) => c.status === 'pending').length > 0 && (
+                      <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[10px] animate-pulse">
+                        {comments.filter((c) => c.status === 'pending').length}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setCommentFilter('approved')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      commentFilter === 'approved'
+                        ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    Disetujui ({comments.filter((c) => c.status === 'approved').length})
+                  </button>
+                </div>
+
+                <button
+                  onClick={fetchComments}
+                  className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 text-xs font-bold transition-colors"
+                >
+                  🔄 Refresh
+                </button>
+              </div>
             </div>
 
-            {comments.length === 0 ? (
-              <div className="text-center py-12 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-3">
-                <MessageSquare className="w-10 h-10 text-slate-400 mx-auto" />
-                <p className="text-sm font-bold text-slate-600 dark:text-slate-400">
-                  Belum ada komentar yang tersinkronisasi.
-                </p>
-                <p className="text-xs text-slate-500 max-w-md mx-auto">
-                  Komentar baru dari pembaca akan muncul secara otomatis di sini setelah Webhook Cusdis aktif.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {comments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-start justify-between gap-4"
-                  >
-                    <div className="flex items-start gap-3 min-w-0">
-                      <img
-                        src={comment.user_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user_name || 'U')}`}
-                        alt={comment.user_name}
-                        className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
-                      />
-                      <div className="space-y-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-extrabold text-xs text-slate-900 dark:text-white">
-                            {comment.user_name}
-                          </span>
-                          {comment.user_email && (
-                            <span className="text-[11px] text-slate-400">
-                              ({comment.user_email})
+            {(() => {
+              const filteredComments = comments.filter((c) => {
+                if (commentFilter === 'pending') return c.status === 'pending';
+                if (commentFilter === 'approved') return c.status === 'approved';
+                return true;
+              });
+
+              if (filteredComments.length === 0) {
+                return (
+                  <div className="text-center py-12 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-3">
+                    <MessageSquare className="w-10 h-10 text-slate-400 mx-auto" />
+                    <p className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                      Tidak ada komentar dalam kategori ini.
+                    </p>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                      Komentar baru dari pembaca akan muncul secara otomatis di sini.
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="space-y-3">
+                  {filteredComments.map((comment) => (
+                    <div
+                      key={comment.id}
+                      className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4 ${
+                        comment.status === 'pending'
+                          ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/80 dark:border-amber-900/50'
+                          : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        <img
+                          src={comment.user_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user_name || 'U')}`}
+                          alt={comment.user_name}
+                          className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
+                        />
+                        <div className="space-y-1.5 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-extrabold text-xs text-slate-900 dark:text-white">
+                              {comment.user_name}
                             </span>
-                          )}
-                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold">
-                            {comment.status || 'approved'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 leading-relaxed font-medium">
-                          {comment.content}
-                        </p>
-                        <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-1">
-                          <span>Artikel: <strong className="text-rose-600 dark:text-rose-400">/baca/{comment.post_slug}</strong></span>
-                          <span>•</span>
-                          <span>{new Date(comment.created_at).toLocaleString('id-ID')}</span>
+                            {comment.user_email && (
+                              <span className="text-[11px] text-slate-400">
+                                ({comment.user_email})
+                              </span>
+                            )}
+
+                            {comment.status === 'pending' ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-extrabold border border-amber-300/60 dark:border-amber-800 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                                ⏳ Menunggu Moderasi
+                              </span>
+                            ) : (
+                              <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-extrabold border border-emerald-300/60 dark:border-emerald-800">
+                                ✓ Disetujui
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 leading-relaxed font-medium">
+                            {comment.content}
+                          </p>
+
+                          <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-0.5">
+                            <span>Artikel: <strong className="text-rose-600 dark:text-rose-400">/baca/{comment.post_slug}</strong></span>
+                            <span>•</span>
+                            <span>{new Date(comment.created_at).toLocaleString('id-ID')}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <button
-                      onClick={() => handleDeleteComment(comment.id)}
-                      className="p-2 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 hover:bg-rose-100 text-xs font-bold transition-colors shrink-0 self-start sm:self-auto"
-                      title="Hapus Komentar dari DB"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-start">
+                        {comment.status === 'pending' && (
+                          <button
+                            onClick={() => handleApproveComment(comment.id)}
+                            className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-xs"
+                            title="Setujui komentar agar tampil di website"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Setujui</span>
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => handleDeleteComment(comment.id)}
+                          className="p-2 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 hover:bg-rose-100 text-xs font-bold transition-colors"
+                          title="Hapus Komentar dari DB"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
