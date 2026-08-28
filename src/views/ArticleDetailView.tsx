@@ -2,8 +2,11 @@ import { useMemo, useState, useEffect } from 'react';
 import { Post, AutoLink, SiteConfig } from '../types';
 import { applyAutoLinks, preprocessMarkdownLineBreaks } from '../lib/autolink';
 import { marked } from 'marked';
-import { Clock, Eye, Calendar, ArrowLeft, Share2, Check, Bookmark, Sparkles, MessageCircle, Twitter, Facebook, Copy } from 'lucide-react';
+import { Clock, Eye, Calendar, ArrowLeft, Share2, Check, Bookmark, Sparkles, MessageCircle, Twitter, Facebook, Copy, Award, CheckCircle2, Linkedin, Instagram, Globe, Users, ShieldCheck } from 'lucide-react';
 import SEOHelper from '../components/SEOHelper';
+import Breadcrumbs from '../components/Breadcrumbs';
+import AutoTableOfContents from '../components/AutoTableOfContents';
+import SmartRelatedArticles from '../components/SmartRelatedArticles';
 import AdSlot from '../components/AdSlot';
 
 interface ArticleDetailViewProps {
@@ -28,6 +31,69 @@ export default function ArticleDetailView({
   const post = useMemo(() => {
     return posts.find((p) => p.slug === slug);
   }, [posts, slug]);
+
+  const [currentViews, setCurrentViews] = useState(post ? post.views : 0);
+  const [hasTrackedView, setHasTrackedView] = useState(false);
+
+  useEffect(() => {
+    if (post) {
+      setCurrentViews(post.views);
+      setHasTrackedView(false);
+    }
+  }, [post?.id, post?.views]);
+
+  // Reader/Viewer Counter Tracking (Human reader scrolls past article midpoint)
+  useEffect(() => {
+    if (!post || hasTrackedView) return;
+
+    const sessionKey = `viewed_article_${post.id}`;
+    if (sessionStorage.getItem(sessionKey)) {
+      setHasTrackedView(true);
+      return;
+    }
+
+    const handleScroll = () => {
+      // Bot detection guard
+      const isBot = /bot|googlebot|crawler|spider|robot|crawling/i.test(navigator.userAgent);
+      if (isBot) return;
+
+      const articleEl = document.getElementById('article-content-body');
+      if (!articleEl) return;
+
+      const rect = articleEl.getBoundingClientRect();
+      const elementTopRelativeToWindow = rect.top + window.scrollY;
+      const elementHeight = rect.height;
+      const midPoint = elementTopRelativeToWindow + (elementHeight * 0.45); // 45% midpoint of content
+
+      const currentScrollPosition = window.scrollY + window.innerHeight;
+
+      if (currentScrollPosition >= midPoint) {
+        sessionStorage.setItem(sessionKey, 'true');
+        setHasTrackedView(true);
+
+        fetch(`/api/posts/${post.id}/view`, { method: 'POST' })
+          .then((res) => res.json())
+          .then((data: any) => {
+            if (data && typeof data.views === 'number') {
+              setCurrentViews(data.views);
+              post.views = data.views;
+            } else {
+              setCurrentViews((prev) => prev + 1);
+              post.views += 1;
+            }
+          })
+          .catch(() => {
+            setCurrentViews((prev) => prev + 1);
+            post.views += 1;
+          });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [post, hasTrackedView]);
 
   // Render markdown to HTML + extract TOC items + apply Auto-Links & Heading IDs
   const { parsedHtml, tocItems } = useMemo(() => {
@@ -111,22 +177,36 @@ export default function ArticleDetailView({
         description={post.metaDescription || post.excerpt}
         image={post.featuredImage}
         canonicalUrl={articleUrl}
+        type="article"
+        authorName={post.authorName || 'Dr. Ratna Sari, M.Psi'}
+        authorRole={post.authorTitle || 'Spesialis Psikologi Anak & Praktisi Parenting'}
+        datePublished={post.createdAt}
+        dateModified={post.updatedAt || post.createdAt}
+        category={post.category || 'Parenting'}
+        keywords={post.tags ? post.tags.split(',').map((t) => t.trim()) : []}
+        contentMarkdown={post.contentMarkdown}
+        siteName={siteConfig?.site_name || 'Parenting.my.id'}
+        siteLogo={siteConfig?.site_logo_icon || 'https://parenting.my.id/favicon-32x32.png'}
       />
 
-      {/* BREADCRUMB & BACK BUTTON */}
-      <div className="flex items-center justify-between text-secondary text-slate-500">
-        <button
-          onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-rose-600 font-medium transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Kembali ke Beranda</span>
-        </button>
-        <div className="hidden sm:flex items-center gap-2">
-          <span>Parenting.my.id</span>
-          <span>/</span>
-          <span className="text-rose-600 font-semibold">{post.category}</span>
+      {/* BREADCRUMB & BACK NAVIGATION */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-secondary text-slate-500">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-rose-600 font-medium transition-colors text-xs sm:text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Kembali ke Beranda</span>
+          </button>
         </div>
+
+        <Breadcrumbs
+          items={[
+            { label: post.category || 'Artikel', onClick: onBack },
+            { label: post.title, active: true },
+          ]}
+        />
       </div>
 
       {/* ARTICLE HEADER */}
@@ -134,9 +214,6 @@ export default function ArticleDetailView({
         <div className="flex items-center gap-2">
           <span className="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold text-xs">
             {post.category}
-          </span>
-          <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-0.5 rounded-md">
-            <Sparkles className="w-3 h-3" /> Auto-Linking Active
           </span>
         </div>
 
@@ -148,25 +225,50 @@ export default function ArticleDetailView({
           "{post.excerpt}"
         </p>
 
-        {/* AUTHOR & METADATA BAR */}
+        {/* AUTHOR & METADATA BAR (WITH MULTI-AUTHOR DISPLAY) */}
         <div className="flex flex-wrap items-center justify-between gap-4 pt-4 text-secondary text-slate-500 border-t border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <img
-              src={post.authorAvatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80'}
-              alt={post.authorName}
-              className="w-10 h-10 rounded-full object-cover border-2 border-rose-300"
-            />
-            <div>
-              <div className="font-bold text-slate-900 dark:text-white text-sm">
-                {post.authorName || 'Dr. Ratna Sari, M.Psi'}
-              </div>
-              <div className="text-[11px] text-rose-600 font-medium">
-                Pakar & Penulis Parenting • {post.authorRole || 'admin'}
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Primary Author */}
+            <div className="flex items-center gap-3">
+              <img
+                src={post.authorAvatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80'}
+                alt={post.authorName}
+                className="w-10 h-10 rounded-full object-cover border-2 border-rose-400 shadow-2xs"
+              />
+              <div>
+                <div className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
+                  <span>{post.authorName || 'Dr. Ratna Sari, M.Psi'}</span>
+                </div>
+                <div className="text-[11px] text-rose-600 font-medium">
+                  {post.authorTitle || 'Spesialis Psikologi Anak & Praktisi Parenting'}
+                </div>
               </div>
             </div>
+
+            {/* Co-Authors Header Badges */}
+            {post.coAuthors && post.coAuthors.length > 0 && (
+              <div className="flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-700">
+                <Users className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-xs text-slate-500 font-medium">Co-Author:</span>
+                <div className="flex -space-x-2 overflow-hidden">
+                  {post.coAuthors.map((co) => (
+                    <img
+                      key={co.id}
+                      src={co.avatar}
+                      alt={co.name}
+                      title={`${co.name} (${co.title || 'Co-Author'})`}
+                      className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-900 object-cover"
+                    />
+                  ))}
+                </div>
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {post.coAuthors.map(c => c.name).join(', ')}
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-4 text-slate-500">
+          <div className="flex items-center gap-4 text-slate-500 text-xs">
             <span className="flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5" />
               {new Date(post.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -177,9 +279,9 @@ export default function ArticleDetailView({
               {post.readTimeMinutes} Mnt Baca
             </span>
             <span>•</span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1" title="Pertambahan terbaca dihitung setelah pembaca melihat hingga pertengahan artikel">
               <Eye className="w-3.5 h-3.5" />
-              {post.views} Dibaca
+              {currentViews} Dibaca
             </span>
           </div>
         </div>
@@ -202,26 +304,7 @@ export default function ArticleDetailView({
       />
 
       {/* TABLE OF CONTENTS (IF HEADINGS EXIST) */}
-      {tocItems.length > 0 && (
-        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-2">
-          <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-            <Bookmark className="w-4 h-4 text-rose-500" />
-            <span>Daftar Isi Artikel</span>
-          </h3>
-          <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
-            {tocItems.map((item, idx) => (
-              <li key={idx} className={item.level === 3 ? 'pl-4' : ''}>
-                <a
-                  href={`#${item.id}`}
-                  className="hover:text-rose-600 hover:underline transition-colors block py-0.5"
-                >
-                  • {item.text}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <AutoTableOfContents items={tocItems} />
 
       {/* STRATEGIC AD PLACEMENT: IN-ARTICLE MIDDLE */}
       <AdSlot
@@ -232,6 +315,7 @@ export default function ArticleDetailView({
 
       {/* ARTICLE CONTENT BODY WITH AUTO-LINKING */}
       <div
+        id="article-content-body"
         className="article-body prose prose-rose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 space-y-4"
         dangerouslySetInnerHTML={{ __html: parsedHtml }}
       />
@@ -249,7 +333,7 @@ export default function ArticleDetailView({
           
           {/* TAGS */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-500">Kata Kunci:</span>
+            <span className="text-xs font-bold text-slate-500">Topik Utama:</span>
             <div className="flex flex-wrap gap-1.5">
               {post.tags.split(',').map((tag) => (
                 <span
@@ -263,7 +347,7 @@ export default function ArticleDetailView({
           </div>
 
           {/* SHARE BUTTONS */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
               <Share2 className="w-3.5 h-3.5" /> Bagikan:
             </span>
@@ -272,18 +356,41 @@ export default function ArticleDetailView({
               href={`https://api.whatsapp.com/send?text=${encodeURIComponent(post.title + ' ' + articleUrl)}`}
               target="_blank"
               rel="noreferrer"
-              className="p-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+              className="p-2 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 hover:bg-emerald-100 transition-colors"
               title="Bagikan ke WhatsApp"
             >
               <MessageCircle className="w-4 h-4" />
             </a>
 
             <a
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(articleUrl)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="p-2 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 hover:bg-blue-100 transition-colors"
+              title="Bagikan ke Facebook"
+            >
+              <Facebook className="w-4 h-4" />
+            </a>
+
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`${post.title} - ${articleUrl}`);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2500);
+                window.open('https://www.instagram.com', '_blank');
+              }}
+              className="p-2 rounded-xl bg-pink-50 text-pink-600 dark:bg-pink-950/60 dark:text-pink-400 hover:bg-pink-100 transition-colors"
+              title="Bagikan ke Instagram (Salin link & buka Instagram)"
+            >
+              <Instagram className="w-4 h-4" />
+            </button>
+
+            <a
               href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(articleUrl)}`}
               target="_blank"
               rel="noreferrer"
-              className="p-2 rounded-xl bg-sky-50 text-sky-600 hover:bg-sky-100 transition-colors"
-              title="Bagikan ke Twitter"
+              className="p-2 rounded-xl bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400 hover:bg-sky-100 transition-colors"
+              title="Bagikan ke Twitter / X"
             >
               <Twitter className="w-4 h-4" />
             </a>
@@ -291,7 +398,7 @@ export default function ArticleDetailView({
             <button
               onClick={handleCopyLink}
               className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition-colors relative"
-              title="Salin Link"
+              title="Salin Link Artikel"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
             </button>
@@ -299,57 +406,116 @@ export default function ArticleDetailView({
         </div>
       </div>
 
-      {/* AUTHOR PROFILE CARD */}
-      <div className="bg-gradient-to-r from-rose-50 to-pink-50 dark:from-slate-900 dark:to-slate-800/80 rounded-3xl p-6 border border-rose-100 dark:border-slate-800 flex flex-col sm:flex-row items-center sm:items-start gap-4">
-        <img
-          src={post.authorAvatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80'}
-          alt={post.authorName}
-          className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-md shrink-0"
-        />
-        <div className="space-y-1 text-center sm:text-left">
-          <h4 className="text-base font-bold text-slate-900 dark:text-white">
-            {post.authorName || 'Dr. Ratna Sari, M.Psi'}
-          </h4>
-          <p className="text-xs text-rose-600 font-semibold">Spesialis Psikologi Anak & Praktisi Parenting</p>
-          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pt-1">
-            Berkomitmen memberikan edukasi berbasis riset medis dan psikologi untuk membantu orang tua Indonesia membesarkan anak dengan penuh kasih sayang dan pemahaman gizi yang tepat.
-          </p>
-        </div>
-      </div>
+      {/* EDITORIAL MULTI-AUTHOR BIO BOX */}
+      <div className="space-y-4 pt-4">
+        {/* PRIMARY AUTHOR BIO BOX */}
+        <div className="bg-gradient-to-br from-rose-50/80 via-white to-pink-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/90 rounded-3xl p-6 border border-rose-200/60 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+            <img
+              src={post.authorAvatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80'}
+              alt={post.authorName}
+              className="w-20 h-20 rounded-2xl object-cover border-2 border-rose-400 shadow-md shrink-0"
+            />
+            <div className="space-y-2 text-center sm:text-left flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <div className="flex items-center justify-center sm:justify-start gap-2">
+                    <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
+                      {post.authorName || 'Dr. Ratna Sari, M.Psi'}
+                    </h4>
+                  </div>
+                  <p className="text-xs text-rose-600 font-semibold pt-0.5">
+                    {post.authorTitle || 'Spesialis Psikologi Anak & Praktisi Parenting'}
+                  </p>
+                </div>
 
-      {/* RELATED POSTS */}
-      {relatedPosts.length > 0 && (
-        <div className="space-y-4 pt-6">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Artikel Terkait Lainnya</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {relatedPosts.map((rel) => (
-              <div
-                key={rel.id}
-                onClick={() => {
-                  onSelectPost(rel.slug);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all cursor-pointer flex items-center gap-4 group"
-              >
-                <img
-                  src={rel.featuredImage}
-                  alt={rel.title}
-                  className="w-20 h-20 rounded-xl object-cover shrink-0"
-                />
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">
-                    {rel.category}
-                  </span>
-                  <h5 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors line-clamp-2">
-                    {rel.title}
-                  </h5>
-                  <div className="text-[10px] text-slate-500">{rel.readTimeMinutes} mnt baca</div>
+                {/* SOCIAL LINKS */}
+                <div className="flex items-center justify-center sm:justify-end gap-2 text-slate-500">
+                  {post.authorSocials?.instagram && (
+                    <a
+                      href={post.authorSocials.instagram}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 rounded-lg bg-rose-50 dark:bg-slate-800 text-rose-600 hover:bg-rose-100 transition-colors"
+                      title="Instagram Penulis"
+                    >
+                      <Instagram className="w-4 h-4" />
+                    </a>
+                  )}
+                  {post.authorSocials?.linkedin && (
+                    <a
+                      href={post.authorSocials.linkedin}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 rounded-lg bg-sky-50 dark:bg-slate-800 text-sky-600 hover:bg-sky-100 transition-colors"
+                      title="LinkedIn Penulis"
+                    >
+                      <Linkedin className="w-4 h-4" />
+                    </a>
+                  )}
+                  {post.authorSocials?.website && (
+                    <a
+                      href={post.authorSocials.website}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition-colors"
+                      title="Situs Resmi Penulis"
+                    >
+                      <Globe className="w-4 h-4" />
+                    </a>
+                  )}
                 </div>
               </div>
-            ))}
+
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                {post.authorBio || 'Berkomitmen memberikan edukasi berbasis riset medis dan psikologi untuk membantu orang tua Indonesia membesarkan anak dengan penuh kasih sayang dan pemahaman gizi yang tepat.'}
+              </p>
+            </div>
           </div>
         </div>
-      )}
+
+        {/* CO-AUTHORS & REVIEWERS SECTION (IF ANY) */}
+        {post.coAuthors && post.coAuthors.length > 0 && (
+          <div className="space-y-3 pt-2">
+            <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+              <Users className="w-3.5 h-3.5 text-rose-500" />
+              <span>Co-Author & Tim Kontributor Editorial</span>
+            </h5>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {post.coAuthors.map((co) => (
+                <div
+                  key={co.id}
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-start gap-3.5 shadow-2xs"
+                >
+                  <img
+                    src={co.avatar}
+                    alt={co.name}
+                    className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
+                  />
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                      {co.name}
+                    </div>
+                    <div className="text-[11px] text-rose-600 font-medium truncate">
+                      {co.title || 'Edukator Kesehatan Anak'}
+                    </div>
+                    <p className="text-[11px] text-slate-500 line-clamp-2 leading-snug">
+                      {co.bio || 'Kontributor riset dan edukasi parenting.'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* SMART RELATED ARTICLES (AUTO RELEVANCE & INTERNAL LINK JUICE) */}
+      <SmartRelatedArticles
+        currentPost={post}
+        allPosts={posts}
+        onSelectPost={onSelectPost}
+      />
     </article>
   );
 }

@@ -8,6 +8,10 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   site_logo_icon: 'Heart',
   site_favicon_url: '/favicon.ico',
   header_nav_links: [
+    { label: 'Balita', url: '/balita' },
+    { label: 'Nutrisi & Makanan', url: '/makanan' },
+    { label: 'Kesehatan', url: '/kesehatan' },
+    { label: 'Parenting', url: '/parenting' },
     { label: 'Sitemap', url: '/sitemap.xml' },
     { label: 'RSS Feed', url: '/feed.xml' }
   ],
@@ -52,11 +56,20 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   age_accessibility_preset: '29-38',
   header_badge_text: 'Beta v1.0',
   hero_badge_text: 'Portal Nomor 1',
-  autolink_ticker_label: 'Trending:',
+  autolink_ticker_label: 'Topik Trending:',
   footer_autolink_label: 'Tautan Populer',
   footer_badge_1: 'Aman & Terpercaya',
   footer_badge_2: 'Diperbarui Rutin',
   footer_badge_3: '100% Gratis',
+
+  // Performance Metric Box Defaults
+  show_performance_box: true,
+  metric1_value: '99+',
+  metric1_label: 'Kecepatan',
+  metric2_value: '100',
+  metric2_label: 'Kualitas',
+  metric3_value: '0ms',
+  metric3_label: 'Respon Delay',
 
   // Strategic AdSense Placements
   enable_adsense: true,

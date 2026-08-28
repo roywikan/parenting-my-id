@@ -1,12 +1,14 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { marked } from 'marked';
 import { applyAutoLinks, calculateReadTime, preprocessMarkdownLineBreaks } from '../lib/autolink';
-import { AutoLink } from '../types';
+import { AutoLink, User, PostRevision } from '../types';
+import SeoAuditWidget from './SeoAuditWidget';
 import { 
   Bold, Italic, Strikethrough, Heading1, Heading2, Heading3, 
   List, ListOrdered, CheckSquare, Quote, Code, Table, Minus, 
   Link as LinkIcon, Image as ImageIcon, Upload, Eye, Edit3, Columns, 
-  Undo, Redo, Sparkles, CheckCircle2, RefreshCw, X, Copy, Check, FileText
+  Undo, Redo, Sparkles, CheckCircle2, RefreshCw, X, Copy, Check, FileText,
+  Users, History, RotateCcw, Award, ShieldCheck
 } from 'lucide-react';
 
 interface RichPostEditorProps {
@@ -35,6 +37,13 @@ interface RichPostEditorProps {
   uploadingImage: boolean;
   onImageUpload: (file: File) => Promise<string | null>;
   autolinks: AutoLink[];
+  writers?: User[];
+  authorId?: number;
+  setAuthorId?: (id: number) => void;
+  coAuthorIds?: number[];
+  setCoAuthorIds?: (ids: number[]) => void;
+  revisions?: PostRevision[];
+  onRestoreRevision?: (rev: PostRevision) => void;
 }
 
 export default function RichPostEditor({
@@ -63,6 +72,13 @@ export default function RichPostEditor({
   uploadingImage,
   onImageUpload,
   autolinks,
+  writers = [],
+  authorId,
+  setAuthorId,
+  coAuthorIds = [],
+  setCoAuthorIds,
+  revisions = [],
+  onRestoreRevision,
 }: RichPostEditorProps) {
   // Editor view modes: 'write' | 'split' | 'preview'
   const [viewMode, setViewMode] = useState<'write' | 'split' | 'preview'>('split');
@@ -613,7 +629,7 @@ export default function RichPostEditor({
                     <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600 mb-1 flex items-center justify-between">
                       <span>Pratinjau Hasil Real-Time (Live)</span>
                       <span className="text-[9px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded">
-                        Auto-Links Active
+                        Tautan Otomatis Aktif
                       </span>
                     </div>
                     <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 max-h-[440px] overflow-y-auto prose prose-rose max-w-none dark:prose-invert prose-sm text-slate-800 dark:text-slate-200">
@@ -772,7 +788,7 @@ export default function RichPostEditor({
             {/* TAGS */}
             <div>
               <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                Kata Kunci / Tag (Pisahkan dengan koma)
+                Topik / Tag (Pisahkan dengan koma)
               </label>
               <input
                 type="text"
@@ -783,6 +799,162 @@ export default function RichPostEditor({
               />
             </div>
 
+          </div>
+
+          {/* REAL-TIME AUTO IN-PAGE SEO AUDITOR WIDGET */}
+          <SeoAuditWidget
+            title={title}
+            metaTitle={metaTitle}
+            setMetaTitle={setMetaTitle}
+            metaDesc={metaDesc}
+            setMetaDesc={setMetaDesc}
+            markdown={markdown}
+            featuredImage={featuredImage}
+            tags={tags}
+            onAutoOptimizeMeta={() => {
+              if (title) {
+                setMetaTitle(`${title} | Parenting.my.id`);
+              }
+              const plainText = (excerpt || markdown || '').replace(/<[^>]+>/g, '').replace(/[#*`_~]/g, ' ').trim();
+              const truncated = plainText.length > 155 ? plainText.substring(0, 155) + '...' : plainText;
+              if (truncated) {
+                setMetaDesc(truncated);
+              }
+            }}
+          />
+
+          {/* MULTI-AUTHOR & CREDENTIALS CARD */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
+            <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <Users className="w-4 h-4 text-rose-600" />
+              <span>Tim Editorial & Penulis Bersama</span>
+            </h4>
+
+            {/* PRIMARY AUTHOR */}
+            {setAuthorId && writers.length > 0 && (
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Penulis Utama (Primary Author)
+                </label>
+                <select
+                  value={authorId || ''}
+                  onChange={(e) => setAuthorId(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                >
+                  {writers.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name} {w.title ? `(${w.title})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* CO-AUTHORS MULTI-SELECT */}
+            {setCoAuthorIds && writers.length > 1 && (
+              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                  Co-Author / Kontributor Tambahan (Opsional)
+                </label>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                  {writers
+                    .filter((w) => w.id !== authorId)
+                    .map((w) => {
+                      const isChecked = coAuthorIds.includes(w.id);
+                      return (
+                        <label
+                          key={w.id}
+                          className={`flex items-center gap-2.5 p-2 rounded-xl border text-xs cursor-pointer transition-colors ${
+                            isChecked
+                              ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200 font-bold'
+                              : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setCoAuthorIds([...coAuthorIds, w.id]);
+                              } else {
+                                setCoAuthorIds(coAuthorIds.filter((id) => id !== w.id));
+                              }
+                            }}
+                            className="rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                          />
+                          <img
+                            src={w.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}
+                            alt={w.name}
+                            className="w-6 h-6 rounded-full object-cover"
+                          />
+                          <div className="truncate">
+                            <span className="text-xs font-bold block">{w.name}</span>
+                            <span className="text-[10px] text-slate-500 block truncate">{w.title || w.role}</span>
+                          </div>
+                        </label>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* REVISION HISTORY CARD (HISTORI REVISI MAX 3 VERSI) */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <History className="w-4 h-4 text-amber-500" />
+                <span>Histori Revisi & Rollback</span>
+              </h4>
+              <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-[10px] font-extrabold">
+                {revisions.length}/3 Versi
+              </span>
+            </div>
+
+            {revisions.length === 0 ? (
+              <p className="text-xs text-slate-400 italic">
+                Belum ada histori revisi disimpan. Revisi tersimpan otomatis saat artikel diperbarui (maksimal 3 versi terkini).
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {revisions.map((rev, idx) => {
+                  const dateFormatted = new Date(rev.updatedAt || rev.timestamp).toLocaleString('id-ID', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+                  return (
+                    <div
+                      key={rev.id || idx}
+                      className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 text-xs"
+                    >
+                      <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
+                        <span className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                          <RotateCcw className="w-3 h-3" /> Versi #{revisions.length - idx} ({dateFormatted})
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-normal">
+                          Oleh {rev.updatedByName}
+                        </span>
+                      </div>
+                      <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 line-clamp-1">
+                        "{rev.title}"
+                      </p>
+                      {onRestoreRevision && (
+                        <button
+                          type="button"
+                          onClick={() => onRestoreRevision(rev)}
+                          className="w-full py-1.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shadow-sm transition-all flex items-center justify-center gap-1.5"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>Kembalikan ke Versi Ini (Rollback)</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
         </div>

@@ -19,24 +19,43 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Initial In-Memory / Local Seed Data mirroring Cloudflare D1
-const mockUsers = [
+let mockUsers = [
   {
     id: 1,
     email: 'admin@parenting.my.id',
     password: 'admin123',
     name: 'Dr. Ratna Sari, M.Psi',
+    title: 'Spesialis Psikologi Anak & Praktisi Parenting',
     role: 'admin',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
-    bio: 'Psikolog anak & praktisi parenting terkemuka di Indonesia.',
+    bio: 'Psikolog anak & praktisi parenting terkemuka di Indonesia dengan pengalaman klinis 12+ tahun dalam pendampingan tumbuh kembang emosi anak.',
+    socialInstagram: 'https://instagram.com/ratnasari.mpsi',
+    socialLinkedin: 'https://linkedin.com/in/ratnasari-mpsi',
+    socialWebsite: 'https://parenting.my.id',
   },
   {
     id: 2,
     email: 'penulis@parenting.my.id',
     password: 'writer123',
     name: 'Ahmad Zulkarnain, S.Ked',
+    title: 'Edukator Kesehatan Anak & Spesialis Gizi Balita',
     role: 'writer',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-    bio: 'Edukator kesehatan anak dan spesialis gizi tumbuh kembang balita.',
+    bio: 'Pemerhati gizi anak, fasilitator pencegahan stunting nasional, serta edukator kesehatan balita.',
+    socialInstagram: 'https://instagram.com/ahmad.zk',
+    socialLinkedin: 'https://linkedin.com/in/ahmad-zulkarnain',
+  },
+  {
+    id: 3,
+    email: 'siti.aminah@parenting.my.id',
+    password: 'writer123',
+    name: 'Siti Aminah, S.Gz',
+    title: 'Ahli Gizi Ibu & Anak (Certified Nutritionist)',
+    role: 'writer',
+    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80',
+    bio: 'Praktisi MPASI sehat, penyusun panduan gizi 1000 HPK, dan konselor laktasi bersertifikasi.',
+    socialInstagram: 'https://instagram.com/sitiaminah.sgz',
+    socialWebsite: 'https://parenting.my.id',
   },
 ];
 
@@ -49,7 +68,7 @@ let mockAutolinks = [
   { id: 6, keyword: 'gizi anak', targetUrl: '/baca/mengenal-bahaya-stunting-dan-cara-pencegahannya-sejak-1000-hpk', description: 'Nutrisi seimbang untuk tumbuh kembang optimal.', clickCount: 50 },
 ];
 
-let mockPosts = [
+let mockPosts: any[] = [
   {
     id: 1,
     title: 'Panduan Lengkap Pola Asuh Demokratis untuk Mendidik Anak Tangguh Masa Kini',
@@ -202,14 +221,24 @@ app.get('/api/posts', (req, res) => {
   res.json(mockPosts);
 });
 
-// GET Post by Slug & Increment View Count
+// GET Post by Slug (Does NOT auto-increment views, handled via midpoint scroll endpoint)
 app.get('/api/posts/:slug', (req, res) => {
   const post = mockPosts.find((p) => p.slug === req.params.slug);
   if (!post) {
     return res.status(404).json({ error: 'Post not found' });
   }
-  post.views += 1;
   res.json(post);
+});
+
+// POST Increment Post View Count (Human reader scrolled past midpoint)
+app.post('/api/posts/:id/view', (req, res) => {
+  const postId = Number(req.params.id);
+  const post = mockPosts.find((p) => p.id === postId);
+  if (!post) {
+    return res.status(404).json({ error: 'Post not found' });
+  }
+  post.views = (post.views || 0) + 1;
+  res.json({ success: true, views: post.views });
 });
 
 // Helper to commit file directly to GitHub via REST API
@@ -283,9 +312,74 @@ async function triggerStaticFilesGeneratorAndCommit(posts: any[]) {
   }
 }
 
-// POST Create or Update Post (With Auto-Save Draft support & Static File Sync)
+// 1.B GET Users / Writers List
+app.get('/api/users', (req, res) => {
+  const safeUsers = mockUsers.map(({ password, ...u }) => u);
+  res.json(safeUsers);
+});
+
+// Create or Update User (Writer / Admin)
+app.post('/api/users', (req, res) => {
+  const { id, name, email, password, role, avatar, title, bio, socialInstagram, socialLinkedin, socialWebsite } = req.body;
+  
+  if (!name || !email) {
+    return res.status(400).json({ error: 'Nama dan Email wajib diisi' });
+  }
+
+  if (id) {
+    const index = mockUsers.findIndex((u) => u.id === Number(id));
+    if (index !== -1) {
+      mockUsers[index] = {
+        ...mockUsers[index],
+        name,
+        email,
+        password: password || mockUsers[index].password,
+        role: role || mockUsers[index].role,
+        avatar: avatar || mockUsers[index].avatar,
+        title: title || mockUsers[index].title,
+        bio: bio || mockUsers[index].bio,
+        socialInstagram: socialInstagram || mockUsers[index].socialInstagram,
+        socialLinkedin: socialLinkedin || mockUsers[index].socialLinkedin,
+        socialWebsite: socialWebsite || mockUsers[index].socialWebsite,
+      };
+      const { password: _, ...safeUser } = mockUsers[index];
+      return res.json({ success: true, user: safeUser });
+    }
+  }
+
+  const newUser = {
+    id: Date.now(),
+    email,
+    password: password || 'writer123',
+    name,
+    role: role || 'writer',
+    avatar: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    title: title || 'Edukator Parenting & Kesehatan',
+    bio: bio || 'Penulis dan kontributor artikel edukasi parenting.',
+    socialInstagram: socialInstagram || '',
+    socialLinkedin: socialLinkedin || '',
+    socialWebsite: socialWebsite || '',
+    createdAt: new Date().toISOString(),
+  };
+
+  mockUsers.push(newUser);
+  const { password: _, ...safeUser } = newUser;
+  res.json({ success: true, user: safeUser });
+});
+
+// Delete User / Writer
+app.delete('/api/users/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (id === 1) {
+    return res.status(400).json({ error: 'Admin Utama tidak dapat dihapus.' });
+  }
+  mockUsers = mockUsers.filter((u) => u.id !== id);
+  res.json({ success: true, message: 'Writer berhasil dihapus' });
+});
+
+// POST Create or Update Post (With Multi-Author, Auto-Save Draft & Revision History max 3)
 app.post('/api/posts', (req, res) => {
-  const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, status, metaTitle, metaDescription, tags } = req.body;
+  const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, status, metaTitle, metaDescription, tags } = req.body;
 
   if (!title || !contentMarkdown) {
     return res.status(400).json({ error: 'Judul dan konten markdown wajib diisi.' });
@@ -294,12 +388,35 @@ app.post('/api/posts', (req, res) => {
   const generatedSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const author = mockUsers.find((u) => u.id === (authorId || 1)) || mockUsers[0];
 
+  // Resolve Co-Authors
+  const coAuthors = Array.isArray(coAuthorIds)
+    ? mockUsers
+        .filter((u) => coAuthorIds.includes(u.id) && u.id !== author.id)
+        .map(({ password, ...u }) => u)
+    : [];
+
   if (id) {
     // Update existing post
     const index = mockPosts.findIndex((p) => p.id === Number(id));
     if (index !== -1) {
+      const existingPost = mockPosts[index];
+
+      // Build Revision History Snapshot (Max 3 latest versions)
+      const prevRevisions = existingPost.revisions || [];
+      const newRevision = {
+        id: `rev-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        title: existingPost.title,
+        contentMarkdown: existingPost.contentMarkdown,
+        excerpt: existingPost.excerpt,
+        updatedByName: author.name,
+      };
+      
+      // Keep only up to 3 revisions
+      const updatedRevisions = [newRevision, ...prevRevisions].slice(0, 3);
+
       mockPosts[index] = {
-        ...mockPosts[index],
+        ...existingPost,
         title,
         slug: generatedSlug,
         contentMarkdown,
@@ -307,6 +424,20 @@ app.post('/api/posts', (req, res) => {
         featuredImage: featuredImage || 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=80',
         category: category || 'Pola Asuh',
         readTimeMinutes: readTimeMinutes || Math.max(1, Math.ceil(contentMarkdown.split(' ').length / 200)),
+        authorId: author.id,
+        authorName: author.name,
+        authorAvatar: author.avatar,
+        authorRole: author.role,
+        authorTitle: author.title,
+        authorBio: author.bio,
+        authorSocials: {
+          instagram: author.socialInstagram,
+          linkedin: author.socialLinkedin,
+          website: author.socialWebsite,
+        },
+        coAuthorIds: coAuthorIds || [],
+        coAuthors,
+        revisions: updatedRevisions,
         status: status || 'draft',
         metaTitle: metaTitle || `${title} | Parenting.my.id`,
         metaDescription: metaDescription || excerpt || 'Artikel edukasi parenting Indonesia.',
@@ -335,6 +466,16 @@ app.post('/api/posts', (req, res) => {
     authorName: author.name,
     authorAvatar: author.avatar,
     authorRole: author.role,
+    authorTitle: author.title,
+    authorBio: author.bio,
+    authorSocials: {
+      instagram: author.socialInstagram,
+      linkedin: author.socialLinkedin,
+      website: author.socialWebsite,
+    },
+    coAuthorIds: coAuthorIds || [],
+    coAuthors,
+    revisions: [],
     status: status || 'draft',
     metaTitle: metaTitle || `${title} | Parenting.my.id`,
     metaDescription: metaDescription || excerpt || 'Artikel edukasi parenting Indonesia.',
@@ -781,6 +922,13 @@ async function startServerAISTUDIO() {
 
 // START EXPRESS + VITE SERVER by GEMINI
 async function startServer() {
+  // Ensure static llms.txt and sitemap.xml are generated on server boot
+  try {
+    generateStaticFiles(mockPosts);
+  } catch (err) {
+    console.error('[Startup] Failed to pre-generate static files:', err);
+  }
+
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },

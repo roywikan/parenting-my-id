@@ -5,17 +5,35 @@ export const INITIAL_USERS: User[] = [
     id: 1,
     email: 'admin@parenting.my.id',
     name: 'Dr. Ratna Sari, M.Psi',
+    title: 'Spesialis Psikologi Anak & Praktisi Parenting',
     role: 'admin',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
-    bio: 'Psikolog anak & praktisi parenting terkemuka di Indonesia.',
+    bio: 'Psikolog anak & praktisi parenting terkemuka di Indonesia dengan pengalaman klinis 12+ tahun dalam pendampingan tumbuh kembang emosi anak.',
+    socialInstagram: 'https://instagram.com/ratnasari.mpsi',
+    socialLinkedin: 'https://linkedin.com/in/ratnasari-mpsi',
+    socialWebsite: 'https://parenting.my.id',
   },
   {
     id: 2,
     email: 'penulis@parenting.my.id',
     name: 'Ahmad Zulkarnain, S.Ked',
+    title: 'Edukator Kesehatan Anak & Spesialis Gizi Balita',
     role: 'writer',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-    bio: 'Edukator kesehatan anak dan spesialis gizi tumbuh kembang balita.',
+    bio: 'Pemerhati gizi anak, fasilitator pencegahan stunting nasional, serta edukator kesehatan balita.',
+    socialInstagram: 'https://instagram.com/ahmad.zk',
+    socialLinkedin: 'https://linkedin.com/in/ahmad-zulkarnain',
+  },
+  {
+    id: 3,
+    email: 'siti.aminah@parenting.my.id',
+    name: 'Siti Aminah, S.Gz',
+    title: 'Ahli Gizi Ibu & Anak (Certified Nutritionist)',
+    role: 'writer',
+    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80',
+    bio: 'Praktisi MPASI sehat, penyusun panduan gizi 1000 HPK, dan konselor laktasi bersertifikasi.',
+    socialInstagram: 'https://instagram.com/sitiaminah.sgz',
+    socialWebsite: 'https://parenting.my.id',
   },
 ];
 
@@ -76,8 +94,47 @@ Untuk kelompok usia **balita**, penerapan komunikasi terbuka sangat efektif jika
     readTimeMinutes: 6,
     authorId: 1,
     authorName: 'Dr. Ratna Sari, M.Psi',
+    authorTitle: 'Spesialis Psikologi Anak & Praktisi Parenting',
     authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
     authorRole: 'admin',
+    authorBio: 'Psikolog anak & praktisi parenting terkemuka di Indonesia dengan pengalaman klinis 12+ tahun.',
+    authorSocials: {
+      instagram: 'https://instagram.com/ratnasari.mpsi',
+      linkedin: 'https://linkedin.com/in/ratnasari-mpsi',
+      website: 'https://parenting.my.id'
+    },
+    coAuthorIds: [2],
+    coAuthors: [
+      {
+        id: 2,
+        email: 'penulis@parenting.my.id',
+        name: 'Ahmad Zulkarnain, S.Ked',
+        title: 'Edukator Kesehatan Anak & Spesialis Gizi Balita',
+        role: 'writer',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+        bio: 'Pemerhati gizi anak, fasilitator pencegahan stunting nasional, serta edukator kesehatan balita.',
+        socialInstagram: 'https://instagram.com/ahmad.zk',
+        socialLinkedin: 'https://linkedin.com/in/ahmad-zulkarnain'
+      }
+    ],
+    revisions: [
+      {
+        id: 'rev-101',
+        timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
+        title: 'Panduan Lengkap Pola Asuh Demokratis Anak Masa Kini (Draft Versi 2)',
+        contentMarkdown: '## Mengapa Pola Asuh Demokratis Sangat Penting?\n\nDraft revisi sebelumnya mengenai komunikasi terbuka dengan balita...',
+        excerpt: 'Draft versi 2 sebelum penyempurnaan kutipan psikolog.',
+        updatedByName: 'Dr. Ratna Sari, M.Psi'
+      },
+      {
+        id: 'rev-100',
+        timestamp: new Date(Date.now() - 3600000 * 24).toISOString(),
+        title: 'Pola Asuh Demokratis Anak di Era Digital (Draft Awal)',
+        contentMarkdown: '## Pengenalan Pola Asuh\n\nVersi awal draft artikel pola asuh demokratis...',
+        excerpt: 'Versi perdana konsep pola asuh.',
+        updatedByName: 'Ahmad Zulkarnain, S.Ked'
+      }
+    ],
     status: 'published',
     metaTitle: 'Panduan Lengkap Pola Asuh Demokratis Anak | Parenting.my.id',
     metaDescription: 'Pelajari panduan penerapan pola asuh demokratis untuk membentuk karakter anak yang mandiri, percaya diri, dan berani di era digital.',

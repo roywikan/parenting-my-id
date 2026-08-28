@@ -85,31 +85,45 @@ export default function HomeView({ posts, autolinks, onSelectPost, onSelectCateg
               )}
             </div>
 
-            {/* LIGHTHOUSE SCORES */}
-            <div className="grid grid-cols-3 gap-3 bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-center w-full md:w-auto shrink-0">
-              <div>
-                <div className="text-xl sm:text-2xl font-black text-emerald-400">99+</div>
-                <div className="text-[10px] text-rose-200 uppercase font-semibold">Performance</div>
+            {/* PERFORMANCE METRICS BOX (CUSTOMIZABLE BY ADMIN) */}
+            {siteConfig?.show_performance_box !== false && (
+              <div className="grid grid-cols-3 gap-3 bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-center w-full md:w-auto shrink-0">
+                <div>
+                  <div className="text-xl sm:text-2xl font-black text-emerald-400">
+                    {siteConfig?.metric1_value ?? '99+'}
+                  </div>
+                  <div className="text-[10px] text-rose-200 uppercase font-semibold">
+                    {siteConfig?.metric1_label ?? 'Kecepatan'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xl sm:text-2xl font-black text-emerald-400">
+                    {siteConfig?.metric2_value ?? '100'}
+                  </div>
+                  <div className="text-[10px] text-rose-200 uppercase font-semibold">
+                    {siteConfig?.metric2_label ?? 'Kualitas'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xl sm:text-2xl font-black text-emerald-400">
+                    {siteConfig?.metric3_value ?? '0ms'}
+                  </div>
+                  <div className="text-[10px] text-rose-200 uppercase font-semibold">
+                    {siteConfig?.metric3_label ?? 'Respon Delay'}
+                  </div>
+                </div>
               </div>
-              <div>
-                <div className="text-xl sm:text-2xl font-black text-emerald-400">100</div>
-                <div className="text-[10px] text-rose-200 uppercase font-semibold">SEO Score</div>
-              </div>
-              <div>
-                <div className="text-xl sm:text-2xl font-black text-emerald-400">0ms</div>
-                <div className="text-[10px] text-rose-200 uppercase font-semibold">Edge Delay</div>
-              </div>
-            </div>
+            )}
           </div>
         </section>
       )}
 
-      {/* TRENDING AUTOLINK KEYWORD TICKER */}
+      {/* TRENDING TOPICS TICKER */}
       {autolinks.length > 0 && (
         <div className="bg-rose-50/70 dark:bg-slate-800/60 border border-rose-100 dark:border-slate-700/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <div className="flex items-center gap-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 shrink-0 uppercase tracking-wide">
             <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
-            <span>Kata Kunci SEO Terpopuler:</span>
+            <span>{siteConfig?.autolink_ticker_label || 'Topik Trending:'}</span>
           </div>
           <div className="flex flex-wrap gap-2 items-center">
             {autolinks.map((link) => (

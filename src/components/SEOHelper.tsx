@@ -6,6 +6,15 @@ interface SEOProps {
   image?: string;
   canonicalUrl?: string;
   type?: string;
+  authorName?: string;
+  authorRole?: string;
+  datePublished?: string;
+  dateModified?: string;
+  category?: string;
+  keywords?: string[];
+  contentMarkdown?: string;
+  siteName?: string;
+  siteLogo?: string;
 }
 
 export default function SEOHelper({
@@ -14,9 +23,18 @@ export default function SEOHelper({
   image = 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=80',
   canonicalUrl = 'https://parenting.my.id',
   type = 'article',
+  authorName = 'Tim Redaksi Parenting.my.id',
+  authorRole = 'Editor & Pakar Pengasuhan',
+  datePublished,
+  dateModified,
+  category = 'Parenting',
+  keywords = [],
+  contentMarkdown = '',
+  siteName = 'Parenting.my.id',
+  siteLogo = 'https://parenting.my.id/favicon-32x32.png',
 }: SEOProps) {
   useEffect(() => {
-    // Update document title
+    // 1. Document Title
     document.title = title;
 
     // Helper function to set or update meta tags
@@ -36,17 +54,174 @@ export default function SEOHelper({
       el.setAttribute('content', content);
     };
 
+    // 2. Standard Meta Tags
     updateMeta('meta[name="description"]', description);
+    updateMeta('meta[name="keywords"]', keywords.join(', '));
+    updateMeta('meta[name="author"]', authorName);
+
+    // 3. OpenGraph Meta Tags
     updateMeta('meta[property="og:title"]', title);
     updateMeta('meta[property="og:description"]', description);
     updateMeta('meta[property="og:image"]', image);
     updateMeta('meta[property="og:type"]', type);
-    updateMeta('meta[property="og:site_name"]', 'Parenting.my.id');
+    updateMeta('meta[property="og:site_name"]', siteName);
+    updateMeta('meta[property="og:url"]', canonicalUrl);
+    updateMeta('meta[property="og:locale"]', 'id_ID');
+
+    if (datePublished) {
+      updateMeta('meta[property="article:published_time"]', datePublished);
+    }
+    if (dateModified || datePublished) {
+      updateMeta('meta[property="article:modified_time"]', dateModified || datePublished || '');
+    }
+    updateMeta('meta[property="article:section"]', category);
+    if (keywords.length > 0) {
+      updateMeta('meta[property="article:tag"]', keywords.join(', '));
+    }
+
+    // 4. Twitter Card Meta Tags
     updateMeta('meta[name="twitter:card"]', 'summary_large_image');
     updateMeta('meta[name="twitter:title"]', title);
     updateMeta('meta[name="twitter:description"]', description);
     updateMeta('meta[name="twitter:image"]', image);
-  }, [title, description, image, canonicalUrl, type]);
+
+    // 5. Canonical Link & Alternate Hreflang Tags
+    let canonicalEl = document.querySelector('link[rel="canonical"]');
+    if (!canonicalEl) {
+      canonicalEl = document.createElement('link');
+      canonicalEl.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalEl);
+    }
+    canonicalEl.setAttribute('href', canonicalUrl);
+
+    let hreflangEl = document.querySelector('link[rel="alternate"][hreflang="id-ID"]');
+    if (!hreflangEl) {
+      hreflangEl = document.createElement('link');
+      hreflangEl.setAttribute('rel', 'alternate');
+      hreflangEl.setAttribute('hreflang', 'id-ID');
+      document.head.appendChild(hreflangEl);
+    }
+    hreflangEl.setAttribute('href', canonicalUrl);
+
+    // 6. JSON-LD Structured Data Schema Injection
+    const injectJsonLd = (id: string, jsonObj: object) => {
+      let script = document.getElementById(id) as HTMLScriptElement | null;
+      if (!script) {
+        script = document.createElement('script');
+        script.id = id;
+        script.type = 'application/ld+json';
+        document.head.appendChild(script);
+      }
+      script.textContent = JSON.stringify(jsonObj, null, 2);
+    };
+
+    // A. Article Schema
+    const articleSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      'mainEntityOfPage': {
+        '@type': 'WebPage',
+        '@id': canonicalUrl,
+      },
+      'headline': title,
+      'description': description,
+      'image': [image],
+      'datePublished': datePublished || new Date().toISOString(),
+      'dateModified': dateModified || datePublished || new Date().toISOString(),
+      'author': {
+        '@type': 'Person',
+        'name': authorName,
+        'jobTitle': authorRole,
+      },
+      'publisher': {
+        '@type': 'Organization',
+        'name': siteName,
+        'logo': {
+          '@type': 'ImageObject',
+          'url': siteLogo,
+        },
+      },
+      'articleSection': category,
+      'keywords': keywords.join(', '),
+      'inLanguage': 'id-ID',
+    };
+    injectJsonLd('jsonld-article-schema', articleSchema);
+
+    // B. BreadcrumbList Schema
+    const breadcrumbSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      'itemListElement': [
+        {
+          '@type': 'ListItem',
+          'position': 1,
+          'name': 'Beranda',
+          'item': 'https://parenting.my.id',
+        },
+        {
+          '@type': 'ListItem',
+          'position': 2,
+          'name': category,
+          'item': `https://parenting.my.id/#${category.toLowerCase()}`,
+        },
+        {
+          '@type': 'ListItem',
+          'position': 3,
+          'name': title,
+          'item': canonicalUrl,
+        },
+      ],
+    };
+    injectJsonLd('jsonld-breadcrumb-schema', breadcrumbSchema);
+
+    // C. Auto FAQ Schema (Parses Q&A headings from markdown)
+    if (contentMarkdown) {
+      const faqItems: { question: string; answer: string }[] = [];
+      const headingMatches = contentMarkdown.match(/^(##|###)\s+(.*?\?)/gm);
+      if (headingMatches && headingMatches.length > 0) {
+        headingMatches.forEach((match) => {
+          const questionText = match.replace(/^(##|###)\s+/, '').trim();
+          if (questionText) {
+            faqItems.push({
+              question: questionText,
+              answer: `Penjelasan mengenai ${questionText} disajikan secara ringkas dan praktis dalam artikel ini.`,
+            });
+          }
+        });
+      }
+
+      if (faqItems.length > 0) {
+        const faqSchema = {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          'mainEntity': faqItems.map((item) => ({
+            '@type': 'Question',
+            'name': item.question,
+            'acceptedAnswer': {
+              '@type': 'Answer',
+              'text': item.answer,
+            },
+          })),
+        };
+        injectJsonLd('jsonld-faq-schema', faqSchema);
+      }
+    }
+  }, [
+    title,
+    description,
+    image,
+    canonicalUrl,
+    type,
+    authorName,
+    authorRole,
+    datePublished,
+    dateModified,
+    category,
+    keywords,
+    contentMarkdown,
+    siteName,
+    siteLogo,
+  ]);
 
   return null;
 }

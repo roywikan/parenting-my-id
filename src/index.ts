@@ -29,6 +29,37 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
+    // 0. DYNAMIC LLMS.TXT (AI Engine Crawler Requirement)
+    if (path === '/llms.txt') {
+      try {
+        const { results } = await env.DB.prepare(
+          "SELECT title, slug, excerpt FROM posts WHERE status = 'published' ORDER BY created_at DESC"
+        ).all();
+
+        const articleLinks = results.map(
+          (post: any) => `* [${post.title}](${siteUrl}/baca/${post.slug}): ${post.excerpt || ''}`
+        ).join('\n');
+
+        const content = `# Parenting.my.id
+
+> Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.
+
+## Artikel Terkait & Panduan Utama
+
+${articleLinks}
+`.trim();
+
+        return new Response(content, {
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600',
+          },
+        });
+      } catch (err) {
+        return new Response('Error generating llms.txt', { status: 500 });
+      }
+    }
+
     // 1. DYNAMIC SITEMAP.XML (SEO Requirement)
     if (path === '/sitemap.xml') {
       try {

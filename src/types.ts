@@ -4,10 +4,25 @@ export interface User {
   id: number;
   email: string;
   name: string;
+  title?: string; // Credentials / Title (e.g. "Dr. Ratna Sari, M.Psi - Psikolog Anak")
   role: UserRole;
   avatar: string;
   bio?: string;
+  socialInstagram?: string;
+  socialLinkedin?: string;
+  socialWebsite?: string;
+  socials?: { instagram?: string; linkedin?: string; website?: string };
   createdAt?: string;
+}
+
+export interface PostRevision {
+  id: string;
+  timestamp: string;
+  updatedAt?: string;
+  title: string;
+  contentMarkdown: string;
+  excerpt: string;
+  updatedByName?: string;
 }
 
 export interface NavLink {
@@ -69,6 +84,15 @@ export interface SiteConfig {
   footer_badge_1?: string;
   footer_badge_2?: string;
   footer_badge_3?: string;
+
+  // Performance Metric Box (Customizable by Admin)
+  show_performance_box?: boolean;
+  metric1_value?: string;
+  metric1_label?: string;
+  metric2_value?: string;
+  metric2_label?: string;
+  metric3_value?: string;
+  metric3_label?: string;
   
   // AdSense & Strategic Ad Placements
   enable_adsense?: boolean;
@@ -97,6 +121,14 @@ export interface Post {
   authorName?: string;
   authorAvatar?: string;
   authorRole?: string;
+  authorTitle?: string;
+  authorBio?: string;
+  authorSocials?: { instagram?: string; linkedin?: string; website?: string };
+  
+  coAuthorIds?: number[];
+  coAuthors?: User[];
+  revisions?: PostRevision[];
+
   status: PostStatus;
   metaTitle?: string;
   metaDescription?: string;

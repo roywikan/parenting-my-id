@@ -28,8 +28,77 @@ Penulis dan Admin dapat mengelola artikel, gambar, SEO meta, serta sistem auto-l
 4. Isi Nama Database: `parenting-db`, lalu klik **Create**.
 5. Salin **Database ID** yang muncul (contoh: `a1b2c3d4-e5f6-7890-abcd-1234567890ab`).
 6. Masuk ke tab **Console** di dalam halaman database `parenting-db` tersebut.
-7. Buka file `schema.sql` di repositori GitHub Anda, **copy seluruh isi kodenya**, dan **paste** ke dalam D1 Console Cloudflare.
-8. Klik **Execute SQL**. Database D1 beserta data awal (artikel, user admin, dan autolinks) kini telah aktif!
+
+### 📜 Skrip Pembuatan Database & Migrasi Kolom Baru (Execute di D1 Console):
+```sql
+-- Tabel Users / Penulis & Tim Editorial
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  name TEXT NOT NULL,
+  title TEXT,
+  role TEXT DEFAULT 'writer',
+  avatar TEXT,
+  bio TEXT,
+  social_instagram TEXT,
+  social_linkedin TEXT,
+  social_website TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabel Posts / Artikel CMS
+CREATE TABLE IF NOT EXISTS posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  content_markdown TEXT NOT NULL,
+  excerpt TEXT,
+  featured_image TEXT,
+  category TEXT,
+  read_time_minutes INTEGER DEFAULT 5,
+  author_id INTEGER,
+  co_author_ids TEXT, -- Array JSON ID Penulis Bersama
+  revisions TEXT, -- Array JSON Snapshot Histori Revisi (Max 3)
+  status TEXT DEFAULT 'draft',
+  meta_title TEXT,
+  meta_description TEXT,
+  tags TEXT,
+  views INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (author_id) REFERENCES users(id)
+);
+
+-- Tabel Autolinks
+CREATE TABLE IF NOT EXISTS autolinks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  keyword TEXT UNIQUE NOT NULL,
+  target_url TEXT NOT NULL,
+  description TEXT,
+  click_count INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabel Site Config / Pengaturan Global Website
+CREATE TABLE IF NOT EXISTS site_config (
+  id INTEGER PRIMARY KEY DEFAULT 1,
+  config_json TEXT NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 💡 Catatan Tambahan bagi Admin (Migrasi Database D1 Opsional):
+Jika Anda meng-upgrade D1 dari versi terdahulu, jalankan perintah `ALTER TABLE` berikut di Cloudflare D1 Console untuk menambahkan kolom kredensial penulis dan multi-author:
+```sql
+ALTER TABLE users ADD COLUMN title TEXT;
+ALTER TABLE users ADD COLUMN bio TEXT;
+ALTER TABLE users ADD COLUMN social_instagram TEXT;
+ALTER TABLE users ADD COLUMN social_linkedin TEXT;
+ALTER TABLE users ADD COLUMN social_website TEXT;
+ALTER TABLE posts ADD COLUMN co_author_ids TEXT;
+ALTER TABLE posts ADD COLUMN revisions TEXT;
+```
 
 ---
 
@@ -74,27 +143,24 @@ Penulis dapat mengunggah gambar langsung di Editor WYSIWYG, yang akan disimpan s
 
 ---
 
-## 🔑 AKSED PORTAL ADMIN (`/admin`) & CARA PENGGUNAAN
-Situs Anda kini aktif di **https://parenting.my.id**!
-Akses portal admin berbasis web di:
- 
-
-### Kredensial Login Default:
-- **Akun Admin (Akses Penuh):**
-  - Email: 
-  - Password:  
-- **Akun Penulis / Writer (Editor Artikel):**
-  - Email: 
-  - Password: 
+## 🤖 OTOMATISASI `llms.txt` UNTUK AI SEARCH ENGINE
+Setiap kali ada artikel baru yang dipublikasikan atau diperbarui lewat CMS:
+1. Endpoint `/llms.txt` secara otomatis ter-generate secara real-time dari database.
+2. File fisik `public/llms.txt` dan `dist/llms.txt` langsung diperbarui secara otomatis.
+3. Jika `GITHUB_TOKEN` diisi, file `public/llms.txt` dan `public/sitemap.xml` akan otomatis di-commit kembali ke repositori GitHub.
 
 ---
 
 ## ✨ FITUR UNGGULAN ENGINE
-1. **Auto-Linking Engine SEO On-Page:**
-   - Semua kata kunci terdaftar (seperti *"pola asuh"*, *"balita"*, *"stunting"*, *"sensory play"*) secara otomatis diubah menjadi internal link menuju artikel terkait.
-2. **Auto-Save Draft:**
-   - Draf tulisan tersimpan otomatis ke Cloudflare D1 setiap 5 detik agar tidak hilang saat mati lampu atau koneksi terputus.
-3. **Optimasi Gambar WebP:**
-   - Gambar yang diunggah dikompresi ke format WebP via Cloudflare Edge untuk kecepatan memuat halaman maksimal.
-4. **Zero Bloat & Dynamic Sitemap/RSS:**
-   - Generasi otomatis `/sitemap.xml` dan `/feed.xml` langsung dari Cloudflare D1 untuk kemudahan indeks Google Search Console.
+1. **Auto In-Page SEO Engine (Di Belakang Layar & Muka Layar):**
+   - **In-Code / JSON-LD Structured Data Schema.org**: Otomatis menghasilkan skema `BlogPosting`, `BreadcrumbList`, `FAQPage` (di-parse otomatis dari heading pertanyaan), `WebSite`, dan `Organization`.
+   - **Canonical & Hreflang Dynamic Injection**: Injeksi otomatis `<link rel="canonical">` dan `<link rel="alternate" hreflang="id-ID">`.
+   - **Admin Real-Time SEO Auditor (0-100%)**: Panel auditor di editor artikel yang menguji panjang judul, meta desc, kedalaman kata, struktur heading, gambar utama, tag topik, dan keyword focus secara real-time.
+   - **Optimasikan Meta SEO Otomatis**: Tombol 1-klik untuk membangun Meta Title & Meta Description standar Google Search.
+   - **Daftar Isi Otomatis (Interactive Table of Contents)**: Navigasi daftar isi interaktif dengan fragment anchor links (`#heading-id`) untuk memicu Google Sitelinks / Fragment Snippets.
+   - **Smart Related Articles**: Menghitung relevansi artikel berdasarkan kesamaan kategori dan tag untuk mengoptimalkan internal link juice dan dwell time.
+2. **Otomatisasi Tautan (Autolinks):** Semua kata kunci terdaftar (seperti *"pola asuh"*, *"balita"*, *"stunting"*) secara otomatis menjadi internal link aktif.
+3. **Fitur Bagikan Multi-Platform:** Mendukung berbagi artikel ke WhatsApp, Facebook, Instagram, Twitter/X, dan Salin Link.
+4. **Pencatatan Pembaca Real-Human:** Penghitung dibaca hanya bertambah jika pengunjung manusia (bukan bot) membaca hingga pertengahan artikel.
+5. **Kustomisasi Box Metrik Performa:** Admin dapat mengatur angka dan label metrik performa di halaman utama sesuai kebutuhan.
+6. **Autosave & Histori Revisi (Snapshot Rollback):** Menyimpan otomatis draf artikel serta 3 histori revisi terakhir untuk kemudahan rollback.

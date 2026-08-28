@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Post, AutoLink, User, SiteConfig } from '../types';
+import { Post, AutoLink, User, SiteConfig, PostRevision } from '../types';
 import { THEME_PRESETS } from '../lib/themes';
+import { DEFAULT_SITE_CONFIG } from '../lib/config';
 import { 
   ShieldCheck, FileText, Link as LinkIcon, Plus, Trash2, Edit3, Save, 
   Upload, Eye, Sparkles, CheckCircle2, RefreshCw, Bold, Italic, Heading2, 
   Heading3, List, ListOrdered, Quote, Image as ImageIcon, Code, UserCheck, 
   ExternalLink, Search, Zap, AlertCircle, Settings, Key, Copy, Check, 
-  LogOut, Globe, Palette, Layout, MessageSquare
-, Droplet } from 'lucide-react';
+  LogOut, Globe, Palette, Layout, MessageSquare, Droplet, Users, Award, History, RotateCcw, X
+} from 'lucide-react';
 import { generateSlug } from '../lib/autolink';
 import RichPostEditor from '../components/RichPostEditor';
 
@@ -48,8 +49,46 @@ export default function AdminPortal({
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Admin tabs: 'posts' | 'editor' | 'autolinks' | 'sitemap' | 'config' | 'security'
-  const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'autolinks' | 'sitemap' | 'config' | 'security'>('posts');
+  // Admin tabs: 'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security'
+  const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security'>('posts');
+
+  // Writers / Editorial Team State
+  const [writers, setWriters] = useState<User[]>([]);
+  const [showWriterModal, setShowWriterModal] = useState(false);
+  const [writerModalMode, setWriterModalMode] = useState<'create' | 'edit'>('create');
+  const [editingWriterId, setEditingWriterId] = useState<number | null>(null);
+  
+  // Writer Form States
+  const [wName, setWName] = useState('');
+  const [wEmail, setWEmail] = useState('');
+  const [wPassword, setWPassword] = useState('');
+  const [wRole, setWRole] = useState<'admin' | 'writer'>('writer');
+  const [wAvatar, setWAvatar] = useState('');
+  const [wTitle, setWTitle] = useState('');
+  const [wBio, setWBio] = useState('');
+  const [wInstagram, setWInstagram] = useState('');
+  const [wLinkedin, setWLinkedin] = useState('');
+  const [wWebsite, setWWebsite] = useState('');
+  const [writerSuccessMsg, setWriterSuccessMsg] = useState('');
+  const [writerErrMsg, setWriterErrMsg] = useState('');
+  const [isSavingWriter, setIsSavingWriter] = useState(false);
+
+  // Fetch writers list from /api/users
+  const fetchWriters = async () => {
+    try {
+      const res = await fetch('/api/users');
+      if (res.ok) {
+        const data = await res.json();
+        setWriters(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch writers:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchWriters();
+  }, []);
 
   // Editor State
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
@@ -63,6 +102,8 @@ export default function AdminPortal({
   const [editorMetaTitle, setEditorMetaTitle] = useState('');
   const [editorMetaDesc, setEditorMetaDesc] = useState('');
   const [editorTags, setEditorTags] = useState('parenting, anak, keluarga');
+  const [editorAuthorId, setEditorAuthorId] = useState<number>(currentUser?.id || 1);
+  const [editorCoAuthorIds, setEditorCoAuthorIds] = useState<number[]>([]);
 
   // Auto-Save Draft Status Indicator
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'dirty'>('saved');
@@ -120,7 +161,9 @@ export default function AdminPortal({
   const [cfgSiteLogoUrl, setCfgSiteLogoUrl] = useState(siteConfig?.site_logo_url || '');
   const [cfgSiteLogoIcon, setCfgSiteLogoIcon] = useState(siteConfig?.site_logo_icon || 'Heart');
   const [cfgSiteFaviconUrl, setCfgSiteFaviconUrl] = useState(siteConfig?.site_favicon_url || '/favicon.ico');
-  const [cfgHeaderNavLinks, setCfgHeaderNavLinks] = useState(JSON.stringify(siteConfig?.header_nav_links || [], null, 2));
+  const [cfgHeaderNavLinks, setCfgHeaderNavLinks] = useState(
+    JSON.stringify(siteConfig?.header_nav_links && siteConfig.header_nav_links.length > 0 ? siteConfig.header_nav_links : DEFAULT_SITE_CONFIG.header_nav_links, null, 2)
+  );
   const [cfgEnableSearchBar, setCfgEnableSearchBar] = useState(siteConfig?.enable_search_bar ?? true);
   const [cfgEnableThemeToggle, setCfgEnableThemeToggle] = useState(siteConfig?.enable_theme_toggle ?? true);
 
@@ -148,7 +191,18 @@ export default function AdminPortal({
   const [cfgSocialFacebook, setCfgSocialFacebook] = useState(siteConfig?.social_facebook || 'https://facebook.com/parentingmyid');
   const [cfgSocialInstagram, setCfgSocialInstagram] = useState(siteConfig?.social_instagram || 'https://instagram.com/parentingmyid');
   const [cfgSocialTwitter, setCfgSocialTwitter] = useState(siteConfig?.social_twitter || 'https://x.com/parentingmyid');
-  const [cfgFooterMenuLinks, setCfgFooterMenuLinks] = useState(JSON.stringify(siteConfig?.footer_menu_links || [], null, 2));
+  const [cfgFooterMenuLinks, setCfgFooterMenuLinks] = useState(
+    JSON.stringify(siteConfig?.footer_menu_links && siteConfig.footer_menu_links.length > 0 ? siteConfig.footer_menu_links : DEFAULT_SITE_CONFIG.footer_menu_links, null, 2)
+  );
+
+  // Performance Metric Box Config States
+  const [cfgShowPerformanceBox, setCfgShowPerformanceBox] = useState<boolean>(siteConfig?.show_performance_box ?? true);
+  const [cfgMetric1Value, setCfgMetric1Value] = useState<string>(siteConfig?.metric1_value || '99+');
+  const [cfgMetric1Label, setCfgMetric1Label] = useState<string>(siteConfig?.metric1_label || 'Kecepatan');
+  const [cfgMetric2Value, setCfgMetric2Value] = useState<string>(siteConfig?.metric2_value || '100');
+  const [cfgMetric2Label, setCfgMetric2Label] = useState<string>(siteConfig?.metric2_label || 'Kualitas');
+  const [cfgMetric3Value, setCfgMetric3Value] = useState<string>(siteConfig?.metric3_value || '0ms');
+  const [cfgMetric3Label, setCfgMetric3Label] = useState<string>(siteConfig?.metric3_label || 'Respon Delay');
 
   // Admin Login Text Config
   const [cfgAdminLoginTitle, setCfgAdminLoginTitle] = useState(siteConfig?.admin_login_title || 'Portal Admin Parenting.my.id');
@@ -178,7 +232,7 @@ export default function AdminPortal({
       setCfgSiteLogoUrl(siteConfig.site_logo_url || '');
       setCfgSiteLogoIcon(siteConfig.site_logo_icon || 'Heart');
       setCfgSiteFaviconUrl(siteConfig.site_favicon_url || '/favicon.ico');
-      setCfgHeaderNavLinks(JSON.stringify(siteConfig.header_nav_links || [], null, 2));
+      setCfgHeaderNavLinks(JSON.stringify(siteConfig.header_nav_links && siteConfig.header_nav_links.length > 0 ? siteConfig.header_nav_links : DEFAULT_SITE_CONFIG.header_nav_links, null, 2));
       setCfgEnableSearchBar(siteConfig.enable_search_bar ?? true);
       setCfgEnableThemeToggle(siteConfig.enable_theme_toggle ?? true);
 
@@ -206,6 +260,14 @@ export default function AdminPortal({
       setCfgHeroCtaText(siteConfig.hero_cta_text);
       setCfgHeroCtaLink(siteConfig.hero_cta_link);
 
+      setCfgShowPerformanceBox(siteConfig.show_performance_box ?? true);
+      setCfgMetric1Value(siteConfig.metric1_value || '99+');
+      setCfgMetric1Label(siteConfig.metric1_label || 'Kecepatan');
+      setCfgMetric2Value(siteConfig.metric2_value || '100');
+      setCfgMetric2Label(siteConfig.metric2_label || 'Kualitas');
+      setCfgMetric3Value(siteConfig.metric3_value || '0ms');
+      setCfgMetric3Label(siteConfig.metric3_label || 'Respon Delay');
+
       setCfgPostsPerPage(siteConfig.posts_per_page || 9);
       setCfgEnableFeaturedPost(siteConfig.enable_featured_post ?? true);
       setCfgPaginationType(siteConfig.pagination_type || 'load_more');
@@ -220,7 +282,7 @@ export default function AdminPortal({
       setCfgSocialFacebook(siteConfig.social_facebook || '');
       setCfgSocialInstagram(siteConfig.social_instagram || '');
       setCfgSocialTwitter(siteConfig.social_twitter || '');
-      setCfgFooterMenuLinks(JSON.stringify(siteConfig.footer_menu_links || [], null, 2));
+      setCfgFooterMenuLinks(JSON.stringify(siteConfig.footer_menu_links && siteConfig.footer_menu_links.length > 0 ? siteConfig.footer_menu_links : DEFAULT_SITE_CONFIG.footer_menu_links, null, 2));
       
       setCfgAdminLoginTitle(siteConfig.admin_login_title || 'Portal Admin Parenting.my.id');
       setCfgAdminLoginSubtitle(siteConfig.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1');
@@ -270,6 +332,13 @@ export default function AdminPortal({
       hero_subtitle: cfgHeroSubtitle,
       hero_cta_text: cfgHeroCtaText,
       hero_cta_link: cfgHeroCtaLink,
+      show_performance_box: cfgShowPerformanceBox,
+      metric1_value: cfgMetric1Value,
+      metric1_label: cfgMetric1Label,
+      metric2_value: cfgMetric2Value,
+      metric2_label: cfgMetric2Label,
+      metric3_value: cfgMetric3Value,
+      metric3_label: cfgMetric3Label,
       posts_per_page: Number(cfgPostsPerPage),
       enable_featured_post: cfgEnableFeaturedPost,
       pagination_type: cfgPaginationType,
@@ -401,6 +470,13 @@ export default function AdminPortal({
         hero_subtitle: cfgHeroSubtitle,
         hero_cta_text: cfgHeroCtaText,
         hero_cta_link: cfgHeroCtaLink,
+        show_performance_box: cfgShowPerformanceBox,
+        metric1_value: cfgMetric1Value,
+        metric1_label: cfgMetric1Label,
+        metric2_value: cfgMetric2Value,
+        metric2_label: cfgMetric2Label,
+        metric3_value: cfgMetric3Value,
+        metric3_label: cfgMetric3Label,
 
         posts_per_page: Number(cfgPostsPerPage),
         enable_featured_post: cfgEnableFeaturedPost,
@@ -486,6 +562,8 @@ export default function AdminPortal({
     setEditorMetaTitle(post.metaTitle || `${post.title} | Parenting.my.id`);
     setEditorMetaDesc(post.metaDescription || post.excerpt);
     setEditorTags(post.tags || 'parenting, anak');
+    setEditorAuthorId(post.authorId || 1);
+    setEditorCoAuthorIds(post.coAuthors ? post.coAuthors.map(c => c.id) : []);
     setActiveTab('editor');
     setAutoSaveStatus('saved');
   };
@@ -503,8 +581,18 @@ export default function AdminPortal({
     setEditorMetaTitle('');
     setEditorMetaDesc('');
     setEditorTags('parenting, anak, keluarga');
+    setEditorAuthorId(currentUser?.id || 1);
+    setEditorCoAuthorIds([]);
     setActiveTab('editor');
     setAutoSaveStatus('saved');
+  };
+
+  // Restore Revision Handler (Rollback)
+  const handleRestoreRevision = (rev: PostRevision) => {
+    setEditorTitle(rev.title);
+    setEditorMarkdown(rev.contentMarkdown);
+    setEditorExcerpt(rev.excerpt);
+    alert(`Konten berhasil dikembalikan ke revisi versi (${new Date(rev.updatedAt || rev.timestamp).toLocaleTimeString()})!`);
   };
 
   // Auto-Save Draft Trigger (Runs when content or title changes)
@@ -529,7 +617,8 @@ export default function AdminPortal({
         metaTitle: editorMetaTitle,
         metaDescription: editorMetaDesc,
         tags: editorTags,
-        authorId: currentUser?.id || 1,
+        authorId: editorAuthorId,
+        coAuthorIds: editorCoAuthorIds,
       });
 
       if (saved && !editingPostId) {
@@ -541,7 +630,7 @@ export default function AdminPortal({
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
-  }, [editorTitle, editorMarkdown, editorExcerpt, editorCategory, editorImage]);
+  }, [editorTitle, editorMarkdown, editorExcerpt, editorCategory, editorImage, editorAuthorId, editorCoAuthorIds]);
 
   // Insert Markdown formatting toolbar
   const insertToolbar = (prefix: string, suffix: string = '') => {
@@ -623,10 +712,108 @@ export default function AdminPortal({
       metaTitle: editorMetaTitle || `${editorTitle} | Parenting.my.id`,
       metaDescription: editorMetaDesc || editorExcerpt,
       tags: editorTags,
-      authorId: currentUser?.id || 1,
+      authorId: editorAuthorId,
+      coAuthorIds: editorCoAuthorIds,
     });
 
     setActiveTab('posts');
+  };
+
+  // Writer Management CRUD Handlers
+  const handleOpenAddWriterModal = () => {
+    setWriterModalMode('create');
+    setEditingWriterId(null);
+    setWName('');
+    setWEmail('');
+    setWPassword('');
+    setWRole('writer');
+    setWAvatar('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400');
+    setWTitle('Pakar Parenting & Kesehatan Anak');
+    setWBio('Praktisi kesehatan dan penulis edukasi keluarga.');
+    setWInstagram('');
+    setWLinkedin('');
+    setWWebsite('');
+    setWriterSuccessMsg('');
+    setWriterErrMsg('');
+    setShowWriterModal(true);
+  };
+
+  const handleOpenEditWriterModal = (w: User) => {
+    setWriterModalMode('edit');
+    setEditingWriterId(w.id);
+    setWName(w.name);
+    setWEmail(w.email);
+    setWPassword('');
+    setWRole(w.role || 'writer');
+    setWAvatar(w.avatar || '');
+    setWTitle(w.title || '');
+    setWBio(w.bio || '');
+    setWInstagram(w.socials?.instagram || '');
+    setWLinkedin(w.socials?.linkedin || '');
+    setWWebsite(w.socials?.website || '');
+    setWriterSuccessMsg('');
+    setWriterErrMsg('');
+    setShowWriterModal(true);
+  };
+
+  const handleSaveWriterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingWriter(true);
+    setWriterSuccessMsg('');
+    setWriterErrMsg('');
+
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingWriterId || undefined,
+          name: wName,
+          email: wEmail,
+          password: wPassword || undefined,
+          role: wRole,
+          avatar: wAvatar,
+          title: wTitle,
+          bio: wBio,
+          socials: {
+            instagram: wInstagram || undefined,
+            linkedin: wLinkedin || undefined,
+            website: wWebsite || undefined,
+          },
+        }),
+      });
+
+      const data: any = await res.json();
+      if (res.ok && data.user) {
+        setWriterSuccessMsg(writerModalMode === 'create' ? 'Penulis baru berhasil ditambahkan!' : 'Profil penulis berhasil diperbarui!');
+        fetchWriters();
+        setTimeout(() => setShowWriterModal(false), 1200);
+      } else {
+        setWriterErrMsg(data.error || 'Gagal menyimpan data penulis.');
+      }
+    } catch (err: any) {
+      setWriterErrMsg(err.message || 'Terjadi kesalahan sistem.');
+    } finally {
+      setIsSavingWriter(false);
+    }
+  };
+
+  const handleDeleteWriter = async (id: number) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus profil penulis ini?')) return;
+
+    try {
+      const res = await fetch(`/api/users?id=${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        fetchWriters();
+      } else {
+        const data: any = await res.json();
+        alert(data.error || 'Gagal menghapus penulis.');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan saat menghapus penulis.');
+    }
   };
 
   // Submit New Autolink
@@ -773,6 +960,18 @@ export default function AdminPortal({
         >
           <Edit3 className="w-4 h-4" />
           <span>Rich WYSIWYG Editor</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('writers')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            activeTab === 'writers'
+              ? 'bg-rose-600 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>Kelola Tim & Penulis ({writers.length})</span>
         </button>
 
         <button
@@ -926,7 +1125,330 @@ export default function AdminPortal({
           uploadingImage={uploadingImage}
           onImageUpload={handleImageUploadFile}
           autolinks={autolinks}
+          writers={writers}
+          authorId={editorAuthorId}
+          setAuthorId={setEditorAuthorId}
+          coAuthorIds={editorCoAuthorIds}
+          setCoAuthorIds={setEditorCoAuthorIds}
+          revisions={posts.find(p => p.id === editingPostId)?.revisions || []}
+          onRestoreRevision={handleRestoreRevision}
         />
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 3: KELOLA TIM EDITORIAL & PENULIS (E-E-A-T) */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'writers' && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+            <div>
+              <h3 className="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                <Users className="w-5 h-5 text-rose-600" />
+                <span>Kelola Tim Penulis & Editor (E-E-A-T Compliance)</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Tambahkan profil dokter, psikolog, atau praktisi pengasuhan anak. Data kredensial akan ditampilkan pada kotak bio penulis di akhir artikel untuk memenuhi standar E-E-A-T Google.
+              </p>
+            </div>
+
+            <button
+              onClick={handleOpenAddWriterModal}
+              className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Tambah Penulis Baru</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {writers.map((w) => {
+              const authorPostsCount = posts.filter(
+                (p) => p.authorId === w.id || (p.coAuthors && p.coAuthors.some((ca) => ca.id === w.id))
+              ).length;
+
+              return (
+                <div
+                  key={w.id}
+                  className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={w.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400'}
+                          alt={w.name}
+                          className="w-14 h-14 rounded-2xl object-cover border-2 border-rose-500/20 shadow-sm"
+                        />
+                        <div>
+                          <h4 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <span>{w.name}</span>
+                            <ShieldCheck className="w-4 h-4 text-emerald-500 fill-emerald-100 dark:fill-emerald-950" />
+                          </h4>
+                          <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 block">
+                            {w.title || 'Penulis Artikel Parenting'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase shrink-0 ${
+                        w.role === 'admin' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                      }`}>
+                        {w.role}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
+                      {w.bio || 'Praktisi dan penulis edukasi kesehatan serta pengasuhan anak.'}
+                    </p>
+
+                    {/* SOCIAL LINKS */}
+                    <div className="flex items-center gap-3 pt-2 text-xs text-slate-500">
+                      {w.socials?.instagram && (
+                        <a
+                          href={w.socials.instagram}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-pink-600 hover:underline font-semibold"
+                        >
+                          Instagram
+                        </a>
+                      )}
+                      {w.socials?.linkedin && (
+                        <a
+                          href={w.socials.linkedin}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 hover:underline font-semibold"
+                        >
+                          LinkedIn
+                        </a>
+                      )}
+                      {w.socials?.website && (
+                        <a
+                          href={w.socials.website}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-emerald-600 hover:underline font-semibold"
+                        >
+                          Website
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500">
+                      📚 {authorPostsCount} Artikel
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenEditWriterModal(w)}
+                        className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-rose-50 hover:text-rose-600 text-xs font-bold transition-colors"
+                      >
+                        Edit
+                      </button>
+                      {currentUser?.role === 'admin' && w.id !== currentUser.id && (
+                        <button
+                          onClick={() => handleDeleteWriter(w.id)}
+                          className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 hover:bg-rose-600 hover:text-white text-xs font-bold transition-colors"
+                        >
+                          Hapus
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* WRITER FORM MODAL */}
+      {showWriterModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <Users className="w-4 h-4 text-rose-600" />
+                <span>{writerModalMode === 'create' ? 'Tambah Penulis Baru' : 'Edit Profil Penulis'}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowWriterModal(false)}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveWriterSubmit} className="space-y-4">
+              {writerSuccessMsg && (
+                <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{writerSuccessMsg}</span>
+                </div>
+              )}
+
+              {writerErrMsg && (
+                <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{writerErrMsg}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Nama Lengkap & Gelar *
+                  </label>
+                  <input
+                    type="text"
+                    value={wName}
+                    onChange={(e) => setWName(e.target.value)}
+                    required
+                    placeholder="Misal: Dr. Ratna Sari, M.Psi"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Email Login Terdaftar *
+                  </label>
+                  <input
+                    type="email"
+                    value={wEmail}
+                    onChange={(e) => setWEmail(e.target.value)}
+                    required
+                    placeholder="ratna@parenting.my.id"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Password {writerModalMode === 'edit' && '(Kosongkan jika tidak ubah)'}
+                  </label>
+                  <input
+                    type="password"
+                    value={wPassword}
+                    onChange={(e) => setWPassword(e.target.value)}
+                    required={writerModalMode === 'create'}
+                    placeholder="••••••••"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Peran / Role Sistem
+                  </label>
+                  <select
+                    value={wRole}
+                    onChange={(e: any) => setWRole(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold"
+                  >
+                    <option value="writer">Penulis / Kontributor</option>
+                    <option value="admin">Administrator (Akses Penuh)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Kredensial & Jabatan Penulis (Gelar / Spesialisasi)
+                </label>
+                <input
+                  type="text"
+                  value={wTitle}
+                  onChange={(e) => setWTitle(e.target.value)}
+                  placeholder="Misal: Spesialis Psikologi Anak & Praktisi Parenting"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  URL Foto Profil / Avatar
+                </label>
+                <input
+                  type="text"
+                  value={wAvatar}
+                  onChange={(e) => setWAvatar(e.target.value)}
+                  placeholder="https://images.unsplash.com/photo-..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Biografi Singkat Penulis (Author Bio Box)
+                </label>
+                <textarea
+                  rows={3}
+                  value={wBio}
+                  onChange={(e) => setWBio(e.target.value)}
+                  placeholder="Deskripsikan keahlian dan pengalaman penulis di bidang parenting & kesehatan anak..."
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs leading-relaxed"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Instagram URL
+                  </label>
+                  <input
+                    type="text"
+                    value={wInstagram}
+                    onChange={(e) => setWInstagram(e.target.value)}
+                    placeholder="https://instagram.com/..."
+                    className="w-full px-3 py-1.5 rounded-xl border text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    LinkedIn URL
+                  </label>
+                  <input
+                    type="text"
+                    value={wLinkedin}
+                    onChange={(e) => setWLinkedin(e.target.value)}
+                    placeholder="https://linkedin.com/in/..."
+                    className="w-full px-3 py-1.5 rounded-xl border text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Website URL
+                  </label>
+                  <input
+                    type="text"
+                    value={wWebsite}
+                    onChange={(e) => setWWebsite(e.target.value)}
+                    placeholder="https://dr-ratna.com"
+                    className="w-full px-3 py-1.5 rounded-xl border text-xs"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSavingWriter}
+                className="w-full py-3 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isSavingWriter ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                <span>{writerModalMode === 'create' ? 'Simpan Penulis Baru' : 'Perbarui Profil Penulis'}</span>
+              </button>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* ------------------------------------------------------------- */}
@@ -1537,6 +2059,82 @@ export default function AdminPortal({
                   rows={2}
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
                 />
+              </div>
+
+              {/* PERFORMANCE METRIC BOX CONFIGURATION */}
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="show_performance_box"
+                    checked={cfgShowPerformanceBox}
+                    onChange={(e) => setCfgShowPerformanceBox(e.target.checked)}
+                    className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500"
+                  />
+                  <label htmlFor="show_performance_box" className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Tampilkan Box Metric / Performa di Samping Hero Banner (show_performance_box)
+                  </label>
+                </div>
+
+                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                  <span className="text-xs font-bold text-rose-600 dark:text-rose-400 block">Kustomisasi Angka & Label Metrik Performa</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Metric 1 */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Metrik 1 (Nilai & Label)</label>
+                      <input
+                        type="text"
+                        value={cfgMetric1Value}
+                        onChange={(e) => setCfgMetric1Value(e.target.value)}
+                        placeholder="Misal: 99+"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold mb-1"
+                      />
+                      <input
+                        type="text"
+                        value={cfgMetric1Label}
+                        onChange={(e) => setCfgMetric1Label(e.target.value)}
+                        placeholder="Misal: Kecepatan"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs"
+                      />
+                    </div>
+                    {/* Metric 2 */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Metrik 2 (Nilai & Label)</label>
+                      <input
+                        type="text"
+                        value={cfgMetric2Value}
+                        onChange={(e) => setCfgMetric2Value(e.target.value)}
+                        placeholder="Misal: 100"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold mb-1"
+                      />
+                      <input
+                        type="text"
+                        value={cfgMetric2Label}
+                        onChange={(e) => setCfgMetric2Label(e.target.value)}
+                        placeholder="Misal: Kualitas"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs"
+                      />
+                    </div>
+                    {/* Metric 3 */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Metrik 3 (Nilai & Label)</label>
+                      <input
+                        type="text"
+                        value={cfgMetric3Value}
+                        onChange={(e) => setCfgMetric3Value(e.target.value)}
+                        placeholder="Misal: 0ms"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold mb-1"
+                      />
+                      <input
+                        type="text"
+                        value={cfgMetric3Label}
+                        onChange={(e) => setCfgMetric3Label(e.target.value)}
+                        placeholder="Misal: Respon Delay"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

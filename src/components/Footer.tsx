@@ -79,7 +79,7 @@ export default function Footer({ siteConfig }: FooterProps) {
           {/* SEO & INFRASTRUCTURE */}
           <div>
             <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider mb-4">
-              Tautan Navigasi & SEO
+              Tautan Navigasi Platform
             </h4>
             <ul className="space-y-2.5 text-sm">
               {footerLinks.map((item, idx) => (
@@ -95,12 +95,6 @@ export default function Footer({ siteConfig }: FooterProps) {
                   </a>
                 </li>
               ))}
-              <li>
-                <span className="text-slate-400 inline-flex items-center gap-1">
-                  <span>Auto-Linking Engine On-Page</span>
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                </span>
-              </li>
             </ul>
           </div>
 
