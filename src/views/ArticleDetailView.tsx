@@ -16,6 +16,7 @@ interface ArticleDetailViewProps {
   autolinks: AutoLink[];
   onBack: () => void;
   onSelectPost: (slug: string) => void;
+  onSelectCategory?: (category: string) => void;
   siteConfig?: SiteConfig;
 }
 
@@ -25,6 +26,7 @@ export default function ArticleDetailView({
   autolinks,
   onBack,
   onSelectPost,
+  onSelectCategory,
   siteConfig,
 }: ArticleDetailViewProps) {
   const [copied, setCopied] = useState(false);
@@ -204,7 +206,16 @@ export default function ArticleDetailView({
 
         <Breadcrumbs
           items={[
-            { label: post.category || 'Artikel', onClick: onBack },
+            {
+              label: post.category || 'Artikel',
+              onClick: () => {
+                if (onSelectCategory && post.category) {
+                  onSelectCategory(post.category);
+                } else {
+                  onBack();
+                }
+              },
+            },
             { label: post.title, active: true },
           ]}
         />
@@ -213,9 +224,18 @@ export default function ArticleDetailView({
       {/* ARTICLE HEADER */}
       <header className="space-y-4 border-b border-slate-200 dark:border-slate-800 pb-8">
         <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold text-xs">
+          <button
+            onClick={() => {
+              if (onSelectCategory && post.category) {
+                onSelectCategory(post.category);
+              } else {
+                onBack();
+              }
+            }}
+            className="px-3 py-1 rounded-full bg-rose-100 hover:bg-rose-200 dark:bg-rose-950 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 font-bold text-xs transition-colors cursor-pointer"
+          >
             {post.category}
-          </span>
+          </button>
         </div>
 
         <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">

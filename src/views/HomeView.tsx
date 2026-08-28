@@ -8,13 +8,23 @@ interface HomeViewProps {
   posts: Post[];
   autolinks: AutoLink[];
   onSelectPost: (slug: string) => void;
+  selectedCategory?: string;
   onSelectCategory: (category: string) => void;
   siteConfig?: SiteConfig;
 }
 
-export default function HomeView({ posts, autolinks, onSelectPost, onSelectCategory, siteConfig }: HomeViewProps) {
+export default function HomeView({ posts, autolinks, onSelectPost, selectedCategory: propSelectedCategory, onSelectCategory, siteConfig }: HomeViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
+  const [internalCategory, setInternalCategory] = useState<string>('Semua');
+
+  const activeCategory = propSelectedCategory !== undefined ? propSelectedCategory : internalCategory;
+
+  const handleCategoryChange = (cat: string) => {
+    setInternalCategory(cat);
+    if (onSelectCategory) {
+      onSelectCategory(cat);
+    }
+  };
 
   const showHero = siteConfig?.show_hero_section ?? true;
   const heroTitle = siteConfig?.hero_title || 'Panduan Pengasuhan Anak Terpercaya';
@@ -22,8 +32,13 @@ export default function HomeView({ posts, autolinks, onSelectPost, onSelectCateg
   const heroCtaText = siteConfig?.hero_cta_text || 'Jelajahi Artikel';
   const heroCtaLink = siteConfig?.hero_cta_link || '#artikel-terbaru';
 
-  const metaTitle = siteConfig?.seo_meta_title || 'Parenting.my.id - Edukasi Pola Asuh & Kesehatan Anak Indonesia';
-  const metaDesc = siteConfig?.seo_meta_description || 'Portal artikel parenting modern, panduan pola asuh, nutrisi balita, dan pencegahan stunting. Cepat, akurat, dan terpercaya.';
+  const isFilteredCategory = activeCategory !== 'Semua';
+  const metaTitle = isFilteredCategory
+    ? `Artikel Kategori ${activeCategory} - ${siteConfig?.site_name || 'Parenting.my.id'}`
+    : siteConfig?.seo_meta_title || 'Parenting.my.id - Edukasi Pola Asuh & Kesehatan Anak Indonesia';
+  const metaDesc = isFilteredCategory
+    ? `Kumpulan artikel, tips, dan panduan seputar ${activeCategory} untuk orang tua modern.`
+    : siteConfig?.seo_meta_description || 'Portal artikel parenting modern, panduan pola asuh, nutrisi balita, dan pencegahan stunting. Cepat, akurat, dan terpercaya.';
   const ogImage = siteConfig?.seo_default_og_image || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1200&h=630';
 
   const publishedPosts = useMemo(() => {
@@ -31,7 +46,7 @@ export default function HomeView({ posts, autolinks, onSelectPost, onSelectCateg
   }, [posts]);
 
   // Categories list
-  const categories = ['Semua', 'Pola Asuh', 'Tumbuh Kembang', 'Kesehatan & Gizi'];
+  const categories = ['Semua', 'Pola Asuh', 'Tumbuh Kembang', 'Kesehatan & Gizi', 'Balita'];
 
   // Filtered posts
   const filteredPosts = useMemo(() => {
@@ -40,13 +55,19 @@ export default function HomeView({ posts, autolinks, onSelectPost, onSelectCateg
         post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
         post.tags.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'Semua' || post.category === selectedCategory;
+      
+      const targetCat = activeCategory.toLowerCase();
+      const matchesCategory =
+        activeCategory === 'Semua' ||
+        post.category.toLowerCase() === targetCat ||
+        post.tags.toLowerCase().includes(targetCat);
+
       return matchesSearch && matchesCategory;
     });
-  }, [publishedPosts, searchQuery, selectedCategory]);
+  }, [publishedPosts, searchQuery, activeCategory]);
 
   const featuredPost = publishedPosts[0];
-  const regularPosts = filteredPosts.length > 0 ? (selectedCategory === 'Semua' && !searchQuery ? filteredPosts.slice(1) : filteredPosts) : [];
+  const regularPosts = filteredPosts.length > 0 ? (activeCategory === 'Semua' && !searchQuery ? filteredPosts.slice(1) : filteredPosts) : [];
 
   return (
     <div className="space-y-12 pb-16">
@@ -230,9 +251,9 @@ export default function HomeView({ posts, autolinks, onSelectPost, onSelectCateg
             {categories.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => handleCategoryChange(cat)}
                 className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                  selectedCategory === cat
+                  activeCategory === cat
                     ? 'bg-rose-600 text-white shadow-sm shadow-rose-500/20'
                     : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-rose-300'
                 }`}
@@ -252,9 +273,9 @@ export default function HomeView({ posts, autolinks, onSelectPost, onSelectCateg
             <span>
               {searchQuery
                 ? `Hasil Pencarian ("${searchQuery}")`
-                : selectedCategory === 'Semua'
+                : activeCategory === 'Semua'
                 ? 'Daftar Artikel Terbaru'
-                : `Kategori: ${selectedCategory}`}
+                : `Kategori: ${activeCategory}`}
             </span>
           </h3>
           <span className="text-xs text-slate-500 font-medium">
@@ -278,7 +299,7 @@ export default function HomeView({ posts, autolinks, onSelectPost, onSelectCateg
             <button
               onClick={() => {
                 setSearchQuery('');
-                setSelectedCategory('Semua');
+                handleCategoryChange('Semua');
               }}
               className="text-xs text-rose-600 font-bold underline hover:text-rose-700"
             >

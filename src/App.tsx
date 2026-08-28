@@ -3,6 +3,7 @@ import { Post, AutoLink, User, SiteConfig } from './types';
 import { INITIAL_POSTS, INITIAL_AUTOLINKS, INITIAL_USERS } from './data/initialData';
 import { getSiteConfig, saveSiteConfig } from './lib/config';
 import { THEME_PRESETS } from './lib/themes';
+import { categoryToSlug, slugToCategory } from './lib/categories';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomeView from './views/HomeView';
@@ -13,6 +14,7 @@ import AdSlot from './components/AdSlot';
 export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'article' | 'admin'>('home');
   const [activeSlug, setActiveSlug] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
 
   const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
   const [autolinks, setAutolinks] = useState<AutoLink[]>(INITIAL_AUTOLINKS);
@@ -275,9 +277,29 @@ export default function App() {
           setCurrentView('article');
         } else {
           setCurrentView('home');
+          setSelectedCategory('Semua');
+        }
+      } else if (path.startsWith('/kategori/')) {
+        const catSlug = path.replace('/kategori/', '');
+        const availableCats = posts.map((p) => p.category);
+        const resolved = slugToCategory(catSlug, availableCats);
+        setSelectedCategory(resolved);
+        setCurrentView('home');
+      } else if (path !== '/' && !path.includes('.')) {
+        // Direct route e.g. /balita, /pola-asuh, /tumbuh-kembang
+        const rawSlug = path.replace(/^\//, '');
+        const availableCats = posts.map((p) => p.category);
+        const resolved = slugToCategory(rawSlug, availableCats);
+        if (resolved && resolved !== 'Semua') {
+          setSelectedCategory(resolved);
+          setCurrentView('home');
+        } else {
+          setCurrentView('home');
+          setSelectedCategory('Semua');
         }
       } else {
         setCurrentView('home');
+        setSelectedCategory('Semua');
         setActiveSlug('');
       }
     };
@@ -285,7 +307,7 @@ export default function App() {
     syncRouteFromUrl();
     window.addEventListener('popstate', syncRouteFromUrl);
     return () => window.removeEventListener('popstate', syncRouteFromUrl);
-  }, []);
+  }, [posts]);
 
   // Navigation Helper
   const handleNavigate = (view: string, param?: string) => {
@@ -293,11 +315,23 @@ export default function App() {
       setActiveSlug(param);
       setCurrentView('article');
       window.history.pushState({}, '', `/baca/${param}`);
+    } else if (view === 'category' && param) {
+      if (param === 'Semua') {
+        setSelectedCategory('Semua');
+        setCurrentView('home');
+        window.history.pushState({}, '', '/');
+      } else {
+        setSelectedCategory(param);
+        setCurrentView('home');
+        const catSlug = categoryToSlug(param);
+        window.history.pushState({}, '', `/kategori/${catSlug}`);
+      }
     } else if (view === 'admin') {
       setCurrentView('admin');
       window.history.pushState({}, '', '/admin');
     } else {
       setCurrentView('home');
+      setSelectedCategory('Semua');
       setActiveSlug('');
       window.history.pushState({}, '', '/');
     }
@@ -391,7 +425,8 @@ export default function App() {
             posts={posts}
             autolinks={autolinks}
             onSelectPost={(slug) => handleNavigate('article', slug)}
-            onSelectCategory={() => {}}
+            selectedCategory={selectedCategory}
+            onSelectCategory={(category) => handleNavigate('category', category)}
             siteConfig={effectiveConfig}
           />
         )}
@@ -403,6 +438,7 @@ export default function App() {
             autolinks={autolinks}
             onBack={() => handleNavigate('home')}
             onSelectPost={(slug) => handleNavigate('article', slug)}
+            onSelectCategory={(category) => handleNavigate('category', category)}
             siteConfig={effectiveConfig}
           />
         )}

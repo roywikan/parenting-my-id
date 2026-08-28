@@ -75,22 +75,35 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
 
           {/* DESKTOP NAVIGATION */}
           <nav className="main-nav hidden md:flex items-center gap-1">
+            <button
+              onClick={() => onNavigate('home')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                currentView === 'home'
+                  ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-bold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              Beranda
+            </button>
+
+            {/* CATEGORY NAV LINKS */}
+            {[
+              { label: 'Pola Asuh', slug: 'pola-asuh', name: 'Pola Asuh' },
+              { label: 'Tumbuh Kembang', slug: 'tumbuh-kembang', name: 'Tumbuh Kembang' },
+              { label: 'Kesehatan & Gizi', slug: 'kesehatan-gizi', name: 'Kesehatan & Gizi' },
+              { label: 'Balita', slug: 'balita', name: 'Balita' },
+            ].map((cat) => (
+              <button
+                key={cat.slug}
+                onClick={() => onNavigate('category', cat.name)}
+                className="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                {cat.label}
+              </button>
+            ))}
+
             {navLinks.map((link, idx) => {
-              if (link.url === '/' || link.url === '#') {
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => onNavigate('home')}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      currentView === 'home'
-                        ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-bold'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    {link.label}
-                  </button>
-                );
-              }
+              if (link.url === '/' || link.url === '#') return null;
               return (
                 <a
                   key={idx}
@@ -160,6 +173,37 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
       {/* MOBILE MENU DRAWER */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-2 pb-4 space-y-2">
+          <button
+            onClick={() => {
+              onNavigate('home');
+              setMobileMenuOpen(false);
+            }}
+            className="block w-full text-left px-3 py-2 rounded-lg text-sm font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50"
+          >
+            Beranda
+          </button>
+
+          <div className="pt-1 pb-1 border-t border-b border-slate-100 dark:border-slate-800 space-y-1">
+            <span className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Kategori Artikel</span>
+            {[
+              { label: 'Pola Asuh', name: 'Pola Asuh' },
+              { label: 'Tumbuh Kembang', name: 'Tumbuh Kembang' },
+              { label: 'Kesehatan & Gizi', name: 'Kesehatan & Gizi' },
+              { label: 'Balita', name: 'Balita' },
+            ].map((cat) => (
+              <button
+                key={cat.name}
+                onClick={() => {
+                  onNavigate('category', cat.name);
+                  setMobileMenuOpen(false);
+                }}
+                className="block w-full text-left px-3 py-1.5 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-rose-50"
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
           {navLinks.map((link, idx) => (
             <a
               key={idx}

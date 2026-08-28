@@ -2,15 +2,11 @@
   "version": 1,
   "include": [
     "/api/*",
-    "/baca/*",
     "/feed.xml",
+    "/rss.xml",
     "/sitemap.xml",
     "/llms.txt",
-    "/robots.txt",
-    "/balita/*",
-    "/makanan/*",
-    "/kesehatan/*",
-    "/parenting/*"
+    "/robots.txt"
   ],
   "exclude": [
     "/assets/*"
