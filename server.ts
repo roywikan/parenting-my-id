@@ -666,7 +666,7 @@ app.get('/baca/:slug', (req, res, next) => {
 });
 
 // START EXPRESS + VITE SERVER
-async function startServer() {
+async function startServerAISTUDIO() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -685,5 +685,53 @@ async function startServer() {
     console.log(`Server parenting.my.id running on http://localhost:${PORT}`);
   });
 }
+
+// START EXPRESS + VITE SERVER by GEMINI
+async function startServer() {
+  if (process.env.NODE_ENV !== 'production') {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'custom', // Ubah dari 'spa' ke 'custom' agar Vite tidak mencegat API/llms.txt/sitemap
+    });
+    app.use(vite.middlewares);
+
+    // Fallback SPA khusus mode Development
+    app.use('*', async (req, res, next) => {
+      const url = req.originalUrl;
+      // Abort jika URL adalah API, sitemap, feed, atau llms.txt
+      if (url.startsWith('/api') || url.includes('.xml') || url.includes('llms.txt')) {
+        return next();
+      }
+      try {
+        let template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
+        template = await vite.transformIndexHtml(url, template);
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      } catch (e) {
+        vite.ssrFixStacktrace(e as Error);
+        next(e);
+      }
+    });
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    
+    // Sajikan file statis, tapi abaikan jika request menuju llms.txt, sitemap, atau api
+    app.use(express.static(distPath, { index: false }));
+
+    // Fallback SPA khusus mode Production
+    app.use('*', (req, res, next) => {
+      const url = req.originalUrl;
+      if (url.startsWith('/api') || url.includes('.xml') || url.includes('llms.txt')) {
+        return next();
+      }
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server parenting.my.id running on http://localhost:${PORT}`);
+  });
+}
+
+startServer();
 
 startServer();
