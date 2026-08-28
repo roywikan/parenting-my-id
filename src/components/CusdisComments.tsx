@@ -84,7 +84,7 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
         }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as any;
 
       if (res.ok && data.success) {
         setSubmitSuccess(true);

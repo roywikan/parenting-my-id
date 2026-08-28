@@ -9,8 +9,8 @@ import { generateStaticFiles } from './scripts/generate-static-files.js';
 
 dotenv.config();
 
-const __filename = typeof import.meta !== 'undefined' && import.meta.url ? fileURLToPath(import.meta.url) : (typeof __filename !== 'undefined' ? __filename : '');
-const __dirname = typeof import.meta !== 'undefined' && import.meta.url ? path.dirname(__filename) : (typeof __dirname !== 'undefined' ? __dirname : process.cwd());
+const __filename = typeof import.meta !== 'undefined' && import.meta.url ? fileURLToPath(import.meta.url) : '';
+const __dirname = typeof import.meta !== 'undefined' && import.meta.url && __filename ? path.dirname(__filename) : process.cwd();
 
 const app = express();
 const PORT = 3000;

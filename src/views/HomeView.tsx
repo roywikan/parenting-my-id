@@ -165,7 +165,7 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
       )}
 
       {/* FEATURED POST (HERO ITEM) */}
-      {featuredPost && !searchQuery && selectedCategory === 'Semua' && (
+      {featuredPost && !searchQuery && activeCategory === 'Semua' && (
         <section className="group cursor-pointer" onClick={() => onSelectPost(featuredPost.slug)}>
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0">
             <div className="lg:col-span-7 relative h-64 lg:h-auto overflow-hidden">
