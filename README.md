@@ -128,7 +128,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   name TEXT NOT NULL,
   role TEXT CHECK(role IN ('admin', 'writer')) NOT NULL DEFAULT 'writer',
-  avatar TEXT DEFAULT '[https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80](https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80)',
+  avatar TEXT DEFAULT 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
   bio TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   password TEXT,

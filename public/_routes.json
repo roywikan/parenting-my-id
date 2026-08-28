@@ -4,6 +4,8 @@
     "/api/*",
     "/baca/*",
     "/feed.xml",
+    "/sitemap.xml",
+    "/llms.txt",
     "/robots.txt",
     "/balita/*",
     "/makanan/*",
@@ -11,8 +13,6 @@
     "/parenting/*"
   ],
   "exclude": [
-    "/assets/*",
-    "/sitemap.xml",
-    "/llms.txt"
+    "/assets/*"
   ]
 }
