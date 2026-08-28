@@ -1,9 +1,10 @@
 import { useMemo, useState, useEffect } from 'react';
-import { Post, AutoLink } from '../types';
+import { Post, AutoLink, SiteConfig } from '../types';
 import { applyAutoLinks, preprocessMarkdownLineBreaks } from '../lib/autolink';
 import { marked } from 'marked';
 import { Clock, Eye, Calendar, ArrowLeft, Share2, Check, Bookmark, Sparkles, MessageCircle, Twitter, Facebook, Copy } from 'lucide-react';
 import SEOHelper from '../components/SEOHelper';
+import AdSlot from '../components/AdSlot';
 
 interface ArticleDetailViewProps {
   slug: string;
@@ -11,6 +12,7 @@ interface ArticleDetailViewProps {
   autolinks: AutoLink[];
   onBack: () => void;
   onSelectPost: (slug: string) => void;
+  siteConfig?: SiteConfig;
 }
 
 export default function ArticleDetailView({
@@ -19,6 +21,7 @@ export default function ArticleDetailView({
   autolinks,
   onBack,
   onSelectPost,
+  siteConfig,
 }: ArticleDetailViewProps) {
   const [copied, setCopied] = useState(false);
 
@@ -191,6 +194,13 @@ export default function ArticleDetailView({
         />
       </div>
 
+      {/* STRATEGIC AD PLACEMENT: IN-ARTICLE TOP */}
+      <AdSlot
+        code={siteConfig?.adsense_article_top}
+        enableAdsense={siteConfig?.enable_adsense}
+        slotLabel="IN-ARTICLE TOP (HIGH CTR)"
+      />
+
       {/* TABLE OF CONTENTS (IF HEADINGS EXIST) */}
       {tocItems.length > 0 && (
         <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-2">
@@ -213,10 +223,24 @@ export default function ArticleDetailView({
         </div>
       )}
 
+      {/* STRATEGIC AD PLACEMENT: IN-ARTICLE MIDDLE */}
+      <AdSlot
+        code={siteConfig?.adsense_article_middle}
+        enableAdsense={siteConfig?.enable_adsense}
+        slotLabel="IN-ARTICLE MIDDLE (HIGH CTR)"
+      />
+
       {/* ARTICLE CONTENT BODY WITH AUTO-LINKING */}
       <div
         className="article-body prose prose-rose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 space-y-4"
         dangerouslySetInnerHTML={{ __html: parsedHtml }}
+      />
+
+      {/* STRATEGIC AD PLACEMENT: IN-ARTICLE BOTTOM */}
+      <AdSlot
+        code={siteConfig?.adsense_article_bottom}
+        enableAdsense={siteConfig?.enable_adsense}
+        slotLabel="IN-ARTICLE BOTTOM (MATCHED CONTENT)"
       />
 
       {/* TAGS & SHARE SECTION */}

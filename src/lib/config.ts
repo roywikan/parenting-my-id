@@ -8,7 +8,6 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   site_logo_icon: 'Heart',
   site_favicon_url: '/favicon.ico',
   header_nav_links: [
-    { label: 'Beranda', url: '/' },
     { label: 'Sitemap', url: '/sitemap.xml' },
     { label: 'RSS Feed', url: '/feed.xml' }
   ],
@@ -49,6 +48,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   site_domain: 'parenting.my.id',
   default_theme_mode: 'auto',
   font_density_scale: 'standard',
+  font_size_scale: 'normal',
   age_accessibility_preset: '29-38',
   header_badge_text: 'Beta v1.0',
   hero_badge_text: 'Portal Nomor 1',
@@ -56,7 +56,17 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   footer_autolink_label: 'Tautan Populer',
   footer_badge_1: 'Aman & Terpercaya',
   footer_badge_2: 'Diperbarui Rutin',
-  footer_badge_3: '100% Gratis'
+  footer_badge_3: '100% Gratis',
+
+  // Strategic AdSense Placements
+  enable_adsense: true,
+  adsense_client_id: '',
+  adsense_header_top: '',
+  adsense_article_top: '',
+  adsense_article_middle: '',
+  adsense_article_bottom: '',
+  adsense_sidebar: '',
+  adsense_sticky_footer: ''
 };
 
 export async function loadSiteConfig(): Promise<SiteConfig> {

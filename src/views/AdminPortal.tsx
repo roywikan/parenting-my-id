@@ -24,6 +24,7 @@ interface AdminPortalProps {
   siteConfig?: SiteConfig;
   onSaveConfig?: (config: SiteConfig) => Promise<boolean>;
   onUpdateCredentials?: (id: number, data: { name: string; email: string; password?: string; avatar?: string; bio?: string }) => Promise<{ success: boolean; user?: User; error?: string }>;
+  onLivePreviewChange?: (config: SiteConfig) => void;
 }
 
 export default function AdminPortal({
@@ -39,6 +40,7 @@ export default function AdminPortal({
   siteConfig,
   onSaveConfig,
   onUpdateCredentials,
+  onLivePreviewChange,
 }: AdminPortalProps) {
   // Login form state
   const [emailInput, setEmailInput] = useState('');
@@ -92,6 +94,7 @@ export default function AdminPortal({
 
   const [cfgSiteDomain, setCfgSiteDomain] = useState(siteConfig?.site_domain || 'parenting.my.id');
   const [cfgDefaultThemeMode, setCfgDefaultThemeMode] = useState<'light'|'dark'|'auto'>(siteConfig?.default_theme_mode || 'auto');
+  const [cfgFontSizeScale, setCfgFontSizeScale] = useState<'small'|'normal'|'large'|'xlarge'>(siteConfig?.font_size_scale || 'normal');
   const [cfgFontDensityScale, setCfgFontDensityScale] = useState<'compact'|'standard'|'spacious'>(siteConfig?.font_density_scale || 'standard');
   const [cfgAgeAccessibilityPreset, setCfgAgeAccessibilityPreset] = useState<'18-28'|'29-38'|'39-48'|'49-58'>(siteConfig?.age_accessibility_preset || '29-38');
   const [cfgHeaderBadgeText, setCfgHeaderBadgeText] = useState(siteConfig?.header_badge_text || 'Beta v1.0');
@@ -101,6 +104,16 @@ export default function AdminPortal({
   const [cfgFooterBadge1, setCfgFooterBadge1] = useState(siteConfig?.footer_badge_1 || 'Aman & Terpercaya');
   const [cfgFooterBadge2, setCfgFooterBadge2] = useState(siteConfig?.footer_badge_2 || 'Diperbarui Rutin');
   const [cfgFooterBadge3, setCfgFooterBadge3] = useState(siteConfig?.footer_badge_3 || '100% Gratis');
+
+  // AdSense Placement Config States
+  const [cfgEnableAdsense, setCfgEnableAdsense] = useState<boolean>(siteConfig?.enable_adsense ?? true);
+  const [cfgAdsenseClientId, setCfgAdsenseClientId] = useState<string>(siteConfig?.adsense_client_id || 'ca-pub-1234567890123456');
+  const [cfgAdsenseHeaderTop, setCfgAdsenseHeaderTop] = useState<string>(siteConfig?.adsense_header_top || '');
+  const [cfgAdsenseArticleTop, setCfgAdsenseArticleTop] = useState<string>(siteConfig?.adsense_article_top || '');
+  const [cfgAdsenseArticleMiddle, setCfgAdsenseArticleMiddle] = useState<string>(siteConfig?.adsense_article_middle || '');
+  const [cfgAdsenseArticleBottom, setCfgAdsenseArticleBottom] = useState<string>(siteConfig?.adsense_article_bottom || '');
+  const [cfgAdsenseSidebar, setCfgAdsenseSidebar] = useState<string>(siteConfig?.adsense_sidebar || '');
+  const [cfgAdsenseStickyFooter, setCfgAdsenseStickyFooter] = useState<string>(siteConfig?.adsense_sticky_footer || '');
 
   const [cfgSiteTagline, setCfgSiteTagline] = useState(siteConfig?.site_tagline || 'Edukasi & Pengasuhan Anak Modern');
   const [cfgSiteDescription, setCfgSiteDescription] = useState(siteConfig?.site_description || 'Portal informasi dan panduan pengasuhan anak modern.');
@@ -158,6 +171,7 @@ export default function AdminPortal({
 
   useEffect(() => {
     if (siteConfig) {
+      setCfgActiveThemePreset(siteConfig.active_theme_preset || 'corp-blue');
       setCfgSiteName(siteConfig.site_name);
       setCfgSiteTagline(siteConfig.site_tagline);
       setCfgSiteDescription(siteConfig.site_description);
@@ -167,6 +181,20 @@ export default function AdminPortal({
       setCfgHeaderNavLinks(JSON.stringify(siteConfig.header_nav_links || [], null, 2));
       setCfgEnableSearchBar(siteConfig.enable_search_bar ?? true);
       setCfgEnableThemeToggle(siteConfig.enable_theme_toggle ?? true);
+
+      setCfgDefaultThemeMode(siteConfig.default_theme_mode || 'auto');
+      setCfgFontSizeScale(siteConfig.font_size_scale || 'normal');
+      setCfgFontDensityScale(siteConfig.font_density_scale || 'standard');
+      setCfgAgeAccessibilityPreset(siteConfig.age_accessibility_preset || '29-38');
+
+      setCfgEnableAdsense(siteConfig.enable_adsense ?? true);
+      setCfgAdsenseClientId(siteConfig.adsense_client_id || 'ca-pub-1234567890123456');
+      setCfgAdsenseHeaderTop(siteConfig.adsense_header_top || '');
+      setCfgAdsenseArticleTop(siteConfig.adsense_article_top || '');
+      setCfgAdsenseArticleMiddle(siteConfig.adsense_article_middle || '');
+      setCfgAdsenseArticleBottom(siteConfig.adsense_article_bottom || '');
+      setCfgAdsenseSidebar(siteConfig.adsense_sidebar || '');
+      setCfgAdsenseStickyFooter(siteConfig.adsense_sticky_footer || '');
 
       setCfgSeoMetaTitle(siteConfig.seo_meta_title);
       setCfgSeoMetaDesc(siteConfig.seo_meta_description);
@@ -199,6 +227,96 @@ export default function AdminPortal({
       setCfgAdminLoginBtnText(siteConfig.admin_login_btn_text || 'Masuk Portal CMS');
     }
   }, [siteConfig]);
+
+  // REAL-TIME INSTANT PREVIEW EFFECT
+  useEffect(() => {
+    if (!onLivePreviewChange) return;
+
+    let navParsed = [];
+    let footerParsed = [];
+    try { navParsed = JSON.parse(cfgHeaderNavLinks); } catch (e) {}
+    try { footerParsed = JSON.parse(cfgFooterMenuLinks); } catch (e) {}
+
+    const draftConfig: SiteConfig = {
+      active_theme_preset: cfgActiveThemePreset,
+      site_name: cfgSiteName,
+      mobile_admin_btn_label: cfgMobileAdminBtnLabel,
+      mobile_show_logged_username: cfgMobileShowLoggedUsername,
+      site_domain: cfgSiteDomain,
+      default_theme_mode: cfgDefaultThemeMode,
+      font_size_scale: cfgFontSizeScale,
+      font_density_scale: cfgFontDensityScale,
+      age_accessibility_preset: cfgAgeAccessibilityPreset,
+      header_badge_text: cfgHeaderBadgeText,
+      hero_badge_text: cfgHeroBadgeText,
+      autolink_ticker_label: cfgAutolinkTickerLabel,
+      footer_autolink_label: cfgFooterAutolinkLabel,
+      footer_badge_1: cfgFooterBadge1,
+      footer_badge_2: cfgFooterBadge2,
+      footer_badge_3: cfgFooterBadge3,
+      site_tagline: cfgSiteTagline,
+      site_description: cfgSiteDescription,
+      site_logo_url: cfgSiteLogoUrl,
+      site_logo_icon: cfgSiteLogoIcon,
+      site_favicon_url: cfgSiteFaviconUrl,
+      header_nav_links: navParsed.length ? navParsed : (siteConfig?.header_nav_links || []),
+      enable_search_bar: cfgEnableSearchBar,
+      enable_theme_toggle: cfgEnableThemeToggle,
+      seo_meta_title: cfgSeoMetaTitle,
+      seo_meta_description: cfgSeoMetaDesc,
+      seo_default_og_image: cfgSeoDefaultOgImage,
+      show_hero_section: cfgShowHeroSection,
+      hero_title: cfgHeroTitle,
+      hero_subtitle: cfgHeroSubtitle,
+      hero_cta_text: cfgHeroCtaText,
+      hero_cta_link: cfgHeroCtaLink,
+      posts_per_page: Number(cfgPostsPerPage),
+      enable_featured_post: cfgEnableFeaturedPost,
+      pagination_type: cfgPaginationType,
+      show_sidebar: cfgShowSidebar,
+      popular_posts_count: Number(cfgPopularPostsCount),
+      categories_widget_limit: Number(cfgCategoriesWidgetLimit),
+      sidebar_banner_code: cfgSidebarBannerCode,
+      footer_about_text: cfgFooterAboutText,
+      footer_copyright_text: cfgFooterCopyrightText,
+      social_facebook: cfgSocialFacebook,
+      social_instagram: cfgSocialInstagram,
+      social_twitter: cfgSocialTwitter,
+      footer_menu_links: footerParsed.length ? footerParsed : (siteConfig?.footer_menu_links || []),
+      admin_login_title: cfgAdminLoginTitle,
+      admin_login_subtitle: cfgAdminLoginSubtitle,
+      admin_login_btn_text: cfgAdminLoginBtnText,
+
+      enable_adsense: cfgEnableAdsense,
+      adsense_client_id: cfgAdsenseClientId,
+      adsense_header_top: cfgAdsenseHeaderTop,
+      adsense_article_top: cfgAdsenseArticleTop,
+      adsense_article_middle: cfgAdsenseArticleMiddle,
+      adsense_article_bottom: cfgAdsenseArticleBottom,
+      adsense_sidebar: cfgAdsenseSidebar,
+      adsense_sticky_footer: cfgAdsenseStickyFooter,
+    };
+
+    onLivePreviewChange(draftConfig);
+  }, [
+    cfgActiveThemePreset, cfgDefaultThemeMode, cfgFontSizeScale, cfgFontDensityScale,
+    cfgAgeAccessibilityPreset, cfgHeaderBadgeText, cfgHeroBadgeText, cfgShowHeroSection,
+    cfgHeroTitle, cfgHeroSubtitle, cfgEnableAdsense, cfgAdsenseClientId,
+    cfgAdsenseHeaderTop, cfgAdsenseArticleTop, cfgAdsenseArticleMiddle,
+    cfgAdsenseArticleBottom, cfgAdsenseSidebar, cfgAdsenseStickyFooter
+  ]);
+
+  // Autofill Demo High-CTR AdSense Snippets
+  const handleFillDemoAdsense = () => {
+    const pubId = cfgAdsenseClientId || 'ca-pub-1234567890123456';
+    setCfgEnableAdsense(true);
+    setCfgAdsenseHeaderTop(`<div style="background:#fff border:1px solid #e2e8f0;padding:12px;text-align:center;border-radius:12px;"><span style="font-size:10px;color:#94a3b8;font-weight:bold;letter-spacing:1px;display:block;margin-bottom:4px;">IKLAN SPONSOR TOP BANNER (728x90)</span><ins class="adsbygoogle" style="display:block" data-ad-client="${pubId}" data-ad-slot="1111111111" data-ad-format="auto" data-full-width-responsive="true"></ins></div>`);
+    setCfgAdsenseArticleTop(`<div style="background:#f8fafc;border:1px dashed #cbd5e1;padding:16px;text-align:center;border-radius:12px;margin:16px 0;"><span style="font-size:10px;color:#64748b;font-weight:bold;display:block;margin-bottom:6px;">REKOMENDASI BACAAN SPONSOR (ATAS ARTIKEL)</span><ins class="adsbygoogle" style="display:inline-block;width:336px;height:280px" data-ad-client="${pubId}" data-ad-slot="2222222222"></ins></div>`);
+    setCfgAdsenseArticleMiddle(`<div style="background:#f1f5f9;border-left:4px solid #f43f5e;padding:16px;text-align:center;border-radius:8px;margin:20px 0;"><span style="font-size:10px;color:#f43f5e;font-weight:bold;display:block;margin-bottom:6px;">IKLAN TENGAH ARTIKEL (HIGH CTR IN-FEED)</span><ins class="adsbygoogle" style="display:block" data-ad-format="fluid" data-ad-layout-key="-fb+5w+4e-db+86" data-ad-client="${pubId}" data-ad-slot="3333333333"></ins></div>`);
+    setCfgAdsenseArticleBottom(`<div style="background:#fafafa;border:1px solid #e5e5e5;padding:16px;text-align:center;border-radius:12px;margin:20px 0;"><span style="font-size:10px;color:#737373;font-weight:bold;display:block;margin-bottom:6px;">IKLAN REKOMENDASI BAWAH ARTIKEL (MATCHED CONTENT)</span><ins class="adsbygoogle" style="display:block" data-ad-client="${pubId}" data-ad-slot="4444444444" data-ad-format="autorelaxed"></ins></div>`);
+    setCfgAdsenseSidebar(`<div style="background:#ffffff;border:1px border-slate-200;padding:12px;text-align:center;border-radius:12px;margin-bottom:16px;"><span style="font-size:10px;color:#64748b;font-weight:bold;display:block;margin-bottom:4px;">SIDEBAR AD (300x250)</span><ins class="adsbygoogle" style="display:inline-block;width:300px;height:250px" data-ad-client="${pubId}" data-ad-slot="5555555555"></ins></div>`);
+    setCfgAdsenseStickyFooter(`<div style="padding:4px;text-align:center;width:100%;"><span style="font-size:9px;color:#94a3b8;font-weight:bold;">STICKY FOOTER MOBILE BANNER</span><ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px" data-ad-client="${pubId}" data-ad-slot="6666666666"></ins></div>`);
+  };
 
   // Auto-Save Draft Debounce Timer
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -245,6 +363,7 @@ export default function AdminPortal({
 
         site_domain: cfgSiteDomain,
         default_theme_mode: cfgDefaultThemeMode,
+        font_size_scale: cfgFontSizeScale,
         font_density_scale: cfgFontDensityScale,
         age_accessibility_preset: cfgAgeAccessibilityPreset,
         header_badge_text: cfgHeaderBadgeText,
@@ -254,6 +373,15 @@ export default function AdminPortal({
         footer_badge_1: cfgFooterBadge1,
         footer_badge_2: cfgFooterBadge2,
         footer_badge_3: cfgFooterBadge3,
+
+        enable_adsense: cfgEnableAdsense,
+        adsense_client_id: cfgAdsenseClientId,
+        adsense_header_top: cfgAdsenseHeaderTop,
+        adsense_article_top: cfgAdsenseArticleTop,
+        adsense_article_middle: cfgAdsenseArticleMiddle,
+        adsense_article_bottom: cfgAdsenseArticleBottom,
+        adsense_sidebar: cfgAdsenseSidebar,
+        adsense_sticky_footer: cfgAdsenseStickyFooter,
 
         site_tagline: cfgSiteTagline,
         site_description: cfgSiteDescription,
@@ -996,10 +1124,28 @@ export default function AdminPortal({
             
             {/* SECTION 0: TEMA (TAMPILAN & PALET) */}
             <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-rose-500/10 border border-rose-500/30 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-rose-500 text-white shadow-md shadow-rose-500/20">
+                    <Sparkles className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>Preview Perubahan Visual & AdSense Instant</span>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold uppercase tracking-wider">LIVE</span>
+                    </h5>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                      Ubah font size, tema, mode terang/gelap, atau snippet iklan di bawah ini — perubahan akan langsung terlihat seketika di halaman tanpa perlu reload!
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Droplet className="w-4 h-4" />
-                <span>0. Tema, Tampilan & Tipografi</span>
+                <span>0. Tema, Tampilan & Tipografi Instant</span>
               </h4>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {THEME_PRESETS.map((preset) => (
                   <label
@@ -1031,7 +1177,7 @@ export default function AdminPortal({
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Mode Tema Default (default_theme_mode)
@@ -1046,6 +1192,23 @@ export default function AdminPortal({
                     <option value="dark">Dark Mode (Night)</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Ukuran Font Utama / Direct Font Scale (font_size_scale)
+                  </label>
+                  <select
+                    value={cfgFontSizeScale}
+                    onChange={(e) => setCfgFontSizeScale(e.target.value as any)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="small">Kecil (14px Base)</option>
+                    <option value="normal">Standar (16px Base Default)</option>
+                    <option value="large">Besar (18px Base)</option>
+                    <option value="xlarge">Sangat Besar / Mata Tua (20px Base)</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Skala Kerapatan Tipografi (font_density_scale)
@@ -1060,21 +1223,22 @@ export default function AdminPortal({
                     <option value="spacious">Spacious & Accessible</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Preset Aksesibilitas Usia Pembaca (age_accessibility_preset)
-                  </label>
-                  <select
-                    value={cfgAgeAccessibilityPreset}
-                    onChange={(e) => setCfgAgeAccessibilityPreset(e.target.value as any)}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
-                  >
-                    <option value="18-28">18–28 Tahun (Muda/Compact)</option>
-                    <option value="29-38">29–38 Tahun (Dewasa/Standar)</option>
-                    <option value="39-48">39–48 Tahun (Nyaman/Lega)</option>
-                    <option value="49-58">49–58+ Tahun (Mata Tua / Senior Accessible)</option>
-                  </select>
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Preset Aksesibilitas Usia Pembaca (age_accessibility_preset)
+                </label>
+                <select
+                  value={cfgAgeAccessibilityPreset}
+                  onChange={(e) => setCfgAgeAccessibilityPreset(e.target.value as any)}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                >
+                  <option value="18-28">18–28 Tahun (Muda/Compact)</option>
+                  <option value="29-38">29–38 Tahun (Dewasa/Standar)</option>
+                  <option value="39-48">39–48 Tahun (Nyaman/Lega)</option>
+                  <option value="49-58">49–58+ Tahun (Mata Tua / Senior Accessible)</option>
+                </select>
               </div>
             </div>
 
@@ -1592,6 +1756,160 @@ export default function AdminPortal({
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
                   placeholder="<!-- Masukkan Script Banner HTML/Adsense disini -->"
                 />
+              </div>
+            </div>
+
+            {/* SECTION 7: ADSENSE HIGH CTR STRATEGIC PLACEMENT CONFIGURATION */}
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  <span>7. Strategi Iklan AdSense (Spot Strategis High CTR)</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={handleFillDemoAdsense}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-[11px] border border-amber-500/30 flex items-center gap-1.5 transition-all"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Isi Demo Snippet AdSense High-CTR</span>
+                </button>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                <span className="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+                  <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  Tips Pengajuan AdSense & Tampilan Profesional:
+                </span>
+                <p className="text-[11px] leading-relaxed opacity-90">
+                  • <strong>Jika belum/sedang pengajuan AdSense:</strong> Cukup <strong>kosongkan seluruh textboxes</strong> atau hilangkan centang <em>Aktifkan Penempatan Iklan AdSense</em>. Sistem akan menyembunyikan (collapse) seluruh slot iklan secara otomatis tanpa meninggalkan kotak kosong, tulisan developer, atau layout rusak. Website Anda akan terlihat 100% rapi, profesional, dan siap di-review oleh Google.
+                  <br />
+                  • <strong>Kode saat Pengajuan AdSense:</strong> Jika Google meminta memasukkan script AdSense Auto-Ads saat review, cukup tempelkan script utama <code>&lt;script async src="https://pagead2.googlesyndication.com/..."&gt;&lt;/script&gt;</code> ke dalam kotak <strong>1. Header Top Banner</strong> dan isi Publisher ID Anda.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cfgEnableAdsense}
+                      onChange={(e) => setCfgEnableAdsense(e.target.checked)}
+                      className="w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500 dark:border-slate-700 dark:bg-slate-950"
+                    />
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">
+                        Aktifkan Penempatan Iklan AdSense (enable_adsense)
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        Mengaktifkan/mematikan penayangan iklan AdSense di seluruh titik website.
+                      </span>
+                    </div>
+                  </label>
+
+                  <div className="w-full sm:w-auto">
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">Google AdSense Publisher ID</label>
+                    <input
+                      type="text"
+                      value={cfgAdsenseClientId}
+                      onChange={(e) => setCfgAdsenseClientId(e.target.value)}
+                      placeholder="ca-pub-1234567890123456"
+                      className="w-full sm:w-56 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-mono font-bold text-rose-600 focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 1. HEADER TOP BANNER */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                    <span>1. Header Top Banner (728x90)</span>
+                    <span className="text-[10px] text-slate-500 font-normal">adsense_header_top</span>
+                  </label>
+                  <textarea
+                    value={cfgAdsenseHeaderTop}
+                    onChange={(e) => setCfgAdsenseHeaderTop(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                    placeholder="<ins class='adsbygoogle' ...></ins>"
+                  />
+                </div>
+
+                {/* 2. IN-ARTICLE TOP */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                    <span>2. In-Article Top (Atas Paragraf 1)</span>
+                    <span className="text-[10px] text-slate-500 font-normal">adsense_article_top</span>
+                  </label>
+                  <textarea
+                    value={cfgAdsenseArticleTop}
+                    onChange={(e) => setCfgAdsenseArticleTop(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                    placeholder="<ins class='adsbygoogle' ...></ins>"
+                  />
+                </div>
+
+                {/* 3. IN-ARTICLE MIDDLE */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                    <span>3. In-Article Middle (Sela-sela Paragraf / High CTR)</span>
+                    <span className="text-[10px] text-slate-500 font-normal">adsense_article_middle</span>
+                  </label>
+                  <textarea
+                    value={cfgAdsenseArticleMiddle}
+                    onChange={(e) => setCfgAdsenseArticleMiddle(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                    placeholder="<ins class='adsbygoogle' ...></ins>"
+                  />
+                </div>
+
+                {/* 4. IN-ARTICLE BOTTOM */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                    <span>4. In-Article Bottom (Bawah Artikel / Matched Content)</span>
+                    <span className="text-[10px] text-slate-500 font-normal">adsense_article_bottom</span>
+                  </label>
+                  <textarea
+                    value={cfgAdsenseArticleBottom}
+                    onChange={(e) => setCfgAdsenseArticleBottom(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                    placeholder="<ins class='adsbygoogle' ...></ins>"
+                  />
+                </div>
+
+                {/* 5. SIDEBAR STICKY */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                    <span>5. Sidebar Ad Unit (300x250 / 300x600)</span>
+                    <span className="text-[10px] text-slate-500 font-normal">adsense_sidebar</span>
+                  </label>
+                  <textarea
+                    value={cfgAdsenseSidebar}
+                    onChange={(e) => setCfgAdsenseSidebar(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                    placeholder="<ins class='adsbygoogle' ...></ins>"
+                  />
+                </div>
+
+                {/* 6. STICKY FOOTER MOBILE BANNER */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                    <span>6. Sticky Footer Banner (Anchor Mobile Ad)</span>
+                    <span className="text-[10px] text-slate-500 font-normal">adsense_sticky_footer</span>
+                  </label>
+                  <textarea
+                    value={cfgAdsenseStickyFooter}
+                    onChange={(e) => setCfgAdsenseStickyFooter(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                    placeholder="<ins class='adsbygoogle' ...></ins>"
+                  />
+                </div>
               </div>
             </div>
 

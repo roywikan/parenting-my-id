@@ -60,6 +60,7 @@ export interface SiteConfig {
   site_domain?: string;
   default_theme_mode?: 'light' | 'dark' | 'auto';
   font_density_scale?: 'compact' | 'standard' | 'spacious';
+  font_size_scale?: 'small' | 'normal' | 'large' | 'xlarge';
   age_accessibility_preset?: '18-28' | '29-38' | '39-48' | '49-58';
   header_badge_text?: string;
   hero_badge_text?: string;
@@ -68,6 +69,16 @@ export interface SiteConfig {
   footer_badge_1?: string;
   footer_badge_2?: string;
   footer_badge_3?: string;
+  
+  // AdSense & Strategic Ad Placements
+  enable_adsense?: boolean;
+  adsense_client_id?: string;
+  adsense_header_top?: string;
+  adsense_article_top?: string;
+  adsense_article_middle?: string;
+  adsense_article_bottom?: string;
+  adsense_sidebar?: string;
+  adsense_sticky_footer?: string;
 }
 
 export type PostStatus = 'draft' | 'published';

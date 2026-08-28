@@ -8,6 +8,7 @@ import Footer from './components/Footer';
 import HomeView from './views/HomeView';
 import ArticleDetailView from './views/ArticleDetailView';
 import AdminPortal from './views/AdminPortal';
+import AdSlot from './components/AdSlot';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'article' | 'admin'>('home');
@@ -17,6 +18,9 @@ export default function App() {
   const [autolinks, setAutolinks] = useState<AutoLink[]>(INITIAL_AUTOLINKS);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [siteConfig, setSiteConfig] = useState<SiteConfig | undefined>(undefined);
+  const [liveDraftConfig, setLiveDraftConfig] = useState<SiteConfig | undefined>(undefined);
+
+  const effectiveConfig = liveDraftConfig || siteConfig;
 
   // Fetch Posts, Autolinks & Config on initial mount
   useEffect(() => {
@@ -35,12 +39,10 @@ export default function App() {
     }
   }, []);
 
-  
-
 // Manage Dark Mode
   useEffect(() => {
-    if (!siteConfig) return;
-    const mode = siteConfig.default_theme_mode || 'auto';
+    if (!effectiveConfig) return;
+    const mode = effectiveConfig.default_theme_mode || 'auto';
     const root = document.documentElement;
     const override = localStorage.getItem('theme_override');
     
@@ -60,11 +62,11 @@ export default function App() {
         root.classList.remove('dark');
       }
     }
-  }, [siteConfig?.default_theme_mode]);
+  }, [effectiveConfig?.default_theme_mode]);
 
   useEffect(() => {
-    if (siteConfig?.active_theme_preset) {
-      const theme = THEME_PRESETS.find(t => t.id === siteConfig.active_theme_preset);
+    if (effectiveConfig?.active_theme_preset) {
+      const theme = THEME_PRESETS.find(t => t.id === effectiveConfig.active_theme_preset);
       if (theme) {
         document.documentElement.style.setProperty('--color-primary', theme.colors.primary);
         document.documentElement.style.setProperty('--color-secondary', theme.colors.secondary);
@@ -77,7 +79,7 @@ export default function App() {
       document.documentElement.style.removeProperty('--font-sans');
       document.documentElement.style.removeProperty('--font-heading');
     }
-  }, [siteConfig?.active_theme_preset]);
+  }, [effectiveConfig?.active_theme_preset]);
 
   const fetchConfig = async () => {
     try {
@@ -304,76 +306,93 @@ export default function App() {
 
   // Terapkan Skala Tipografi
   let densityClass = 'text-base leading-relaxed tracking-normal'; // Standard
-  if (siteConfig?.font_density_scale === 'compact') {
+  if (effectiveConfig?.font_density_scale === 'compact') {
     densityClass = 'text-sm leading-snug tracking-tight';
-  } else if (siteConfig?.font_density_scale === 'spacious') {
+  } else if (effectiveConfig?.font_density_scale === 'spacious') {
     densityClass = 'text-[17px] md:text-lg leading-loose tracking-wide';
   }
 
+  // Terapkan Ukuran Font Direct & Preset Aksesibilitas Usia Pembaca
+  let fontScaleCss = '';
+  if (effectiveConfig?.font_size_scale) {
+    switch (effectiveConfig.font_size_scale) {
+      case 'small': fontScaleCss = 'html { font-size: 14px !important; }'; break;
+      case 'normal': fontScaleCss = 'html { font-size: 16px !important; }'; break;
+      case 'large': fontScaleCss = 'html { font-size: 18px !important; }'; break;
+      case 'xlarge': fontScaleCss = 'html { font-size: 20px !important; }'; break;
+    }
+  }
 
-  // Terapkan Preset Aksesibilitas Usia Pembaca (Age Accessibility Preset)
   let ageStyle = '';
-  switch (siteConfig?.age_accessibility_preset) {
+  switch (effectiveConfig?.age_accessibility_preset) {
     case '18-28':
       ageStyle = `
-        .article-body { font-size: 16px; line-height: 1.625; }
-        .main-nav, .main-nav a, .main-nav button { font-size: 16px !important; }
-        .text-secondary { font-size: 12px; opacity: 0.8; }
+        .article-body { font-size: 1.05rem; line-height: 1.625; }
+        .main-nav, .main-nav a, .main-nav button { font-size: 1rem !important; }
+        .text-secondary { font-size: 0.8rem; opacity: 0.8; }
       `;
       break;
     case '29-38':
       ageStyle = `
-        .article-body { font-size: 18px; line-height: 1.625; }
-        .main-nav, .main-nav a, .main-nav button { font-size: 16px !important; }
-        .text-secondary { font-size: 14px; }
+        .article-body { font-size: 1.15rem; line-height: 1.65; }
+        .main-nav, .main-nav a, .main-nav button { font-size: 1rem !important; }
+        .text-secondary { font-size: 0.875rem; }
       `;
       break;
     case '39-48':
       ageStyle = `
-        .article-body { font-size: 20px; line-height: 2; }
-        .main-nav, .main-nav a, .main-nav button { font-size: 18px !important; font-weight: bold; }
-        .text-secondary { font-size: 14px; }
+        .article-body { font-size: 1.25rem; line-height: 1.8; }
+        .main-nav, .main-nav a, .main-nav button { font-size: 1.1rem !important; font-weight: bold; }
+        .text-secondary { font-size: 0.9rem; }
       `;
       break;
     case '49-58':
       ageStyle = `
-        .article-body { font-size: 24px; line-height: 2; }
+        .article-body { font-size: 1.4rem; line-height: 2; }
         .dark .article-body { color: #ffffff !important; }
         .article-body p, .article-body li { color: #000000; }
         .dark .article-body p, .dark .article-body li { color: #ffffff; }
-        .main-nav, .main-nav a, .main-nav button { font-size: 20px !important; padding: 12px 16px !important; }
-        .text-secondary { font-size: 16px; }
+        .main-nav, .main-nav a, .main-nav button { font-size: 1.25rem !important; padding: 12px 16px !important; }
+        .text-secondary { font-size: 1rem; }
       `;
       break;
     default:
-      // Default to 29-38
       ageStyle = `
-        .article-body { font-size: 18px; line-height: 1.625; }
-        .main-nav, .main-nav a, .main-nav button { font-size: 16px !important; }
-        .text-secondary { font-size: 14px; }
+        .article-body { font-size: 1.125rem; line-height: 1.625; }
+        .main-nav, .main-nav a, .main-nav button { font-size: 1rem !important; }
+        .text-secondary { font-size: 0.875rem; }
       `;
       break;
   }
 
   return (
     <div className={`min-h-screen bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors antialiased ${densityClass}`}>
-      <style>{`${ageStyle}`}</style>
+      <style>{`${fontScaleCss} ${ageStyle}`}</style>
       <Header
         currentView={currentView}
         onNavigate={handleNavigate}
         currentUser={currentUser}
         onLogout={handleLogout}
-        siteConfig={siteConfig}
+        siteConfig={effectiveConfig}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+      {/* STRATEGIC AD PLACEMENT: HEADER TOP BANNER */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <AdSlot
+          code={effectiveConfig?.adsense_header_top}
+          enableAdsense={effectiveConfig?.enable_adsense}
+          slotLabel="HEADER TOP BANNER (STRATEGIC HIGH CTR)"
+        />
+      </div>
+
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
         {currentView === 'home' && (
           <HomeView
             posts={posts}
             autolinks={autolinks}
             onSelectPost={(slug) => handleNavigate('article', slug)}
             onSelectCategory={() => {}}
-            siteConfig={siteConfig}
+            siteConfig={effectiveConfig}
           />
         )}
 
@@ -384,6 +403,7 @@ export default function App() {
             autolinks={autolinks}
             onBack={() => handleNavigate('home')}
             onSelectPost={(slug) => handleNavigate('article', slug)}
+            siteConfig={effectiveConfig}
           />
         )}
 
@@ -398,14 +418,28 @@ export default function App() {
             onDeletePost={handleDeletePost}
             onAddAutolink={handleAddAutolink}
             onDeleteAutolink={handleDeleteAutolink}
-            siteConfig={siteConfig}
+            siteConfig={effectiveConfig}
             onSaveConfig={handleSaveConfig}
             onUpdateCredentials={handleUpdateCredentials}
+            onLivePreviewChange={setLiveDraftConfig}
           />
         )}
       </main>
 
-      <Footer siteConfig={siteConfig} />
+      <Footer siteConfig={effectiveConfig} />
+
+      {/* STICKY FOOTER AD BANNER */}
+      {effectiveConfig?.enable_adsense !== false && effectiveConfig?.adsense_sticky_footer && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-800 shadow-2xl p-2 flex items-center justify-center">
+          <div className="relative max-w-4xl w-full flex items-center justify-center">
+            <AdSlot
+              code={effectiveConfig.adsense_sticky_footer}
+              enableAdsense={effectiveConfig.enable_adsense}
+              slotLabel="STICKY FOOTER BANNER"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

@@ -1,20 +1,18 @@
 {
   "version": 1,
   "include": [
-
     "/api/*",
     "/baca/*",
-    "/sitemap.xml",
     "/feed.xml",
     "/robots.txt",
-        "/balita/*",
-        "/makanan/*",
+    "/balita/*",
+    "/makanan/*",
     "/kesehatan/*",
     "/parenting/*"
-
-        
   ],
   "exclude": [
-    "/assets/*"
+    "/assets/*",
+    "/sitemap.xml",
+    "/llms.txt"
   ]
 }

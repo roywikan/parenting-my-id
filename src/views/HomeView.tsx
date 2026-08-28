@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Post, AutoLink, SiteConfig } from '../types';
 import { Search, Clock, Eye, Sparkles, ArrowRight, ShieldCheck, Zap, BookOpen, Tag } from 'lucide-react';
 import SEOHelper from '../components/SEOHelper';
+import AdSlot from '../components/AdSlot';
 
 interface HomeViewProps {
   posts: Post[];
@@ -246,6 +247,13 @@ export default function HomeView({ posts, autolinks, onSelectPost, onSelectCateg
             {regularPosts.length} Artikel ditemukan
           </span>
         </div>
+
+        {/* SIDEBAR / GRID AD SLOT */}
+        <AdSlot
+          code={siteConfig?.adsense_sidebar}
+          enableAdsense={siteConfig?.enable_adsense}
+          slotLabel="SIDEBAR / IN-FEED AD (HIGH CTR)"
+        />
 
         {regularPosts.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 border border-slate-200 dark:border-slate-800 text-center space-y-3">

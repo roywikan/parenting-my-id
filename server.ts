@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
+import { generateStaticFiles } from './scripts/generate-static-files.js';
 
 dotenv.config();
 
@@ -211,7 +212,78 @@ app.get('/api/posts/:slug', (req, res) => {
   res.json(post);
 });
 
-// POST Create or Update Post (With Auto-Save Draft support)
+// Helper to commit file directly to GitHub via REST API
+async function commitFileToGitHub(filePath: string, contentStr: string, commitMessage: string) {
+  const githubToken = process.env.GITHUB_TOKEN;
+  const owner = process.env.GITHUB_OWNER;
+  const repo = process.env.GITHUB_REPO;
+  const branch = process.env.GITHUB_BRANCH || 'main';
+
+  if (!githubToken || !owner || !repo) {
+    return { success: false, reason: 'No GitHub credentials in env' };
+  }
+
+  try {
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${githubToken}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      'User-Agent': 'Parenting-Blog-Server',
+    };
+
+    let sha: string | undefined;
+    const getRes = await fetch(`${apiUrl}?ref=${branch}`, { headers });
+    if (getRes.ok) {
+      const getJson: any = await getRes.json();
+      sha = getJson.sha;
+    }
+
+    const base64Content = Buffer.from(contentStr, 'utf-8').toString('base64');
+    const putBody: any = {
+      message: commitMessage,
+      content: base64Content,
+      branch,
+    };
+    if (sha) {
+      putBody.sha = sha;
+    }
+
+    const putRes = await fetch(apiUrl, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(putBody),
+    });
+
+    if (putRes.ok) {
+      console.log(`[GitHub Commit] Successfully committed ${filePath} to repo ${owner}/${repo}`);
+      return { success: true };
+    } else {
+      const errText = await putRes.text();
+      console.error(`[GitHub Commit] Failed to commit ${filePath}:`, errText);
+      return { success: false, error: errText };
+    }
+  } catch (err) {
+    console.error(`[GitHub Commit] Error committing ${filePath}:`, err);
+    return { success: false, error: String(err) };
+  }
+}
+
+async function triggerStaticFilesGeneratorAndCommit(posts: any[]) {
+  try {
+    const { llmsContent, sitemapContent } = generateStaticFiles(posts);
+
+    if (process.env.GITHUB_TOKEN && process.env.GITHUB_OWNER && process.env.GITHUB_REPO) {
+      console.log('[Auto-Commit] Committing updated llms.txt and sitemap.xml to GitHub...');
+      commitFileToGitHub('public/llms.txt', llmsContent, 'auto-update: sync llms.txt via CMS');
+      commitFileToGitHub('public/sitemap.xml', sitemapContent, 'auto-update: sync sitemap.xml via CMS');
+    }
+  } catch (err) {
+    console.error('Error triggering static files generator and GitHub commit:', err);
+  }
+}
+
+// POST Create or Update Post (With Auto-Save Draft support & Static File Sync)
 app.post('/api/posts', (req, res) => {
   const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, status, metaTitle, metaDescription, tags } = req.body;
 
@@ -241,6 +313,10 @@ app.post('/api/posts', (req, res) => {
         tags: tags || 'parenting, anak',
         updatedAt: new Date().toISOString(),
       };
+
+      // Automatically regenerate static llms.txt & sitemap.xml and commit to GitHub
+      triggerStaticFilesGeneratorAndCommit(mockPosts);
+
       return res.json({ success: true, post: mockPosts[index] });
     }
   }
@@ -269,6 +345,10 @@ app.post('/api/posts', (req, res) => {
   };
 
   mockPosts.unshift(newPost);
+
+  // Automatically regenerate static llms.txt & sitemap.xml and commit to GitHub
+  triggerStaticFilesGeneratorAndCommit(mockPosts);
+
   res.json({ success: true, post: newPost });
 });
 
@@ -276,6 +356,10 @@ app.post('/api/posts', (req, res) => {
 app.delete('/api/posts/:id', (req, res) => {
   const id = Number(req.params.id);
   mockPosts = mockPosts.filter((p) => p.id !== id);
+
+  // Automatically regenerate static llms.txt & sitemap.xml and commit to GitHub
+  triggerStaticFilesGeneratorAndCommit(mockPosts);
+
   res.json({ success: true, message: 'Artikel berhasil dihapus' });
 });
 

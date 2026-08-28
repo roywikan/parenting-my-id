@@ -15,11 +15,11 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
 
   const siteName = siteConfig?.site_name || 'Parenting.my.id';
   const siteTagline = siteConfig?.site_tagline || 'PORTAL EDUKASI POLA ASUH & GIZI ANAK';
-  const navLinks = siteConfig?.header_nav_links || [
-    { label: 'Beranda', url: '/' },
+  const rawNavLinks = siteConfig?.header_nav_links || [
     { label: 'Sitemap', url: '/sitemap.xml' },
     { label: 'RSS Feed', url: '/feed.xml' }
   ];
+  const navLinks = rawNavLinks.filter(link => link.label !== 'Beranda' && link.url !== '/');
 
   
   const toggleTheme = () => {
