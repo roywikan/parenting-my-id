@@ -294,6 +294,19 @@ ${articleLinks}
         }
       }
 
+      // GET /api/webhooks/cusdis or GET /api/cusdis-webhook (Health Check)
+      if ((path === '/api/webhooks/cusdis' || path === '/api/cusdis-webhook') && request.method === 'GET') {
+        return new Response(
+          JSON.stringify({
+            status: 'online',
+            success: true,
+            message: 'Cusdis Webhook Endpoint Cloudflare Worker aktif dan siap menerima payload POST dari Cusdis!',
+            endpoint: 'https://parenting.my.id/api/webhooks/cusdis',
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       // POST /api/webhooks/cusdis or POST /api/cusdis-webhook (Cusdis Comment Webhook Auto-Sync to D1 DB)
       if ((path === '/api/webhooks/cusdis' || path === '/api/cusdis-webhook') && request.method === 'POST') {
         try {

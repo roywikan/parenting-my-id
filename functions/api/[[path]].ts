@@ -602,6 +602,109 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       }
     }
 
+    // 9. GET /api/comments
+    if (path === '/api/comments' && method === 'GET') {
+      if (env.DB) {
+        try {
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS comments (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              post_slug TEXT NOT NULL,
+              user_name TEXT NOT NULL,
+              user_email TEXT NOT NULL,
+              user_avatar TEXT NOT NULL,
+              content TEXT NOT NULL,
+              status TEXT DEFAULT 'approved',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `).run();
+
+          const { results } = await env.DB.prepare(
+            'SELECT * FROM comments ORDER BY created_at DESC LIMIT 100'
+          ).all();
+
+          return jsonResponse(results || []);
+        } catch (e: any) {
+          console.error('Error fetching comments from D1:', e);
+          return jsonResponse([]);
+        }
+      }
+      return jsonResponse([]);
+    }
+
+    // 10. DELETE /api/comments/:id
+    if (path.startsWith('/api/comments/') && method === 'DELETE') {
+      if (env.DB) {
+        try {
+          const id = path.split('/')[3];
+          await env.DB.prepare('DELETE FROM comments WHERE id = ?').bind(id).run();
+          return jsonResponse({ success: true, message: 'Komentar berhasil dihapus.' });
+        } catch (e: any) {
+          return jsonResponse({ error: e.message }, 500);
+        }
+      }
+      return jsonResponse({ success: true });
+    }
+
+    // 11. GET /api/webhooks/cusdis or GET /api/cusdis-webhook (Health / Browser Check)
+    if ((path === '/api/webhooks/cusdis' || path === '/api/cusdis-webhook') && method === 'GET') {
+      return jsonResponse({
+        status: 'online',
+        success: true,
+        message: 'Cusdis Webhook Endpoint Cloudflare Pages aktif dan siap menerima payload POST dari Cusdis!',
+        endpoint: 'https://parenting.my.id/api/webhooks/cusdis',
+      });
+    }
+
+    // 12. POST /api/webhooks/cusdis or POST /api/cusdis-webhook (Cusdis Comment Webhook Auto-Sync to D1 DB)
+    if ((path === '/api/webhooks/cusdis' || path === '/api/cusdis-webhook') && method === 'POST') {
+      try {
+        const payload = await request.json() as any;
+        console.log('[Cusdis Webhook Received]:', JSON.stringify(payload));
+
+        if (payload && payload.type === 'new_comment' && payload.data) {
+          const { by_nickname, by_email, content, page_id } = payload.data;
+          const avatarName = encodeURIComponent(by_nickname || 'Pembaca');
+          const avatar = `https://ui-avatars.com/api/?name=${avatarName}&background=f43f5e&color=fff`;
+
+          if (env.DB) {
+            await env.DB.prepare(`
+              CREATE TABLE IF NOT EXISTS comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                post_slug TEXT NOT NULL,
+                user_name TEXT NOT NULL,
+                user_email TEXT NOT NULL,
+                user_avatar TEXT NOT NULL,
+                content TEXT NOT NULL,
+                status TEXT DEFAULT 'approved',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+              )
+            `).run();
+
+            await env.DB.prepare(`
+              INSERT INTO comments (post_slug, user_name, user_email, user_avatar, content, status)
+              VALUES (?, ?, ?, ?, ?, 'approved')
+            `).bind(
+              page_id || '',
+              by_nickname || 'Pembaca Anonim',
+              by_email || '',
+              avatar,
+              content || ''
+            ).run();
+          }
+
+          return jsonResponse({
+            success: true,
+            message: 'Komentar Cusdis berhasil disinkronkan ke Cloudflare D1 Database!',
+          });
+        }
+
+        return jsonResponse({ success: true, message: 'Webhook payload diterima.' });
+      } catch (err: any) {
+        return jsonResponse({ success: false, error: err.message }, 500);
+      }
+    }
+
     return jsonResponse({ error: 'Endpoint tidak ditemukan' }, 404);
   } catch (err: any) {
     return jsonResponse({ error: err.message || 'Internal Server Error' }, 500);

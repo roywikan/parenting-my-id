@@ -294,6 +294,16 @@ app.delete('/api/comments/:id', (req, res) => {
   res.json({ success: true, message: 'Komentar berhasil dihapus' });
 });
 
+// GET Cusdis Webhook Endpoint (Health Check)
+app.get(['/api/webhooks/cusdis', '/api/cusdis-webhook'], (req, res) => {
+  res.json({
+    status: 'online',
+    success: true,
+    message: 'Cusdis Webhook Endpoint server aktif dan siap menerima payload POST dari Cusdis!',
+    endpoint: 'https://parenting.my.id/api/webhooks/cusdis',
+  });
+});
+
 // POST Cusdis Webhook Endpoint (Auto Sync Webhook)
 app.post(['/api/webhooks/cusdis', '/api/cusdis-webhook'], (req, res) => {
   try {

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { MessageSquare, ShieldCheck, Sparkles } from 'lucide-react';
+import { MessageSquare, Sparkles } from 'lucide-react';
 
 interface CusdisCommentsProps {
   pageId: string;
@@ -37,6 +37,23 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
     threadEl.setAttribute('data-page-url', pageUrl);
     threadEl.setAttribute('data-page-title', pageTitle);
 
+    // Dynamic iframe auto-resize listener from Cusdis window postMessage
+    const handleMessage = (e: MessageEvent) => {
+      try {
+        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        if (data && data.from === 'cusdis' && data.type === 'resize') {
+          const iframe = document.querySelector('#cusdis_thread iframe') as HTMLIFrameElement;
+          if (iframe && data.data) {
+            iframe.style.height = `${Math.max(420, Number(data.data))}px`;
+          }
+        }
+      } catch (err) {
+        // Safe catch for unrelated window messages
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
     const initCusdis = async () => {
       // 1. Ensure Indonesian language script (id.js) is loaded FIRST
       if (!document.getElementById('cusdis-lang-script')) {
@@ -71,10 +88,23 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
     };
 
     initCusdis();
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
   }, [pageId, pageUrl, pageTitle, appId, host]);
 
   return (
     <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 space-y-6">
+      <style>{`
+        #cusdis_thread iframe {
+          width: 100% !important;
+          min-height: 450px !important;
+          border: none !important;
+          background: transparent !important;
+        }
+      `}</style>
+
       {/* HEADER DISKUSI */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-rose-50/80 via-white to-pink-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/80 p-4 rounded-2xl border border-rose-100 dark:border-slate-800 shadow-2xs">
         <div className="flex items-center gap-3">
@@ -83,9 +113,9 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
           </div>
           <div>
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>Diskusi & Komentar Pembaca</span>
+              <span>Diskusi &amp; Komentar Pembaca</span>
               <span className="flex items-center gap-1 text-[10px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-950/60 px-2 py-0.5 rounded-md">
-                <Sparkles className="w-3 h-3" /> Moderasi Terarah
+                <Sparkles className="w-3 h-3" /> Dimoderasi
               </span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -93,15 +123,10 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
             </p>
           </div>
         </div>
-
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-700 shrink-0">
-          <ShieldCheck className="w-4 h-4 text-emerald-500" />
-          <span className="font-semibold text-[11px]">Bahasa Indonesia (Cusdis ID)</span>
-        </div>
       </div>
 
       {/* CUSDIS THREAD CONTAINER */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xs min-h-[180px]">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xs min-h-[480px]">
         <div
           id="cusdis_thread"
           data-host={host}
@@ -114,3 +139,4 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
     </div>
   );
 };
+
