@@ -447,7 +447,7 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
   });
 });
 
-// 6. DYNAMIC SITEMAP.XML
+// 6. DYNAMIC SITEMAP.XML BY AISTUDIO :
 app.get('/sitemapper.xml', (req, res) => {
   const siteUrl = 'https://parenting.my.id';
   const publishedPosts = mockPosts.filter((p) => p.status === 'published');
@@ -478,7 +478,7 @@ app.get('/sitemapper.xml', (req, res) => {
   res.status(200).send(xml.trim());
 });
 
-// 6. DYNAMIC SITEMAP.XML
+// 6. DYNAMIC SITEMAP.XML by Gemini AI :
 app.get('/sitemap.xml', (req, res) => {
   const siteUrl = 'https://parenting.my.id';
   const publishedPosts = mockPosts.filter((p) => p.status === 'published');
@@ -531,6 +531,31 @@ app.get('/feed.xml', (req, res) => {
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   res.status(200).send(rss.trim());
 });
+
+
+// 7.A. DYNAMIC LLMS.TXT ENDPOINT by GEMINI AI
+app.get('/llms.txt', (req, res) => {
+  const siteUrl = 'https://parenting.my.id';
+  const publishedPosts = mockPosts.filter((p) => p.status === 'published');
+
+  const articleLinks = publishedPosts
+    .map((p) => `* [${p.title}](${siteUrl}/baca/${p.slug}): ${p.excerpt}`)
+    .join('\n');
+
+  const content = `# Parenting.my.id
+
+> Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.
+
+## Artikel Terkait & Panduan Utama
+
+${articleLinks}
+`.trim();
+
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.status(200).send(content);
+});
+
+
 
 // 8. SSR / STATIC HTML PRE-RENDERING FOR ARTICLE PAGES (/baca/:slug) FOR GOOGLEBOT & CRAWLERS
 app.get('/baca/:slug', (req, res, next) => {
