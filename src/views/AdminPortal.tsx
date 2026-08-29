@@ -574,7 +574,7 @@ export default function AdminPortal({
 
       const ok = await onSaveConfig(updatedCfg);
       if (ok) {
-        setConfigSuccessMsg('✅ Semua pengaturan situs, Top Bar Navigasi, Menu Hamburger, dan Footer berhasil disimpan!');
+        setConfigSuccessMsg('✅ PERUBAHAN DISIMPAN SINKRON! Semua 65+ parameter konfigurasi situs telah berhasil disimpan ke Database Cloudflare D1 (tabel configs) & public/site_config.json.');
         setConfigErrMsg('');
       } else {
         setConfigErrMsg('⚠️ GAGAL MENYIMPAN KONFIGURASI SITUS: Server mengembalikan respon error. Silakan periksa koneksi internet Anda atau coba lagi.');

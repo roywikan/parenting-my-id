@@ -109,6 +109,21 @@ export async function loadSiteConfig(): Promise<SiteConfig> {
       const data = await res.json();
       if (data && typeof data === 'object' && Object.keys(data).length > 0) {
         currentConfig = { ...DEFAULT_SITE_CONFIG, ...data };
+
+        // Ensure array navigation fields fall back to defaults if empty or missing
+        if (!Array.isArray(currentConfig.header_nav_links) || currentConfig.header_nav_links.length === 0) {
+          currentConfig.header_nav_links = DEFAULT_SITE_CONFIG.header_nav_links;
+        }
+        if (!Array.isArray(currentConfig.hamburger_nav_links) || currentConfig.hamburger_nav_links.length === 0) {
+          currentConfig.hamburger_nav_links = DEFAULT_SITE_CONFIG.hamburger_nav_links;
+        }
+        if (!Array.isArray(currentConfig.footer_menu_links) || currentConfig.footer_menu_links.length === 0) {
+          currentConfig.footer_menu_links = DEFAULT_SITE_CONFIG.footer_menu_links;
+        }
+        if (!Array.isArray(currentConfig.footer_category_links) || currentConfig.footer_category_links.length === 0) {
+          currentConfig.footer_category_links = DEFAULT_SITE_CONFIG.footer_category_links;
+        }
+
         localStorage.setItem('parenting_site_config', JSON.stringify(currentConfig));
       }
     }

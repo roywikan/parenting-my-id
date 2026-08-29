@@ -335,7 +335,7 @@ Sitemap: ${siteUrl}/sitemap.xml
 
           // SECURITY PURGE: Remove any sensitive credential keys accidentally saved in configs table
           try {
-            await env.DB.prepare("DELETE FROM configs WHERE key LIKE 'admin_%' OR key LIKE '%password%' OR key LIKE '%secret%' OR key LIKE '%token%'").run();
+            await env.DB.prepare("DELETE FROM configs WHERE key IN ('admin_email', 'admin_password', 'admin_name', 'admin_avatar', 'admin_bio') OR key LIKE '%password%' OR key LIKE '%secret%' OR key LIKE '%token%'").run();
           } catch {}
 
           const { results } = await env.DB.prepare('SELECT key, value FROM configs').all();
@@ -345,8 +345,8 @@ Sitemap: ${siteUrl}/sitemap.xml
             
             for (const row of results) {
               const kLower = String(row.key).toLowerCase();
-              if (SENSITIVE_KEYS.includes(row.key) || kLower.startsWith('admin_') || kLower.includes('password') || kLower.includes('secret')) {
-                continue; // STRIKT: Exclude all credential keys from public site config response
+              if (SENSITIVE_KEYS.includes(row.key) || kLower.includes('password') || kLower.includes('secret') || kLower.includes('token')) {
+                continue; // STRIKT: Exclude credential keys from public site config response
               }
               try {
                 configObj[row.key] = JSON.parse(row.value);
@@ -421,8 +421,8 @@ Sitemap: ${siteUrl}/sitemap.xml
 
       for (const [key, value] of Object.entries(body)) {
         const kLower = key.toLowerCase();
-        if (SENSITIVE_KEYS.includes(key) || kLower.startsWith('admin_') || kLower.includes('password') || kLower.includes('secret')) {
-          continue; // DO NOT SAVE SENSITIVE KEYS INTO CONFIGS TABLE
+        if (SENSITIVE_KEYS.includes(key) || kLower.includes('password') || kLower.includes('secret') || kLower.includes('token')) {
+          continue; // DO NOT SAVE SENSITIVE CREDENTIALS INTO CONFIGS TABLE
         }
         safeConfigObj[key] = value;
       }
@@ -438,7 +438,7 @@ Sitemap: ${siteUrl}/sitemap.xml
 
           // Delete any existing credential keys in DB
           try {
-            await env.DB.prepare("DELETE FROM configs WHERE key LIKE 'admin_%' OR key LIKE '%password%' OR key LIKE '%secret%'").run();
+            await env.DB.prepare("DELETE FROM configs WHERE key IN ('admin_email', 'admin_password', 'admin_name', 'admin_avatar', 'admin_bio') OR key LIKE '%password%' OR key LIKE '%secret%' OR key LIKE '%token%'").run();
           } catch {}
 
           for (const [key, value] of Object.entries(safeConfigObj)) {
