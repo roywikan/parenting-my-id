@@ -227,6 +227,12 @@ export default function AdminPortal({
     }
     return DEFAULT_SITE_CONFIG.footer_menu_links || [];
   });
+  const [cfgFooterCategoryLinksArray, setCfgFooterCategoryLinksArray] = useState<NavLink[]>(() => {
+    if (siteConfig?.footer_category_links && Array.isArray(siteConfig.footer_category_links)) {
+      return siteConfig.footer_category_links;
+    }
+    return DEFAULT_SITE_CONFIG.footer_category_links || [];
+  });
   const [cfgEnableSearchBar, setCfgEnableSearchBar] = useState(siteConfig?.enable_search_bar ?? true);
   const [cfgEnableThemeToggle, setCfgEnableThemeToggle] = useState(siteConfig?.enable_theme_toggle ?? true);
 
@@ -300,6 +306,9 @@ export default function AdminPortal({
       }
       if (siteConfig.footer_menu_links && Array.isArray(siteConfig.footer_menu_links)) {
         setCfgFooterMenuLinksArray(siteConfig.footer_menu_links);
+      }
+      if (siteConfig.footer_category_links && Array.isArray(siteConfig.footer_category_links)) {
+        setCfgFooterCategoryLinksArray(siteConfig.footer_category_links);
       }
       setCfgEnableSearchBar(siteConfig.enable_search_bar ?? true);
       setCfgEnableThemeToggle(siteConfig.enable_theme_toggle ?? true);
@@ -426,6 +435,7 @@ export default function AdminPortal({
       social_instagram: cfgSocialInstagram,
       social_twitter: cfgSocialTwitter,
       footer_menu_links: cfgFooterMenuLinksArray,
+      footer_category_links: cfgFooterCategoryLinksArray,
       admin_login_title: cfgAdminLoginTitle,
       admin_login_subtitle: cfgAdminLoginSubtitle,
       admin_login_btn_text: cfgAdminLoginBtnText,
@@ -447,7 +457,7 @@ export default function AdminPortal({
     cfgHeroTitle, cfgHeroSubtitle, cfgEnableAdsense, cfgAdsenseClientId,
     cfgAdsenseHeaderTop, cfgAdsenseArticleTop, cfgAdsenseArticleMiddle,
     cfgAdsenseArticleBottom, cfgAdsenseSidebar, cfgAdsenseStickyFooter,
-    cfgHeaderNavLinksArray, cfgHamburgerNavLinksArray, cfgFooterMenuLinksArray
+    cfgHeaderNavLinksArray, cfgHamburgerNavLinksArray, cfgFooterMenuLinksArray, cfgFooterCategoryLinksArray
   ]);
 
   // Autofill Demo High-CTR AdSense Snippets
@@ -556,6 +566,7 @@ export default function AdminPortal({
         social_instagram: cfgSocialInstagram,
         social_twitter: cfgSocialTwitter,
         footer_menu_links: cfgFooterMenuLinksArray,
+        footer_category_links: cfgFooterCategoryLinksArray,
         admin_login_title: cfgAdminLoginTitle,
         admin_login_subtitle: cfgAdminLoginSubtitle,
         admin_login_btn_text: cfgAdminLoginBtnText
@@ -2062,7 +2073,7 @@ export default function AdminPortal({
                 <div className="flex items-center justify-between">
                   <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
                     <Layout className="w-4 h-4 text-emerald-500" />
-                    <span>3. Setting Footer Navigation (Tautan Bawah)</span>
+                    <span>3. Setting Footer Navigation (Tautan Navigasi Platform)</span>
                   </h5>
                   <span className="text-[10px] font-semibold text-slate-500">Tampil di bagian paling bawah website</span>
                 </div>
@@ -2070,7 +2081,24 @@ export default function AdminPortal({
                   links={cfgFooterMenuLinksArray}
                   onChange={setCfgFooterMenuLinksArray}
                   title="Menu Footer Website"
-                  description="Atur daftar tautan di bagian bawah (Footer)."
+                  description="Atur daftar tautan navigasi platform di bagian bawah (Footer)."
+                />
+              </div>
+
+              {/* 4. FOOTER CATEGORY LINKS BUILDER */}
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-sky-500" />
+                    <span>4. Setting Kategori Artikel Footer (Tautan Kategori Footer)</span>
+                  </h5>
+                  <span className="text-[10px] font-semibold text-slate-500">Daftar Kategori yang dapat diklik di Footer</span>
+                </div>
+                <NavigationBuilder
+                  links={cfgFooterCategoryLinksArray}
+                  onChange={setCfgFooterCategoryLinksArray}
+                  title="Tautan Kategori Footer"
+                  description="Atur daftar tautan kategori artikel di Footer agar pengunjung bisa langsung menglik kategori tersebut."
                 />
               </div>
             </div>

@@ -52,6 +52,12 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
     { label: 'Sitemap XML', url: '/sitemap.xml' },
     { label: 'RSS Feed', url: '/feed.xml' }
   ],
+  footer_category_links: [
+    { label: 'Pola Asuh', url: '/kategori/pola-asuh' },
+    { label: 'Tumbuh Kembang', url: '/kategori/tumbuh-kembang' },
+    { label: 'Kesehatan & Gizi', url: '/kategori/kesehatan-gizi' },
+    { label: 'Balita', url: '/balita' }
+  ],
   admin_login_title: 'Portal Admin Parenting.my.id',
   admin_login_subtitle: 'Sistem Otentikasi Cloudflare D1',
   admin_login_btn_text: 'Masuk Portal CMS',

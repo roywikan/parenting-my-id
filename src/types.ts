@@ -67,6 +67,7 @@ export interface SiteConfig {
   social_instagram: string;
   social_twitter: string;
   footer_menu_links: NavLink[];
+  footer_category_links?: NavLink[];
   admin_login_title?: string;
   admin_login_subtitle?: string;
   admin_login_btn_text?: string;

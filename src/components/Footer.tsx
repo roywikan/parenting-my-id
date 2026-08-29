@@ -1,11 +1,13 @@
+import React from 'react';
 import { Heart, ShieldCheck, Zap, Database, GitBranch, ArrowUpRight } from 'lucide-react';
 import { SiteConfig } from '../types';
 
 interface FooterProps {
   siteConfig?: SiteConfig;
+  onNavigate?: (view: string, param?: string) => void;
 }
 
-export default function Footer({ siteConfig }: FooterProps) {
+export default function Footer({ siteConfig, onNavigate }: FooterProps) {
   const siteName = siteConfig?.site_name || 'Parenting.my.id';
   const aboutText = siteConfig?.footer_about_text || 'Parenting.my.id menghadirkan bacaan berkualitas seputar dunia pengasuhan anak, kesehatan keluarga, dan pendidikan anak usia dini.';
   const copyrightText = siteConfig?.footer_copyright_text || `© ${new Date().getFullYear()} Parenting.my.id. Hak Cipta Dilindungi Undang-Undang.`;
@@ -13,6 +15,46 @@ export default function Footer({ siteConfig }: FooterProps) {
     { label: 'Dynamic Sitemap.xml', url: '/sitemap.xml' },
     { label: 'Dynamic RSS Feed', url: '/feed.xml' },
   ];
+
+  const categoryLinks = siteConfig?.footer_category_links && siteConfig.footer_category_links.length > 0
+    ? siteConfig.footer_category_links
+    : [
+        { label: 'Pola Asuh', url: '/kategori/pola-asuh' },
+        { label: 'Tumbuh Kembang', url: '/kategori/tumbuh-kembang' },
+        { label: 'Kesehatan & Gizi', url: '/kategori/kesehatan-gizi' },
+        { label: 'Balita', url: '/balita' },
+      ];
+
+  const handleLinkClick = (url: string, e: React.MouseEvent) => {
+    if (!onNavigate) return;
+    if (url === '/' || url === '/home') {
+      e.preventDefault();
+      onNavigate('home');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (url.startsWith('/kategori/')) {
+      e.preventDefault();
+      const slug = url.replace('/kategori/', '');
+      const catMap: Record<string, string> = {
+        'pola-asuh': 'Pola Asuh',
+        'tumbuh-kembang': 'Tumbuh Kembang',
+        'kesehatan-gizi': 'Kesehatan & Gizi',
+        'balita': 'Balita'
+      };
+      onNavigate('category', catMap[slug] || slug);
+    } else if (url === '/balita') {
+      e.preventDefault();
+      onNavigate('category', 'Balita');
+    } else if (url === '/pola-asuh') {
+      e.preventDefault();
+      onNavigate('category', 'Pola Asuh');
+    } else if (url === '/tumbuh-kembang') {
+      e.preventDefault();
+      onNavigate('category', 'Tumbuh Kembang');
+    } else if (url === '/kesehatan-gizi') {
+      e.preventDefault();
+      onNavigate('category', 'Kesehatan & Gizi');
+    }
+  };
 
   return (
     <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 pt-12 pb-8 mt-20">
@@ -47,32 +89,25 @@ export default function Footer({ siteConfig }: FooterProps) {
             </div>
           </div>
 
-          {/* QUICK LINKS */}
+          {/* QUICK LINKS / KATEGORI ARTIKEL */}
           <div>
             <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider mb-4">
               Kategori Artikel
             </h4>
             <ul className="space-y-2.5 text-sm">
-              <li>
-                <span className="text-slate-400 hover:text-rose-400 transition-colors">
-                  • Pola Asuh Demokratis
-                </span>
-              </li>
-              <li>
-                <span className="text-slate-400 hover:text-rose-400 transition-colors">
-                  • Stimulasi Balita & Sensory Play
-                </span>
-              </li>
-              <li>
-                <span className="text-slate-400 hover:text-rose-400 transition-colors">
-                  • Pencegahan Stunting & MPASI
-                </span>
-              </li>
-              <li>
-                <span className="text-slate-400 hover:text-rose-400 transition-colors">
-                  • Kesehatan & Gizi Anak
-                </span>
-              </li>
+              {categoryLinks.map((item, idx) => (
+                <li key={idx}>
+                  <a
+                    href={item.url}
+                    onClick={(e) => handleLinkClick(item.url, e)}
+                    target={item.url.startsWith('http') || item.url.endsWith('.xml') ? '_blank' : '_self'}
+                    rel="noreferrer"
+                    className="text-slate-400 hover:text-rose-400 transition-colors inline-flex items-center gap-1.5"
+                  >
+                    <span>• {item.label}</span>
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 

@@ -462,7 +462,7 @@ export default function App() {
         )}
       </main>
 
-      <Footer siteConfig={effectiveConfig} />
+      <Footer siteConfig={effectiveConfig} onNavigate={(view, param) => handleNavigate(view, param)} />
 
       {/* STICKY FOOTER AD BANNER */}
       {effectiveConfig?.enable_adsense !== false && effectiveConfig?.adsense_sticky_footer && (

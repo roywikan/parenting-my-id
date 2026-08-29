@@ -15,11 +15,17 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
 
   const siteName = siteConfig?.site_name || 'Parenting.my.id';
   const siteTagline = siteConfig?.site_tagline || 'PORTAL EDUKASI POLA ASUH & GIZI ANAK';
-  const rawNavLinks = siteConfig?.header_nav_links || [
-    { label: 'Sitemap', url: '/sitemap.xml' },
-    { label: 'RSS Feed', url: '/feed.xml' }
-  ];
-  const navLinks = rawNavLinks.filter(link => link.label !== 'Beranda' && link.url !== '/');
+  const rawHeaderLinks = siteConfig?.header_nav_links && siteConfig.header_nav_links.length > 0
+    ? siteConfig.header_nav_links
+    : [
+        { label: 'Beranda', url: '/' },
+        { label: 'Pola Asuh', url: '/kategori/pola-asuh' },
+        { label: 'Tumbuh Kembang', url: '/kategori/tumbuh-kembang' },
+        { label: 'Kesehatan & Gizi', url: '/kategori/kesehatan-gizi' },
+        { label: 'Balita', url: '/balita' },
+        { label: 'Sitemap', url: '/sitemap.xml' },
+        { label: 'RSS Feed', url: '/feed.xml' }
+      ];
 
   const customHamburgerLinks = siteConfig?.hamburger_nav_links && siteConfig.hamburger_nav_links.length > 0
     ? siteConfig.hamburger_nav_links
@@ -111,51 +117,43 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
             </div>
           </div>
 
-          {/* DESKTOP NAVIGATION */}
+          {/* DESKTOP NAVIGATION (TOP BAR) */}
           <nav className="main-nav hidden md:flex items-center gap-1">
-            <button
-              onClick={() => onNavigate('home')}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                currentView === 'home'
-                  ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-bold'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
-            >
-              Beranda
-            </button>
+            {rawHeaderLinks.map((link, idx) => {
+              const isExternalOrXml = link.url.startsWith('http') || link.url.endsWith('.xml');
+              const isHome = link.url === '/' || link.url === '/home' || link.label === 'Beranda';
+              const isActive = isHome && currentView === 'home';
 
-            {/* CATEGORY NAV LINKS */}
-            {[
-              { label: 'Pola Asuh', slug: 'pola-asuh', name: 'Pola Asuh' },
-              { label: 'Tumbuh Kembang', slug: 'tumbuh-kembang', name: 'Tumbuh Kembang' },
-              { label: 'Kesehatan & Gizi', slug: 'kesehatan-gizi', name: 'Kesehatan & Gizi' },
-              { label: 'Balita', slug: 'balita', name: 'Balita' },
-            ].map((cat) => (
-              <button
-                key={cat.slug}
-                onClick={() => onNavigate('category', cat.name)}
-                className="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-              >
-                {cat.label}
-              </button>
-            ))}
+              if (isExternalOrXml) {
+                return (
+                  <a
+                    key={idx}
+                    href={link.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 transition-colors"
+                  >
+                    <span>{link.label}</span>
+                  </a>
+                );
+              }
 
-            {navLinks.map((link, idx) => {
-              if (link.url === '/' || link.url === '#') return null;
               return (
                 <a
                   key={idx}
                   href={link.url}
-                  target={link.url.startsWith('http') || link.url.endsWith('.xml') ? '_blank' : '_self'}
-                  rel="noreferrer"
-                  className="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5"
+                  onClick={(e) => handleMobileNavClick(link.url, e)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-bold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  }`}
                 >
-                  <span>{link.label}</span>
+                  {link.label}
                 </a>
               );
             })}
 
-            
             {siteConfig?.enable_theme_toggle !== false && (
               <button
                 onClick={toggleTheme}
@@ -262,11 +260,11 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
                 ))}
               </div>
 
-              {navLinks.map((link, idx) => (
+              {rawHeaderLinks.map((link, idx) => (
                 <a
                   key={idx}
                   href={link.url}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={(e) => handleMobileNavClick(link.url, e)}
                   className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-rose-50"
                 >
                   {link.label}
