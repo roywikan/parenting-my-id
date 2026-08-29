@@ -239,7 +239,19 @@ CREATE TABLE IF NOT EXISTS site_config (
 4. Klik tombol **Simpan Konfigurasi Situs**. Perubahan akan langsung tersimpan di database **Cloudflare D1** dan tersinkronisasi ke file `public/site_config.json`.
 
 ---
-
+## Setiap perubahan konfigurasi yang Anda simpan di Config Situs (Portal Admin) ditulis dan disimpan secara multi-layer (berlapis) ke 3 lokasi utama:
+1. Peramban Lokal (localStorage)
+Lokasi: Peramban web Anda (localStorage.getItem('parenting_site_config')).
+Fungsi: Disimpan secara instan di browser agar perubahan tampilan (Theme, Navigasi, Badge, Banner) langsung terasa seketika (instant preview) tanpa menunggu respon jaringan.
+2. File Server Disk (public/site_config.json & dist/site_config.json)
+Lokasi File: /public/site_config.json dan /dist/site_config.json.
+Fungsi: Backend Server (Express Node.js) menulis seluruh objek konfigurasi situs ke dalam file JSON di folder public/. File ini menjadi acuan (fallback) utama saat situs diakses oleh pengunjung baru yang belum memiliki cache.
+3. Database Cloudflare D1 (Tabel configs)
+Lokasi Database: Tabel SQL configs pada Cloudflare D1 Database.
+Fungsi: Pada lingkungan produksi (Cloudflare Pages / Edge Worker), API /api/config memecah setiap parameter konfigurasi (misalnya header_nav_links, footer_category_links, site_name, adsense_client_id, dll.) dan menyimpannya sebagai pasangan key-value ke dalam tabel database configs.
+4. Sinkronisasi Otomatis ke Repository GitHub (Opsional bila GitHub Token aktif)
+Fungsi: Jika backend terhubung ke GitHub API, sistem Cloudflare Worker akan secara otomatis memperbarui file public/site_config.json langsung di repositori Git Anda melalui komit otomatis, sehingga perubahan situs tetap aman dan tersimpan dalam riwayat versi (version control).
+---
 ## ✍️ LANGKAH 4: Panduan Penulis — Mengisi Artikel & Gambar dari Unsplash.com
 
 Penulis artikel memiliki akses ke **Editor WYSIWYG Rich Editor** lengkap dengan AI Assistant, SEO Auditor, dan Pengelola Gambar.
