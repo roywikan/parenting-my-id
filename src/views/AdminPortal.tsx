@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Post, AutoLink, User, SiteConfig, PostRevision } from '../types';
+import { Post, AutoLink, User, SiteConfig, PostRevision, NavLink } from '../types';
 import { THEME_PRESETS } from '../lib/themes';
 import { DEFAULT_SITE_CONFIG } from '../lib/config';
 import { 
@@ -7,10 +7,11 @@ import {
   Upload, Eye, Sparkles, CheckCircle2, RefreshCw, Bold, Italic, Heading2, 
   Heading3, List, ListOrdered, Quote, Image as ImageIcon, Code, UserCheck, 
   ExternalLink, Search, Zap, AlertCircle, Settings, Key, Copy, Check, 
-  LogOut, Globe, Palette, Layout, MessageSquare, Droplet, Users, Award, History, RotateCcw, X
+  LogOut, Globe, Palette, Layout, MessageSquare, Droplet, Users, Award, History, RotateCcw, X, Menu
 } from 'lucide-react';
 import { generateSlug } from '../lib/autolink';
 import RichPostEditor from '../components/RichPostEditor';
+import NavigationBuilder, { PRESET_NAV_ITEMS } from '../components/NavigationBuilder';
 
 interface AdminPortalProps {
   currentUser: User | null;
@@ -208,9 +209,24 @@ export default function AdminPortal({
   const [cfgSiteLogoUrl, setCfgSiteLogoUrl] = useState(siteConfig?.site_logo_url || '');
   const [cfgSiteLogoIcon, setCfgSiteLogoIcon] = useState(siteConfig?.site_logo_icon || 'Heart');
   const [cfgSiteFaviconUrl, setCfgSiteFaviconUrl] = useState(siteConfig?.site_favicon_url || '/favicon.ico');
-  const [cfgHeaderNavLinks, setCfgHeaderNavLinks] = useState(
-    JSON.stringify(siteConfig?.header_nav_links && siteConfig.header_nav_links.length > 0 ? siteConfig.header_nav_links : DEFAULT_SITE_CONFIG.header_nav_links, null, 2)
-  );
+  const [cfgHeaderNavLinksArray, setCfgHeaderNavLinksArray] = useState<NavLink[]>(() => {
+    if (siteConfig?.header_nav_links && Array.isArray(siteConfig.header_nav_links)) {
+      return siteConfig.header_nav_links;
+    }
+    return DEFAULT_SITE_CONFIG.header_nav_links || [];
+  });
+  const [cfgHamburgerNavLinksArray, setCfgHamburgerNavLinksArray] = useState<NavLink[]>(() => {
+    if (siteConfig?.hamburger_nav_links && Array.isArray(siteConfig.hamburger_nav_links)) {
+      return siteConfig.hamburger_nav_links;
+    }
+    return DEFAULT_SITE_CONFIG.hamburger_nav_links || [];
+  });
+  const [cfgFooterMenuLinksArray, setCfgFooterMenuLinksArray] = useState<NavLink[]>(() => {
+    if (siteConfig?.footer_menu_links && Array.isArray(siteConfig.footer_menu_links)) {
+      return siteConfig.footer_menu_links;
+    }
+    return DEFAULT_SITE_CONFIG.footer_menu_links || [];
+  });
   const [cfgEnableSearchBar, setCfgEnableSearchBar] = useState(siteConfig?.enable_search_bar ?? true);
   const [cfgEnableThemeToggle, setCfgEnableThemeToggle] = useState(siteConfig?.enable_theme_toggle ?? true);
 
@@ -238,9 +254,6 @@ export default function AdminPortal({
   const [cfgSocialFacebook, setCfgSocialFacebook] = useState(siteConfig?.social_facebook || 'https://facebook.com/parentingmyid');
   const [cfgSocialInstagram, setCfgSocialInstagram] = useState(siteConfig?.social_instagram || 'https://instagram.com/parentingmyid');
   const [cfgSocialTwitter, setCfgSocialTwitter] = useState(siteConfig?.social_twitter || 'https://x.com/parentingmyid');
-  const [cfgFooterMenuLinks, setCfgFooterMenuLinks] = useState(
-    JSON.stringify(siteConfig?.footer_menu_links && siteConfig.footer_menu_links.length > 0 ? siteConfig.footer_menu_links : DEFAULT_SITE_CONFIG.footer_menu_links, null, 2)
-  );
 
   // Performance Metric Box Config States
   const [cfgShowPerformanceBox, setCfgShowPerformanceBox] = useState<boolean>(siteConfig?.show_performance_box ?? true);
@@ -279,7 +292,15 @@ export default function AdminPortal({
       setCfgSiteLogoUrl(siteConfig.site_logo_url || '');
       setCfgSiteLogoIcon(siteConfig.site_logo_icon || 'Heart');
       setCfgSiteFaviconUrl(siteConfig.site_favicon_url || '/favicon.ico');
-      setCfgHeaderNavLinks(JSON.stringify(siteConfig.header_nav_links && siteConfig.header_nav_links.length > 0 ? siteConfig.header_nav_links : DEFAULT_SITE_CONFIG.header_nav_links, null, 2));
+      if (siteConfig.header_nav_links && Array.isArray(siteConfig.header_nav_links)) {
+        setCfgHeaderNavLinksArray(siteConfig.header_nav_links);
+      }
+      if (siteConfig.hamburger_nav_links && Array.isArray(siteConfig.hamburger_nav_links)) {
+        setCfgHamburgerNavLinksArray(siteConfig.hamburger_nav_links);
+      }
+      if (siteConfig.footer_menu_links && Array.isArray(siteConfig.footer_menu_links)) {
+        setCfgFooterMenuLinksArray(siteConfig.footer_menu_links);
+      }
       setCfgEnableSearchBar(siteConfig.enable_search_bar ?? true);
       setCfgEnableThemeToggle(siteConfig.enable_theme_toggle ?? true);
 
@@ -329,7 +350,6 @@ export default function AdminPortal({
       setCfgSocialFacebook(siteConfig.social_facebook || '');
       setCfgSocialInstagram(siteConfig.social_instagram || '');
       setCfgSocialTwitter(siteConfig.social_twitter || '');
-      setCfgFooterMenuLinks(JSON.stringify(siteConfig.footer_menu_links && siteConfig.footer_menu_links.length > 0 ? siteConfig.footer_menu_links : DEFAULT_SITE_CONFIG.footer_menu_links, null, 2));
       
       setCfgAdminLoginTitle(siteConfig.admin_login_title || 'Portal Admin Parenting.my.id');
       setCfgAdminLoginSubtitle(siteConfig.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1');
@@ -351,11 +371,6 @@ export default function AdminPortal({
   // REAL-TIME INSTANT PREVIEW EFFECT
   useEffect(() => {
     if (!onLivePreviewChange) return;
-
-    let navParsed = [];
-    let footerParsed = [];
-    try { navParsed = JSON.parse(cfgHeaderNavLinks); } catch (e) {}
-    try { footerParsed = JSON.parse(cfgFooterMenuLinks); } catch (e) {}
 
     const draftConfig: SiteConfig = {
       active_theme_preset: cfgActiveThemePreset,
@@ -379,7 +394,8 @@ export default function AdminPortal({
       site_logo_url: cfgSiteLogoUrl,
       site_logo_icon: cfgSiteLogoIcon,
       site_favicon_url: cfgSiteFaviconUrl,
-      header_nav_links: navParsed.length ? navParsed : (siteConfig?.header_nav_links || []),
+      header_nav_links: cfgHeaderNavLinksArray,
+      hamburger_nav_links: cfgHamburgerNavLinksArray,
       enable_search_bar: cfgEnableSearchBar,
       enable_theme_toggle: cfgEnableThemeToggle,
       seo_meta_title: cfgSeoMetaTitle,
@@ -409,7 +425,7 @@ export default function AdminPortal({
       social_facebook: cfgSocialFacebook,
       social_instagram: cfgSocialInstagram,
       social_twitter: cfgSocialTwitter,
-      footer_menu_links: footerParsed.length ? footerParsed : (siteConfig?.footer_menu_links || []),
+      footer_menu_links: cfgFooterMenuLinksArray,
       admin_login_title: cfgAdminLoginTitle,
       admin_login_subtitle: cfgAdminLoginSubtitle,
       admin_login_btn_text: cfgAdminLoginBtnText,
@@ -430,7 +446,8 @@ export default function AdminPortal({
     cfgAgeAccessibilityPreset, cfgHeaderBadgeText, cfgHeroBadgeText, cfgShowHeroSection,
     cfgHeroTitle, cfgHeroSubtitle, cfgEnableAdsense, cfgAdsenseClientId,
     cfgAdsenseHeaderTop, cfgAdsenseArticleTop, cfgAdsenseArticleMiddle,
-    cfgAdsenseArticleBottom, cfgAdsenseSidebar, cfgAdsenseStickyFooter
+    cfgAdsenseArticleBottom, cfgAdsenseSidebar, cfgAdsenseStickyFooter,
+    cfgHeaderNavLinksArray, cfgHamburgerNavLinksArray, cfgFooterMenuLinksArray
   ]);
 
   // Autofill Demo High-CTR AdSense Snippets
@@ -469,19 +486,6 @@ export default function AdminPortal({
     setConfigErrMsg('');
 
     try {
-      let navParsed = [];
-      let footerParsed = [];
-      try {
-        navParsed = JSON.parse(cfgHeaderNavLinks);
-      } catch (err) {
-        throw new Error('Format JSON Header Nav Links tidak valid.');
-      }
-      try {
-        footerParsed = JSON.parse(cfgFooterMenuLinks);
-      } catch (err) {
-        throw new Error('Format JSON Footer Menu Links tidak valid.');
-      }
-
       const updatedCfg: SiteConfig = {
         active_theme_preset: cfgActiveThemePreset,
         site_name: cfgSiteName,
@@ -515,7 +519,8 @@ export default function AdminPortal({
         site_logo_url: cfgSiteLogoUrl,
         site_logo_icon: cfgSiteLogoIcon,
         site_favicon_url: cfgSiteFaviconUrl,
-        header_nav_links: navParsed,
+        header_nav_links: cfgHeaderNavLinksArray,
+        hamburger_nav_links: cfgHamburgerNavLinksArray,
         enable_search_bar: cfgEnableSearchBar,
         enable_theme_toggle: cfgEnableThemeToggle,
 
@@ -550,7 +555,7 @@ export default function AdminPortal({
         social_facebook: cfgSocialFacebook,
         social_instagram: cfgSocialInstagram,
         social_twitter: cfgSocialTwitter,
-        footer_menu_links: footerParsed,
+        footer_menu_links: cfgFooterMenuLinksArray,
         admin_login_title: cfgAdminLoginTitle,
         admin_login_subtitle: cfgAdminLoginSubtitle,
         admin_login_btn_text: cfgAdminLoginBtnText
@@ -558,12 +563,15 @@ export default function AdminPortal({
 
       const ok = await onSaveConfig(updatedCfg);
       if (ok) {
-        setConfigSuccessMsg('Semua konfigurasi situs berhasil diperbarui dan disimpan!');
+        setConfigSuccessMsg('✅ Semua pengaturan situs, Top Bar Navigasi, Menu Hamburger, dan Footer berhasil disimpan!');
+        setConfigErrMsg('');
       } else {
-        setConfigErrMsg('Gagal menyimpan konfigurasi situs.');
+        setConfigErrMsg('⚠️ GAGAL MENYIMPAN KONFIGURASI SITUS: Server mengembalikan respon error. Silakan periksa koneksi internet Anda atau coba lagi.');
+        setConfigSuccessMsg('');
       }
     } catch (err: any) {
-      setConfigErrMsg(err.message || 'Terjadi kesalahan saat menyimpan config.');
+      setConfigErrMsg('⚠️ GAGAL MENYIMPAN KONFIGURASI: ' + (err?.message || 'Terjadi kesalahan sistem saat menghubungi backend server.'));
+      setConfigSuccessMsg('');
     } finally {
       setIsSavingConfig(false);
     }
@@ -1996,15 +2004,73 @@ export default function AdminPortal({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Menu Navigasi Header (header_nav_links dalam Format JSON)
-                </label>
-                <textarea
-                  value={cfgHeaderNavLinks}
-                  onChange={(e) => setCfgHeaderNavLinks(e.target.value)}
-                  rows={4}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+            </div>
+
+            {/* SECTION NAV BUILDER: TOP BAR, HAMBURGER & FOOTER */}
+            <div className="space-y-6 pt-6 border-t-2 border-rose-500/20 bg-slate-50/50 dark:bg-slate-900/30 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 text-white shadow-md">
+                  <Layout className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <span>Pengaturan Visual Menu Navigasi Website</span>
+                    <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-extrabold uppercase tracking-wider border border-rose-500/20">Mudah & Visual</span>
+                  </h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Atur menu Top Bar Header, Mobile Hamburger Drawer, dan Footer tanpa mengetik JSON manual. Tambah, edit, hapus, dan atur urutan menu secara visual!
+                  </p>
+                </div>
+              </div>
+
+              {/* 1. TOP BAR NAV BUILDER */}
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-rose-500" />
+                    <span>1. Setting Top Bar Navigation (Desktop Header)</span>
+                  </h5>
+                  <span className="text-[10px] font-semibold text-slate-500">Tampil di Komputer / Laptop</span>
+                </div>
+                <NavigationBuilder
+                  links={cfgHeaderNavLinksArray}
+                  onChange={setCfgHeaderNavLinksArray}
+                  title="Menu Top Bar Header"
+                  description="Atur tautan menu yang tampil di baris atas header website."
+                />
+              </div>
+
+              {/* 2. HAMBURGER MENU BUILDER */}
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <Menu className="w-4 h-4 text-amber-500" />
+                    <span>2. Setting Menu Hamburger (Mobile Navigation Drawer)</span>
+                  </h5>
+                  <span className="text-[10px] font-semibold text-slate-500">Tampil saat menekan menu ☰ di HP</span>
+                </div>
+                <NavigationBuilder
+                  links={cfgHamburgerNavLinksArray}
+                  onChange={setCfgHamburgerNavLinksArray}
+                  title="Menu Hamburger Drawer"
+                  description="Atur tautan menu khusus yang tampil saat pengunjung membuka drawer mobile di HP."
+                />
+              </div>
+
+              {/* 3. FOOTER NAV BUILDER */}
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                    <Layout className="w-4 h-4 text-emerald-500" />
+                    <span>3. Setting Footer Navigation (Tautan Bawah)</span>
+                  </h5>
+                  <span className="text-[10px] font-semibold text-slate-500">Tampil di bagian paling bawah website</span>
+                </div>
+                <NavigationBuilder
+                  links={cfgFooterMenuLinksArray}
+                  onChange={setCfgFooterMenuLinksArray}
+                  title="Menu Footer Website"
+                  description="Atur daftar tautan di bagian bawah (Footer)."
                 />
               </div>
             </div>
@@ -2240,18 +2306,6 @@ export default function AdminPortal({
                   value={cfgFooterCopyrightText}
                   onChange={(e) => setCfgFooterCopyrightText(e.target.value)}
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Menu Footer (footer_menu_links dalam Format JSON)
-                </label>
-                <textarea
-                  value={cfgFooterMenuLinks}
-                  onChange={(e) => setCfgFooterMenuLinks(e.target.value)}
-                  rows={4}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
                 />
               </div>
 

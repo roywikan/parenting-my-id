@@ -8,11 +8,20 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   site_logo_icon: 'Heart',
   site_favicon_url: '/favicon.ico',
   header_nav_links: [
+    { label: 'Pola Asuh', url: '/kategori/pola-asuh' },
+    { label: 'Tumbuh Kembang', url: '/kategori/tumbuh-kembang' },
+    { label: 'Kesehatan & Gizi', url: '/kategori/kesehatan-gizi' },
     { label: 'Balita', url: '/balita' },
-    { label: 'Nutrisi & Makanan', url: '/makanan' },
-    { label: 'Kesehatan', url: '/kesehatan' },
-    { label: 'Parenting', url: '/parenting' },
     { label: 'Sitemap', url: '/sitemap.xml' },
+    { label: 'RSS Feed', url: '/feed.xml' }
+  ],
+  hamburger_nav_links: [
+    { label: 'Beranda', url: '/' },
+    { label: 'Pola Asuh', url: '/kategori/pola-asuh' },
+    { label: 'Tumbuh Kembang', url: '/kategori/tumbuh-kembang' },
+    { label: 'Kesehatan & Gizi', url: '/kategori/kesehatan-gizi' },
+    { label: 'Balita', url: '/balita' },
+    { label: 'Sitemap XML', url: '/sitemap.xml' },
     { label: 'RSS Feed', url: '/feed.xml' }
   ],
   enable_search_bar: true,

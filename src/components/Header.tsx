@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Heart, ShieldCheck, Zap, Menu, X, UserCheck, FileText, Rss, Baby, Sparkles, BookOpen, Moon, Sun } from 'lucide-react';
 import { User, SiteConfig } from '../types';
 
@@ -20,6 +20,44 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
     { label: 'RSS Feed', url: '/feed.xml' }
   ];
   const navLinks = rawNavLinks.filter(link => link.label !== 'Beranda' && link.url !== '/');
+
+  const customHamburgerLinks = siteConfig?.hamburger_nav_links && siteConfig.hamburger_nav_links.length > 0
+    ? siteConfig.hamburger_nav_links
+    : null;
+
+  const handleMobileNavClick = (url: string, e?: React.MouseEvent) => {
+    setMobileMenuOpen(false);
+    if (url === '/' || url === '/home') {
+      if (e) e.preventDefault();
+      onNavigate('home');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (url.startsWith('/kategori/')) {
+      if (e) e.preventDefault();
+      const slug = url.replace('/kategori/', '');
+      const catMap: Record<string, string> = {
+        'pola-asuh': 'Pola Asuh',
+        'tumbuh-kembang': 'Tumbuh Kembang',
+        'kesehatan-gizi': 'Kesehatan & Gizi',
+        'balita': 'Balita'
+      };
+      onNavigate('category', catMap[slug] || slug);
+    } else if (url === '/balita') {
+      if (e) e.preventDefault();
+      onNavigate('category', 'Balita');
+    } else if (url === '/pola-asuh') {
+      if (e) e.preventDefault();
+      onNavigate('category', 'Pola Asuh');
+    } else if (url === '/tumbuh-kembang') {
+      if (e) e.preventDefault();
+      onNavigate('category', 'Tumbuh Kembang');
+    } else if (url === '/kesehatan-gizi') {
+      if (e) e.preventDefault();
+      onNavigate('category', 'Kesehatan & Gizi');
+    } else if (url === '/admin') {
+      if (e) e.preventDefault();
+      onNavigate('admin');
+    }
+  };
 
   
   const toggleTheme = () => {
@@ -173,47 +211,69 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
       {/* MOBILE MENU DRAWER */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-2 pb-4 space-y-2">
-          <button
-            onClick={() => {
-              onNavigate('home');
-              setMobileMenuOpen(false);
-            }}
-            className="block w-full text-left px-3 py-2 rounded-lg text-sm font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50"
-          >
-            Beranda
-          </button>
-
-          <div className="pt-1 pb-1 border-t border-b border-slate-100 dark:border-slate-800 space-y-1">
-            <span className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Kategori Artikel</span>
-            {[
-              { label: 'Pola Asuh', name: 'Pola Asuh' },
-              { label: 'Tumbuh Kembang', name: 'Tumbuh Kembang' },
-              { label: 'Kesehatan & Gizi', name: 'Kesehatan & Gizi' },
-              { label: 'Balita', name: 'Balita' },
-            ].map((cat) => (
+          {customHamburgerLinks ? (
+            <div className="space-y-1">
+              <span className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">
+                Menu Utama (Navigasi Mobile)
+              </span>
+              {customHamburgerLinks.map((link, idx) => (
+                <a
+                  key={idx}
+                  href={link.url}
+                  onClick={(e) => handleMobileNavClick(link.url, e)}
+                  target={link.url.startsWith('http') || link.url.endsWith('.xml') ? '_blank' : '_self'}
+                  rel="noreferrer"
+                  className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-slate-800 hover:text-rose-600 transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <>
               <button
-                key={cat.name}
                 onClick={() => {
-                  onNavigate('category', cat.name);
+                  onNavigate('home');
                   setMobileMenuOpen(false);
                 }}
-                className="block w-full text-left px-3 py-1.5 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-rose-50"
+                className="block w-full text-left px-3 py-2 rounded-lg text-sm font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50"
               >
-                {cat.label}
+                Beranda
               </button>
-            ))}
-          </div>
 
-          {navLinks.map((link, idx) => (
-            <a
-              key={idx}
-              href={link.url}
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-rose-50"
-            >
-              {link.label}
-            </a>
-          ))}
+              <div className="pt-1 pb-1 border-t border-b border-slate-100 dark:border-slate-800 space-y-1">
+                <span className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Kategori Artikel</span>
+                {[
+                  { label: 'Pola Asuh', name: 'Pola Asuh' },
+                  { label: 'Tumbuh Kembang', name: 'Tumbuh Kembang' },
+                  { label: 'Kesehatan & Gizi', name: 'Kesehatan & Gizi' },
+                  { label: 'Balita', name: 'Balita' },
+                ].map((cat) => (
+                  <button
+                    key={cat.name}
+                    onClick={() => {
+                      onNavigate('category', cat.name);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-3 py-1.5 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-rose-50"
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              {navLinks.map((link, idx) => (
+                <a
+                  key={idx}
+                  href={link.url}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-rose-50"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </>
+          )}
           {currentUser && (
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
               <button

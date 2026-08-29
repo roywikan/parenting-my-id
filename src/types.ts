@@ -38,6 +38,7 @@ export interface SiteConfig {
   site_logo_icon: string;
   site_favicon_url: string;
   header_nav_links: NavLink[];
+  hamburger_nav_links?: NavLink[];
   enable_search_bar: boolean;
   enable_theme_toggle: boolean;
   
