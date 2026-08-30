@@ -1,14 +1,28 @@
 import { marked } from 'marked';
 
+function isUnsplashUrl(url?: string | null): boolean {
+  if (!url) return false;
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return (
+      hostname === 'images.unsplash.com' ||
+      hostname === 'plus.unsplash.com' ||
+      hostname.endsWith('.unsplash.com')
+    );
+  } catch {
+    return url.includes('unsplash.com');
+  }
+}
+
 function optimizeUnsplashUrl(
   url?: string | null,
   targetWidth = 600,
-  quality = 65,
+  quality = 55,
   format = 'webp',
   targetHeight?: number
 ): string {
   if (!url) return '';
-  if (!url.includes('unsplash.com')) return url;
+  if (!isUnsplashUrl(url)) return url;
   try {
     const parsed = new URL(url);
     parsed.searchParams.set('w', targetWidth.toString());
@@ -30,10 +44,10 @@ function optimizeUnsplashUrl(
 function getUnsplashSrcSet(
   url?: string | null,
   widths = [400, 700],
-  quality = 65,
+  quality = 55,
   format = 'webp'
 ): string {
-  if (!url || !url.includes('unsplash.com')) return '';
+  if (!url || !isUnsplashUrl(url)) return '';
   return widths
     .map((w) => `${optimizeUnsplashUrl(url, w, quality, format)} ${w}w`)
     .join(', ');
