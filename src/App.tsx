@@ -18,6 +18,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
 
   const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
+  const [isPostsLoading, setIsPostsLoading] = useState<boolean>(true);
   const [autolinks, setAutolinks] = useState<AutoLink[]>(INITIAL_AUTOLINKS);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [siteConfig, setSiteConfig] = useState<SiteConfig | undefined>(undefined);
@@ -94,6 +95,7 @@ export default function App() {
   };
 
   const fetchPosts = async () => {
+    setIsPostsLoading(true);
     try {
       const res = await fetch('/api/posts');
       const contentType = res.headers.get('content-type');
@@ -105,6 +107,8 @@ export default function App() {
       }
     } catch (err) {
       console.error('Error fetching posts:', err);
+    } finally {
+      setIsPostsLoading(false);
     }
   };
 
@@ -437,6 +441,8 @@ export default function App() {
             slug={activeSlug}
             posts={posts}
             autolinks={autolinks}
+            isPostsLoading={isPostsLoading}
+            onRefreshPosts={fetchPosts}
             onBack={() => handleNavigate('home')}
             onSelectPost={(slug) => handleNavigate('article', slug)}
             onSelectCategory={(category) => handleNavigate('category', category)}

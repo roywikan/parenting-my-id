@@ -18,6 +18,8 @@ interface ArticleDetailViewProps {
   onSelectPost: (slug: string) => void;
   onSelectCategory?: (category: string) => void;
   siteConfig?: SiteConfig;
+  isPostsLoading?: boolean;
+  onRefreshPosts?: () => Promise<void>;
 }
 
 export default function ArticleDetailView({
@@ -28,12 +30,57 @@ export default function ArticleDetailView({
   onSelectPost,
   onSelectCategory,
   siteConfig,
+  isPostsLoading = false,
+  onRefreshPosts,
 }: ArticleDetailViewProps) {
   const [copied, setCopied] = useState(false);
+  const [fetchedPost, setFetchedPost] = useState<Post | null>(null);
+  const [isFetchingSingle, setIsFetchingSingle] = useState<boolean>(false);
+  const [attemptedFetch, setAttemptedFetch] = useState<boolean>(false);
+
+  // Reset local fetch state when slug changes
+  useEffect(() => {
+    setFetchedPost(null);
+    setIsFetchingSingle(false);
+    setAttemptedFetch(false);
+  }, [slug]);
 
   const post = useMemo(() => {
-    return posts.find((p) => p.slug === slug);
-  }, [posts, slug]);
+    return posts.find((p) => p.slug === slug) || fetchedPost || undefined;
+  }, [posts, slug, fetchedPost]);
+
+  // If post is not found in props and initial load finished, try a targeted refresh
+  useEffect(() => {
+    if (!post && !isPostsLoading && !isFetchingSingle && !attemptedFetch) {
+      setIsFetchingSingle(true);
+      setAttemptedFetch(true);
+
+      const fetchSingle = async () => {
+        try {
+          if (onRefreshPosts) {
+            await onRefreshPosts();
+          } else {
+            const res = await fetch('/api/posts');
+            if (res.ok) {
+              const data = await res.json();
+              if (Array.isArray(data)) {
+                const found = data.find((p: Post) => p.slug === slug);
+                if (found) {
+                  setFetchedPost(found);
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching post:', err);
+        } finally {
+          setIsFetchingSingle(false);
+        }
+      };
+
+      fetchSingle();
+    }
+  }, [post, isPostsLoading, isFetchingSingle, attemptedFetch, slug, onRefreshPosts]);
 
   const [currentViews, setCurrentViews] = useState(post ? post.views : 0);
   const [hasTrackedView, setHasTrackedView] = useState(false);
@@ -148,14 +195,55 @@ export default function ArticleDetailView({
     return () => document.removeEventListener('click', handleAutolinkClick);
   }, [onSelectPost]);
 
+  // 1. Loading State (Data fetching in progress)
+  if (!post && (isPostsLoading || isFetchingSingle)) {
+    return (
+      <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 space-y-8 animate-pulse">
+        {/* Breadcrumb Skeleton */}
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded-md" />
+          <div className="h-4 w-4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+          <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded-md" />
+        </div>
+
+        {/* Header Skeleton */}
+        <div className="space-y-4">
+          <div className="h-6 w-28 bg-rose-200 dark:bg-rose-950/40 rounded-full" />
+          <div className="h-10 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+          <div className="h-8 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+          <div className="flex items-center gap-4 pt-2">
+            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800" />
+            <div className="space-y-2">
+              <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded-md" />
+              <div className="h-3 w-48 bg-slate-200 dark:bg-slate-800 rounded-md" />
+            </div>
+          </div>
+        </div>
+
+        {/* Featured Image Skeleton */}
+        <div className="w-full aspect-[16/9] max-h-[480px] rounded-3xl bg-slate-200 dark:bg-slate-800" />
+
+        {/* Content Skeleton Lines */}
+        <div className="space-y-4 pt-4">
+          <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded" />
+          <div className="h-4 w-11/12 bg-slate-200 dark:bg-slate-800 rounded" />
+          <div className="h-4 w-4/5 bg-slate-200 dark:bg-slate-800 rounded" />
+          <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded" />
+          <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Not Found State (Data fetching completed and post truly does not exist)
   if (!post) {
     return (
       <div className="max-w-3xl mx-auto py-16 text-center space-y-4">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Artikel Tidak Ditemukan</h2>
-        <p className="text-slate-600">Artikel dengan slug "{slug}" mungkin telah dihapus atau dipindahkan.</p>
+        <p className="text-slate-600 dark:text-slate-400">Artikel dengan slug "{slug}" mungkin telah dihapus atau dipindahkan.</p>
         <button
           onClick={onBack}
-          className="px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs inline-flex items-center gap-2"
+          className="px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs inline-flex items-center gap-2 hover:bg-rose-700 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Kembali ke Beranda
         </button>
