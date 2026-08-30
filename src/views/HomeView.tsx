@@ -141,12 +141,12 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
 
       {/* TRENDING TOPICS TICKER */}
       {autolinks.length > 0 && (
-        <div className="bg-rose-50/70 dark:bg-slate-800/60 border border-rose-100 dark:border-slate-700/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="bg-rose-50/70 dark:bg-slate-800/60 border border-rose-100 dark:border-slate-700/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 min-h-[60px]">
           <div className="flex items-center gap-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 shrink-0 uppercase tracking-wide">
-            <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
+            <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
             <span>{siteConfig?.autolink_ticker_label || 'Topik Trending:'}</span>
           </div>
-          <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-none">
             {autolinks.map((link) => (
               <button
                 key={link.id}
@@ -154,7 +154,7 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                   const targetSlug = link.targetUrl.split('/').pop() || '';
                   if (targetSlug) onSelectPost(targetSlug);
                 }}
-                className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-rose-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-200 hover:border-rose-400 hover:text-rose-600 transition-all shadow-2xs font-medium flex items-center gap-1 group"
+                className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-rose-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-200 hover:border-rose-400 hover:text-rose-600 transition-all shadow-2xs font-medium flex items-center gap-1 group shrink-0 whitespace-nowrap"
               >
                 <span>#{link.keyword}</span>
                 <span className="text-[10px] text-rose-500 font-bold group-hover:translate-x-0.5 transition-transform">↗</span>
@@ -166,9 +166,9 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
 
       {/* FEATURED POST (HERO ITEM) */}
       {featuredPost && !searchQuery && activeCategory === 'Semua' && (
-        <section className="group cursor-pointer" onClick={() => onSelectPost(featuredPost.slug)}>
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0">
-            <div className="lg:col-span-7 relative h-64 lg:h-auto overflow-hidden bg-slate-100 dark:bg-slate-800">
+        <section className="group cursor-pointer min-h-[380px]" onClick={() => onSelectPost(featuredPost.slug)}>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0 min-h-[380px]">
+            <div className="lg:col-span-7 relative aspect-[16/9] lg:aspect-none h-64 sm:h-72 lg:h-full min-h-[256px] lg:min-h-[380px] overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0">
               <img
                 src={featuredPost.featuredImage}
                 alt={featuredPost.title}
@@ -185,16 +185,16 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
               </div>
             </div>
 
-            <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between">
+            <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between min-h-[320px] lg:min-h-[380px]">
               <div className="space-y-4">
-                <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 shrink-0">
                   <span className="flex items-center gap-1 font-medium">
-                    <Clock className="w-3.5 h-3.5" />
+                    <Clock className="w-3.5 h-3.5 shrink-0" />
                     {featuredPost.readTimeMinutes} menit baca
                   </span>
                   <span>•</span>
                   <span className="flex items-center gap-1">
-                    <Eye className="w-3.5 h-3.5" />
+                    <Eye className="w-3.5 h-3.5 shrink-0" />
                     {featuredPost.views} pembaca
                   </span>
                 </div>
@@ -208,17 +208,17 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                 </p>
               </div>
 
-              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between min-h-[58px] shrink-0">
+                <div className="flex items-center gap-3 shrink-0">
                   <img
                     src={featuredPost.authorAvatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80'}
                     alt={featuredPost.authorName}
                     width={36}
                     height={36}
                     decoding="async"
-                    className="w-9 h-9 rounded-full object-cover border border-rose-200"
+                    className="w-9 h-9 rounded-full object-cover border border-rose-200 shrink-0"
                   />
-                  <div>
+                  <div className="shrink-0">
                     <div className="text-xs font-bold text-slate-900 dark:text-white">
                       {featuredPost.authorName}
                     </div>
@@ -226,9 +226,9 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                   </div>
                 </div>
 
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 dark:text-rose-400 group-hover:translate-x-1 transition-transform">
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 dark:text-rose-400 group-hover:translate-x-1 transition-transform shrink-0">
                   Baca Selengkapnya
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 shrink-0" />
                 </span>
               </div>
             </div>
