@@ -133,23 +133,20 @@ ${articleLinks}
       // GET /api/config
       if (path === '/api/config' && request.method === 'GET') {
         try {
-          await env.DB.prepare(
-            `CREATE TABLE IF NOT EXISTS site_config (
-              id INTEGER PRIMARY KEY,
-              config_json TEXT NOT NULL,
-              updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )`
-          ).run();
-
+          const cacheHeaders = {
+            ...corsHeaders,
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
+          };
           const result: any = await env.DB.prepare('SELECT config_json FROM site_config WHERE id = 1 LIMIT 1').first();
           if (result && result.config_json) {
             return new Response(result.config_json, {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              headers: cacheHeaders,
             });
           }
 
           return new Response(JSON.stringify({}), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: cacheHeaders,
           });
         } catch (err: any) {
           return new Response(JSON.stringify({ error: err.message }), {

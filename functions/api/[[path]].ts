@@ -12,7 +12,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const path = url.pathname;
   const method = request.method;
 
-  const jsonResponse = (data: any, status = 200) => {
+  const jsonResponse = (data: any, status = 200, extraHeaders: Record<string, string> = {}) => {
     return new Response(JSON.stringify(data), {
       status,
       headers: {
@@ -20,6 +20,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        ...extraHeaders,
       },
     });
   };
@@ -322,22 +323,13 @@ Sitemap: ${siteUrl}/sitemap.xml
       return jsonResponse({ success: true, message: 'Autolink berhasil dihapus' });
     }
 
-    // 7. GET /api/config (Public site settings ONLY)
+    // 7. GET /api/config (Public site settings ONLY - Accelerated & Edge Cached)
     if (path === '/api/config' && method === 'GET') {
+      const cacheHeaders = {
+        'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
+      };
       if (env.DB) {
         try {
-          await env.DB.prepare(`
-            CREATE TABLE IF NOT EXISTS configs (
-              key TEXT PRIMARY KEY,
-              value TEXT
-            )
-          `).run();
-
-          // SECURITY PURGE: Remove any sensitive credential keys accidentally saved in configs table
-          try {
-            await env.DB.prepare("DELETE FROM configs WHERE key IN ('admin_email', 'admin_password', 'admin_name', 'admin_avatar', 'admin_bio') OR key LIKE '%password%' OR key LIKE '%secret%' OR key LIKE '%token%'").run();
-          } catch {}
-
           const { results } = await env.DB.prepare('SELECT key, value FROM configs').all();
           if (results && results.length > 0) {
             const configObj: Record<string, any> = {};
@@ -354,13 +346,13 @@ Sitemap: ${siteUrl}/sitemap.xml
                 configObj[row.key] = row.value;
               }
             }
-            return jsonResponse(configObj);
+            return jsonResponse(configObj, 200, cacheHeaders);
           }
         } catch (e) {
           console.error('Error fetching site configs from D1:', e);
         }
       }
-      return jsonResponse({});
+      return jsonResponse({}, 200, cacheHeaders);
     }
 
     // 8. POST /api/config

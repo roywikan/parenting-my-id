@@ -98,11 +98,19 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
 };
 
 export async function loadSiteConfig(): Promise<SiteConfig> {
+  // 0. Check SSR injected initial data
+  const ssrConfig = typeof window !== 'undefined' ? (window as any).__INITIAL_DATA__?.siteConfig : undefined;
+  if (ssrConfig && typeof ssrConfig === 'object' && Object.keys(ssrConfig).length > 0) {
+    const merged = { ...DEFAULT_SITE_CONFIG, ...ssrConfig };
+    localStorage.setItem('parenting_site_config', JSON.stringify(merged));
+    return merged;
+  }
+
   // 1. Try local cache first for instant load
   const cached = localStorage.getItem('parenting_site_config');
   let currentConfig: SiteConfig = cached ? { ...DEFAULT_SITE_CONFIG, ...JSON.parse(cached) } : DEFAULT_SITE_CONFIG;
 
-  // 2. Fetch fresh config from API / D1
+  // 2. Fetch fresh config from API / D1 (Edge Cached)
   try {
     const res = await fetch('/api/config');
     if (res.ok) {

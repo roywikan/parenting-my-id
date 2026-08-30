@@ -287,6 +287,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   let post: Post | null = null;
   let autolinks: AutoLink[] = INITIAL_AUTOLINKS;
+  let siteConfig: Record<string, any> | undefined = undefined;
 
   // 1. Fetch from D1 database if bound
   if (env.DB) {
@@ -334,6 +335,20 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       if (autolinkRes.results && autolinkRes.results.length > 0) {
         autolinks = autolinkRes.results;
       }
+
+      // Fetch siteConfig from DB for SSR
+      try {
+        const configRes = await env.DB.prepare('SELECT key, value FROM configs').all();
+        if (configRes.results && configRes.results.length > 0) {
+          siteConfig = {};
+          const SENSITIVE = ['admin_email', 'admin_password', 'admin_name', 'admin_avatar', 'admin_bio', 'password', 'secret', 'token'];
+          for (const row of configRes.results) {
+            const kLower = String(row.key).toLowerCase();
+            if (SENSITIVE.includes(row.key) || kLower.includes('password') || kLower.includes('secret') || kLower.includes('token')) continue;
+            try { siteConfig[row.key] = JSON.parse(row.value); } catch { siteConfig[row.key] = row.value; }
+          }
+        }
+      } catch {}
     } catch (e) {
       console.error('D1 error in /baca/[slug]:', e);
     }
@@ -614,7 +629,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   // Inject pre-rendered static HTML into <div id="root">
-  const initialDataJson = JSON.stringify({ post, autolinks }).replace(/</g, '\\u003c');
+  const initialDataJson = JSON.stringify({ post, autolinks, siteConfig }).replace(/</g, '\\u003c');
   const initialDataScript = `<script>window.__INITIAL_DATA__=${initialDataJson};</script>`;
   finalHtml = finalHtml.replace(/<div id="root"><\/div>/i, `${initialDataScript}<div id="root">${preRenderedBody}</div>`);
 
