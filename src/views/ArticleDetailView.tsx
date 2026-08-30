@@ -406,9 +406,9 @@ export default function ArticleDetailView({
       {/* FEATURED IMAGE (LCP OPTIMIZED - ZERO CLS) */}
       <div className="w-full aspect-[16/9] max-h-[480px] rounded-3xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800">
         <img
-          src={optimizeUnsplashUrl(post.featuredImage, 700, 65)}
-          srcSet={getUnsplashSrcSet(post.featuredImage, [400, 700], 65)}
-          sizes="(max-width: 768px) 100vw, 700px"
+          src={optimizeUnsplashUrl(post.featuredImage, 700, 55)}
+          srcSet={getUnsplashSrcSet(post.featuredImage, [400, 700], 55)}
+          sizes="(max-width: 1024px) 100vw, 700px"
           alt={post.title}
           width={700}
           height={394}

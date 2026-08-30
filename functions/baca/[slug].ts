@@ -609,7 +609,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         <!-- FEATURED IMAGE (LCP OPTIMIZED - ZERO CLS) -->
         <div class="mb-10 w-full aspect-[16/9] max-h-[500px] rounded-3xl overflow-hidden shadow-md border border-slate-200 bg-slate-100">
-          <img src="${heroImageSrc}" ${heroSrcSet ? `srcset="${heroSrcSet}"` : ''} sizes="(max-width: 768px) 100vw, 700px" alt="${escapeHtml(post.title)}" width="700" height="394" fetchpriority="high" decoding="async" class="w-full h-full object-cover" />
+          <img src="${heroImageSrc}" ${heroSrcSet ? `srcset="${heroSrcSet}"` : ''} sizes="(max-width: 1024px) 100vw, 700px" alt="${escapeHtml(post.title)}" width="700" height="394" fetchpriority="high" decoding="async" class="w-full h-full object-cover" />
         </div>
 
         <!-- RENDERED ARTICLE CONTENT HTML -->
@@ -655,7 +655,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
     <link rel="canonical" href="${canonicalUrl}" />
-    <link rel="preload" as="image" href="${heroImageSrc}" ${heroSrcSet ? `imagesrcset="${heroSrcSet}" imagesizes="(max-width: 768px) 100vw, 700px"` : ''} fetchpriority="high" />
+    <link rel="preload" as="image" href="${heroImageSrc}" ${heroSrcSet ? `imagesrcset="${heroSrcSet}" imagesizes="(max-width: 1024px) 100vw, 700px"` : ''} fetchpriority="high" />
 
     <!-- OpenGraph Meta Tags -->
     <meta property="og:site_name" content="Parenting.my.id" />

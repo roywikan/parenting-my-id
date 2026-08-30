@@ -171,8 +171,8 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0 min-h-[380px]">
             <div className="lg:col-span-7 relative aspect-[16/9] lg:aspect-none h-64 sm:h-72 lg:h-full min-h-[256px] lg:min-h-[380px] overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0">
               <img
-                src={optimizeUnsplashUrl(featuredPost.featuredImage, 700, 65)}
-                srcSet={getUnsplashSrcSet(featuredPost.featuredImage, [400, 700], 65)}
+                src={optimizeUnsplashUrl(featuredPost.featuredImage, 700, 55)}
+                srcSet={getUnsplashSrcSet(featuredPost.featuredImage, [400, 700], 55)}
                 sizes="(max-width: 1024px) 100vw, 700px"
                 alt={featuredPost.title}
                 width={700}

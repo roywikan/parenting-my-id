@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { optimizeUnsplashUrl } from '../lib/imageUtils';
+import { optimizeUnsplashUrl, getUnsplashSrcSet } from '../lib/imageUtils';
 
 interface SEOProps {
   title: string;
@@ -88,7 +88,7 @@ export default function SEOHelper({
     updateMeta('meta[name="twitter:description"]', description);
     updateMeta('meta[name="twitter:image"]', optimizedOgImage);
 
-    // 5. Canonical Link & Alternate Hreflang Tags
+    // 5. Canonical Link & Alternate Hreflang & LCP Image Preload Tags
     let canonicalEl = document.querySelector('link[rel="canonical"]');
     if (!canonicalEl) {
       canonicalEl = document.createElement('link');
@@ -105,6 +105,25 @@ export default function SEOHelper({
       document.head.appendChild(hreflangEl);
     }
     hreflangEl.setAttribute('href', canonicalUrl);
+
+    if (image) {
+      const heroImageSrc = optimizeUnsplashUrl(image, 700, 55, 'webp');
+      const heroSrcSet = getUnsplashSrcSet(image, [400, 700], 55, 'webp');
+
+      let preloadEl = document.querySelector('link[rel="preload"][as="image"]');
+      if (!preloadEl) {
+        preloadEl = document.createElement('link');
+        preloadEl.setAttribute('rel', 'preload');
+        preloadEl.setAttribute('as', 'image');
+        preloadEl.setAttribute('fetchpriority', 'high');
+        document.head.appendChild(preloadEl);
+      }
+      preloadEl.setAttribute('href', heroImageSrc);
+      if (heroSrcSet) {
+        preloadEl.setAttribute('imagesrcset', heroSrcSet);
+        preloadEl.setAttribute('imagesizes', '(max-width: 1024px) 100vw, 700px');
+      }
+    }
 
     // 6. JSON-LD Structured Data Schema Injection
     const injectJsonLd = (id: string, jsonObj: object) => {
