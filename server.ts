@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
@@ -9,8 +9,8 @@ import { generateStaticFiles } from './scripts/generate-static-files.js';
 
 dotenv.config();
 
-const __filename = typeof import.meta !== 'undefined' && import.meta.url ? fileURLToPath(import.meta.url) : '';
-const __dirname = typeof import.meta !== 'undefined' && import.meta.url && __filename ? path.dirname(__filename) : process.cwd();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
