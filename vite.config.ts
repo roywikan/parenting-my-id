@@ -12,16 +12,24 @@ export default defineConfig(() => {
       },
     },
     build: {
+      target: 'es2020',
+      minify: 'esbuild' as const,
+      cssCodeSplit: true,
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
           manualChunks: {
             'vendor-react': ['react', 'react-dom'],
             'vendor-icons': ['lucide-react'],
+            'vendor-motion': ['motion'],
             'vendor-marked': ['marked'],
           },
         },
       },
+    },
+    esbuild: {
+      drop: ['console', 'debugger'] as ('console' | 'debugger')[],
+      legalComments: 'none' as 'none',
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

@@ -557,38 +557,38 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       <!-- MAIN CONTENT -->
       <main class="max-w-4xl mx-auto px-4 py-8 md:py-12">
         <!-- BREADCRUMB NAV -->
-        <nav class="flex items-center gap-2 text-xs text-slate-500 mb-6 flex-wrap" aria-label="Breadcrumb">
-          <a href="/" class="hover:underline">Beranda</a>
+        <nav class="flex items-center gap-2 text-xs text-slate-700 mb-6 flex-wrap font-medium" aria-label="Breadcrumb">
+          <a href="/" class="hover:underline text-slate-800 font-semibold">Beranda</a>
           <span>/</span>
-          <a href="/?kategori=${encodeURIComponent(post.category)}" class="hover:underline font-semibold text-rose-600">${escapeHtml(post.category)}</a>
+          <a href="/?kategori=${encodeURIComponent(post.category)}" class="hover:underline font-extrabold text-rose-800">${escapeHtml(post.category)}</a>
           <span>/</span>
-          <span class="text-slate-800 font-medium truncate max-w-xs">${escapeHtml(post.title)}</span>
+          <span class="text-slate-900 font-semibold truncate max-w-xs">${escapeHtml(post.title)}</span>
         </nav>
 
         <!-- TITLE & META BANNER -->
         <header class="mb-8">
-          <span class="inline-block px-3.5 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-extrabold uppercase tracking-wider mb-4 border border-rose-200">
+          <span class="inline-block px-3.5 py-1 rounded-full bg-rose-100 text-rose-900 text-xs font-black uppercase tracking-wider mb-4 border border-rose-200">
             ${escapeHtml(post.category)}
           </span>
           <h1 class="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 leading-tight tracking-tight mb-4">
             ${escapeHtml(post.title)}
           </h1>
-          <p class="text-base md:text-lg text-slate-600 leading-relaxed font-medium mb-6 border-l-4 border-rose-500 pl-4 py-2 italic bg-rose-50/60 rounded-r-2xl">
+          <p class="text-base md:text-lg text-slate-700 leading-relaxed font-medium mb-6 border-l-4 border-rose-600 pl-4 py-2 italic bg-rose-50/70 rounded-r-2xl">
             "${escapeHtml(post.excerpt)}"
           </p>
 
           <!-- AUTHOR & PUBLISH DATE -->
-          <div class="flex flex-wrap items-center justify-between gap-4 border-y border-slate-200 py-4 text-xs text-slate-600">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-y border-slate-200 py-4 text-xs text-slate-700 font-medium">
             <div class="flex items-center gap-3">
               <img src="${avatarImageSrc}" alt="${escapeHtml(post.authorName || '')}" width="44" height="44" decoding="async" class="w-11 h-11 rounded-full object-cover border-2 border-rose-500 shadow-sm" />
               <div>
                 <div class="font-extrabold text-sm text-slate-900">${escapeHtml(post.authorName || 'Dr. Ratna Sari, M.Psi')}</div>
-                <div class="text-slate-500">${post.authorRole === 'admin' ? 'Psikolog Anak & Tim Redaksi' : 'Penulis Konten Medis'}</div>
+                <div class="text-slate-700 font-semibold">${post.authorRole === 'admin' ? 'Psikolog Anak & Tim Redaksi' : 'Penulis Konten Medis'}</div>
               </div>
             </div>
             <div class="text-right">
-              <div>Dipublikasikan: <time datetime="${post.createdAt}" class="font-bold text-slate-800">${pubDateFormatted}</time></div>
-              <div class="text-rose-600 font-extrabold mt-0.5">⏱️ ${post.readTimeMinutes} menit baca</div>
+              <div>Dipublikasikan: <time datetime="${post.createdAt}" class="font-bold text-slate-900">${pubDateFormatted}</time></div>
+              <div class="text-rose-800 font-black mt-0.5">⏱️ ${post.readTimeMinutes} menit baca</div>
             </div>
           </div>
         </header>
@@ -599,13 +599,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         </div>
 
         <!-- RENDERED ARTICLE CONTENT HTML -->
-        <article class="prose prose-rose max-w-none text-slate-800 text-base leading-relaxed space-y-6">
+        <article class="prose prose-rose max-w-none text-slate-900 text-base leading-relaxed space-y-6">
           ${parsedHtml}
         </article>
 
         <!-- TAGS -->
         <div class="mt-12 pt-6 border-t border-slate-200">
-          <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider block mb-3">Topik Kata Kunci Terkait:</span>
+          <span class="text-xs font-black text-slate-700 uppercase tracking-wider block mb-3">Topik Kata Kunci Terkait:</span>
           <div class="flex flex-wrap gap-2">
             ${tagsHtml}
           </div>
@@ -616,18 +616,18 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           <img src="${avatarImageSrc}" alt="${escapeHtml(post.authorName || '')}" width="56" height="56" decoding="async" class="w-14 h-14 rounded-full object-cover border-2 border-rose-500" />
           <div class="space-y-1">
             <h4 class="font-black text-sm text-slate-900">${escapeHtml(post.authorName || 'Dr. Ratna Sari, M.Psi')}</h4>
-            <p class="text-xs text-rose-600 font-bold">${post.authorRole === 'admin' ? 'Psikolog Anak & Tim Redaksi Utama' : 'Penulis Konten Kesehatan'}</p>
-            <p class="text-xs text-slate-600 leading-relaxed">Penulis berdedikasi menyajikan panduan parenting berbasis riset ilmiah dan edukasi praktis untuk keluarga Indonesia.</p>
+            <p class="text-xs text-rose-800 font-extrabold">${post.authorRole === 'admin' ? 'Psikolog Anak & Tim Redaksi Utama' : 'Penulis Konten Kesehatan'}</p>
+            <p class="text-xs text-slate-700 leading-relaxed font-medium">Penulis berdedikasi menyajikan panduan parenting berbasis riset ilmiah dan edukasi praktis untuk keluarga Indonesia.</p>
           </div>
         </div>
       </main>
 
       <!-- FOOTER -->
-      <footer class="bg-slate-900 text-slate-300 py-12 mt-16 border-t border-slate-800">
+      <footer class="bg-slate-900 text-slate-200 py-12 mt-16 border-t border-slate-800">
         <div class="max-w-7xl mx-auto px-4 text-center space-y-3">
           <p class="font-black text-xl text-white tracking-tight">Parenting.my.id</p>
-          <p class="text-xs text-slate-400 max-w-md mx-auto">Portal Media Edukasi Pola Asuh, Gizi Balita, & Tumbuh Kembang Anak Terpercaya di Indonesia.</p>
-          <p class="text-[11px] text-slate-500 pt-4">© 2026 Parenting.my.id. Seluruh hak cipta dilindungi undang-undang.</p>
+          <p class="text-xs text-slate-300 max-w-md mx-auto font-medium">Portal Media Edukasi Pola Asuh, Gizi Balita, & Tumbuh Kembang Anak Terpercaya di Indonesia.</p>
+          <p class="text-[11px] text-slate-300 pt-4 font-medium">© 2026 Parenting.my.id. Seluruh hak cipta dilindungi undang-undang.</p>
         </div>
       </footer>
     </div>

@@ -104,15 +104,15 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
                 <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
                   {siteName}
                 </span>
-                <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase">
+                <span className="block text-[10px] text-slate-700 dark:text-slate-300 font-semibold tracking-wide uppercase">
                   {siteTagline}
                 </span>
               </div>
             </button>
 
             {/* EDGE PERFORMANCE BADGE */}
-            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-700 dark:text-emerald-300 font-medium ml-3">
-              <Zap className="w-3.5 h-3.5 fill-current text-emerald-500" />
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300 font-bold ml-3">
+              <Zap className="w-3.5 h-3.5 fill-current text-emerald-600 dark:text-emerald-400" />
               <span>{siteConfig?.header_badge_text || 'Cloudflare D1 Edge Engine'}</span>
             </div>
           </div>
@@ -131,7 +131,7 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
                     href={link.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 transition-colors"
+                    className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-100 hover:text-rose-700 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 transition-colors"
                   >
                     <span>{link.label}</span>
                   </a>
@@ -143,10 +143,10 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
                   key={idx}
                   href={link.url}
                   onClick={(e) => handleMobileNavClick(link.url, e)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 rounded-lg text-sm transition-colors ${
                     isActive
-                      ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-bold'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 font-extrabold border border-rose-200/80 dark:border-rose-900'
+                      : 'font-semibold text-slate-800 dark:text-slate-100 hover:text-rose-700 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   {link.label}

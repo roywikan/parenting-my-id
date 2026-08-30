@@ -102,7 +102,7 @@ export default function Footer({ siteConfig, onNavigate }: FooterProps) {
                     onClick={(e) => handleLinkClick(item.url, e)}
                     target={item.url.startsWith('http') || item.url.endsWith('.xml') ? '_blank' : '_self'}
                     rel="noreferrer"
-                    className="text-slate-400 hover:text-rose-400 transition-colors inline-flex items-center gap-1.5"
+                    className="text-slate-300 hover:text-rose-300 transition-colors font-medium inline-flex items-center gap-1.5"
                   >
                     <span>• {item.label}</span>
                   </a>
@@ -123,10 +123,10 @@ export default function Footer({ siteConfig, onNavigate }: FooterProps) {
                     href={item.url}
                     target={item.url.startsWith('http') || item.url.endsWith('.xml') ? '_blank' : '_self'}
                     rel="noreferrer"
-                    className="text-slate-400 hover:text-rose-400 transition-colors inline-flex items-center gap-1"
+                    className="text-slate-300 hover:text-rose-300 transition-colors font-medium inline-flex items-center gap-1"
                   >
                     <span>{item.label}</span>
-                    <ArrowUpRight className="w-3 h-3 opacity-60" />
+                    <ArrowUpRight className="w-3 h-3 opacity-80" />
                   </a>
                 </li>
               ))}
@@ -136,17 +136,17 @@ export default function Footer({ siteConfig, onNavigate }: FooterProps) {
         </div>
 
         {/* BOTTOM COPYRIGHT */}
-        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-300 font-medium gap-4">
           <p>{copyrightText}</p>
           <div className="flex items-center gap-4">
             {siteConfig?.social_facebook && (
-              <a href={siteConfig.social_facebook} target="_blank" rel="noreferrer" className="hover:text-rose-400">Facebook</a>
+              <a href={siteConfig.social_facebook} target="_blank" rel="noreferrer" className="text-slate-300 hover:text-rose-300 font-semibold underline underline-offset-4">Facebook</a>
             )}
             {siteConfig?.social_instagram && (
-              <a href={siteConfig.social_instagram} target="_blank" rel="noreferrer" className="hover:text-rose-400">Instagram</a>
+              <a href={siteConfig.social_instagram} target="_blank" rel="noreferrer" className="hover:text-rose-300 text-slate-300 font-semibold underline underline-offset-4">Instagram</a>
             )}
             {siteConfig?.social_twitter && (
-              <a href={siteConfig.social_twitter} target="_blank" rel="noreferrer" className="hover:text-rose-400">Twitter/X</a>
+              <a href={siteConfig.social_twitter} target="_blank" rel="noreferrer" className="hover:text-rose-300 text-slate-300 font-semibold underline underline-offset-4">Twitter/X</a>
             )}
           </div>
         </div>

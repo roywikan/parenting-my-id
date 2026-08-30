@@ -321,7 +321,7 @@ export default function ArticleDetailView({
                 onBack();
               }
             }}
-            className="px-3 py-1 rounded-full bg-rose-100 hover:bg-rose-200 dark:bg-rose-950 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 font-bold text-xs transition-colors cursor-pointer"
+            className="px-3.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-200 font-black text-xs transition-colors cursor-pointer border border-rose-200 dark:border-rose-900"
           >
             {post.category}
           </button>
@@ -331,12 +331,12 @@ export default function ArticleDetailView({
           {post.title}
         </h1>
 
-        <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed italic border-l-4 border-rose-500 pl-4 py-1 bg-rose-50/50 dark:bg-slate-800/40 rounded-r-xl">
+        <p className="text-slate-700 dark:text-slate-200 text-sm sm:text-base leading-relaxed italic border-l-4 border-rose-600 pl-4 py-1 bg-rose-50/70 dark:bg-slate-800/60 rounded-r-xl font-medium">
           "{post.excerpt}"
         </p>
 
         {/* AUTHOR & METADATA BAR (WITH MULTI-AUTHOR DISPLAY) */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 text-secondary text-slate-500 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 text-slate-700 dark:text-slate-300 border-t border-slate-200 dark:border-slate-800">
           <div className="flex flex-wrap items-center gap-4">
             {/* Primary Author */}
             <div className="flex items-center gap-3">
@@ -352,7 +352,7 @@ export default function ArticleDetailView({
                 <div className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
                   <span>{post.authorName || 'Dr. Ratna Sari, M.Psi'}</span>
                 </div>
-                <div className="text-[11px] text-rose-600 font-medium">
+                <div className="text-[11px] text-rose-800 dark:text-rose-300 font-bold">
                   {post.authorTitle || 'Spesialis Psikologi Anak & Praktisi Parenting'}
                 </div>
               </div>
@@ -361,8 +361,8 @@ export default function ArticleDetailView({
             {/* Co-Authors Header Badges */}
             {post.coAuthors && post.coAuthors.length > 0 && (
               <div className="flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-700">
-                <Users className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-xs text-slate-500 font-medium">Co-Author:</span>
+                <Users className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+                <span className="text-xs text-slate-700 dark:text-slate-300 font-bold">Co-Author:</span>
                 <div className="flex -space-x-2 overflow-hidden">
                   {post.coAuthors.map((co) => (
                     <img
@@ -377,26 +377,26 @@ export default function ArticleDetailView({
                     />
                   ))}
                 </div>
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                   {post.coAuthors.map(c => c.name).join(', ')}
                 </span>
               </div>
             )}
           </div>
 
-          <div className="flex items-center gap-4 text-slate-500 text-xs">
+          <div className="flex items-center gap-4 text-slate-700 dark:text-slate-300 font-semibold text-xs">
             <span className="flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" />
+              <Calendar className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
               {new Date(post.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
             </span>
             <span>•</span>
             <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
+              <Clock className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
               {post.readTimeMinutes} Mnt Baca
             </span>
             <span>•</span>
             <span className="flex items-center gap-1" title="Pertambahan terbaca dihitung setelah pembaca melihat hingga pertengahan artikel">
-              <Eye className="w-3.5 h-3.5" />
+              <Eye className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
               {currentViews} Dibaca
             </span>
           </div>
