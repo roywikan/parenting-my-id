@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Post, AutoLink, User, SiteConfig } from './types';
 import { INITIAL_POSTS, INITIAL_AUTOLINKS, INITIAL_USERS } from './data/initialData';
 import { getSiteConfig, saveSiteConfig } from './lib/config';
@@ -8,8 +8,9 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import HomeView from './views/HomeView';
 import ArticleDetailView from './views/ArticleDetailView';
-import AdminPortal from './views/AdminPortal';
 import AdSlot from './components/AdSlot';
+
+const AdminPortal = lazy(() => import('./views/AdminPortal'));
 
 export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'article' | 'admin'>('home');
@@ -444,21 +445,28 @@ export default function App() {
         )}
 
         {currentView === 'admin' && (
-          <AdminPortal
-            currentUser={currentUser}
-            onLogin={handleLogin}
-            onLogout={handleLogout}
-            posts={posts}
-            autolinks={autolinks}
-            onSavePost={handleSavePost}
-            onDeletePost={handleDeletePost}
-            onAddAutolink={handleAddAutolink}
-            onDeleteAutolink={handleDeleteAutolink}
-            siteConfig={effectiveConfig}
-            onSaveConfig={handleSaveConfig}
-            onUpdateCredentials={handleUpdateCredentials}
-            onLivePreviewChange={setLiveDraftConfig}
-          />
+          <Suspense fallback={
+            <div className="py-20 text-center space-y-3">
+              <div className="w-10 h-10 border-4 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-sm text-slate-500 font-bold">Memuat Portal Admin & Editor CMS...</p>
+            </div>
+          }>
+            <AdminPortal
+              currentUser={currentUser}
+              onLogin={handleLogin}
+              onLogout={handleLogout}
+              posts={posts}
+              autolinks={autolinks}
+              onSavePost={handleSavePost}
+              onDeletePost={handleDeletePost}
+              onAddAutolink={handleAddAutolink}
+              onDeleteAutolink={handleDeleteAutolink}
+              siteConfig={effectiveConfig}
+              onSaveConfig={handleSaveConfig}
+              onUpdateCredentials={handleUpdateCredentials}
+              onLivePreviewChange={setLiveDraftConfig}
+            />
+          </Suspense>
         )}
       </main>
 

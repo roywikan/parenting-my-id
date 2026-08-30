@@ -168,12 +168,15 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
       {featuredPost && !searchQuery && activeCategory === 'Semua' && (
         <section className="group cursor-pointer" onClick={() => onSelectPost(featuredPost.slug)}>
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0">
-            <div className="lg:col-span-7 relative h-64 lg:h-auto overflow-hidden">
+            <div className="lg:col-span-7 relative h-64 lg:h-auto overflow-hidden bg-slate-100 dark:bg-slate-800">
               <img
                 src={featuredPost.featuredImage}
                 alt={featuredPost.title}
+                width={1200}
+                height={675}
+                fetchPriority="high"
+                decoding="async"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                loading="eager"
               />
               <div className="absolute top-4 left-4">
                 <span className="px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-bold shadow-md uppercase tracking-wider">
@@ -210,6 +213,9 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                   <img
                     src={featuredPost.authorAvatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80'}
                     alt={featuredPost.authorName}
+                    width={36}
+                    height={36}
+                    decoding="async"
                     className="w-9 h-9 rounded-full object-cover border border-rose-200"
                   />
                   <div>
@@ -315,12 +321,15 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                 className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer"
               >
                 <div>
-                  <div className="relative h-48 overflow-hidden">
+                  <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                     <img
                       src={post.featuredImage}
                       alt={post.title}
+                      width={600}
+                      height={338}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute top-3 left-3">
                       <span className="px-2.5 py-1 rounded-md bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-800 dark:text-slate-200 text-[10px] font-bold uppercase tracking-wider shadow-2xs">
@@ -357,6 +366,9 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                     <img
                       src={post.authorAvatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80'}
                       alt={post.authorName}
+                      width={24}
+                      height={24}
+                      decoding="async"
                       className="w-6 h-6 rounded-full object-cover"
                     />
                     <span className="text-slate-700 dark:text-slate-300 font-medium text-[11px]">

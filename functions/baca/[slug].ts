@@ -533,9 +533,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           </div>
         </header>
 
-        <!-- FEATURED IMAGE -->
-        <div class="mb-10 rounded-3xl overflow-hidden shadow-md border border-slate-200">
-          <img src="${post.featuredImage}" alt="${escapeHtml(post.title)}" class="w-full h-auto max-h-[500px] object-cover" />
+        <!-- FEATURED IMAGE (LCP OPTIMIZED - ZERO CLS) -->
+        <div class="mb-10 w-full aspect-[16/9] max-h-[500px] rounded-3xl overflow-hidden shadow-md border border-slate-200 bg-slate-100">
+          <img src="${post.featuredImage}" alt="${escapeHtml(post.title)}" width="1200" height="675" fetchpriority="high" decoding="async" class="w-full h-full object-cover" />
         </div>
 
         <!-- RENDERED ARTICLE CONTENT HTML -->
@@ -579,6 +579,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <meta name="description" content="${escapeHtml(pageDesc)}" />
     <meta name="keywords" content="${escapeHtml(post.tags || 'parenting, anak, gizi')}" />
     <link rel="canonical" href="${canonicalUrl}" />
+    <link rel="preload" as="image" href="${post.featuredImage}" fetchpriority="high" />
 
     <!-- OpenGraph Meta Tags -->
     <meta property="og:site_name" content="Parenting.my.id" />

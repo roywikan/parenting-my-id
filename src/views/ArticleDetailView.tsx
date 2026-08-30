@@ -254,6 +254,9 @@ export default function ArticleDetailView({
               <img
                 src={post.authorAvatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80'}
                 alt={post.authorName}
+                width={40}
+                height={40}
+                decoding="async"
                 className="w-10 h-10 rounded-full object-cover border-2 border-rose-400 shadow-2xs"
               />
               <div>
@@ -278,6 +281,9 @@ export default function ArticleDetailView({
                       src={co.avatar}
                       alt={co.name}
                       title={`${co.name} (${co.title || 'Co-Author'})`}
+                      width={28}
+                      height={28}
+                      decoding="async"
                       className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-900 object-cover"
                     />
                   ))}
@@ -308,12 +314,16 @@ export default function ArticleDetailView({
         </div>
       </header>
 
-      {/* FEATURED IMAGE */}
-      <div className="rounded-3xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800">
+      {/* FEATURED IMAGE (LCP OPTIMIZED - ZERO CLS) */}
+      <div className="w-full aspect-[16/9] max-h-[480px] rounded-3xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800">
         <img
           src={post.featuredImage}
           alt={post.title}
-          className="w-full max-h-[480px] object-cover"
+          width={1200}
+          height={675}
+          fetchPriority="high"
+          decoding="async"
+          className="w-full h-full object-cover"
         />
       </div>
 
