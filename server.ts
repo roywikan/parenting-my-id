@@ -18,7 +18,7 @@ const PORT = 3000;
 function optimizeUnsplashUrl(
   url?: string | null,
   targetWidth = 600,
-  quality = 55,
+  quality = 50,
   format = 'webp',
   targetHeight?: number
 ): string {
@@ -45,7 +45,7 @@ function optimizeUnsplashUrl(
 function getUnsplashSrcSet(
   url?: string | null,
   widths = [400, 700],
-  quality = 55,
+  quality = 50,
   format = 'webp'
 ): string {
   if (!url || !url.includes('unsplash.com')) return '';
@@ -1039,8 +1039,8 @@ app.get('/baca/:slug', (req, res, next) => {
     const pageDesc = post.metaDescription || post.excerpt;
     const canonicalUrl = `${siteUrl}/baca/${post.slug}`;
 
-    const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 55, 'webp');
-    const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700], 55, 'webp');
+    const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 50, 'webp');
+    const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700], 50, 'webp');
 
     // Convert Markdown to basic HTML
     let bodyHtml = post.contentMarkdown

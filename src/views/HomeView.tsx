@@ -326,8 +326,8 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                 <div>
                   <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                     <img
-                      src={optimizeUnsplashUrl(post.featuredImage, 600, 65)}
-                      srcSet={getUnsplashSrcSet(post.featuredImage, [400, 600], 65)}
+                      src={optimizeUnsplashUrl(post.featuredImage, 600, 50)}
+                      srcSet={getUnsplashSrcSet(post.featuredImage, [400, 600], 50)}
                       sizes="(max-width: 640px) 100vw, 400px"
                       alt={post.title}
                       width={600}

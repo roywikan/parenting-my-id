@@ -17,7 +17,7 @@ function isUnsplashUrl(url?: string | null): boolean {
 function optimizeUnsplashUrl(
   url?: string | null,
   targetWidth = 600,
-  quality = 55,
+  quality = 50,
   format = 'webp',
   targetHeight?: number
 ): string {
@@ -44,7 +44,7 @@ function optimizeUnsplashUrl(
 function getUnsplashSrcSet(
   url?: string | null,
   widths = [400, 700],
-  quality = 55,
+  quality = 50,
   format = 'webp'
 ): string {
   if (!url || !isUnsplashUrl(url)) return '';
@@ -322,7 +322,7 @@ function applyAutoLinks(htmlContent: string, autolinks: AutoLink[]): string {
       if (htmlTag) return htmlTag;
       if (keywordMatch && replacedCount < 2) {
         replacedCount++;
-        return `<a href="${link.targetUrl}" class="inline-flex items-center gap-0.5 text-rose-600 font-semibold underline decoration-rose-300 underline-offset-4 hover:bg-rose-50 px-1 py-0.5 rounded transition-all" title="Artikel terkait: ${escapeHtml(link.description || link.keyword)}">${keywordMatch}↗</a>`;
+        return `<a href="${link.targetUrl}" class="inline-flex items-center gap-0.5 text-rose-700 font-semibold underline decoration-rose-400 underline-offset-4 hover:bg-rose-50 px-1 py-0.5 rounded transition-all" title="Artikel terkait: ${escapeHtml(link.description || link.keyword)}">${keywordMatch}↗</a>`;
       }
       return match;
     });
@@ -543,10 +543,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   };
 
   // Image Optimization for SSR HTML
-  const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 65, 'webp');
-  const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700], 65, 'webp');
-  const avatarImageSrc = optimizeUnsplashUrl(post.authorAvatar, 60, 60, 'webp');
-  const ogImageSrc = optimizeUnsplashUrl(post.featuredImage, 1200, 70, 'webp', 630);
+  const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 50, 'webp');
+  const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700], 50, 'webp');
+  const avatarImageSrc = optimizeUnsplashUrl(post.authorAvatar, 80, 50, 'webp');
+  const ogImageSrc = optimizeUnsplashUrl(post.featuredImage, 1200, 50, 'webp', 630);
 
   // Static HTML Content to inject into <div id="root">
   const preRenderedBody = `

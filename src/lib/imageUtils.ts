@@ -30,7 +30,7 @@ export function isUnsplashUrl(url: string | undefined | null): boolean {
 
 /**
  * Optimizes Unsplash image URLs dynamically.
- * Default settings: w=600, q=55, fm=webp, fit=crop, auto=format
+ * Default settings: w=600, q=50, fm=webp, fit=crop, auto=format
  */
 export function getOptimizedUnsplashUrl(
   url: string | undefined | null,
@@ -42,7 +42,7 @@ export function getOptimizedUnsplashUrl(
   const {
     width = 600,
     height,
-    quality = 55,
+    quality = 50,
     format = 'webp',
     fit = 'crop',
   } = options;
@@ -73,7 +73,7 @@ export function getOptimizedUnsplashUrl(
 export function optimizeUnsplashUrl(
   url: string | undefined | null,
   targetWidth = 600,
-  quality = 55,
+  quality = 50,
   format = 'webp',
   targetHeight?: number
 ): string {
@@ -91,7 +91,7 @@ export function optimizeUnsplashUrl(
 export function getUnsplashSrcSet(
   url: string | undefined | null,
   widths: number[] = [400, 600],
-  quality = 55,
+  quality = 50,
   format = 'webp'
 ): string | undefined {
   if (!url || !isUnsplashUrl(url)) return undefined;

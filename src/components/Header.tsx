@@ -118,7 +118,7 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
           </div>
 
           {/* DESKTOP NAVIGATION (TOP BAR) */}
-          <nav className="main-nav hidden md:flex items-center gap-1">
+          <nav className="main-nav hidden md:flex items-center gap-1 min-h-[40px] h-[40px]">
             {rawHeaderLinks.map((link, idx) => {
               const isExternalOrXml = link.url.startsWith('http') || link.url.endsWith('.xml');
               const isHome = link.url === '/' || link.url === '/home' || link.label === 'Beranda';
@@ -131,7 +131,7 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
                     href={link.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-100 hover:text-rose-700 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 transition-colors"
+                    className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-100 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 transition-colors"
                   >
                     <span>{link.label}</span>
                   </a>
@@ -145,8 +145,8 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
                   onClick={(e) => handleMobileNavClick(link.url, e)}
                   className={`px-3 py-2 rounded-lg text-sm transition-colors ${
                     isActive
-                      ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 font-extrabold border border-rose-200/80 dark:border-rose-900'
-                      : 'font-semibold text-slate-800 dark:text-slate-100 hover:text-rose-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-200 font-extrabold border border-rose-200/80 dark:border-rose-900'
+                      : 'font-semibold text-slate-800 dark:text-slate-100 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   {link.label}
@@ -234,13 +234,13 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
                   onNavigate('home');
                   setMobileMenuOpen(false);
                 }}
-                className="block w-full text-left px-3 py-2 rounded-lg text-sm font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50"
+                className="block w-full text-left px-3 py-2 rounded-lg text-sm font-extrabold text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-slate-800"
               >
                 Beranda
               </button>
 
               <div className="pt-1 pb-1 border-t border-b border-slate-100 dark:border-slate-800 space-y-1">
-                <span className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Kategori Artikel</span>
+                <span className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Kategori Artikel</span>
                 {[
                   { label: 'Pola Asuh', name: 'Pola Asuh' },
                   { label: 'Tumbuh Kembang', name: 'Tumbuh Kembang' },
@@ -253,7 +253,7 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
                       onNavigate('category', cat.name);
                       setMobileMenuOpen(false);
                     }}
-                    className="block w-full text-left px-3 py-1.5 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-rose-50"
+                    className="block w-full text-left px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-800 dark:text-slate-100 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-slate-800"
                   >
                     {cat.label}
                   </button>

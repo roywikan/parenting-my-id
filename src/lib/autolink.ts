@@ -37,7 +37,7 @@ export function applyAutoLinks(htmlContent: string, autolinks: AutoLink[]): stri
 
       if (keywordMatch && replacedCount < maxReplacementsPerKeyword) {
         replacedCount++;
-        return `<a href="${link.targetUrl}" class="inline-flex items-center gap-0.5 text-rose-600 dark:text-rose-400 font-medium underline decoration-rose-300 dark:decoration-rose-600 underline-offset-4 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-1 py-0.5 rounded transition-all group/autolink" title="Artikel terkait: ${link.description || link.keyword}" data-autolink-id="${link.id}">${keywordMatch}<span class="inline-block text-[10px] opacity-70 group-hover/autolink:translate-x-0.5 transition-transform">↗</span></a>`;
+        return `<a href="${link.targetUrl}" class="inline-flex items-center gap-0.5 text-rose-700 dark:text-rose-300 font-semibold underline decoration-rose-400 dark:decoration-rose-500 underline-offset-4 hover:bg-rose-50 dark:hover:bg-rose-950/60 px-1 py-0.5 rounded transition-all group/autolink" title="Artikel terkait: ${link.description || link.keyword}" data-autolink-id="${link.id}">${keywordMatch}<span class="inline-block text-[10px] opacity-70 group-hover/autolink:translate-x-0.5 transition-transform">↗</span></a>`;
       }
 
       return match;

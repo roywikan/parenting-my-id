@@ -7,9 +7,9 @@ import { categoryToSlug, slugToCategory } from './lib/categories';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomeView from './views/HomeView';
-import ArticleDetailView from './views/ArticleDetailView';
 import AdSlot from './components/AdSlot';
 
+const ArticleDetailView = lazy(() => import('./views/ArticleDetailView'));
 const AdminPortal = lazy(() => import('./views/AdminPortal'));
 
 export default function App() {
@@ -457,17 +457,24 @@ export default function App() {
         )}
 
         {currentView === 'article' && (
-          <ArticleDetailView
-            slug={activeSlug}
-            posts={posts}
-            autolinks={autolinks}
-            isPostsLoading={isPostsLoading}
-            onRefreshPosts={fetchPosts}
-            onBack={() => handleNavigate('home')}
-            onSelectPost={(slug) => handleNavigate('article', slug)}
-            onSelectCategory={(category) => handleNavigate('category', category)}
-            siteConfig={effectiveConfig}
-          />
+          <Suspense fallback={
+            <div className="py-20 text-center space-y-3">
+              <div className="w-10 h-10 border-4 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-sm text-slate-500 font-bold">Memuat Detail Artikel...</p>
+            </div>
+          }>
+            <ArticleDetailView
+              slug={activeSlug}
+              posts={posts}
+              autolinks={autolinks}
+              isPostsLoading={isPostsLoading}
+              onRefreshPosts={fetchPosts}
+              onBack={() => handleNavigate('home')}
+              onSelectPost={(slug) => handleNavigate('article', slug)}
+              onSelectCategory={(category) => handleNavigate('category', category)}
+              siteConfig={effectiveConfig}
+            />
+          </Suspense>
         )}
 
         {currentView === 'admin' && (
