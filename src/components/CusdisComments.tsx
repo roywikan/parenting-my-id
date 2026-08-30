@@ -57,7 +57,12 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
   };
 
   useEffect(() => {
-    fetchApprovedComments();
+    // Defer comments fetching so it doesn't block initial page render & LCP
+    const timer = setTimeout(() => {
+      fetchApprovedComments();
+    }, 700);
+
+    return () => clearTimeout(timer);
   }, [pageId]);
 
   // Handle Native Submit

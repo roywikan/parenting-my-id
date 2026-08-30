@@ -17,9 +17,18 @@ export default function App() {
   const [activeSlug, setActiveSlug] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
 
-  const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
-  const [isPostsLoading, setIsPostsLoading] = useState<boolean>(true);
-  const [autolinks, setAutolinks] = useState<AutoLink[]>(INITIAL_AUTOLINKS);
+  // Check if server injected SSR initial data
+  const initialSsrData = typeof window !== 'undefined' ? (window as any).__INITIAL_DATA__ : undefined;
+
+  const [posts, setPosts] = useState<Post[]>(() => {
+    if (initialSsrData?.post) {
+      const p = initialSsrData.post;
+      return [p, ...INITIAL_POSTS.filter((item) => item.slug !== p.slug)];
+    }
+    return INITIAL_POSTS;
+  });
+  const [isPostsLoading, setIsPostsLoading] = useState<boolean>(!initialSsrData?.post);
+  const [autolinks, setAutolinks] = useState<AutoLink[]>(() => initialSsrData?.autolinks || INITIAL_AUTOLINKS);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [siteConfig, setSiteConfig] = useState<SiteConfig | undefined>(undefined);
   const [liveDraftConfig, setLiveDraftConfig] = useState<SiteConfig | undefined>(undefined);
@@ -28,9 +37,14 @@ export default function App() {
 
   // Fetch Posts, Autolinks & Config on initial mount
   useEffect(() => {
-    fetchPosts();
-    fetchAutolinks();
+    // 1. Critical fetch: Posts & Site Config
+    fetchPosts(!initialSsrData?.post);
     fetchConfig();
+
+    // 2. Non-critical fetch: Autolinks (deferred to prevent critical path network chaining)
+    const deferTimer = setTimeout(() => {
+      fetchAutolinks();
+    }, 600);
 
     // Check saved session
     const savedUser = localStorage.getItem('parenting_user');
@@ -41,6 +55,8 @@ export default function App() {
         localStorage.removeItem('parenting_user');
       }
     }
+
+    return () => clearTimeout(deferTimer);
   }, []);
 
 // Manage Dark Mode
@@ -94,8 +110,10 @@ export default function App() {
     }
   };
 
-  const fetchPosts = async () => {
-    setIsPostsLoading(true);
+  const fetchPosts = async (showLoadingState: boolean = true) => {
+    if (showLoadingState) {
+      setIsPostsLoading(true);
+    }
     try {
       const res = await fetch('/api/posts');
       const contentType = res.headers.get('content-type');
@@ -108,7 +126,9 @@ export default function App() {
     } catch (err) {
       console.error('Error fetching posts:', err);
     } finally {
-      setIsPostsLoading(false);
+      if (showLoadingState) {
+        setIsPostsLoading(false);
+      }
     }
   };
 

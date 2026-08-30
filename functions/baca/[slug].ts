@@ -578,6 +578,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <title>${escapeHtml(pageTitle)}</title>
     <meta name="description" content="${escapeHtml(pageDesc)}" />
     <meta name="keywords" content="${escapeHtml(post.tags || 'parenting, anak, gizi')}" />
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
+    <link rel="dns-prefetch" href="https://images.unsplash.com" />
     <link rel="canonical" href="${canonicalUrl}" />
     <link rel="preload" as="image" href="${post.featuredImage}" fetchpriority="high" />
 
@@ -612,7 +614,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   // Inject pre-rendered static HTML into <div id="root">
-  finalHtml = finalHtml.replace(/<div id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
+  const initialDataJson = JSON.stringify({ post, autolinks }).replace(/</g, '\\u003c');
+  const initialDataScript = `<script>window.__INITIAL_DATA__=${initialDataJson};</script>`;
+  finalHtml = finalHtml.replace(/<div id="root"><\/div>/i, `${initialDataScript}<div id="root">${preRenderedBody}</div>`);
 
   return new Response(finalHtml, {
     status: 200,
