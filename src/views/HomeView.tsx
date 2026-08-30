@@ -241,7 +241,7 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari topik parenting, misal: 'pola asuh', 'stunting'..."
+              placeholder={`Cari artikel atau kata kunci di ${siteConfig?.site_name || 'website'}...`}
               className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500 transition-all shadow-2xs"
             />
           </div>

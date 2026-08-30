@@ -225,33 +225,58 @@ CREATE TABLE IF NOT EXISTS site_config (
 
 ---
 
-## ⚙️ LANGKAH 3: Kustomisasi Pengaturan di Admin Panel (`/admin`)
+## ⚙️ LANGKAH 3: Kustomisasi Pengaturan & Navigasi di Admin Panel (`/admin`)
 
-1. Akses halaman admin di web Anda: `https://parenting.my.id/#admin` (atau klik tombol **Portal Admin** di header).
-2. Login dengan akun bawaan atau akun admin yang dibuat di database D1.
-3. Buka tab **⚙️ Configs Situs**:
-   - **Badge Samping Logo Header (`header_badge_text`)**: Ubah teks badge hijau di header desktop (misal: `"Cloudflare D1 Edge Engine"` atau `"Portal Resmi"`).
-   - **Label Tombol Portal Admin (`mobile_admin_btn_label`)**: Ubah label tombol admin di header/mobile drawer.
-   - **Teks Halaman Login Admin**: Sesuaikan judul dan sub-judul portal admin.
-   - **Domain Situs (`site_domain`)**: Setel domain utama situs.
-   - **Metrik Performa Situs**: Sesuaikan angka metrik seperti *Jumlah Artikel Terverifikasi*, *Traffic Bulanan*, *Skor Kecepatan CDN*, dsb.
-   - **Footer & Running Ticker**: Atur teksrunning ticker topik trending dan badge jaminan footer.
-4. Klik tombol **Simpan Konfigurasi Situs**. Perubahan akan langsung tersimpan di database **Cloudflare D1** dan tersinkronisasi ke file `public/site_config.json`.
+### A. Penyimpanan Konfigurasi Multi-Layer & Permanen
+Setiap perubahan konfigurasi yang Anda simpan di **Config Situs** (Portal Admin) ditulis dan disimpan secara multi-layer (berlapis) ke 3-4 lokasi utama secara sinkron (*dual-write persistence*):
+
+1. **Peramban Lokal (`localStorage`)**:
+   - **Lokasi**: Browser pengunjung (`localStorage.getItem('parenting_site_config')`).
+   - **Fungsi**: Disimpan secara instan agar perubahan tampilan (Theme, Navigasi, Badge, Banner) langsung terasa seketika (*instant preview*) tanpa *delay* jaringan.
+2. **Database Cloudflare D1 (Tabel `configs`)**:
+   - **Lokasi**: Tabel SQL `configs` pada Cloudflare D1 Database.
+   - **Fungsi**: Merekam seluruh 65+ parameter sebagai *single source of truth* permanen di server edge. Tidak akan hilang meskipun cache browser dihapus.
+3. **File Server Disk (`public/site_config.json` & `dist/site_config.json`)**:
+   - **Lokasi**: `/public/site_config.json` dan `/dist/site_config.json`.
+   - **Fungsi**: Acuan (*fallback*) static CDN utama untuk pengunjung baru yang belum memiliki cache lokal.
+4. **Sinkronisasi Otomatis ke Repository GitHub (Opsional bila GitHub Token aktif)**:
+   - **Fungsi**: Memperbarui file `public/site_config.json` di repositori Git Anda melalui komit otomatis untuk riwayat versi (*version control*).
 
 ---
-## Setiap perubahan konfigurasi yang Anda simpan di Config Situs (Portal Admin) ditulis dan disimpan secara multi-layer (berlapis) ke 3 lokasi utama:
-1. Peramban Lokal (localStorage)
-Lokasi: Peramban web Anda (localStorage.getItem('parenting_site_config')).
-Fungsi: Disimpan secara instan di browser agar perubahan tampilan (Theme, Navigasi, Badge, Banner) langsung terasa seketika (instant preview) tanpa menunggu respon jaringan.
-2. File Server Disk (public/site_config.json & dist/site_config.json)
-Lokasi File: /public/site_config.json dan /dist/site_config.json.
-Fungsi: Backend Server (Express Node.js) menulis seluruh objek konfigurasi situs ke dalam file JSON di folder public/. File ini menjadi acuan (fallback) utama saat situs diakses oleh pengunjung baru yang belum memiliki cache.
-3. Database Cloudflare D1 (Tabel configs)
-Lokasi Database: Tabel SQL configs pada Cloudflare D1 Database.
-Fungsi: Pada lingkungan produksi (Cloudflare Pages / Edge Worker), API /api/config memecah setiap parameter konfigurasi (misalnya header_nav_links, footer_category_links, site_name, adsense_client_id, dll.) dan menyimpannya sebagai pasangan key-value ke dalam tabel database configs.
-4. Sinkronisasi Otomatis ke Repository GitHub (Opsional bila GitHub Token aktif)
-Fungsi: Jika backend terhubung ke GitHub API, sistem Cloudflare Worker akan secara otomatis memperbarui file public/site_config.json langsung di repositori Git Anda melalui komit otomatis, sehingga perubahan situs tetap aman dan tersimpan dalam riwayat versi (version control).
+
+### B. Visual Navigation Builder (Pengelola Navigasi Visual)
+Tanpa perlu mengetik struktur JSON manual, Portal Admin dilengkapi dengan **Visual Navigation Builder** untuk 4 lokasi menu utama:
+
+1. **Top Bar Navigation (Header Desktop & Tablet)**:
+   - Mengatur daftar menu utama di bagian atas website untuk layar lebar/laptop.
+   - Tampilan bersih, terpisah murni dari menu mobile hamburger sehingga tidak membingungkan pengunjung desktop.
+2. **Menu Hamburger (Mobile Drawer Navigation)**:
+   - Mengatur menu khusus yang tampil ketika pengunjung menekan tombol hamburger (☰) di smartphone/layar sentuh.
+3. **Footer Navigation (Tautan Navigasi Platform)**:
+   - Mengatur tautan halaman penting di bagian bawah website (seperti Kebijakan Privasi, Syarat & Ketentuan, Sitemap XML, RSS Feed).
+4. **Setting Kategori Artikel Footer (Tautan Kategori Footer)**:
+   - Mengatur daftar kategori artikel interaktif di footer yang dapat diklik langsung oleh pengunjung untuk memfilter artikel berdasarkan kategori.
+
+**Fitur Navigation Builder:**
+- ⚡ **Preset 1-Klik**: Pilihan cepat menambahkan menu populer (Beranda, Kategori, Privacy, Sitemap, RSS, dll.).
+- ✏️ **Edit & Hapus**: Ubah Label dan URL langsung secara interaktif dengan tombol hapus (🗑️).
+- ⬆️⬇️ **Atur Urutan**: Geser posisi menu naik (↑) atau turun (↓).
+- 🧩 **Mode JSON Opsional**: Bebas berpindah ke editor JSON jika ingin menyalin/menempel struktur menu secara masal.
+
 ---
+
+### C. Jaminan Resiliensi & Notifikasi Admin
+- **Structured Array State**: Menggaransi semua tautan diproses sebagai struktur data yang valid.
+- **Notifikasi Berhasil**: Banner hijau mengonfirmasi bahwa data berhasil tersimpan ke Cloudflare D1 & `site_config.json`.
+- **Notifikasi Gagal & Retry**: Jika terjadi kendala jaringan/server, banner merah beserta tombol **"Coba Simpan Lagi"** akan muncul tanpa menghapus data yang sudah diketik.
+
+---
+
+### D. Panduan Portabilitas & Forking (Theme & Domain Independent)
+Aplikasi ini didesain agar mudah **difork** atau digunakan kembali untuk domain dan niche tema lain:
+1. **Ubah Niche & Domain**: Di Portal Admin -> Configs Situs, ubah `Nama Situs (site_name)`, `Tagline (site_tagline)`, `Deskripsi (site_description)`, dan `Domain Utama (site_domain)`.
+2. **Pencarian Dinamis**: Kolom pencarian otomatis menyesuaikan diri dengan nama situs tanpa teks hardcoded.
+3. **Sesuaikan Navigasi**: Gunakan Navigation Builder untuk mengganti tautan menu sesuai kategori niche baru Anda.
 ## ✍️ LANGKAH 4: Panduan Penulis — Mengisi Artikel & Gambar dari Unsplash.com
 
 Penulis artikel memiliki akses ke **Editor WYSIWYG Rich Editor** lengkap dengan AI Assistant, SEO Auditor, dan Pengelola Gambar.
