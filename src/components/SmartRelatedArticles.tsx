@@ -87,8 +87,8 @@ export default function SmartRelatedArticles({
               {post.featuredImage && (
                 <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-3 bg-slate-100 dark:bg-slate-800">
                   <img
-                    src={optimizeUnsplashUrl(post.featuredImage, 400)}
-                    srcSet={getUnsplashSrcSet(post.featuredImage, [300, 400, 600])}
+                    src={optimizeUnsplashUrl(post.featuredImage, 400, 65)}
+                    srcSet={getUnsplashSrcSet(post.featuredImage, [300, 400, 600], 65)}
                     sizes="(max-width: 640px) 100vw, 300px"
                     alt={post.title}
                     width={400}

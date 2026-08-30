@@ -171,8 +171,8 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0 min-h-[380px]">
             <div className="lg:col-span-7 relative aspect-[16/9] lg:aspect-none h-64 sm:h-72 lg:h-full min-h-[256px] lg:min-h-[380px] overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0">
               <img
-                src={optimizeUnsplashUrl(featuredPost.featuredImage, 700)}
-                srcSet={getUnsplashSrcSet(featuredPost.featuredImage, [400, 700, 1200])}
+                src={optimizeUnsplashUrl(featuredPost.featuredImage, 700, 65)}
+                srcSet={getUnsplashSrcSet(featuredPost.featuredImage, [400, 700], 65)}
                 sizes="(max-width: 1024px) 100vw, 700px"
                 alt={featuredPost.title}
                 width={700}
@@ -214,7 +214,7 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
               <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between min-h-[58px] shrink-0">
                 <div className="flex items-center gap-3 shrink-0">
                   <img
-                    src={getOptimizedAvatarUrl(featuredPost.authorAvatar, 100)}
+                    src={getOptimizedAvatarUrl(featuredPost.authorAvatar, 60, 60)}
                     alt={featuredPost.authorName}
                     width={36}
                     height={36}
@@ -326,9 +326,9 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                 <div>
                   <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                     <img
-                      src={optimizeUnsplashUrl(post.featuredImage, 600)}
-                      srcSet={getUnsplashSrcSet(post.featuredImage, [400, 600, 900])}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+                      src={optimizeUnsplashUrl(post.featuredImage, 600, 65)}
+                      srcSet={getUnsplashSrcSet(post.featuredImage, [400, 600], 65)}
+                      sizes="(max-width: 640px) 100vw, 400px"
                       alt={post.title}
                       width={600}
                       height={338}
@@ -369,7 +369,7 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                 <div className="p-5 pt-0 border-t border-slate-100 dark:border-slate-800/60 mt-2 flex items-center justify-between text-xs pt-4">
                   <div className="flex items-center gap-2">
                     <img
-                      src={getOptimizedAvatarUrl(post.authorAvatar, 80)}
+                      src={getOptimizedAvatarUrl(post.authorAvatar, 60, 60)}
                       alt={post.authorName}
                       width={24}
                       height={24}

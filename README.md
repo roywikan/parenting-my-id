@@ -336,3 +336,16 @@ Untuk memasukkan gambar di tengah-tengah teks tulisan artikel:
 3. **Automated `llms.txt` Generator**: Secara otomatis membuat & meng-update endpoint `/llms.txt` untuk optimasi keterbacaan oleh AI Search Engine (Perplexity, ChatGPT, Gemini).
 4. **Autolinks Engine**: Otomatis mengubah kata kunci tertentu di seluruh artikel menjadi internal link aktif tanpa perlu mengedit artikel satu per satu.
 5. **Histori Revisi & Autosave**: Menyimpan draf artikel dan 3 histori revisi terakhir untuk perlindungan data tulisan penulis.
+
+---
+
+## ⚡ Optimasi Performa & PageSpeed Insights
+
+Sistem ini dikonfigurasi secara khusus untuk mencapai skor tinggi pada **Google PageSpeed Insights / Lighthouse**:
+
+1. **Non-blocking CSS Preloading**: File CSS kritis dimuat secara asinkron (`<link rel="preload" as="style" onload="...">`) dengan fallback `<noscript>` untuk mengeliminasi *Render-Blocking Resources*.
+2. **Responsive Image Optimization (WebP/AVIF)**:
+   - Utilitas Unsplash dikompresi ke kualitas `q=65` dan dikonversi ke format `fm=webp` secara otomatis di CDN Edge.
+   - Menggunakan atribut `srcset` dengan ukuran kontainer yang presisi (`400w`, `600w`, `700w`) untuk mencegah pengunduhan gambar berlebih pada perangkat seluler.
+   - Avatar dikompresi secara ketat pada dimensi `w=60` & `q=60` (ukuran file < 2 KiB).
+3. **Pemuatan Asinkron & Defer Script**: Semua script JavaScript menggunakan atribut `defer` atau disuntikkan secara non-blocking di tingkat serverless Cloudflare Workers / Edge SSR.

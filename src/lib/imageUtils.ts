@@ -6,7 +6,7 @@
 export function optimizeUnsplashUrl(
   url: string | undefined | null,
   targetWidth = 600,
-  quality = 75,
+  quality = 65,
   format = 'webp',
   targetHeight?: number
 ): string {
@@ -26,7 +26,7 @@ export function optimizeUnsplashUrl(
       parsed.searchParams.delete('h');
     }
     return parsed.toString();
-  } catch (e) {
+  } catch {
     return url;
   }
 }
@@ -36,8 +36,8 @@ export function optimizeUnsplashUrl(
  */
 export function getUnsplashSrcSet(
   url: string | undefined | null,
-  widths: number[] = [400, 700, 1200],
-  quality = 75,
+  widths: number[] = [400, 600],
+  quality = 65,
   format = 'webp'
 ): string | undefined {
   if (!url || !url.includes('unsplash.com')) return undefined;
@@ -47,13 +47,14 @@ export function getUnsplashSrcSet(
 }
 
 /**
- * Helper for avatar images (small profile pictures ~24px-100px)
+ * Helper for avatar images (small profile pictures ~24px-80px)
  */
 export function getOptimizedAvatarUrl(
   url: string | undefined | null,
-  defaultWidth = 100,
+  defaultWidth = 60,
+  quality = 60,
   fallback = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'
 ): string {
   const targetUrl = url || fallback;
-  return optimizeUnsplashUrl(targetUrl, defaultWidth, 75, 'webp');
+  return optimizeUnsplashUrl(targetUrl, defaultWidth, quality, 'webp');
 }

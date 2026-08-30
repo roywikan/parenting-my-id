@@ -140,10 +140,38 @@ export function generateStaticFiles(customPosts) {
   return { llmsContent, sitemapContent };
 }
 
+/**
+ * Optimize dist/index.html post-build for non-blocking CSS preloading
+ */
+export function postBuildOptimizeDistHtml() {
+  const distHtmlPath = path.join(rootDir, 'dist', 'index.html');
+  if (!fs.existsSync(distHtmlPath)) {
+    console.log('[Post-Build Optimizer] dist/index.html not found, skipping.');
+    return;
+  }
+
+  let html = fs.readFileSync(distHtmlPath, 'utf-8');
+  const originalHtml = html;
+
+  // Convert render-blocking <link rel="stylesheet" ... href="/assets/index-....css"> to preloaded CSS
+  html = html.replace(
+    /<link rel="stylesheet"([^>]*?)href="(\/assets\/[^"]+\.css)"([^>]*?)>/gi,
+    '<link rel="preload" href="$2" as="style" onload="this.onload=null;this.rel=\'stylesheet\'"><noscript><link rel="stylesheet" href="$2"></noscript>'
+  );
+
+  if (html !== originalHtml) {
+    fs.writeFileSync(distHtmlPath, html, 'utf-8');
+    console.log('[Post-Build Optimizer] Successfully updated dist/index.html for non-blocking CSS rendering.');
+  }
+}
+
 // Execute generator if script is executed directly via `node scripts/generate-static-files.js`
 if (process.argv[1] && (process.argv[1].endsWith('generate-static-files.js') || process.argv[1].includes('generate-static-files'))) {
   try {
     generateStaticFiles();
+    if (process.argv.includes('postbuild')) {
+      postBuildOptimizeDistHtml();
+    }
     console.log('[Static Generator] Build static files generated successfully.');
   } catch (err) {
     console.error('[Static Generator] Failed to generate static files:', err);

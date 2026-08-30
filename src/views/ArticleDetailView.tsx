@@ -341,7 +341,7 @@ export default function ArticleDetailView({
             {/* Primary Author */}
             <div className="flex items-center gap-3">
               <img
-                src={getOptimizedAvatarUrl(post.authorAvatar, 100)}
+                src={getOptimizedAvatarUrl(post.authorAvatar, 60, 60)}
                 alt={post.authorName}
                 width={40}
                 height={40}
@@ -367,7 +367,7 @@ export default function ArticleDetailView({
                   {post.coAuthors.map((co) => (
                     <img
                       key={co.id}
-                      src={getOptimizedAvatarUrl(co.avatar, 80)}
+                      src={getOptimizedAvatarUrl(co.avatar, 60, 60)}
                       alt={co.name}
                       title={`${co.name} (${co.title || 'Co-Author'})`}
                       width={28}
@@ -406,8 +406,8 @@ export default function ArticleDetailView({
       {/* FEATURED IMAGE (LCP OPTIMIZED - ZERO CLS) */}
       <div className="w-full aspect-[16/9] max-h-[480px] rounded-3xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800">
         <img
-          src={optimizeUnsplashUrl(post.featuredImage, 700)}
-          srcSet={getUnsplashSrcSet(post.featuredImage, [400, 700, 1200])}
+          src={optimizeUnsplashUrl(post.featuredImage, 700, 65)}
+          srcSet={getUnsplashSrcSet(post.featuredImage, [400, 700], 65)}
           sizes="(max-width: 768px) 100vw, 700px"
           alt={post.title}
           width={700}
@@ -534,7 +534,7 @@ export default function ArticleDetailView({
         <div className="bg-gradient-to-br from-rose-50/80 via-white to-pink-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/90 rounded-3xl p-6 border border-rose-200/60 dark:border-slate-800 shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
             <img
-              src={getOptimizedAvatarUrl(post.authorAvatar, 120)}
+              src={getOptimizedAvatarUrl(post.authorAvatar, 80, 60)}
               alt={post.authorName}
               width={80}
               height={80}
@@ -613,7 +613,7 @@ export default function ArticleDetailView({
                   className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-start gap-3.5 shadow-2xs"
                 >
                   <img
-                    src={getOptimizedAvatarUrl(co.avatar, 100)}
+                    src={getOptimizedAvatarUrl(co.avatar, 60, 60)}
                     alt={co.name}
                     width={48}
                     height={48}

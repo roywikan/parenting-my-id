@@ -2,8 +2,8 @@ import { marked } from 'marked';
 
 function optimizeUnsplashUrl(
   url?: string | null,
-  targetWidth = 700,
-  quality = 75,
+  targetWidth = 600,
+  quality = 65,
   format = 'webp',
   targetHeight?: number
 ): string {
@@ -29,8 +29,8 @@ function optimizeUnsplashUrl(
 
 function getUnsplashSrcSet(
   url?: string | null,
-  widths = [400, 700, 1200],
-  quality = 75,
+  widths = [400, 700],
+  quality = 65,
   format = 'webp'
 ): string {
   if (!url || !url.includes('unsplash.com')) return '';
@@ -529,10 +529,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   };
 
   // Image Optimization for SSR HTML
-  const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 75, 'webp');
-  const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700, 1200], 75, 'webp');
-  const avatarImageSrc = optimizeUnsplashUrl(post.authorAvatar, 100, 75, 'webp');
-  const ogImageSrc = optimizeUnsplashUrl(post.featuredImage, 1200, 75, 'webp', 630);
+  const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 65, 'webp');
+  const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700], 65, 'webp');
+  const avatarImageSrc = optimizeUnsplashUrl(post.authorAvatar, 60, 60, 'webp');
+  const ogImageSrc = optimizeUnsplashUrl(post.featuredImage, 1200, 70, 'webp', 630);
 
   // Static HTML Content to inject into <div id="root">
   const preRenderedBody = `
@@ -672,6 +672,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   } else {
     finalHtml = finalHtml.replace('</head>', `${seoHeadTags}</head>`);
   }
+
+  // Optimize CSS loading (non-blocking style loading with preload fallback)
+  finalHtml = finalHtml.replace(
+    /<link rel="stylesheet"([^>]*?)href="(\/assets\/[^"]+\.css)"([^>]*?)>/gi,
+    '<link rel="preload" href="$2" as="style" onload="this.onload=null;this.rel=\'stylesheet\'"><noscript><link rel="stylesheet" href="$2"></noscript>'
+  );
 
   // Inject pre-rendered static HTML into <div id="root">
   const initialDataJson = JSON.stringify({ post, autolinks, siteConfig }).replace(/</g, '\\u003c');
