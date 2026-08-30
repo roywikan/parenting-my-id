@@ -9,6 +9,7 @@ import AutoTableOfContents from '../components/AutoTableOfContents';
 import SmartRelatedArticles from '../components/SmartRelatedArticles';
 import AdSlot from '../components/AdSlot';
 import { CusdisComments } from '../components/CusdisComments';
+import { optimizeUnsplashUrl, getUnsplashSrcSet, getOptimizedAvatarUrl } from '../lib/imageUtils';
 
 interface ArticleDetailViewProps {
   slug: string;
@@ -340,7 +341,7 @@ export default function ArticleDetailView({
             {/* Primary Author */}
             <div className="flex items-center gap-3">
               <img
-                src={post.authorAvatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80'}
+                src={getOptimizedAvatarUrl(post.authorAvatar, 100)}
                 alt={post.authorName}
                 width={40}
                 height={40}
@@ -366,7 +367,7 @@ export default function ArticleDetailView({
                   {post.coAuthors.map((co) => (
                     <img
                       key={co.id}
-                      src={co.avatar}
+                      src={getOptimizedAvatarUrl(co.avatar, 80)}
                       alt={co.name}
                       title={`${co.name} (${co.title || 'Co-Author'})`}
                       width={28}
@@ -405,10 +406,12 @@ export default function ArticleDetailView({
       {/* FEATURED IMAGE (LCP OPTIMIZED - ZERO CLS) */}
       <div className="w-full aspect-[16/9] max-h-[480px] rounded-3xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800">
         <img
-          src={post.featuredImage}
+          src={optimizeUnsplashUrl(post.featuredImage, 700)}
+          srcSet={getUnsplashSrcSet(post.featuredImage, [400, 700, 1200])}
+          sizes="(max-width: 768px) 100vw, 700px"
           alt={post.title}
-          width={1200}
-          height={675}
+          width={700}
+          height={394}
           fetchPriority="high"
           decoding="async"
           className="w-full h-full object-cover"
@@ -531,8 +534,11 @@ export default function ArticleDetailView({
         <div className="bg-gradient-to-br from-rose-50/80 via-white to-pink-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/90 rounded-3xl p-6 border border-rose-200/60 dark:border-slate-800 shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
             <img
-              src={post.authorAvatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80'}
+              src={getOptimizedAvatarUrl(post.authorAvatar, 120)}
               alt={post.authorName}
+              width={80}
+              height={80}
+              decoding="async"
               className="w-20 h-20 rounded-2xl object-cover border-2 border-rose-400 shadow-md shrink-0"
             />
             <div className="space-y-2 text-center sm:text-left flex-1">
@@ -607,8 +613,11 @@ export default function ArticleDetailView({
                   className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-start gap-3.5 shadow-2xs"
                 >
                   <img
-                    src={co.avatar}
+                    src={getOptimizedAvatarUrl(co.avatar, 100)}
                     alt={co.name}
+                    width={48}
+                    height={48}
+                    decoding="async"
                     className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
                   />
                   <div className="space-y-1 min-w-0 flex-1">

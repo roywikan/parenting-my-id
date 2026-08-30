@@ -194,7 +194,7 @@ Sitemap: ${siteUrl}/sitemap.xml
 
       const generatedSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       const postExcerpt = excerpt || contentMarkdown.slice(0, 150) + '...';
-      const image = featuredImage || 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=80';
+      const image = featuredImage || 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=700&q=75&fm=webp';
       const cat = category || 'Pola Asuh';
       const readMin = readTimeMinutes || Math.max(1, Math.ceil(contentMarkdown.split(' ').length / 200));
       const postStatus = status || 'draft';
@@ -635,7 +635,7 @@ Sitemap: ${siteUrl}/sitemap.xml
                   email: cleanEmail,
                   name: 'Admin Utama',
                   role: 'admin',
-                  avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
+                  avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=75&fm=webp',
                   bio: 'Administrator Utama Parenting.my.id'
                 },
                 token: `session_1_${Date.now()}`
@@ -656,7 +656,7 @@ Sitemap: ${siteUrl}/sitemap.xml
             email: 'admin@parenting.my.id',
             name: 'Dr. Ratna Sari, M.Psi',
             role: 'admin',
-            avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
+            avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=75&fm=webp',
             bio: 'Psikolog anak dan praktisi parenting terkemuka di Indonesia.'
           },
           token: `session_1_${Date.now()}`
@@ -669,7 +669,7 @@ Sitemap: ${siteUrl}/sitemap.xml
             email: 'penulis@parenting.my.id',
             name: 'Ahmad Zulkarnain, S.Ked',
             role: 'writer',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=75&fm=webp',
             bio: 'Edukator kesehatan anak dan spesialis gizi tumbuh kembang balita.'
           },
           token: `session_2_${Date.now()}`

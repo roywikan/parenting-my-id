@@ -1,5 +1,44 @@
 import { marked } from 'marked';
 
+function optimizeUnsplashUrl(
+  url?: string | null,
+  targetWidth = 700,
+  quality = 75,
+  format = 'webp',
+  targetHeight?: number
+): string {
+  if (!url) return '';
+  if (!url.includes('unsplash.com')) return url;
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.set('w', targetWidth.toString());
+    parsed.searchParams.set('q', quality.toString());
+    parsed.searchParams.set('auto', 'format');
+    parsed.searchParams.set('fit', 'crop');
+    parsed.searchParams.set('fm', format);
+    if (targetHeight) {
+      parsed.searchParams.set('h', targetHeight.toString());
+    } else {
+      parsed.searchParams.delete('h');
+    }
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+function getUnsplashSrcSet(
+  url?: string | null,
+  widths = [400, 700, 1200],
+  quality = 75,
+  format = 'webp'
+): string {
+  if (!url || !url.includes('unsplash.com')) return '';
+  return widths
+    .map((w) => `${optimizeUnsplashUrl(url, w, quality, format)} ${w}w`)
+    .join(', ');
+}
+
 interface Env {
   DB?: any;
   ASSETS: {
@@ -87,12 +126,12 @@ Untuk kelompok usia **balita**, penerapan komunikasi terbuka sangat efektif jika
 - **Libatkan dalam Keputusan Kecil:** Biarkan si kecil memilih baju atau menu bekal sekolahnya sendiri.
 - **Validasi Emosi:** Saat anak menangis atau marah, katakan *"Ibu tahu kamu kecewa, mari kita tenang dulu lalu cari solusinya bersama."*`,
     excerpt: 'Pola asuh demokratis menggabungkan kasih sayang, aturan yang konsisten, dan komunikasi terbuka. Simak strategi praktis penerapannya di rumah.',
-    featuredImage: 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=80',
+    featuredImage: 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=700&q=75&fm=webp',
     category: 'Pola Asuh',
     readTimeMinutes: 6,
     authorId: 1,
     authorName: 'Dr. Ratna Sari, M.Psi',
-    authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
+    authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=75&fm=webp',
     authorRole: 'admin',
     status: 'published',
     metaTitle: 'Panduan Lengkap Pola Asuh Demokratis Anak | Parenting.my.id',
@@ -137,12 +176,12 @@ Saat mendampingi si kecil bermain, beri kebebasan eksplorasi tanpa terlalu takut
 
 Jika anak sudah menunjukkan tanda-tanda kelelahan, istirahatlah dan pastikan kebutuhan **gizi anak** serta asupan nutrisi hariannya sudah terpenuhi dengan baik.`,
     excerpt: 'Temukan 5 ide permainan sensory play mudah dan hemat bahan untuk mengasah indera serta ketangkasan motorik balita di rumah.',
-    featuredImage: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=1200&q=80',
+    featuredImage: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=700&q=75&fm=webp',
     category: 'Tumbuh Kembang',
     readTimeMinutes: 4,
     authorId: 2,
     authorName: 'Ahmad Zulkarnain, S.Ked',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=75&fm=webp',
     authorRole: 'writer',
     status: 'published',
     metaTitle: '5 Aktivitas Sensory Play Melatih Motorik Balita | Parenting.my.id',
@@ -177,12 +216,12 @@ Memastikan **gizi anak** terpenuhi secara optimal mensyaratkan edukasi orang tua
 
 Ajak juga **balita** aktif bergerak lewat permainan ringan seperti **sensory play** untuk menjaga daya tahan tubuh dan kebugaran fisiknya.`,
     excerpt: 'Stunting berpengaruh besar pada kecerdasan anak. Pelajari langkah pencegahan stunting melalui pemberian ASI eksklusif dan MPASI tinggi protein.',
-    featuredImage: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=1200&q=80',
+    featuredImage: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=700&q=75&fm=webp',
     category: 'Kesehatan & Gizi',
     readTimeMinutes: 7,
     authorId: 1,
     authorName: 'Dr. Ratna Sari, M.Psi',
-    authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
+    authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=75&fm=webp',
     authorRole: 'admin',
     status: 'published',
     metaTitle: 'Cara Mencegah Stunting pada 1000 HPK Anak | Parenting.my.id',
@@ -489,6 +528,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     ],
   };
 
+  // Image Optimization for SSR HTML
+  const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 75, 'webp');
+  const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700, 1200], 75, 'webp');
+  const avatarImageSrc = optimizeUnsplashUrl(post.authorAvatar, 100, 75, 'webp');
+  const ogImageSrc = optimizeUnsplashUrl(post.featuredImage, 1200, 75, 'webp', 630);
+
   // Static HTML Content to inject into <div id="root">
   const preRenderedBody = `
     <div class="min-h-screen bg-slate-50 text-slate-900 font-sans">
@@ -535,7 +580,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           <!-- AUTHOR & PUBLISH DATE -->
           <div class="flex flex-wrap items-center justify-between gap-4 border-y border-slate-200 py-4 text-xs text-slate-600">
             <div class="flex items-center gap-3">
-              <img src="${post.authorAvatar}" alt="${escapeHtml(post.authorName || '')}" class="w-11 h-11 rounded-full object-cover border-2 border-rose-500 shadow-sm" />
+              <img src="${avatarImageSrc}" alt="${escapeHtml(post.authorName || '')}" width="44" height="44" decoding="async" class="w-11 h-11 rounded-full object-cover border-2 border-rose-500 shadow-sm" />
               <div>
                 <div class="font-extrabold text-sm text-slate-900">${escapeHtml(post.authorName || 'Dr. Ratna Sari, M.Psi')}</div>
                 <div class="text-slate-500">${post.authorRole === 'admin' ? 'Psikolog Anak & Tim Redaksi' : 'Penulis Konten Medis'}</div>
@@ -550,7 +595,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         <!-- FEATURED IMAGE (LCP OPTIMIZED - ZERO CLS) -->
         <div class="mb-10 w-full aspect-[16/9] max-h-[500px] rounded-3xl overflow-hidden shadow-md border border-slate-200 bg-slate-100">
-          <img src="${post.featuredImage}" alt="${escapeHtml(post.title)}" width="1200" height="675" fetchpriority="high" decoding="async" class="w-full h-full object-cover" />
+          <img src="${heroImageSrc}" ${heroSrcSet ? `srcset="${heroSrcSet}"` : ''} sizes="(max-width: 768px) 100vw, 700px" alt="${escapeHtml(post.title)}" width="700" height="394" fetchpriority="high" decoding="async" class="w-full h-full object-cover" />
         </div>
 
         <!-- RENDERED ARTICLE CONTENT HTML -->
@@ -568,7 +613,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         <!-- AUTHOR BIO BOX -->
         <div class="mt-10 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-start gap-4">
-          <img src="${post.authorAvatar}" alt="${escapeHtml(post.authorName || '')}" class="w-14 h-14 rounded-full object-cover border-2 border-rose-500" />
+          <img src="${avatarImageSrc}" alt="${escapeHtml(post.authorName || '')}" width="56" height="56" decoding="async" class="w-14 h-14 rounded-full object-cover border-2 border-rose-500" />
           <div class="space-y-1">
             <h4 class="font-black text-sm text-slate-900">${escapeHtml(post.authorName || 'Dr. Ratna Sari, M.Psi')}</h4>
             <p class="text-xs text-rose-600 font-bold">${post.authorRole === 'admin' ? 'Psikolog Anak & Tim Redaksi Utama' : 'Penulis Konten Kesehatan'}</p>
@@ -596,13 +641,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
     <link rel="canonical" href="${canonicalUrl}" />
-    <link rel="preload" as="image" href="${post.featuredImage}" fetchpriority="high" />
+    <link rel="preload" as="image" href="${heroImageSrc}" ${heroSrcSet ? `imagesrcset="${heroSrcSet}" imagesizes="(max-width: 768px) 100vw, 700px"` : ''} fetchpriority="high" />
 
     <!-- OpenGraph Meta Tags -->
     <meta property="og:site_name" content="Parenting.my.id" />
     <meta property="og:title" content="${escapeHtml(pageTitle)}" />
     <meta property="og:description" content="${escapeHtml(pageDesc)}" />
-    <meta property="og:image" content="${post.featuredImage}" />
+    <meta property="og:image" content="${ogImageSrc}" />
     <meta property="og:url" content="${canonicalUrl}" />
     <meta property="og:type" content="article" />
     <meta property="article:published_time" content="${post.createdAt}" />
@@ -612,7 +657,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(pageTitle)}" />
     <meta name="twitter:description" content="${escapeHtml(pageDesc)}" />
-    <meta name="twitter:image" content="${post.featuredImage}" />
+    <meta name="twitter:image" content="${ogImageSrc}" />
 
     <!-- Schema.org JSON-LD -->
     <script type="application/ld+json">${JSON.stringify(schemaArticle)}</script>

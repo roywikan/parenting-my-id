@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { optimizeUnsplashUrl } from '../lib/imageUtils';
 
 interface SEOProps {
   title: string;
@@ -59,10 +60,12 @@ export default function SEOHelper({
     updateMeta('meta[name="keywords"]', keywords.join(', '));
     updateMeta('meta[name="author"]', authorName);
 
+    const optimizedOgImage = optimizeUnsplashUrl(image, 1200, 75, 'webp', 630);
+
     // 3. OpenGraph Meta Tags
     updateMeta('meta[property="og:title"]', title);
     updateMeta('meta[property="og:description"]', description);
-    updateMeta('meta[property="og:image"]', image);
+    updateMeta('meta[property="og:image"]', optimizedOgImage);
     updateMeta('meta[property="og:type"]', type);
     updateMeta('meta[property="og:site_name"]', siteName);
     updateMeta('meta[property="og:url"]', canonicalUrl);
@@ -83,7 +86,7 @@ export default function SEOHelper({
     updateMeta('meta[name="twitter:card"]', 'summary_large_image');
     updateMeta('meta[name="twitter:title"]', title);
     updateMeta('meta[name="twitter:description"]', description);
-    updateMeta('meta[name="twitter:image"]', image);
+    updateMeta('meta[name="twitter:image"]', optimizedOgImage);
 
     // 5. Canonical Link & Alternate Hreflang Tags
     let canonicalEl = document.querySelector('link[rel="canonical"]');
