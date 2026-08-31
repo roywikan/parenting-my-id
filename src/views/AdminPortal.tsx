@@ -250,7 +250,7 @@ export default function AdminPortal({
   const [cfgPostsPerPage, setCfgPostsPerPage] = useState(siteConfig?.posts_per_page || 9);
   const [cfgEnableFeaturedPost, setCfgEnableFeaturedPost] = useState(siteConfig?.enable_featured_post ?? true);
   const [cfgPaginationType, setCfgPaginationType] = useState<'load_more' | 'infinite_scroll' | 'numbered'>(siteConfig?.pagination_type || 'load_more');
-  const [cfgCommentEngineMode, setCfgCommentEngineMode] = useState<'both' | 'native' | 'cusdis'>(siteConfig?.comment_engine_mode || 'both');
+  const [cfgCommentEngineMode, setCfgCommentEngineMode] = useState<'both' | 'native' | 'cusdis' | 'none'>(siteConfig?.comment_engine_mode || 'both');
 
   const [cfgShowSidebar, setCfgShowSidebar] = useState(siteConfig?.show_sidebar ?? true);
   const [cfgPopularPostsCount, setCfgPopularPostsCount] = useState(siteConfig?.popular_posts_count || 5);
@@ -461,7 +461,8 @@ export default function AdminPortal({
     cfgHeroTitle, cfgHeroSubtitle, cfgEnableAdsense, cfgAdsenseClientId,
     cfgAdsenseHeaderTop, cfgAdsenseArticleTop, cfgAdsenseArticleMiddle,
     cfgAdsenseArticleBottom, cfgAdsenseSidebar, cfgAdsenseStickyFooter,
-    cfgHeaderNavLinksArray, cfgHamburgerNavLinksArray, cfgFooterMenuLinksArray, cfgFooterCategoryLinksArray
+    cfgHeaderNavLinksArray, cfgHamburgerNavLinksArray, cfgFooterMenuLinksArray, cfgFooterCategoryLinksArray,
+    cfgCommentEngineMode, cfgPaginationType, cfgPostsPerPage, cfgEnableFeaturedPost, cfgShowSidebar
   ]);
 
   // Autofill Demo High-CTR AdSense Snippets
@@ -2476,7 +2477,7 @@ export default function AdminPortal({
                   Pilih mesin komentar yang aktif di bagian bawah setiap artikel: pasang salah satu saja (Native D1 / Cusdis) atau aktifkan keduanya sekaligus.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
                   {/* OPTION 1: BOTH */}
                   <div
                     onClick={() => setCfgCommentEngineMode('both')}
@@ -2555,6 +2556,33 @@ export default function AdminPortal({
                     </div>
                     <p className="text-[10.5px] text-slate-500 leading-snug">
                       Hanya widget komentar embed Cusdis pihak ketiga.
+                    </p>
+                  </div>
+
+                  {/* OPTION 4: NONE (DISABLED) */}
+                  <div
+                    onClick={() => setCfgCommentEngineMode('none')}
+                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                      cfgCommentEngineMode === 'none'
+                        ? 'border-rose-500 bg-white dark:bg-slate-900 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
+                        : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>🚫 Nonaktifkan (None)</span>
+                      </span>
+                      <input
+                        type="radio"
+                        name="comment_engine_mode"
+                        value="none"
+                        checked={cfgCommentEngineMode === 'none'}
+                        onChange={() => setCfgCommentEngineMode('none')}
+                        className="w-4 h-4 text-rose-600"
+                      />
+                    </div>
+                    <p className="text-[10.5px] text-slate-500 leading-snug">
+                      Tutup seluruh kolom komentar di semua artikel.
                     </p>
                   </div>
                 </div>
@@ -3042,7 +3070,7 @@ export default function AdminPortal({
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
               {/* OPTION 1: BOTH */}
               <div
                 onClick={() => setCfgCommentEngineMode('both')}
@@ -3121,6 +3149,33 @@ export default function AdminPortal({
                 </div>
                 <p className="text-[11px] text-slate-500 leading-snug">
                   Hanya widget diskusi Cusdis pihak ketiga yang tampil di bawah artikel.
+                </p>
+              </div>
+
+              {/* OPTION 4: NONE (DISABLED) */}
+              <div
+                onClick={() => setCfgCommentEngineMode('none')}
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                  cfgCommentEngineMode === 'none'
+                    ? 'border-rose-500 bg-rose-50/30 dark:bg-rose-950/20 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>🚫 Nonaktifkan (None)</span>
+                  </span>
+                  <input
+                    type="radio"
+                    name="comment_engine_mode_tab7"
+                    value="none"
+                    checked={cfgCommentEngineMode === 'none'}
+                    onChange={() => setCfgCommentEngineMode('none')}
+                    className="w-4 h-4 text-rose-600"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Tutup seluruh fitur dan kolom komentar di semua artikel website.
                 </p>
               </div>
             </div>
