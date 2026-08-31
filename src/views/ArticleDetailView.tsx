@@ -638,11 +638,12 @@ export default function ArticleDetailView({
         )}
       </div>
 
-      {/* CUSDIS COMMENTS SECTION */}
+      {/* CUSDIS / NATIVE COMMENTS SECTION */}
       <CusdisComments
         pageId={post.slug || String(post.id)}
         pageUrl={articleUrl}
         pageTitle={post.title}
+        engineMode={siteConfig?.comment_engine_mode || 'both'}
       />
 
       {/* SMART RELATED ARTICLES (AUTO RELEVANCE & INTERNAL LINK JUICE) */}

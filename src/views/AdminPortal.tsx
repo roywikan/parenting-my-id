@@ -12,6 +12,7 @@ import {
 import { generateSlug } from '../lib/autolink';
 import RichPostEditor from '../components/RichPostEditor';
 import NavigationBuilder, { PRESET_NAV_ITEMS } from '../components/NavigationBuilder';
+import { sanitizeAndOptimizeImageUrl } from '../lib/imageUtils';
 
 interface AdminPortalProps {
   currentUser: User | null;
@@ -249,6 +250,7 @@ export default function AdminPortal({
   const [cfgPostsPerPage, setCfgPostsPerPage] = useState(siteConfig?.posts_per_page || 9);
   const [cfgEnableFeaturedPost, setCfgEnableFeaturedPost] = useState(siteConfig?.enable_featured_post ?? true);
   const [cfgPaginationType, setCfgPaginationType] = useState<'load_more' | 'infinite_scroll' | 'numbered'>(siteConfig?.pagination_type || 'load_more');
+  const [cfgCommentEngineMode, setCfgCommentEngineMode] = useState<'both' | 'native' | 'cusdis'>(siteConfig?.comment_engine_mode || 'both');
 
   const [cfgShowSidebar, setCfgShowSidebar] = useState(siteConfig?.show_sidebar ?? true);
   const [cfgPopularPostsCount, setCfgPopularPostsCount] = useState(siteConfig?.popular_posts_count || 5);
@@ -348,6 +350,7 @@ export default function AdminPortal({
       setCfgPostsPerPage(siteConfig.posts_per_page || 9);
       setCfgEnableFeaturedPost(siteConfig.enable_featured_post ?? true);
       setCfgPaginationType(siteConfig.pagination_type || 'load_more');
+      setCfgCommentEngineMode(siteConfig.comment_engine_mode || 'both');
 
       setCfgShowSidebar(siteConfig.show_sidebar ?? true);
       setCfgPopularPostsCount(siteConfig.popular_posts_count || 5);
@@ -425,6 +428,7 @@ export default function AdminPortal({
       posts_per_page: Number(cfgPostsPerPage),
       enable_featured_post: cfgEnableFeaturedPost,
       pagination_type: cfgPaginationType,
+      comment_engine_mode: cfgCommentEngineMode,
       show_sidebar: cfgShowSidebar,
       popular_posts_count: Number(cfgPopularPostsCount),
       categories_widget_limit: Number(cfgCategoriesWidgetLimit),
@@ -554,6 +558,7 @@ export default function AdminPortal({
         posts_per_page: Number(cfgPostsPerPage),
         enable_featured_post: cfgEnableFeaturedPost,
         pagination_type: cfgPaginationType,
+        comment_engine_mode: cfgCommentEngineMode,
 
         show_sidebar: cfgShowSidebar,
         popular_posts_count: Number(cfgPopularPostsCount),
@@ -1470,7 +1475,7 @@ export default function AdminPortal({
                 <input
                   type="text"
                   value={wAvatar}
-                  onChange={(e) => setWAvatar(e.target.value)}
+                  onChange={(e) => setWAvatar(sanitizeAndOptimizeImageUrl(e.target.value, 'avatar'))}
                   placeholder="https://images.unsplash.com/photo-..."
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono"
                 />
@@ -1976,7 +1981,7 @@ export default function AdminPortal({
                   <input
                     type="text"
                     value={cfgSiteLogoUrl}
-                    onChange={(e) => setCfgSiteLogoUrl(e.target.value)}
+                    onChange={(e) => setCfgSiteLogoUrl(sanitizeAndOptimizeImageUrl(e.target.value, 'avatar'))}
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
                     placeholder="https://.../logo.png"
                   />
@@ -2130,7 +2135,7 @@ export default function AdminPortal({
                   <input
                     type="text"
                     value={cfgSeoDefaultOgImage}
-                    onChange={(e) => setCfgSeoDefaultOgImage(e.target.value)}
+                    onChange={(e) => setCfgSeoDefaultOgImage(sanitizeAndOptimizeImageUrl(e.target.value, 'og'))}
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
                   />
                 </div>
@@ -2451,6 +2456,107 @@ export default function AdminPortal({
                     />
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Tampilkan Artikel Pilihan (enable_featured_post)</span>
                   </label>
+                </div>
+              </div>
+
+              {/* PENGATURAN MESIN KOMENTAR (COMMENT ENGINE MODE) */}
+              <div className="p-4 rounded-2xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/50 space-y-3 mt-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                    <label className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+                      Pilihan Mesin Komentar Artikel (comment_engine_mode)
+                    </label>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold">
+                    Opsi Fleksibel
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                  Pilih mesin komentar yang aktif di bagian bawah setiap artikel: pasang salah satu saja (Native D1 / Cusdis) atau aktifkan keduanya sekaligus.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                  {/* OPTION 1: BOTH */}
+                  <div
+                    onClick={() => setCfgCommentEngineMode('both')}
+                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                      cfgCommentEngineMode === 'both'
+                        ? 'border-rose-500 bg-white dark:bg-slate-900 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
+                        : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>🔥 Keduanya (Both)</span>
+                      </span>
+                      <input
+                        type="radio"
+                        name="comment_engine_mode"
+                        value="both"
+                        checked={cfgCommentEngineMode === 'both'}
+                        onChange={() => setCfgCommentEngineMode('both')}
+                        className="w-4 h-4 text-rose-600"
+                      />
+                    </div>
+                    <p className="text-[10.5px] text-slate-500 leading-snug">
+                      Form internal Native (D1) + Widget Cusdis Embed aktif bersamaan.
+                    </p>
+                  </div>
+
+                  {/* OPTION 2: NATIVE ONLY */}
+                  <div
+                    onClick={() => setCfgCommentEngineMode('native')}
+                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                      cfgCommentEngineMode === 'native'
+                        ? 'border-rose-500 bg-white dark:bg-slate-900 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
+                        : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>⚡ Native D1 Saja</span>
+                      </span>
+                      <input
+                        type="radio"
+                        name="comment_engine_mode"
+                        value="native"
+                        checked={cfgCommentEngineMode === 'native'}
+                        onChange={() => setCfgCommentEngineMode('native')}
+                        className="w-4 h-4 text-rose-600"
+                      />
+                    </div>
+                    <p className="text-[10.5px] text-slate-500 leading-snug">
+                      Hanya form komentar bawaan website, data tersimpan di Cloudflare D1.
+                    </p>
+                  </div>
+
+                  {/* OPTION 3: CUSDIS ONLY */}
+                  <div
+                    onClick={() => setCfgCommentEngineMode('cusdis')}
+                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                      cfgCommentEngineMode === 'cusdis'
+                        ? 'border-rose-500 bg-white dark:bg-slate-900 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
+                        : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>💬 Cusdis Embed Saja</span>
+                      </span>
+                      <input
+                        type="radio"
+                        name="comment_engine_mode"
+                        value="cusdis"
+                        checked={cfgCommentEngineMode === 'cusdis'}
+                        onChange={() => setCfgCommentEngineMode('cusdis')}
+                        className="w-4 h-4 text-rose-600"
+                      />
+                    </div>
+                    <p className="text-[10.5px] text-slate-500 leading-snug">
+                      Hanya widget komentar embed Cusdis pihak ketiga.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2854,7 +2960,7 @@ export default function AdminPortal({
                 <input
                   type="text"
                   value={credAvatar}
-                  onChange={(e) => setCredAvatar(e.target.value)}
+                  onChange={(e) => setCredAvatar(sanitizeAndOptimizeImageUrl(e.target.value, 'avatar'))}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
                 />
               </div>
@@ -2891,6 +2997,135 @@ export default function AdminPortal({
       {/* ------------------------------------------------------------- */}
       {activeTab === 'comments' && (
         <div className="space-y-8">
+          {/* COMMENT ENGINE MODE SELECTION CARD */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                    Pilihan Mesin Komentar Website
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Pilih mesin komentar mana yang akan aktif di halaman artikel: pasang salah satu atau pasang keduanya.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!onSaveConfig || !siteConfig) return;
+                  setIsSavingConfig(true);
+                  await onSaveConfig({
+                    ...siteConfig,
+                    comment_engine_mode: cfgCommentEngineMode
+                  });
+                  setIsSavingConfig(false);
+                  setConfigSuccessMsg('✅ Mesin komentar berhasil diperbarui!');
+                  setTimeout(() => setConfigSuccessMsg(''), 3000);
+                }}
+                disabled={isSavingConfig}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md shadow-rose-500/20 flex items-center gap-2 transition-all self-start sm:self-auto disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isSavingConfig ? 'Menyimpan...' : 'Terapkan Pilihan'}</span>
+              </button>
+            </div>
+
+            {configSuccessMsg && (
+              <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{configSuccessMsg}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+              {/* OPTION 1: BOTH */}
+              <div
+                onClick={() => setCfgCommentEngineMode('both')}
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                  cfgCommentEngineMode === 'both'
+                    ? 'border-rose-500 bg-rose-50/30 dark:bg-rose-950/20 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>🔥 Keduanya Aktif (Both)</span>
+                  </span>
+                  <input
+                    type="radio"
+                    name="comment_engine_mode_tab7"
+                    value="both"
+                    checked={cfgCommentEngineMode === 'both'}
+                    onChange={() => setCfgCommentEngineMode('both')}
+                    className="w-4 h-4 text-rose-600"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Form komentar internal Native D1 + Widget Cusdis Embed aktif bersamaan di artikel.
+                </p>
+              </div>
+
+              {/* OPTION 2: NATIVE ONLY */}
+              <div
+                onClick={() => setCfgCommentEngineMode('native')}
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                  cfgCommentEngineMode === 'native'
+                    ? 'border-rose-500 bg-rose-50/30 dark:bg-rose-950/20 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>⚡ Hanya Native D1</span>
+                  </span>
+                  <input
+                    type="radio"
+                    name="comment_engine_mode_tab7"
+                    value="native"
+                    checked={cfgCommentEngineMode === 'native'}
+                    onChange={() => setCfgCommentEngineMode('native')}
+                    className="w-4 h-4 text-rose-600"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Hanya form komentar internal website, data tersimpan cepat & aman di Cloudflare D1.
+                </p>
+              </div>
+
+              {/* OPTION 3: CUSDIS ONLY */}
+              <div
+                onClick={() => setCfgCommentEngineMode('cusdis')}
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                  cfgCommentEngineMode === 'cusdis'
+                    ? 'border-rose-500 bg-rose-50/30 dark:bg-rose-950/20 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>💬 Hanya Cusdis Embed</span>
+                  </span>
+                  <input
+                    type="radio"
+                    name="comment_engine_mode_tab7"
+                    value="cusdis"
+                    checked={cfgCommentEngineMode === 'cusdis'}
+                    onChange={() => setCfgCommentEngineMode('cusdis')}
+                    className="w-4 h-4 text-rose-600"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Hanya widget diskusi Cusdis pihak ketiga yang tampil di bawah artikel.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* CUSDIS WEBHOOK CONFIG & INSTRUCTIONS BOX */}
           <div className="bg-gradient-to-br from-slate-900 via-rose-950 to-slate-900 text-white p-6 sm:p-8 rounded-3xl border border-rose-800/80 shadow-xl space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

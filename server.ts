@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
-import { generateStaticFiles } from './scripts/generate-static-files.js';
+import { generateStaticFiles, generateFeedXml, generateLlmsTxt, parseFeedXmlItems } from './scripts/generate-static-files.js';
 
 dotenv.config();
 
@@ -515,10 +515,11 @@ async function commitFileToGitHub(filePath: string, contentStr: string, commitMe
 
 async function triggerStaticFilesGeneratorAndCommit(posts: any[]) {
   try {
-    const { llmsContent, sitemapContent } = generateStaticFiles(posts);
+    const { feedContent, llmsContent, sitemapContent } = generateStaticFiles(posts);
 
     if (process.env.GITHUB_TOKEN && process.env.GITHUB_OWNER && process.env.GITHUB_REPO) {
-      console.log('[Auto-Commit] Committing updated llms.txt and sitemap.xml to GitHub...');
+      console.log('[Auto-Commit] Committing updated feed.xml, llms.txt, and sitemap.xml to GitHub...');
+      commitFileToGitHub('public/feed.xml', feedContent, 'auto-update: sync feed.xml via CMS');
       commitFileToGitHub('public/llms.txt', llmsContent, 'auto-update: sync llms.txt via CMS');
       commitFileToGitHub('public/sitemap.xml', sitemapContent, 'auto-update: sync sitemap.xml via CMS');
     }
@@ -953,59 +954,21 @@ app.get('/sitemap.xml', (req, res) => {
 });
 
 
-// 7. DYNAMIC RSS FEED.XML
-app.get('/feed.xml', (req, res) => {
-  const siteUrl = 'https://parenting.my.id';
-  const publishedPosts = mockPosts.filter((p) => p.status === 'published');
-
-  const items = publishedPosts
-    .map(
-      (p) => `
-    <item>
-      <title><![CDATA[${p.title}]]></title>
-      <link>${siteUrl}/baca/${p.slug}</link>
-      <guid>${siteUrl}/baca/${p.slug}</guid>
-      <description><![CDATA[${p.excerpt}]]></description>
-      <pubDate>${new Date(p.createdAt).toUTCString()}</pubDate>
-    </item>`
-    )
-    .join('');
-
-  const rss = `<?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0">
-  <channel>
-    <title>Parenting.my.id - Edukasi &amp; Pola Asuh Anak Modern</title>
-    <link>${siteUrl}</link>
-    <description>Portal artikel parenting, gizi anak, stimulasi balita, dan pencegahan stunting di Indonesia.</description>
-    <language>id-id</language>
-    ${items}
-  </channel>
-</rss>`;
+// 7. DYNAMIC RSS FEED.XML & RSS.XML
+app.get(['/feed.xml', '/rss.xml'], (req, res) => {
+  const rss = generateFeedXml(mockPosts);
 
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
-  res.status(200).send(rss.trim());
+  res.status(200).send(rss);
 });
 
 
-// 7.A. DYNAMIC LLMS.TXT ENDPOINT by GEMINI AI
+// 7.A. DYNAMIC LLMS.TXT ENDPOINT (SYNCHRONIZED WITH FEED.XML ITEMS)
 app.get('/llms.txt', (req, res) => {
-  const siteUrl = 'https://parenting.my.id';
-  const publishedPosts = mockPosts.filter((p) => p.status === 'published');
-
-  const articleLinks = publishedPosts
-    .map((p) => `* [${p.title}](${siteUrl}/baca/${p.slug}): ${p.excerpt}`)
-    .join('\n');
-
-  const content = `# Parenting.my.id
-
-> Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.
-
-## Artikel Terkait & Panduan Utama
-
-${articleLinks}
-`.trim();
+  const feedXmlContent = generateFeedXml(mockPosts);
+  const content = generateLlmsTxt(mockPosts, feedXmlContent);
 
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
