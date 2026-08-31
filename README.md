@@ -277,6 +277,17 @@ Aplikasi ini didesain agar mudah **difork** atau digunakan kembali untuk domain 
 1. **Ubah Niche & Domain**: Di Portal Admin -> Configs Situs, ubah `Nama Situs (site_name)`, `Tagline (site_tagline)`, `Deskripsi (site_description)`, dan `Domain Utama (site_domain)`.
 2. **Pencarian Dinamis**: Kolom pencarian otomatis menyesuaikan diri dengan nama situs tanpa teks hardcoded.
 3. **Sesuaikan Navigasi**: Gunakan Navigation Builder untuk mengganti tautan menu sesuai kategori niche baru Anda.
+
+---
+
+### E. Pengaturan Mesin Komentar (Comment Engine Modes)
+Portal Admin menyediakan 4 opsi fleksibel untuk pengaturan kolom komentar artikel (`comment_engine_mode`):
+1. **🔥 Keduanya Aktif (`both`)**: Form komentar internal Native (D1) dan Widget Cusdis Embed aktif bersamaan, dilengkapi tombol *switcher* interaktif bagi pembaca.
+2. **⚡ Native D1 Saja (`native`)**: Menggunakan form komentar bawaan website yang cepat, aman dengan Anti-XSS, dan tersimpan langsung di tabel SQL `comments` Cloudflare D1.
+3. **💬 Cusdis Embed Saja (`cusdis`)**: Hanya menampilkan widget komentar embed Cusdis pihak ketiga.
+4. **🚫 Nonaktifkan (`none`)**: Menutup kolom komentar secara menyeluruh di semua artikel.
+
+*Catatan Integrasi Webhook Cusdis:* Tersedia endpoint webhook `/api/webhooks/cusdis` yang secara otomatis menyinkronkan komentar baru dari Cusdis ke database Cloudflare D1 sebagai backup data.
 ## ✍️ LANGKAH 4: Panduan Penulis — Mengisi Artikel & Gambar dari Unsplash.com
 
 Penulis artikel memiliki akses ke **Editor WYSIWYG Rich Editor** lengkap dengan AI Assistant, SEO Auditor, dan Pengelola Gambar.
