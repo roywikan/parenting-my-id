@@ -81,6 +81,8 @@ export interface SiteConfig {
   font_size_scale?: 'small' | 'normal' | 'large' | 'xlarge';
   age_accessibility_preset?: '18-28' | '29-38' | '39-48' | '49-58';
   header_badge_text?: string;
+  show_header_badge?: boolean;
+  show_edge_badge?: boolean;
   hero_badge_text?: string;
   autolink_ticker_label?: string;
   footer_autolink_label?: string;

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
-import { generateStaticFiles, generateFeedXml, generateLlmsTxt, parseFeedXmlItems } from './scripts/generate-static-files.js';
+import { generateStaticFiles, generateFeedXml, generateLlmsTxt, generateLlmsFullTxt, parseFeedXmlItems } from './scripts/generate-static-files.js';
 
 dotenv.config();
 
@@ -965,10 +965,19 @@ app.get(['/feed.xml', '/rss.xml'], (req, res) => {
 });
 
 
-// 7.A. DYNAMIC LLMS.TXT ENDPOINT (SYNCHRONIZED WITH FEED.XML ITEMS)
+// 7.A. DYNAMIC LLMS.TXT & LLMS-FULL.TXT ENDPOINTS (SYNCHRONIZED WITH FEED.XML ITEMS)
 app.get('/llms.txt', (req, res) => {
   const feedXmlContent = generateFeedXml(mockPosts);
   const content = generateLlmsTxt(mockPosts, feedXmlContent);
+
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.status(200).send(content);
+});
+
+app.get('/llms-full.txt', (req, res) => {
+  const content = generateLlmsFullTxt(mockPosts);
 
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');

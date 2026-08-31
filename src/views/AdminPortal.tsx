@@ -187,7 +187,8 @@ export default function AdminPortal({
   const [cfgFontSizeScale, setCfgFontSizeScale] = useState<'small'|'normal'|'large'|'xlarge'>(siteConfig?.font_size_scale || 'normal');
   const [cfgFontDensityScale, setCfgFontDensityScale] = useState<'compact'|'standard'|'spacious'>(siteConfig?.font_density_scale || 'standard');
   const [cfgAgeAccessibilityPreset, setCfgAgeAccessibilityPreset] = useState<'18-28'|'29-38'|'39-48'|'49-58'>(siteConfig?.age_accessibility_preset || '29-38');
-  const [cfgHeaderBadgeText, setCfgHeaderBadgeText] = useState(siteConfig?.header_badge_text || 'Beta v1.0');
+  const [cfgHeaderBadgeText, setCfgHeaderBadgeText] = useState(siteConfig?.header_badge_text || 'Cloudflare D1 Edge Engine');
+  const [cfgShowHeaderBadge, setCfgShowHeaderBadge] = useState<boolean>(siteConfig?.show_header_badge ?? siteConfig?.show_edge_badge ?? true);
   const [cfgHeroBadgeText, setCfgHeroBadgeText] = useState(siteConfig?.hero_badge_text || 'Portal Nomor 1');
   const [cfgAutolinkTickerLabel, setCfgAutolinkTickerLabel] = useState(siteConfig?.autolink_ticker_label || 'Trending:');
   const [cfgFooterAutolinkLabel, setCfgFooterAutolinkLabel] = useState(siteConfig?.footer_autolink_label || 'Tautan Populer');
@@ -378,6 +379,7 @@ export default function AdminPortal({
 
       setCfgSiteDomain(siteConfig.site_domain || 'parenting.my.id');
       setCfgHeaderBadgeText(siteConfig.header_badge_text || 'Cloudflare D1 Edge Engine');
+      setCfgShowHeaderBadge(siteConfig.show_header_badge ?? siteConfig.show_edge_badge ?? true);
       setCfgMobileAdminBtnLabel(siteConfig.mobile_admin_btn_label || 'Portal Admin & Editor');
       setCfgMobileShowLoggedUsername(siteConfig.mobile_show_logged_username ?? false);
       setCfgHeroBadgeText(siteConfig.hero_badge_text || 'Portal Nomor 1');
@@ -407,6 +409,8 @@ export default function AdminPortal({
         font_density_scale: cfgFontDensityScale,
         age_accessibility_preset: cfgAgeAccessibilityPreset,
         header_badge_text: cfgHeaderBadgeText,
+        show_header_badge: cfgShowHeaderBadge,
+        show_edge_badge: cfgShowHeaderBadge,
         hero_badge_text: cfgHeroBadgeText,
         autolink_ticker_label: cfgAutolinkTickerLabel,
         footer_autolink_label: cfgFooterAutolinkLabel,
@@ -537,6 +541,8 @@ export default function AdminPortal({
         font_density_scale: cfgFontDensityScale,
         age_accessibility_preset: cfgAgeAccessibilityPreset,
         header_badge_text: cfgHeaderBadgeText,
+        show_header_badge: cfgShowHeaderBadge,
+        show_edge_badge: cfgShowHeaderBadge,
         hero_badge_text: cfgHeroBadgeText,
         autolink_ticker_label: cfgAutolinkTickerLabel,
         footer_autolink_label: cfgFooterAutolinkLabel,
@@ -1931,16 +1937,35 @@ export default function AdminPortal({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Teks Badge Samping Logo Header (header_badge_text)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Teks Badge Samping Logo Header (header_badge_text)
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cfgShowHeaderBadge}
+                        onChange={(e) => setCfgShowHeaderBadge(e.target.checked)}
+                        className="w-3.5 h-3.5 text-rose-600 rounded focus:ring-rose-500"
+                      />
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                        Tampilkan Badge
+                      </span>
+                    </label>
+                  </div>
                   <input
                     type="text"
                     value={cfgHeaderBadgeText}
                     onChange={(e) => setCfgHeaderBadgeText(e.target.value)}
                     placeholder="Cloudflare D1 Edge Engine"
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                    disabled={!cfgShowHeaderBadge}
+                    className={`w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500 ${!cfgShowHeaderBadge ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    {cfgShowHeaderBadge
+                      ? '✓ Badge `<span>` "Cloudflare D1 Edge Engine" akan ditampilkan di samping logo header.'
+                      : '✗ Badge `<span>` "Cloudflare D1 Edge Engine" disembunyikan dari header.'}
+                  </p>
                 </div>
 
                 <div>

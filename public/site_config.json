@@ -9,6 +9,8 @@
   "font_density_scale": "standard",
   "age_accessibility_preset": "29-38",
   "header_badge_text": "Cloudflare D1 Edge Engine",
+  "show_header_badge": true,
+  "show_edge_badge": true,
   "hero_badge_text": "Portal Nomor 1",
   "autolink_ticker_label": "Topik Trending:",
   "footer_autolink_label": "Tautan Populer",
