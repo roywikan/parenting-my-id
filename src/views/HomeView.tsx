@@ -1,9 +1,18 @@
 import { useState, useMemo } from 'react';
 import { Post, AutoLink, SiteConfig } from '../types';
-import { Search, Clock, Eye, Sparkles, ArrowRight, ShieldCheck, Zap, BookOpen, Tag } from 'lucide-react';
 import SEOHelper from '../components/SEOHelper';
-import AdSlot from '../components/AdSlot';
-import { optimizeUnsplashUrl, getUnsplashSrcSet, getOptimizedAvatarUrl } from '../lib/imageUtils';
+
+// Import all Layout Modes
+import DefaultHomeLayout from '../components/home_layouts/DefaultHomeLayout';
+import EventHomeLayout from '../components/home_layouts/EventHomeLayout';
+import CampaignHomeLayout from '../components/home_layouts/CampaignHomeLayout';
+import MicrositeHomeLayout from '../components/home_layouts/MicrositeHomeLayout';
+import PortfolioHomeLayout from '../components/home_layouts/PortfolioHomeLayout';
+import PersonalBrandingHomeLayout from '../components/home_layouts/PersonalBrandingHomeLayout';
+import CorporateHomeLayout from '../components/home_layouts/CorporateHomeLayout';
+import ProductLandingHomeLayout from '../components/home_layouts/ProductLandingHomeLayout';
+import ClassifiedAdsHomeLayout from '../components/home_layouts/ClassifiedAdsHomeLayout';
+import KnowledgeBaseHomeLayout from '../components/home_layouts/KnowledgeBaseHomeLayout';
 
 interface HomeViewProps {
   posts: Post[];
@@ -14,7 +23,14 @@ interface HomeViewProps {
   siteConfig?: SiteConfig;
 }
 
-export default function HomeView({ posts, autolinks, onSelectPost, selectedCategory: propSelectedCategory, onSelectCategory, siteConfig }: HomeViewProps) {
+export default function HomeView({
+  posts,
+  autolinks,
+  onSelectPost,
+  selectedCategory: propSelectedCategory,
+  onSelectCategory,
+  siteConfig,
+}: HomeViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [internalCategory, setInternalCategory] = useState<string>('Semua');
 
@@ -26,12 +42,6 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
       onSelectCategory(cat);
     }
   };
-
-  const showHero = siteConfig?.show_hero_section ?? true;
-  const heroTitle = siteConfig?.hero_title || 'Panduan Pengasuhan Anak Terpercaya';
-  const heroSubtitle = siteConfig?.hero_subtitle || 'Temukan artikel, tips nutrisi, dan edukasi tumbuh kembang anak untuk orang tua modern.';
-  const heroCtaText = siteConfig?.hero_cta_text || 'Jelajahi Artikel';
-  const heroCtaLink = siteConfig?.hero_cta_link || '#artikel-terbaru';
 
   const isFilteredCategory = activeCategory !== 'Semua';
   const metaTitle = isFilteredCategory
@@ -46,10 +56,8 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
     return posts.filter((p) => p.status === 'published');
   }, [posts]);
 
-  // Categories list
   const categories = ['Semua', 'Pola Asuh', 'Tumbuh Kembang', 'Kesehatan & Gizi', 'Balita'];
 
-  // Filtered posts
   const filteredPosts = useMemo(() => {
     return publishedPosts.filter((post) => {
       const matchesSearch =
@@ -59,341 +67,124 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
       
       const targetCat = activeCategory.toLowerCase();
       const matchesCategory =
-        activeCategory === 'Semua' ||
-        post.category.toLowerCase() === targetCat ||
-        post.tags.toLowerCase().includes(targetCat);
+        targetCat === 'semua' ||
+        post.category.toLowerCase().includes(targetCat) ||
+        (targetCat === 'kesehatan & gizi' && (post.category.toLowerCase().includes('kesehatan') || post.category.toLowerCase().includes('gizi'))) ||
+        (targetCat === 'tumbuh kembang' && post.category.toLowerCase().includes('tumbuh'));
 
       return matchesSearch && matchesCategory;
     });
   }, [publishedPosts, searchQuery, activeCategory]);
 
-  const featuredPost = publishedPosts[0];
-  const regularPosts = filteredPosts.length > 0 ? (activeCategory === 'Semua' && !searchQuery ? filteredPosts.slice(1) : filteredPosts) : [];
+  const displayMode = siteConfig?.homepage_display_mode || 'default';
+
+  const renderLayout = () => {
+    switch (displayMode) {
+      case 'event':
+        return (
+          <EventHomeLayout
+            posts={publishedPosts}
+            onSelectPost={onSelectPost}
+            siteConfig={siteConfig}
+          />
+        );
+      case 'campaign':
+        return (
+          <CampaignHomeLayout
+            posts={publishedPosts}
+            onSelectPost={onSelectPost}
+            siteConfig={siteConfig}
+          />
+        );
+      case 'microsite':
+        return (
+          <MicrositeHomeLayout
+            posts={publishedPosts}
+            onSelectPost={onSelectPost}
+            siteConfig={siteConfig}
+          />
+        );
+      case 'portfolio':
+        return (
+          <PortfolioHomeLayout
+            posts={publishedPosts}
+            onSelectPost={onSelectPost}
+            siteConfig={siteConfig}
+          />
+        );
+      case 'personal_branding':
+        return (
+          <PersonalBrandingHomeLayout
+            posts={publishedPosts}
+            onSelectPost={onSelectPost}
+            siteConfig={siteConfig}
+          />
+        );
+      case 'corporate':
+        return (
+          <CorporateHomeLayout
+            posts={publishedPosts}
+            onSelectPost={onSelectPost}
+            siteConfig={siteConfig}
+          />
+        );
+      case 'product_landing':
+        return (
+          <ProductLandingHomeLayout
+            posts={publishedPosts}
+            onSelectPost={onSelectPost}
+            siteConfig={siteConfig}
+          />
+        );
+      case 'classified_ads':
+        return (
+          <ClassifiedAdsHomeLayout
+            posts={publishedPosts}
+            onSelectPost={onSelectPost}
+            siteConfig={siteConfig}
+          />
+        );
+      case 'knowledge_base':
+        return (
+          <KnowledgeBaseHomeLayout
+            posts={publishedPosts}
+            onSelectPost={onSelectPost}
+            siteConfig={siteConfig}
+          />
+        );
+      case 'default':
+      default:
+        return (
+          <DefaultHomeLayout
+            posts={posts}
+            autolinks={autolinks}
+            onSelectPost={onSelectPost}
+            selectedCategory={activeCategory}
+            onSelectCategory={handleCategoryChange}
+            siteConfig={siteConfig}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            filteredPosts={filteredPosts}
+            categories={categories}
+          />
+        );
+    }
+  };
 
   return (
-    <div className="space-y-12 pb-16">
+    <div>
       <SEOHelper
         title={metaTitle}
         description={metaDesc}
-        image={ogImage}
+        ogImage={ogImage}
+        canonicalUrl={typeof window !== 'undefined' ? window.location.href : 'https://parenting.my.id/'}
+        articleData={{
+          type: 'website',
+          siteName: siteConfig?.site_name || 'Parenting.my.id',
+          locale: 'id_ID',
+        }}
       />
-
-      {/* HERO BANNER SECTION */}
-      {showHero && (
-        <section className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-500/15 relative overflow-hidden">
-          <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="space-y-3 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-rose-100 border border-white/20">
-                <Zap className="w-3.5 h-3.5 text-amber-300 fill-current" />
-                <span>Cloudflare D1 Edge Architecture • TTFB &lt; 20ms</span>
-              </div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                {heroTitle}
-              </h1>
-              <p className="text-rose-100 text-sm sm:text-base leading-relaxed">
-                {heroSubtitle}
-              </p>
-              {heroCtaText && (
-                <div className="pt-2">
-                  <a
-                    href={heroCtaLink}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-rose-900 font-black text-xs shadow-lg hover:bg-rose-50 transition-all hover:scale-105"
-                  >
-                    <span>{heroCtaText}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* PERFORMANCE METRICS BOX (CUSTOMIZABLE BY ADMIN) */}
-            {siteConfig?.show_performance_box !== false && (
-              <div className="grid grid-cols-3 gap-3 bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-center w-full md:w-auto shrink-0">
-                <div>
-                  <div className="text-xl sm:text-2xl font-black text-emerald-400">
-                    {siteConfig?.metric1_value ?? '99+'}
-                  </div>
-                  <div className="text-[10px] text-rose-200 uppercase font-semibold">
-                    {siteConfig?.metric1_label ?? 'Kecepatan'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xl sm:text-2xl font-black text-emerald-400">
-                    {siteConfig?.metric2_value ?? '100'}
-                  </div>
-                  <div className="text-[10px] text-rose-200 uppercase font-semibold">
-                    {siteConfig?.metric2_label ?? 'Kualitas'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xl sm:text-2xl font-black text-emerald-400">
-                    {siteConfig?.metric3_value ?? '0ms'}
-                  </div>
-                  <div className="text-[10px] text-rose-200 uppercase font-semibold">
-                    {siteConfig?.metric3_label ?? 'Respon Delay'}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* TRENDING TOPICS TICKER */}
-      {autolinks.length > 0 && (
-        <div className="bg-rose-50/70 dark:bg-slate-800/60 border border-rose-200 dark:border-slate-700/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 min-h-[60px]">
-          <div className="flex items-center gap-1.5 text-xs font-black text-rose-800 dark:text-rose-300 shrink-0 uppercase tracking-wide">
-            <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
-            <span>{siteConfig?.autolink_ticker_label || 'Topik Trending:'}</span>
-          </div>
-          <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-none min-h-[36px]">
-            {autolinks.map((link) => (
-              <button
-                key={link.id}
-                onClick={() => {
-                  const targetSlug = link.targetUrl.split('/').pop() || '';
-                  if (targetSlug) onSelectPost(targetSlug);
-                }}
-                className="h-[32px] px-3 py-1 rounded-lg bg-white dark:bg-slate-900 border border-rose-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 hover:border-rose-500 hover:text-rose-700 dark:hover:text-rose-300 transition-all shadow-2xs font-bold inline-flex items-center gap-1 group shrink-0 whitespace-nowrap leading-none"
-              >
-                <span>#{link.keyword}</span>
-                <span className="text-[10px] text-rose-700 dark:text-rose-300 font-black group-hover:translate-x-0.5 transition-transform">↗</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* FEATURED POST (HERO ITEM - FIXED ZERO-CLS CONTAINER) */}
-      {featuredPost && !searchQuery && activeCategory === 'Semua' && (
-        <section
-          className="group cursor-pointer h-auto lg:h-[420px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900"
-          onClick={() => onSelectPost(featuredPost.slug)}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 h-auto lg:h-[420px] w-full overflow-hidden">
-            {/* HERO IMAGE CONTAINER (LOCKED 16:9 ON MOBILE, FIXED 420px ON DESKTOP) */}
-            <div className="lg:col-span-7 relative aspect-[16/9] lg:aspect-auto h-64 sm:h-72 lg:h-[420px] w-full overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0">
-              <img
-                src={optimizeUnsplashUrl(featuredPost.featuredImage, 700, 55)}
-                srcSet={getUnsplashSrcSet(featuredPost.featuredImage, [400, 700], 55)}
-                sizes="(max-width: 1024px) 100vw, 700px"
-                alt={featuredPost.title}
-                width={700}
-                height={394}
-                fetchPriority="high"
-                decoding="async"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute top-4 left-4 min-h-[28px] flex items-center">
-                <span className="inline-flex items-center px-3 py-1 rounded-full bg-rose-800 text-white text-xs font-black shadow-md uppercase tracking-wider leading-none">
-                  UTAMA • {featuredPost.category}
-                </span>
-              </div>
-            </div>
-
-            {/* HERO CONTENT CONTAINER (LOCKED DESKTOP HEIGHT WITH ZERO JUMP) */}
-            <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between h-auto lg:h-[420px] overflow-hidden">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 font-semibold shrink-0 min-h-[20px]">
-                  <span className="flex items-center gap-1 font-bold">
-                    <Clock className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
-                    {featuredPost.readTimeMinutes} menit baca
-                  </span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1 font-bold">
-                    <Eye className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
-                    {featuredPost.views} pembaca
-                  </span>
-                </div>
-
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white group-hover:text-rose-700 dark:group-hover:text-rose-400 transition-colors leading-snug">
-                  {featuredPost.title}
-                </h2>
-
-                <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed line-clamp-3 min-h-[3.75rem] sm:min-h-[4.5rem]">
-                  {featuredPost.excerpt}
-                </p>
-              </div>
-
-              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between min-h-[58px] shrink-0">
-                <div className="flex items-center gap-3 shrink-0">
-                  <img
-                    src={getOptimizedAvatarUrl(featuredPost.authorAvatar, 60, 60)}
-                    alt={featuredPost.authorName}
-                    width={36}
-                    height={36}
-                    decoding="async"
-                    className="w-9 h-9 rounded-full object-cover border border-rose-300 shrink-0"
-                  />
-                  <div className="shrink-0">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">
-                      {featuredPost.authorName}
-                    </div>
-                    <div className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold">Tim Pakar Parenting</div>
-                  </div>
-                </div>
-
-                <span className="inline-flex items-center gap-1 text-xs font-black text-rose-800 dark:text-rose-300 group-hover:translate-x-1 transition-transform shrink-0">
-                  Baca Selengkapnya
-                  <ArrowRight className="w-4 h-4 shrink-0" />
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* SEARCH BAR & CATEGORIES */}
-      <div className="space-y-4 pt-4">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          
-          {/* SEARCH INPUT */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={`Cari artikel atau kata kunci di ${siteConfig?.site_name || 'website'}...`}
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500 transition-all shadow-2xs"
-            />
-          </div>
-
-          {/* CATEGORY PILLS */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => handleCategoryChange(cat)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all ${
-                  activeCategory === cat
-                    ? 'bg-rose-700 text-white shadow-sm shadow-rose-500/20'
-                    : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:border-rose-500'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ARTICLES GRID */}
-      <section className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-rose-500" />
-            <span>
-              {searchQuery
-                ? `Hasil Pencarian ("${searchQuery}")`
-                : activeCategory === 'Semua'
-                ? 'Daftar Artikel Terbaru'
-                : `Kategori: ${activeCategory}`}
-            </span>
-          </h2>
-          <span className="text-xs text-slate-700 dark:text-slate-300 font-bold">
-            {regularPosts.length} Artikel ditemukan
-          </span>
-        </div>
-
-        {/* SIDEBAR / GRID AD SLOT */}
-        <AdSlot
-          code={siteConfig?.adsense_sidebar}
-          enableAdsense={siteConfig?.enable_adsense}
-          slotLabel="SIDEBAR / IN-FEED AD (HIGH CTR)"
-        />
-
-        {regularPosts.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 border border-slate-200 dark:border-slate-800 text-center space-y-3">
-            <Tag className="w-10 h-10 text-rose-500 mx-auto opacity-80" />
-            <p className="text-slate-800 dark:text-slate-200 font-semibold">
-              Tidak ada artikel yang cocok dengan pencarian Anda.
-            </p>
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                handleCategoryChange('Semua');
-              }}
-              className="text-xs text-rose-800 dark:text-rose-300 font-black underline hover:text-rose-900"
-            >
-              Reset Filter Pencarian
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {regularPosts.map((post) => (
-              <article
-                key={post.id}
-                onClick={() => onSelectPost(post.slug)}
-                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer"
-              >
-                <div>
-                  <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
-                    <img
-                      src={optimizeUnsplashUrl(post.featuredImage, 600, 50)}
-                      srcSet={getUnsplashSrcSet(post.featuredImage, [400, 600], 50)}
-                      sizes="(max-width: 640px) 100vw, 400px"
-                      alt={post.title}
-                      width={600}
-                      height={338}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <div className="absolute top-3 left-3">
-                      <span className="px-2.5 py-1 rounded-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-slate-900 dark:text-slate-100 text-[10px] font-black uppercase tracking-wider shadow-2xs">
-                        {post.category}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-5 space-y-3">
-                    <div className="flex items-center gap-3 text-[11px] text-slate-700 dark:text-slate-300 font-bold">
-                      <span className="flex items-center gap-1 font-bold">
-                        <Clock className="w-3 h-3 text-slate-600 dark:text-slate-400" />
-                        {post.readTimeMinutes} mnt
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1 font-bold">
-                        <Eye className="w-3 h-3 text-slate-600 dark:text-slate-400" />
-                        {post.views}
-                      </span>
-                    </div>
-
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-rose-700 dark:group-hover:text-rose-400 transition-colors leading-snug line-clamp-2 min-h-[3rem]">
-                      {post.title}
-                    </h3>
-
-                    <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-3 leading-relaxed min-h-[3.75rem]">
-                      {post.excerpt}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-5 pt-0 border-t border-slate-100 dark:border-slate-800/60 mt-2 flex items-center justify-between text-xs pt-4">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={getOptimizedAvatarUrl(post.authorAvatar, 60, 60)}
-                      alt={post.authorName}
-                      width={24}
-                      height={24}
-                      decoding="async"
-                      className="w-6 h-6 rounded-full object-cover"
-                    />
-                    <span className="text-slate-900 dark:text-slate-100 font-bold text-[11px]">
-                      {post.authorName}
-                    </span>
-                  </div>
-                  <span className="text-rose-800 dark:text-rose-300 font-black group-hover:translate-x-0.5 transition-transform">
-                    Baca ↗
-                  </span>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
+      {renderLayout()}
     </div>
   );
 }
