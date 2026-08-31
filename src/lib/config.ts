@@ -58,6 +58,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
     { label: 'Kesehatan & Gizi', url: '/kategori/kesehatan-gizi' },
     { label: 'Balita', url: '/balita' }
   ],
+  comment_engine_mode: 'both',
   admin_login_title: 'Portal Admin Parenting.my.id',
   admin_login_subtitle: 'Sistem Otentikasi Cloudflare D1',
   admin_login_btn_text: 'Masuk Portal CMS',

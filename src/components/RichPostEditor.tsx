@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { marked } from 'marked';
 import { applyAutoLinks, calculateReadTime, preprocessMarkdownLineBreaks } from '../lib/autolink';
+import { sanitizeAndOptimizeImageUrl, sanitizeMarkdownImageUrls } from '../lib/imageUtils';
 import { AutoLink, User, PostRevision } from '../types';
 import SeoAuditWidget from './SeoAuditWidget';
 import { 
@@ -99,14 +100,14 @@ export default function RichPostEditor({
   const [unsplashSearch, setUnsplashSearch] = useState('');
 
   const UNSPLASH_PRESETS = [
-    { label: 'Bayi & Balita', url: 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=80' },
-    { label: 'Pola Asuh & Ibu', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1200&q=80' },
-    { label: 'Kehamilan & Menyusui', url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=1200&q=80' },
-    { label: 'Nutrisi & Gizi Makanan', url: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=1200&q=80' },
-    { label: 'Sensory Play & Main', url: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=1200&q=80' },
-    { label: 'Keluarga Bahagia', url: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1200&q=80' },
-    { label: 'Sekolah & Belajar', url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80' },
-    { label: 'Kesehatan Anak', url: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1200&q=80' },
+    { label: 'Bayi & Balita', url: 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Pola Asuh & Ibu', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Kehamilan & Menyusui', url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Nutrisi & Gizi Makanan', url: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Sensory Play & Main', url: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Keluarga Bahagia', url: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Sekolah & Belajar', url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Kesehatan Anak', url: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=65&fm=webp' },
   ];
 
   // Undo / Redo History Stack
@@ -217,7 +218,8 @@ export default function RichPostEditor({
   // Insert Image Action
   const handleInsertImage = (url: string, altText: string) => {
     if (!url) return;
-    const formatted = `\n\n![${altText || 'Gambar Artikel'}](${url})\n\n`;
+    const sanitizedUrl = sanitizeAndOptimizeImageUrl(url, 'body');
+    const formatted = `\n\n![${altText || 'Gambar Artikel'}](${sanitizedUrl})\n\n`;
     
     if (textareaRef.current) {
       const textarea = textareaRef.current;
@@ -759,7 +761,8 @@ export default function RichPostEditor({
               <input
                 type="text"
                 value={featuredImage}
-                onChange={(e) => setFeaturedImage(e.target.value)}
+                onChange={(e) => setFeaturedImage(sanitizeAndOptimizeImageUrl(e.target.value, 'featured'))}
+                onBlur={(e) => setFeaturedImage(sanitizeAndOptimizeImageUrl(e.target.value, 'featured'))}
                 placeholder="https://images.unsplash.com/..."
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono"
               />
@@ -1250,7 +1253,7 @@ export default function RichPostEditor({
                       <button
                         type="button"
                         onClick={() => {
-                          setFeaturedImage(imageUrl);
+                          setFeaturedImage(sanitizeAndOptimizeImageUrl(imageUrl, 'featured'));
                           setShowImageModal(false);
                         }}
                         className="flex-1 py-1.5 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-colors"
@@ -1317,7 +1320,7 @@ export default function RichPostEditor({
                   <button
                     type="button"
                     onClick={() => {
-                      setFeaturedImage(imageUrl);
+                      setFeaturedImage(sanitizeAndOptimizeImageUrl(imageUrl, 'featured'));
                       setShowImageModal(false);
                     }}
                     className="px-3 py-2 rounded-xl bg-slate-800 text-white font-bold text-xs hover:bg-slate-900"

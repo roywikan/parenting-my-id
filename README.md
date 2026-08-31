@@ -333,7 +333,7 @@ Untuk memasukkan gambar di tengah-tengah teks tulisan artikel:
 
 1. **Dual Storage Cloudflare D1 + GitHub REST API**: Menyimpan artikel dan konfigurasi situs di database SQLite serverless D1 berkecepatan edge, sekaligus menyinkronkan file aset ke GitHub.
 2. **In-Page SEO & Structured Data Auto-Generator**: Menghasilkan skema JSON-LD `BlogPosting`, `BreadcrumbList`, `<link rel="canonical">`, dan `<link rel="alternate">` secara otomatis.
-3. **Automated `llms.txt` Generator**: Secara otomatis membuat & meng-update endpoint `/llms.txt` untuk optimasi keterbacaan oleh AI Search Engine (Perplexity, ChatGPT, Gemini).
+3. **Automated `llms.txt` & `feed.xml` RSS Synchronization**: Secara otomatis menghasilkan file feed RSS 2.0 standar (`/feed.xml`) dan mengekstrak seluruh daftar artikelnya ke `/llms.txt` secara sinkron dan konsisten untuk optimasi AI Search Engine (Perplexity, ChatGPT, Claude, Gemini).
 4. **Autolinks Engine**: Otomatis mengubah kata kunci tertentu di seluruh artikel menjadi internal link aktif tanpa perlu mengedit artikel satu per satu.
 5. **Histori Revisi & Autosave**: Menyimpan draf artikel dan 3 histori revisi terakhir untuk perlindungan data tulisan penulis.
 

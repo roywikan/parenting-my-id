@@ -60,13 +60,93 @@ export function loadPostsFromInitialData() {
 }
 
 /**
- * Generate llms.txt string
+ * Generate feed.xml (RSS 2.0) string
+ * CRITICAL: Tag <?xml version="1.0" encoding="UTF-8"?> MUST be at index 0 (character 0).
  */
-export function generateLlmsTxt(posts) {
+export function generateFeedXml(posts) {
   const publishedPosts = (posts || []).filter((p) => p.status === 'published');
 
-  const articleLinks = publishedPosts
-    .map((p) => `* [${p.title}](${SITE_URL}/baca/${p.slug}): ${p.excerpt || ''}`)
+  const items = publishedPosts
+    .map((p) => {
+      const pubDate = p.createdAt ? new Date(p.createdAt).toUTCString() : (p.updatedAt ? new Date(p.updatedAt).toUTCString() : new Date().toUTCString());
+      const link = `${SITE_URL}/baca/${p.slug}`;
+      const desc = p.excerpt || '';
+      return `    <item>
+      <title><![CDATA[${p.title}]]></title>
+      <link>${link}</link>
+      <guid>${link}</guid>
+      <description><![CDATA[${desc}]]></description>
+      <pubDate>${pubDate}</pubDate>
+    </item>`;
+    })
+    .join('\n');
+
+  const rss = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Parenting.my.id - Edukasi &amp; Pola Asuh Anak Modern</title>
+    <link>${SITE_URL}</link>
+    <description>Portal artikel parenting, gizi anak, stimulasi balita, dan pencegahan stunting di Indonesia.</description>
+    <language>id-id</language>
+${items}
+  </channel>
+</rss>`;
+
+  return rss.trim();
+}
+
+/**
+ * Parse items directly from a feed.xml (RSS 2.0) string
+ */
+export function parseFeedXmlItems(feedXmlContent) {
+  if (!feedXmlContent || typeof feedXmlContent !== 'string') return [];
+  const items = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+  let match;
+  while ((match = itemRegex.exec(feedXmlContent)) !== null) {
+    const itemBlock = match[1];
+
+    // Extract title (handles both CDATA and plain text)
+    const titleMatch = itemBlock.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i);
+    const title = titleMatch ? titleMatch[1].trim() : '';
+
+    // Extract link
+    const linkMatch = itemBlock.match(/<link>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
+    const link = linkMatch ? linkMatch[1].trim() : '';
+
+    // Extract description
+    const descMatch = itemBlock.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i);
+    const description = descMatch ? descMatch[1].trim() : '';
+
+    if (title && link) {
+      items.push({ title, link, description });
+    }
+  }
+  return items;
+}
+
+/**
+ * Generate llms.txt string taken directly from feed.xml items
+ */
+export function generateLlmsTxt(posts, feedXmlContent) {
+  let items = [];
+
+  if (feedXmlContent) {
+    items = parseFeedXmlItems(feedXmlContent);
+  }
+
+  // If no items found from feedXmlContent, fallback to posts directly
+  if (items.length === 0 && posts) {
+    const publishedPosts = (posts || []).filter((p) => p.status === 'published');
+    items = publishedPosts.map((p) => ({
+      title: p.title,
+      link: `${SITE_URL}/baca/${p.slug}`,
+      description: p.excerpt || '',
+    }));
+  }
+
+  const articleLinks = items
+    .map((item) => `* [${item.title}](${item.link}): ${item.description}`)
     .join('\n');
 
   return `# Parenting.my.id
@@ -104,12 +184,21 @@ export function generateSitemapXml(posts) {
 export function generateStaticFiles(customPosts) {
   const posts = customPosts || loadPostsFromInitialData();
 
-  const llmsContent = generateLlmsTxt(posts);
+  // 1. Generate feed.xml first
+  const feedContent = generateFeedXml(posts);
+
+  // 2. Generate llms.txt strictly derived from feed.xml items
+  const llmsContent = generateLlmsTxt(posts, feedContent);
+
+  // 3. Generate sitemap.xml
   const sitemapContent = generateSitemapXml(posts);
 
-  // Validate sitemap index 0 rule
+  // Validate XML index 0 rules
   if (sitemapContent.indexOf('<?xml') !== 0) {
     throw new Error('Sitemap XML declaration must start at index 0 without leading whitespace or newlines!');
+  }
+  if (feedContent.indexOf('<?xml') !== 0) {
+    throw new Error('Feed XML declaration must start at index 0 without leading whitespace or newlines!');
   }
 
   const publicDir = path.join(rootDir, 'public');
@@ -121,23 +210,27 @@ export function generateStaticFiles(customPosts) {
   }
 
   // Write to public/
+  const publicFeedPath = path.join(publicDir, 'feed.xml');
   const publicLlmsPath = path.join(publicDir, 'llms.txt');
   const publicSitemapPath = path.join(publicDir, 'sitemap.xml');
+  fs.writeFileSync(publicFeedPath, feedContent, 'utf-8');
   fs.writeFileSync(publicLlmsPath, llmsContent, 'utf-8');
   fs.writeFileSync(publicSitemapPath, sitemapContent, 'utf-8');
-  console.log(`[Static Generator] Updated ${publicLlmsPath} and ${publicSitemapPath}`);
+  console.log(`[Static Generator] Updated ${publicFeedPath}, ${publicLlmsPath}, and ${publicSitemapPath}`);
 
   // Write to dist/ if dist directory exists or generate it
   if (!fs.existsSync(distDir)) {
     fs.mkdirSync(distDir, { recursive: true });
   }
+  const distFeedPath = path.join(distDir, 'feed.xml');
   const distLlmsPath = path.join(distDir, 'llms.txt');
   const distSitemapPath = path.join(distDir, 'sitemap.xml');
+  fs.writeFileSync(distFeedPath, feedContent, 'utf-8');
   fs.writeFileSync(distLlmsPath, llmsContent, 'utf-8');
   fs.writeFileSync(distSitemapPath, sitemapContent, 'utf-8');
-  console.log(`[Static Generator] Updated ${distLlmsPath} and ${distSitemapPath}`);
+  console.log(`[Static Generator] Updated ${distFeedPath}, ${distLlmsPath}, and ${distSitemapPath}`);
 
-  return { llmsContent, sitemapContent };
+  return { feedContent, llmsContent, sitemapContent };
 }
 
 /**
