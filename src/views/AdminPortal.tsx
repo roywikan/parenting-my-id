@@ -187,7 +187,8 @@ export default function AdminPortal({
   const [cfgFontSizeScale, setCfgFontSizeScale] = useState<'small'|'normal'|'large'|'xlarge'>(siteConfig?.font_size_scale || 'normal');
   const [cfgFontDensityScale, setCfgFontDensityScale] = useState<'compact'|'standard'|'spacious'>(siteConfig?.font_density_scale || 'standard');
   const [cfgAgeAccessibilityPreset, setCfgAgeAccessibilityPreset] = useState<'18-28'|'29-38'|'39-48'|'49-58'>(siteConfig?.age_accessibility_preset || '29-38');
-  const [cfgHeaderBadgeText, setCfgHeaderBadgeText] = useState(siteConfig?.header_badge_text || 'Beta v1.0');
+  const [cfgHeaderBadgeText, setCfgHeaderBadgeText] = useState(siteConfig?.header_badge_text || 'Cloudflare D1 Edge Engine');
+  const [cfgShowHeaderBadge, setCfgShowHeaderBadge] = useState<boolean>(siteConfig?.show_header_badge ?? siteConfig?.show_edge_badge ?? true);
   const [cfgHeroBadgeText, setCfgHeroBadgeText] = useState(siteConfig?.hero_badge_text || 'Portal Nomor 1');
   const [cfgAutolinkTickerLabel, setCfgAutolinkTickerLabel] = useState(siteConfig?.autolink_ticker_label || 'Trending:');
   const [cfgFooterAutolinkLabel, setCfgFooterAutolinkLabel] = useState(siteConfig?.footer_autolink_label || 'Tautan Populer');
@@ -280,6 +281,7 @@ export default function AdminPortal({
   const [configSuccessMsg, setConfigSuccessMsg] = useState('');
   const [configErrMsg, setConfigErrMsg] = useState('');
   const [isSavingConfig, setIsSavingConfig] = useState(false);
+  const hasInitializedFromPropsRef = useRef(false);
 
   // Sync state when props arrive
   useEffect(() => {
@@ -293,24 +295,32 @@ export default function AdminPortal({
 
   useEffect(() => {
     if (siteConfig) {
-      setCfgActiveThemePreset(siteConfig.active_theme_preset || 'corp-blue');
-      setCfgSiteName(siteConfig.site_name);
-      setCfgSiteTagline(siteConfig.site_tagline);
-      setCfgSiteDescription(siteConfig.site_description);
+      setCfgActiveThemePreset(siteConfig.active_theme_preset || DEFAULT_SITE_CONFIG.active_theme_preset || 'corp-blue');
+      setCfgSiteName(siteConfig.site_name || DEFAULT_SITE_CONFIG.site_name);
+      setCfgSiteTagline(siteConfig.site_tagline || DEFAULT_SITE_CONFIG.site_tagline);
+      setCfgSiteDescription(siteConfig.site_description || DEFAULT_SITE_CONFIG.site_description);
       setCfgSiteLogoUrl(siteConfig.site_logo_url || '');
       setCfgSiteLogoIcon(siteConfig.site_logo_icon || 'Heart');
       setCfgSiteFaviconUrl(siteConfig.site_favicon_url || '/favicon.ico');
-      if (siteConfig.header_nav_links && Array.isArray(siteConfig.header_nav_links)) {
+      if (siteConfig.header_nav_links && Array.isArray(siteConfig.header_nav_links) && siteConfig.header_nav_links.length > 0) {
         setCfgHeaderNavLinksArray(siteConfig.header_nav_links);
+      } else if (!hasInitializedFromPropsRef.current) {
+        setCfgHeaderNavLinksArray(DEFAULT_SITE_CONFIG.header_nav_links);
       }
-      if (siteConfig.hamburger_nav_links && Array.isArray(siteConfig.hamburger_nav_links)) {
+      if (siteConfig.hamburger_nav_links && Array.isArray(siteConfig.hamburger_nav_links) && siteConfig.hamburger_nav_links.length > 0) {
         setCfgHamburgerNavLinksArray(siteConfig.hamburger_nav_links);
+      } else if (!hasInitializedFromPropsRef.current) {
+        setCfgHamburgerNavLinksArray(DEFAULT_SITE_CONFIG.hamburger_nav_links || []);
       }
-      if (siteConfig.footer_menu_links && Array.isArray(siteConfig.footer_menu_links)) {
+      if (siteConfig.footer_menu_links && Array.isArray(siteConfig.footer_menu_links) && siteConfig.footer_menu_links.length > 0) {
         setCfgFooterMenuLinksArray(siteConfig.footer_menu_links);
+      } else if (!hasInitializedFromPropsRef.current) {
+        setCfgFooterMenuLinksArray(DEFAULT_SITE_CONFIG.footer_menu_links);
       }
-      if (siteConfig.footer_category_links && Array.isArray(siteConfig.footer_category_links)) {
+      if (siteConfig.footer_category_links && Array.isArray(siteConfig.footer_category_links) && siteConfig.footer_category_links.length > 0) {
         setCfgFooterCategoryLinksArray(siteConfig.footer_category_links);
+      } else if (!hasInitializedFromPropsRef.current) {
+        setCfgFooterCategoryLinksArray(DEFAULT_SITE_CONFIG.footer_category_links || []);
       }
       setCfgEnableSearchBar(siteConfig.enable_search_bar ?? true);
       setCfgEnableThemeToggle(siteConfig.enable_theme_toggle ?? true);
@@ -321,7 +331,7 @@ export default function AdminPortal({
       setCfgAgeAccessibilityPreset(siteConfig.age_accessibility_preset || '29-38');
 
       setCfgEnableAdsense(siteConfig.enable_adsense ?? true);
-      setCfgAdsenseClientId(siteConfig.adsense_client_id || 'ca-pub-1234567890123456');
+      setCfgAdsenseClientId(siteConfig.adsense_client_id || '');
       setCfgAdsenseHeaderTop(siteConfig.adsense_header_top || '');
       setCfgAdsenseArticleTop(siteConfig.adsense_article_top || '');
       setCfgAdsenseArticleMiddle(siteConfig.adsense_article_middle || '');
@@ -329,15 +339,15 @@ export default function AdminPortal({
       setCfgAdsenseSidebar(siteConfig.adsense_sidebar || '');
       setCfgAdsenseStickyFooter(siteConfig.adsense_sticky_footer || '');
 
-      setCfgSeoMetaTitle(siteConfig.seo_meta_title);
-      setCfgSeoMetaDesc(siteConfig.seo_meta_description);
-      setCfgSeoDefaultOgImage(siteConfig.seo_default_og_image);
+      setCfgSeoMetaTitle(siteConfig.seo_meta_title || DEFAULT_SITE_CONFIG.seo_meta_title);
+      setCfgSeoMetaDesc(siteConfig.seo_meta_description || DEFAULT_SITE_CONFIG.seo_meta_description);
+      setCfgSeoDefaultOgImage(siteConfig.seo_default_og_image || DEFAULT_SITE_CONFIG.seo_default_og_image);
 
       setCfgShowHeroSection(siteConfig.show_hero_section ?? true);
-      setCfgHeroTitle(siteConfig.hero_title);
-      setCfgHeroSubtitle(siteConfig.hero_subtitle);
-      setCfgHeroCtaText(siteConfig.hero_cta_text);
-      setCfgHeroCtaLink(siteConfig.hero_cta_link);
+      setCfgHeroTitle(siteConfig.hero_title || DEFAULT_SITE_CONFIG.hero_title);
+      setCfgHeroSubtitle(siteConfig.hero_subtitle || DEFAULT_SITE_CONFIG.hero_subtitle);
+      setCfgHeroCtaText(siteConfig.hero_cta_text || DEFAULT_SITE_CONFIG.hero_cta_text);
+      setCfgHeroCtaLink(siteConfig.hero_cta_link || DEFAULT_SITE_CONFIG.hero_cta_link);
 
       setCfgShowPerformanceBox(siteConfig.show_performance_box ?? true);
       setCfgMetric1Value(siteConfig.metric1_value || '99+');
@@ -357,8 +367,8 @@ export default function AdminPortal({
       setCfgCategoriesWidgetLimit(siteConfig.categories_widget_limit || 8);
       setCfgSidebarBannerCode(siteConfig.sidebar_banner_code || '');
 
-      setCfgFooterAboutText(siteConfig.footer_about_text);
-      setCfgFooterCopyrightText(siteConfig.footer_copyright_text);
+      setCfgFooterAboutText(siteConfig.footer_about_text || DEFAULT_SITE_CONFIG.footer_about_text);
+      setCfgFooterCopyrightText(siteConfig.footer_copyright_text || DEFAULT_SITE_CONFIG.footer_copyright_text);
       setCfgSocialFacebook(siteConfig.social_facebook || '');
       setCfgSocialInstagram(siteConfig.social_instagram || '');
       setCfgSocialTwitter(siteConfig.social_twitter || '');
@@ -369,6 +379,7 @@ export default function AdminPortal({
 
       setCfgSiteDomain(siteConfig.site_domain || 'parenting.my.id');
       setCfgHeaderBadgeText(siteConfig.header_badge_text || 'Cloudflare D1 Edge Engine');
+      setCfgShowHeaderBadge(siteConfig.show_header_badge ?? siteConfig.show_edge_badge ?? true);
       setCfgMobileAdminBtnLabel(siteConfig.mobile_admin_btn_label || 'Portal Admin & Editor');
       setCfgMobileShowLoggedUsername(siteConfig.mobile_show_logged_username ?? false);
       setCfgHeroBadgeText(siteConfig.hero_badge_text || 'Portal Nomor 1');
@@ -377,92 +388,109 @@ export default function AdminPortal({
       setCfgFooterBadge1(siteConfig.footer_badge_1 || 'Aman & Terpercaya');
       setCfgFooterBadge2(siteConfig.footer_badge_2 || 'Diperbarui Rutin');
       setCfgFooterBadge3(siteConfig.footer_badge_3 || '100% Gratis');
+
+      hasInitializedFromPropsRef.current = true;
     }
   }, [siteConfig]);
 
-  // REAL-TIME INSTANT PREVIEW EFFECT
+  // REAL-TIME INSTANT PREVIEW EFFECT (Debounced)
   useEffect(() => {
     if (!onLivePreviewChange) return;
 
-    const draftConfig: SiteConfig = {
-      active_theme_preset: cfgActiveThemePreset,
-      site_name: cfgSiteName,
-      mobile_admin_btn_label: cfgMobileAdminBtnLabel,
-      mobile_show_logged_username: cfgMobileShowLoggedUsername,
-      site_domain: cfgSiteDomain,
-      default_theme_mode: cfgDefaultThemeMode,
-      font_size_scale: cfgFontSizeScale,
-      font_density_scale: cfgFontDensityScale,
-      age_accessibility_preset: cfgAgeAccessibilityPreset,
-      header_badge_text: cfgHeaderBadgeText,
-      hero_badge_text: cfgHeroBadgeText,
-      autolink_ticker_label: cfgAutolinkTickerLabel,
-      footer_autolink_label: cfgFooterAutolinkLabel,
-      footer_badge_1: cfgFooterBadge1,
-      footer_badge_2: cfgFooterBadge2,
-      footer_badge_3: cfgFooterBadge3,
-      site_tagline: cfgSiteTagline,
-      site_description: cfgSiteDescription,
-      site_logo_url: cfgSiteLogoUrl,
-      site_logo_icon: cfgSiteLogoIcon,
-      site_favicon_url: cfgSiteFaviconUrl,
-      header_nav_links: cfgHeaderNavLinksArray,
-      hamburger_nav_links: cfgHamburgerNavLinksArray,
-      enable_search_bar: cfgEnableSearchBar,
-      enable_theme_toggle: cfgEnableThemeToggle,
-      seo_meta_title: cfgSeoMetaTitle,
-      seo_meta_description: cfgSeoMetaDesc,
-      seo_default_og_image: cfgSeoDefaultOgImage,
-      show_hero_section: cfgShowHeroSection,
-      hero_title: cfgHeroTitle,
-      hero_subtitle: cfgHeroSubtitle,
-      hero_cta_text: cfgHeroCtaText,
-      hero_cta_link: cfgHeroCtaLink,
-      show_performance_box: cfgShowPerformanceBox,
-      metric1_value: cfgMetric1Value,
-      metric1_label: cfgMetric1Label,
-      metric2_value: cfgMetric2Value,
-      metric2_label: cfgMetric2Label,
-      metric3_value: cfgMetric3Value,
-      metric3_label: cfgMetric3Label,
-      posts_per_page: Number(cfgPostsPerPage),
-      enable_featured_post: cfgEnableFeaturedPost,
-      pagination_type: cfgPaginationType,
-      comment_engine_mode: cfgCommentEngineMode,
-      show_sidebar: cfgShowSidebar,
-      popular_posts_count: Number(cfgPopularPostsCount),
-      categories_widget_limit: Number(cfgCategoriesWidgetLimit),
-      sidebar_banner_code: cfgSidebarBannerCode,
-      footer_about_text: cfgFooterAboutText,
-      footer_copyright_text: cfgFooterCopyrightText,
-      social_facebook: cfgSocialFacebook,
-      social_instagram: cfgSocialInstagram,
-      social_twitter: cfgSocialTwitter,
-      footer_menu_links: cfgFooterMenuLinksArray,
-      footer_category_links: cfgFooterCategoryLinksArray,
-      admin_login_title: cfgAdminLoginTitle,
-      admin_login_subtitle: cfgAdminLoginSubtitle,
-      admin_login_btn_text: cfgAdminLoginBtnText,
+    const timer = setTimeout(() => {
+      const draftConfig: SiteConfig = {
+        active_theme_preset: cfgActiveThemePreset,
+        site_name: cfgSiteName,
+        mobile_admin_btn_label: cfgMobileAdminBtnLabel,
+        mobile_show_logged_username: cfgMobileShowLoggedUsername,
+        site_domain: cfgSiteDomain,
+        default_theme_mode: cfgDefaultThemeMode,
+        font_size_scale: cfgFontSizeScale,
+        font_density_scale: cfgFontDensityScale,
+        age_accessibility_preset: cfgAgeAccessibilityPreset,
+        header_badge_text: cfgHeaderBadgeText,
+        show_header_badge: cfgShowHeaderBadge,
+        show_edge_badge: cfgShowHeaderBadge,
+        hero_badge_text: cfgHeroBadgeText,
+        autolink_ticker_label: cfgAutolinkTickerLabel,
+        footer_autolink_label: cfgFooterAutolinkLabel,
+        footer_badge_1: cfgFooterBadge1,
+        footer_badge_2: cfgFooterBadge2,
+        footer_badge_3: cfgFooterBadge3,
+        site_tagline: cfgSiteTagline,
+        site_description: cfgSiteDescription,
+        site_logo_url: cfgSiteLogoUrl,
+        site_logo_icon: cfgSiteLogoIcon,
+        site_favicon_url: cfgSiteFaviconUrl,
+        header_nav_links: cfgHeaderNavLinksArray,
+        hamburger_nav_links: cfgHamburgerNavLinksArray,
+        enable_search_bar: cfgEnableSearchBar,
+        enable_theme_toggle: cfgEnableThemeToggle,
+        seo_meta_title: cfgSeoMetaTitle,
+        seo_meta_description: cfgSeoMetaDesc,
+        seo_default_og_image: cfgSeoDefaultOgImage,
+        show_hero_section: cfgShowHeroSection,
+        hero_title: cfgHeroTitle,
+        hero_subtitle: cfgHeroSubtitle,
+        hero_cta_text: cfgHeroCtaText,
+        hero_cta_link: cfgHeroCtaLink,
+        show_performance_box: cfgShowPerformanceBox,
+        metric1_value: cfgMetric1Value,
+        metric1_label: cfgMetric1Label,
+        metric2_value: cfgMetric2Value,
+        metric2_label: cfgMetric2Label,
+        metric3_value: cfgMetric3Value,
+        metric3_label: cfgMetric3Label,
+        posts_per_page: Number(cfgPostsPerPage),
+        enable_featured_post: cfgEnableFeaturedPost,
+        pagination_type: cfgPaginationType,
+        comment_engine_mode: cfgCommentEngineMode,
+        show_sidebar: cfgShowSidebar,
+        popular_posts_count: Number(cfgPopularPostsCount),
+        categories_widget_limit: Number(cfgCategoriesWidgetLimit),
+        sidebar_banner_code: cfgSidebarBannerCode,
+        footer_about_text: cfgFooterAboutText,
+        footer_copyright_text: cfgFooterCopyrightText,
+        social_facebook: cfgSocialFacebook,
+        social_instagram: cfgSocialInstagram,
+        social_twitter: cfgSocialTwitter,
+        footer_menu_links: cfgFooterMenuLinksArray,
+        footer_category_links: cfgFooterCategoryLinksArray,
+        admin_login_title: cfgAdminLoginTitle,
+        admin_login_subtitle: cfgAdminLoginSubtitle,
+        admin_login_btn_text: cfgAdminLoginBtnText,
 
-      enable_adsense: cfgEnableAdsense,
-      adsense_client_id: cfgAdsenseClientId,
-      adsense_header_top: cfgAdsenseHeaderTop,
-      adsense_article_top: cfgAdsenseArticleTop,
-      adsense_article_middle: cfgAdsenseArticleMiddle,
-      adsense_article_bottom: cfgAdsenseArticleBottom,
-      adsense_sidebar: cfgAdsenseSidebar,
-      adsense_sticky_footer: cfgAdsenseStickyFooter,
-    };
+        enable_adsense: cfgEnableAdsense,
+        adsense_client_id: cfgAdsenseClientId,
+        adsense_header_top: cfgAdsenseHeaderTop,
+        adsense_article_top: cfgAdsenseArticleTop,
+        adsense_article_middle: cfgAdsenseArticleMiddle,
+        adsense_article_bottom: cfgAdsenseArticleBottom,
+        adsense_sidebar: cfgAdsenseSidebar,
+        adsense_sticky_footer: cfgAdsenseStickyFooter,
+      };
 
-    onLivePreviewChange(draftConfig);
+      onLivePreviewChange(draftConfig);
+    }, 60);
+
+    return () => clearTimeout(timer);
   }, [
-    cfgActiveThemePreset, cfgDefaultThemeMode, cfgFontSizeScale, cfgFontDensityScale,
-    cfgAgeAccessibilityPreset, cfgHeaderBadgeText, cfgHeroBadgeText, cfgShowHeroSection,
-    cfgHeroTitle, cfgHeroSubtitle, cfgEnableAdsense, cfgAdsenseClientId,
-    cfgAdsenseHeaderTop, cfgAdsenseArticleTop, cfgAdsenseArticleMiddle,
-    cfgAdsenseArticleBottom, cfgAdsenseSidebar, cfgAdsenseStickyFooter,
-    cfgHeaderNavLinksArray, cfgHamburgerNavLinksArray, cfgFooterMenuLinksArray, cfgFooterCategoryLinksArray,
-    cfgCommentEngineMode, cfgPaginationType, cfgPostsPerPage, cfgEnableFeaturedPost, cfgShowSidebar
+    cfgActiveThemePreset, cfgSiteName, cfgMobileAdminBtnLabel, cfgMobileShowLoggedUsername,
+    cfgSiteDomain, cfgDefaultThemeMode, cfgFontSizeScale, cfgFontDensityScale,
+    cfgAgeAccessibilityPreset, cfgHeaderBadgeText, cfgHeroBadgeText, cfgAutolinkTickerLabel,
+    cfgFooterAutolinkLabel, cfgFooterBadge1, cfgFooterBadge2, cfgFooterBadge3,
+    cfgSiteTagline, cfgSiteDescription, cfgSiteLogoUrl, cfgSiteLogoIcon, cfgSiteFaviconUrl,
+    cfgHeaderNavLinksArray, cfgHamburgerNavLinksArray, cfgEnableSearchBar, cfgEnableThemeToggle,
+    cfgSeoMetaTitle, cfgSeoMetaDesc, cfgSeoDefaultOgImage, cfgShowHeroSection,
+    cfgHeroTitle, cfgHeroSubtitle, cfgHeroCtaText, cfgHeroCtaLink,
+    cfgShowPerformanceBox, cfgMetric1Value, cfgMetric1Label, cfgMetric2Value, cfgMetric2Label,
+    cfgMetric3Value, cfgMetric3Label, cfgPostsPerPage, cfgEnableFeaturedPost,
+    cfgPaginationType, cfgCommentEngineMode, cfgShowSidebar, cfgPopularPostsCount,
+    cfgCategoriesWidgetLimit, cfgSidebarBannerCode, cfgFooterAboutText, cfgFooterCopyrightText,
+    cfgSocialFacebook, cfgSocialInstagram, cfgSocialTwitter, cfgFooterMenuLinksArray,
+    cfgFooterCategoryLinksArray, cfgAdminLoginTitle, cfgAdminLoginSubtitle, cfgAdminLoginBtnText,
+    cfgEnableAdsense, cfgAdsenseClientId, cfgAdsenseHeaderTop, cfgAdsenseArticleTop,
+    cfgAdsenseArticleMiddle, cfgAdsenseArticleBottom, cfgAdsenseSidebar, cfgAdsenseStickyFooter
   ]);
 
   // Autofill Demo High-CTR AdSense Snippets
@@ -513,6 +541,8 @@ export default function AdminPortal({
         font_density_scale: cfgFontDensityScale,
         age_accessibility_preset: cfgAgeAccessibilityPreset,
         header_badge_text: cfgHeaderBadgeText,
+        show_header_badge: cfgShowHeaderBadge,
+        show_edge_badge: cfgShowHeaderBadge,
         hero_badge_text: cfgHeroBadgeText,
         autolink_ticker_label: cfgAutolinkTickerLabel,
         footer_autolink_label: cfgFooterAutolinkLabel,
@@ -1907,16 +1937,35 @@ export default function AdminPortal({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Teks Badge Samping Logo Header (header_badge_text)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Teks Badge Samping Logo Header (header_badge_text)
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cfgShowHeaderBadge}
+                        onChange={(e) => setCfgShowHeaderBadge(e.target.checked)}
+                        className="w-3.5 h-3.5 text-rose-600 rounded focus:ring-rose-500"
+                      />
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                        Tampilkan Badge
+                      </span>
+                    </label>
+                  </div>
                   <input
                     type="text"
                     value={cfgHeaderBadgeText}
                     onChange={(e) => setCfgHeaderBadgeText(e.target.value)}
                     placeholder="Cloudflare D1 Edge Engine"
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                    disabled={!cfgShowHeaderBadge}
+                    className={`w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500 ${!cfgShowHeaderBadge ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    {cfgShowHeaderBadge
+                      ? '✓ Badge `<span>` "Cloudflare D1 Edge Engine" akan ditampilkan di samping logo header.'
+                      : '✗ Badge `<span>` "Cloudflare D1 Edge Engine" disembunyikan dari header.'}
+                  </p>
                 </div>
 
                 <div>

@@ -1,5 +1,5 @@
 {
-  "active_theme_preset": "corp-blue",
+  "active_theme_preset": "blog-pastel",
   "site_name": "Parenting.my.id",
   "mobile_admin_btn_label": "Portal Admin & Editor",
   "mobile_show_logged_username": false,
@@ -9,6 +9,8 @@
   "font_density_scale": "standard",
   "age_accessibility_preset": "29-38",
   "header_badge_text": "Cloudflare D1 Edge Engine",
+  "show_header_badge": true,
+  "show_edge_badge": true,
   "hero_badge_text": "Portal Nomor 1",
   "autolink_ticker_label": "Topik Trending:",
   "footer_autolink_label": "Tautan Populer",
@@ -29,22 +31,60 @@
   "site_logo_icon": "Heart",
   "site_favicon_url": "/favicon.ico",
   "header_nav_links": [
-    { "label": "Beranda", "url": "/" },
-    { "label": "Pola Asuh", "url": "/kategori/pola-asuh" },
-    { "label": "Tumbuh Kembang", "url": "/kategori/tumbuh-kembang" },
-    { "label": "Kesehatan & Gizi", "url": "/kategori/kesehatan-gizi" },
-    { "label": "Balita", "url": "/balita" },
-    { "label": "Sitemap", "url": "/sitemap.xml" },
-    { "label": "RSS Feed", "url": "/feed.xml" }
+    {
+      "label": "Pola Asuh",
+      "url": "/kategori/pola-asuh"
+    },
+    {
+      "label": "Tumbuh Kembang",
+      "url": "/kategori/tumbuh-kembang"
+    },
+    {
+      "label": "Kesehatan & Gizi",
+      "url": "/kategori/kesehatan-gizi"
+    },
+    {
+      "label": "Balita",
+      "url": "/balita"
+    },
+    {
+      "label": "Sitemap",
+      "url": "/sitemap.xml"
+    },
+    {
+      "label": "RSS Feed",
+      "url": "/feed.xml"
+    }
   ],
   "hamburger_nav_links": [
-    { "label": "Beranda", "url": "/" },
-    { "label": "Pola Asuh", "url": "/kategori/pola-asuh" },
-    { "label": "Tumbuh Kembang", "url": "/kategori/tumbuh-kembang" },
-    { "label": "Kesehatan & Gizi", "url": "/kategori/kesehatan-gizi" },
-    { "label": "Balita", "url": "/balita" },
-    { "label": "Sitemap XML", "url": "/sitemap.xml" },
-    { "label": "RSS Feed", "url": "/feed.xml" }
+    {
+      "label": "Beranda",
+      "url": "/"
+    },
+    {
+      "label": "Pola Asuh",
+      "url": "/kategori/pola-asuh"
+    },
+    {
+      "label": "Tumbuh Kembang",
+      "url": "/kategori/tumbuh-kembang"
+    },
+    {
+      "label": "Kesehatan & Gizi",
+      "url": "/kategori/kesehatan-gizi"
+    },
+    {
+      "label": "Balita",
+      "url": "/balita"
+    },
+    {
+      "label": "Sitemap XML",
+      "url": "/sitemap.xml"
+    },
+    {
+      "label": "RSS Feed",
+      "url": "/feed.xml"
+    }
   ],
   "enable_search_bar": true,
   "enable_theme_toggle": true,
@@ -66,6 +106,7 @@
   "posts_per_page": 9,
   "enable_featured_post": true,
   "pagination_type": "load_more",
+  "comment_engine_mode": "both",
   "show_sidebar": true,
   "popular_posts_count": 5,
   "categories_widget_limit": 8,
@@ -76,16 +117,40 @@
   "social_instagram": "https://instagram.com/parentingmyid",
   "social_twitter": "https://x.com/parentingmyid",
   "footer_menu_links": [
-    { "label": "Kebijakan Privasi", "url": "/privacy" },
-    { "label": "Syarat & Ketentuan", "url": "/terms" },
-    { "label": "Sitemap XML", "url": "/sitemap.xml" },
-    { "label": "RSS Feed", "url": "/feed.xml" }
+    {
+      "label": "Kebijakan Privasi",
+      "url": "/privacy"
+    },
+    {
+      "label": "Syarat & Ketentuan",
+      "url": "/terms"
+    },
+    {
+      "label": "Sitemap XML",
+      "url": "/sitemap.xml"
+    },
+    {
+      "label": "RSS Feed",
+      "url": "/feed.xml"
+    }
   ],
   "footer_category_links": [
-    { "label": "Pola Asuh", "url": "/kategori/pola-asuh" },
-    { "label": "Tumbuh Kembang", "url": "/kategori/tumbuh-kembang" },
-    { "label": "Kesehatan & Gizi", "url": "/kategori/kesehatan-gizi" },
-    { "label": "Balita", "url": "/balita" }
+    {
+      "label": "Pola Asuh",
+      "url": "/kategori/pola-asuh"
+    },
+    {
+      "label": "Tumbuh Kembang",
+      "url": "/kategori/tumbuh-kembang"
+    },
+    {
+      "label": "Kesehatan & Gizi",
+      "url": "/kategori/kesehatan-gizi"
+    },
+    {
+      "label": "Balita",
+      "url": "/balita"
+    }
   ],
   "admin_login_title": "Portal Admin Parenting.my.id",
   "admin_login_subtitle": "Sistem Otentikasi Cloudflare D1",

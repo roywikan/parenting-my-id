@@ -146,6 +146,101 @@ ${articleLinks || '* [Panduan Parenting Utama](' + siteUrl + '): Edukasi pola as
       }
     }
 
+    // 0c-1. DYNAMIC LLMS.TXT (AI Context & Feed-derived Index)
+    if (path === '/llms.txt' && method === 'GET') {
+      try {
+        let postsList: any[] = [];
+        if (env.DB) {
+          const { results } = await env.DB.prepare(
+            "SELECT title, slug, excerpt FROM posts WHERE status = 'published' ORDER BY created_at DESC LIMIT 50"
+          ).all();
+          postsList = results || [];
+        }
+
+        const articleLinks = postsList
+          .map((p: any) => `* [${p.title}](${siteUrl}/baca/${p.slug}): ${p.excerpt || ''}`)
+          .join('\n');
+
+        const llmsTxt = `# Parenting.my.id
+
+> Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.
+
+## Artikel Terkait & Panduan Utama
+
+${articleLinks}
+
+## Sumber Daya Tambahan
+
+* [Konten Lengkap LLMs](${siteUrl}/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
+* [Sitemap XML](${siteUrl}/sitemap.xml): Peta situs terstruktur untuk crawler.
+* [RSS Feed](${siteUrl}/feed.xml): Umpan sindikasi artikel terbaru.
+`.trim();
+
+        return new Response(llmsTxt, {
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      } catch (err: any) {
+        return new Response('Error generating llms.txt', { status: 500 });
+      }
+    }
+
+    // 0c-2. DYNAMIC LLMS-FULL.TXT (Full Text Content for LLMs)
+    if (path === '/llms-full.txt' && method === 'GET') {
+      try {
+        let postsList: any[] = [];
+        if (env.DB) {
+          const { results } = await env.DB.prepare(
+            `SELECT p.title, p.slug, p.excerpt, p.content_markdown as contentMarkdown, p.category, p.updated_at as updatedAt, p.created_at as createdAt, u.name as authorName
+             FROM posts p
+             LEFT JOIN users u ON p.author_id = u.id
+             WHERE p.status = 'published'
+             ORDER BY p.created_at DESC`
+          ).all();
+          postsList = results || [];
+        }
+
+        const fullArticles = postsList.map((p: any) => {
+          const url = `${siteUrl}/baca/${p.slug}`;
+          const author = p.authorName || 'Tim Redaksi Parenting.my.id';
+          const category = p.category || 'Parenting';
+          const date = p.updatedAt || p.createdAt || new Date().toISOString();
+          return `---
+
+# ${p.title}
+
+* **URL:** ${url}
+* **Penulis:** ${author}
+* **Kategori:** ${category}
+* **Terakhir Diperbarui:** ${date}
+* **Ringkasan:** ${p.excerpt || ''}
+
+${p.contentMarkdown || ''}
+`;
+        }).join('\n\n');
+
+        const llmsFullTxt = `# Arsip Lengkap Artikel Parenting.my.id (LLMs Full Text)
+
+Dokumen ini memuat kumpulan artikel lengkap dalam format Markdown untuk Large Language Models (LLMs).
+
+${fullArticles}
+`.trim();
+
+        return new Response(llmsFullTxt, {
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      } catch (err: any) {
+        return new Response('Error generating llms-full.txt', { status: 500 });
+      }
+    }
+
     // 0d. ROBOTS.TXT
     if (path === '/robots.txt' && method === 'GET') {
       const robots = `User-agent: *

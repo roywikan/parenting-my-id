@@ -126,7 +126,7 @@ export function parseFeedXmlItems(feedXmlContent) {
 }
 
 /**
- * Generate llms.txt string taken directly from feed.xml items
+ * Generate llms.txt string taken directly from feed.xml items (Summary index format)
  */
 export function generateLlmsTxt(posts, feedXmlContent) {
   let items = [];
@@ -156,6 +156,45 @@ export function generateLlmsTxt(posts, feedXmlContent) {
 ## Artikel Terkait & Panduan Utama
 
 ${articleLinks}
+
+## Sumber Daya Tambahan
+
+* [Konten Lengkap LLMs](${SITE_URL}/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
+* [Sitemap XML](${SITE_URL}/sitemap.xml): Peta situs terstruktur untuk crawler.
+* [RSS Feed](${SITE_URL}/feed.xml): Umpan sindikasi artikel terbaru.
+`.trim();
+}
+
+/**
+ * Generate llms-full.txt string containing full markdown content of published posts
+ */
+export function generateLlmsFullTxt(posts) {
+  const publishedPosts = (posts || []).filter((p) => p.status === 'published');
+
+  const fullArticles = publishedPosts.map((p) => {
+    const url = `${SITE_URL}/baca/${p.slug}`;
+    const author = p.authorName || 'Tim Redaksi Parenting.my.id';
+    const category = p.category || 'Parenting';
+    const date = p.updatedAt || p.createdAt || new Date().toISOString();
+    return `---
+
+# ${p.title}
+
+* **URL:** ${url}
+* **Penulis:** ${author}
+* **Kategori:** ${category}
+* **Terakhir Diperbarui:** ${date}
+* **Ringkasan:** ${p.excerpt || ''}
+
+${p.contentMarkdown || ''}
+`;
+  }).join('\n\n');
+
+  return `# Arsip Lengkap Artikel Parenting.my.id (LLMs Full Text)
+
+Dokumen ini memuat kumpulan artikel lengkap dalam format Markdown untuk Large Language Models (LLMs).
+
+${fullArticles}
 `.trim();
 }
 
@@ -187,8 +226,9 @@ export function generateStaticFiles(customPosts) {
   // 1. Generate feed.xml first
   const feedContent = generateFeedXml(posts);
 
-  // 2. Generate llms.txt strictly derived from feed.xml items
+  // 2. Generate llms.txt strictly derived from feed.xml items & llms-full.txt
   const llmsContent = generateLlmsTxt(posts, feedContent);
+  const llmsFullContent = generateLlmsFullTxt(posts);
 
   // 3. Generate sitemap.xml
   const sitemapContent = generateSitemapXml(posts);
@@ -212,11 +252,13 @@ export function generateStaticFiles(customPosts) {
   // Write to public/
   const publicFeedPath = path.join(publicDir, 'feed.xml');
   const publicLlmsPath = path.join(publicDir, 'llms.txt');
+  const publicLlmsFullPath = path.join(publicDir, 'llms-full.txt');
   const publicSitemapPath = path.join(publicDir, 'sitemap.xml');
   fs.writeFileSync(publicFeedPath, feedContent, 'utf-8');
   fs.writeFileSync(publicLlmsPath, llmsContent, 'utf-8');
+  fs.writeFileSync(publicLlmsFullPath, llmsFullContent, 'utf-8');
   fs.writeFileSync(publicSitemapPath, sitemapContent, 'utf-8');
-  console.log(`[Static Generator] Updated ${publicFeedPath}, ${publicLlmsPath}, and ${publicSitemapPath}`);
+  console.log(`[Static Generator] Updated ${publicFeedPath}, ${publicLlmsPath}, ${publicLlmsFullPath}, and ${publicSitemapPath}`);
 
   // Write to dist/ if dist directory exists or generate it
   if (!fs.existsSync(distDir)) {
@@ -224,13 +266,15 @@ export function generateStaticFiles(customPosts) {
   }
   const distFeedPath = path.join(distDir, 'feed.xml');
   const distLlmsPath = path.join(distDir, 'llms.txt');
+  const distLlmsFullPath = path.join(distDir, 'llms-full.txt');
   const distSitemapPath = path.join(distDir, 'sitemap.xml');
   fs.writeFileSync(distFeedPath, feedContent, 'utf-8');
   fs.writeFileSync(distLlmsPath, llmsContent, 'utf-8');
+  fs.writeFileSync(distLlmsFullPath, llmsFullContent, 'utf-8');
   fs.writeFileSync(distSitemapPath, sitemapContent, 'utf-8');
-  console.log(`[Static Generator] Updated ${distFeedPath}, ${distLlmsPath}, and ${distSitemapPath}`);
+  console.log(`[Static Generator] Updated ${distFeedPath}, ${distLlmsPath}, ${distLlmsFullPath}, and ${distSitemapPath}`);
 
-  return { feedContent, llmsContent, sitemapContent };
+  return { feedContent, llmsContent, llmsFullContent, sitemapContent };
 }
 
 /**

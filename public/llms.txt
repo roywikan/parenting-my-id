@@ -7,3 +7,9 @@
 * [Panduan Lengkap Pola Asuh Demokratis untuk Mendidik Anak Tangguh Masa Kini](https://parenting.my.id/baca/panduan-lengkap-pola-asuh-demokratis-anak-masa-kini): Pola asuh demokratis menggabungkan kasih sayang, aturan yang konsisten, dan komunikasi terbuka. Simak strategi praktis penerapannya di rumah.
 * [5 Aktivitas Sensory Play Seru untuk Melatih Motorik Halus Balita di Rumah](https://parenting.my.id/baca/5-aktivitas-sensory-play-seru-untuk-melatih-motorik-balita): Temukan 5 ide permainan sensory play mudah dan hemat bahan untuk mengasah indera serta ketangkasan motorik balita di rumah.
 * [Mengenal Bahaya Stunting dan Cara Pencegahannya Sejak 1000 Hari Pertama Kehidupan](https://parenting.my.id/baca/mengenal-bahaya-stunting-dan-cara-pencegahannya-sejak-1000-hpk): Stunting berpengaruh besar pada kecerdasan anak. Pelajari langkah pencegahan stunting melalui pemberian ASI eksklusif dan MPASI tinggi protein.
+
+## Sumber Daya Tambahan
+
+* [Konten Lengkap LLMs](https://parenting.my.id/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
+* [Sitemap XML](https://parenting.my.id/sitemap.xml): Peta situs terstruktur untuk crawler.
+* [RSS Feed](https://parenting.my.id/feed.xml): Umpan sindikasi artikel terbaru.

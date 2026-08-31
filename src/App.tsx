@@ -196,6 +196,7 @@ export default function App() {
     const ok = await saveSiteConfig(newConfig);
     if (ok) {
       setSiteConfig(newConfig);
+      setLiveDraftConfig(undefined);
     }
     return ok;
   };
@@ -516,7 +517,7 @@ export default function App() {
               onDeletePost={handleDeletePost}
               onAddAutolink={handleAddAutolink}
               onDeleteAutolink={handleDeleteAutolink}
-              siteConfig={effectiveConfig}
+              siteConfig={siteConfig}
               onSaveConfig={handleSaveConfig}
               onUpdateCredentials={handleUpdateCredentials}
               onLivePreviewChange={setLiveDraftConfig}
