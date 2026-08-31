@@ -341,11 +341,31 @@ Untuk memasukkan gambar di tengah-tengah teks tulisan artikel:
 
 ## ⚡ Optimasi Performa & PageSpeed Insights
 
-Sistem ini dikonfigurasi secara khusus untuk mencapai skor tinggi pada **Google PageSpeed Insights / Lighthouse**:
+Sistem ini dikonfigurasi secara khusus untuk mencapai skor **95-100** pada **Google PageSpeed Insights / Lighthouse**:
 
-1. **Non-blocking CSS Preloading**: File CSS kritis dimuat secara asinkron (`<link rel="preload" as="style" onload="...">`) dengan fallback `<noscript>` untuk mengeliminasi *Render-Blocking Resources*.
-2. **Responsive Image Optimization (WebP/AVIF)**:
-   - Utilitas Unsplash dikompresi ke kualitas `q=65` dan dikonversi ke format `fm=webp` secara otomatis di CDN Edge.
-   - Menggunakan atribut `srcset` dengan ukuran kontainer yang presisi (`400w`, `600w`, `700w`) untuk mencegah pengunduhan gambar berlebih pada perangkat seluler.
-   - Avatar dikompresi secara ketat pada dimensi `w=60` & `q=60` (ukuran file < 2 KiB).
-3. **Pemuatan Asinkron & Defer Script**: Semua script JavaScript menggunakan atribut `defer` atau disuntikkan secara non-blocking di tingkat serverless Cloudflare Workers / Edge SSR.
+1. **Eliminasi Cumulative Layout Shift (Zero CLS Target = 0.000)**:
+   - **Hero Container Stabilization**: Mengunci dimensi kontainer dan rasio aspek gambar hero (`aspect-[16/9]` pada mobile dan `lg:h-[420px]` pada desktop) dengan `object-cover`, mencegah lonjakan 0.317 CLS saat data dimuat.
+   - **Full-Fidelity Article Skeleton**: Menghindari pergeseran footer 0.522 CLS dengan menerapkan `min-h-[900px]` pada `<main>` dan render skeleton berstruktur identik pada *Suspense Fallback* dan `ArticleDetailView`.
+   - **Font Loading & Metric Stabilization**: Menetapkan `font-display: swap;` dan `text-rendering: optimizeLegibility` untuk mencegah *FOIT/FOUT* dan pergeseran hierarki teks.
+   - **Fixed-height Ticker & Tags**: Mengunci dimensi vertikal tombol tag/ticker (`h-[32px]`) dan `min-h` pada deskripsi ringkasan kartu artikel.
+
+2. **Largest Contentful Paint (LCP < 1.2s)**:
+   - **High-Priority Image Preloading**: Header SSR (`/baca/[slug]` dan `/`) menyuntikkan tag `<link rel="preload" as="image" href="..." fetchpriority="high">` langsung di `<head>` HTML awal.
+   - **Non-blocking CSS Preloading**: File CSS kritis dimuat secara asinkron (`<link rel="preload" as="style" onload="...">`) dengan fallback `<noscript>` untuk mengeliminasi *Render-Blocking Resources*.
+   - **Responsive Image Optimization (WebP/AVIF)**:
+     - Utilitas Unsplash dikompresi ke kualitas `q=55` dan format `fm=webp` secara otomatis di CDN Edge.
+     - Menggunakan atribut `srcset` dengan ukuran kontainer presisi (`400w`, `600w`, `700w`) dan `sizes="(max-width: 1024px) 100vw, 700px"`.
+     - Avatar dikompresi secara ketat pada dimensi `w=60` & `q=60` (ukuran file < 2 KiB).
+
+3. **Composited Animations & GPU Acceleration**:
+   - Menghapus animasi `transition-colors` / `border-bottom-color` pada elemen sticky `<header>` untuk mencegah *layout reflows* pada thread utama peramban mobile.
+
+4. **Aksesibilitas (WCAG AA Contrast & Heading Sequence)**:
+   - Kontras warna teks sekunder, badge ("Dimoderasi", "9 mnt", kategori) ditingkatkan ke tingkat kontras tinggi (`rose-700/800`, `slate-700/800`, `emerald-900`).
+   - Hierarki Heading berurutan rapi: `<h1>` (Judul Halaman/Artikel) ➔ `<h2>` (Daftar Isi, Bagian Konten, Komentar, Rekomendasi) ➔ `<h3>` (Subbagian, Penulis, Kartu Artikel).
+
+5. **Tipografi Ramah Baca Mobile (High Readability for Parents)**:
+   - **Ukuran & Spasi Paragraf**: Teks isi artikel berukuran 17px (`1.0625rem`) di mobile dengan *line-height* renggang `1.6` (27px) dan jarak paragraf 18px (`1.125rem`).
+   - **Skalabilitas Judul**: H1 (26px), H2 (21px), H3 (19px) di layar sentuh dengan ketebalan 700-800 dan *line-height* rapat `1.25 - 1.3`.
+   - **Batas Lebar Baca**: Panjang baris dibatasi maksimal `68ch` dengan *horizontal padding* minimum 16px untuk kenyamanan mata saat membaca durasi panjang.
+

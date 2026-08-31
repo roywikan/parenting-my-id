@@ -87,7 +87,7 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-rose-100 dark:border-slate-800 transition-colors">
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-rose-100 dark:border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
@@ -111,8 +111,8 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
             </button>
 
             {/* EDGE PERFORMANCE BADGE */}
-            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300 font-bold ml-3">
-              <Zap className="w-3.5 h-3.5 fill-current text-emerald-600 dark:text-emerald-400" />
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 text-[11px] text-emerald-900 dark:text-emerald-200 font-bold ml-3">
+              <Zap className="w-3.5 h-3.5 fill-current text-emerald-700 dark:text-emerald-400" />
               <span>{siteConfig?.header_badge_text || 'Cloudflare D1 Edge Engine'}</span>
             </div>
           </div>

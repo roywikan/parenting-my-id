@@ -199,7 +199,7 @@ export default function ArticleDetailView({
   // 1. Loading State (Data fetching in progress)
   if (!post && (isPostsLoading || isFetchingSingle)) {
     return (
-      <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 space-y-8 animate-pulse">
+      <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 space-y-8 animate-pulse min-h-[900px]">
         {/* Breadcrumb Skeleton */}
         <div className="flex items-center gap-2">
           <div className="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded-md" />
@@ -239,7 +239,7 @@ export default function ArticleDetailView({
   // 2. Not Found State (Data fetching completed and post truly does not exist)
   if (!post) {
     return (
-      <div className="max-w-3xl mx-auto py-16 text-center space-y-4">
+      <div className="max-w-3xl mx-auto py-16 text-center space-y-4 min-h-[500px]">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Artikel Tidak Ditemukan</h2>
         <p className="text-slate-600 dark:text-slate-400">Artikel dengan slug "{slug}" mungkin telah dihapus atau dipindahkan.</p>
         <button
@@ -263,7 +263,7 @@ export default function ArticleDetailView({
   const relatedPosts = posts.filter((p) => p.slug !== post.slug && p.status === 'published').slice(0, 2);
 
   return (
-    <article className="max-w-4xl mx-auto space-y-8 pb-16">
+    <article className="max-w-4xl mx-auto space-y-8 pb-16 min-h-[900px]">
       <SEOHelper
         title={`${post.title} | Parenting.my.id`}
         description={post.metaDescription || post.excerpt}
@@ -545,23 +545,23 @@ export default function ArticleDetailView({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <div className="flex items-center justify-center sm:justify-start gap-2">
-                    <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                       {post.authorName || 'Dr. Ratna Sari, M.Psi'}
-                    </h4>
+                    </h3>
                   </div>
-                  <p className="text-xs text-rose-600 font-semibold pt-0.5">
+                  <p className="text-xs text-rose-700 dark:text-rose-300 font-bold pt-0.5">
                     {post.authorTitle || 'Spesialis Psikologi Anak & Praktisi Parenting'}
                   </p>
                 </div>
 
                 {/* SOCIAL LINKS */}
-                <div className="flex items-center justify-center sm:justify-end gap-2 text-slate-500">
+                <div className="flex items-center justify-center sm:justify-end gap-2 text-slate-600 dark:text-slate-400">
                   {post.authorSocials?.instagram && (
                     <a
                       href={post.authorSocials.instagram}
                       target="_blank"
                       rel="noreferrer"
-                      className="p-1.5 rounded-lg bg-rose-50 dark:bg-slate-800 text-rose-600 hover:bg-rose-100 transition-colors"
+                      className="p-1.5 rounded-lg bg-rose-50 dark:bg-slate-800 text-rose-700 dark:text-rose-300 hover:bg-rose-100 transition-colors"
                       title="Instagram Penulis"
                     >
                       <Instagram className="w-4 h-4" />
@@ -572,7 +572,7 @@ export default function ArticleDetailView({
                       href={post.authorSocials.linkedin}
                       target="_blank"
                       rel="noreferrer"
-                      className="p-1.5 rounded-lg bg-sky-50 dark:bg-slate-800 text-sky-600 hover:bg-sky-100 transition-colors"
+                      className="p-1.5 rounded-lg bg-sky-50 dark:bg-slate-800 text-sky-700 dark:text-sky-300 hover:bg-sky-100 transition-colors"
                       title="LinkedIn Penulis"
                     >
                       <Linkedin className="w-4 h-4" />
@@ -583,7 +583,7 @@ export default function ArticleDetailView({
                       href={post.authorSocials.website}
                       target="_blank"
                       rel="noreferrer"
-                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition-colors"
+                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 transition-colors"
                       title="Situs Resmi Penulis"
                     >
                       <Globe className="w-4 h-4" />
@@ -592,7 +592,7 @@ export default function ArticleDetailView({
                 </div>
               </div>
 
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
                 {post.authorBio || 'Berkomitmen memberikan edukasi berbasis riset medis dan psikologi untuk membantu orang tua Indonesia membesarkan anak dengan penuh kasih sayang dan pemahaman gizi yang tepat.'}
               </p>
             </div>
@@ -602,10 +602,10 @@ export default function ArticleDetailView({
         {/* CO-AUTHORS & REVIEWERS SECTION (IF ANY) */}
         {post.coAuthors && post.coAuthors.length > 0 && (
           <div className="space-y-3 pt-2">
-            <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
-              <Users className="w-3.5 h-3.5 text-rose-500" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <Users className="w-3.5 h-3.5 text-rose-600" />
               <span>Co-Author & Tim Kontributor Editorial</span>
-            </h5>
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {post.coAuthors.map((co) => (
                 <div

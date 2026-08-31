@@ -23,19 +23,19 @@ export default function AutoTableOfContents({ items }: AutoTableOfContentsProps)
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-lg bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
+          <div className="p-1.5 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
             <List className="w-4 h-4" />
           </div>
-          <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base tracking-tight">
+          <h2 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base tracking-tight">
             Daftar Isi Artikel
-          </h3>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-mono">
+          </h2>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold font-mono">
             {items.length} Bagian
           </span>
         </div>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors"
+          className="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors"
           aria-label={isOpen ? 'Sembunyikan Daftar Isi' : 'Tampilkan Daftar Isi'}
         >
           {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -58,10 +58,10 @@ export default function AutoTableOfContents({ items }: AutoTableOfContentsProps)
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }
                 }}
-                className="group flex items-start gap-2 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 py-1 transition-colors leading-relaxed"
+                className="group flex items-start gap-2 text-slate-700 dark:text-slate-300 hover:text-rose-700 dark:hover:text-rose-300 py-1 transition-colors leading-relaxed"
               >
-                <Anchor className="w-3.5 h-3.5 mt-0.5 opacity-40 group-hover:opacity-100 group-hover:text-rose-500 shrink-0 transition-opacity" />
-                <span className="font-medium group-hover:underline decoration-rose-400/50 underline-offset-4">
+                <Anchor className="w-3.5 h-3.5 mt-0.5 opacity-60 group-hover:opacity-100 group-hover:text-rose-600 shrink-0 transition-opacity" />
+                <span className="font-semibold group-hover:underline decoration-rose-400/50 underline-offset-4">
                   {item.text}
                 </span>
               </a>

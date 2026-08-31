@@ -186,17 +186,17 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
       {/* HEADER DISKUSI & TAB SWITCHER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-rose-50/80 via-white to-pink-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/80 p-4 rounded-2xl border border-rose-100 dark:border-slate-800 shadow-2xs">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-rose-500 text-white shadow-sm shrink-0">
+          <div className="p-2.5 rounded-xl bg-rose-600 text-white shadow-sm shrink-0">
             <MessageSquare className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
               <span>Diskusi &amp; Komentar Pembaca</span>
-              <span className="flex items-center gap-1 text-[10px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-950/60 px-2 py-0.5 rounded-md">
+              <span className="flex items-center gap-1 text-[10px] font-bold text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 px-2 py-0.5 rounded-md">
                 <Sparkles className="w-3 h-3" /> Dimoderasi
               </span>
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            </h2>
+            <p className="text-xs text-slate-700 dark:text-slate-300 font-medium mt-0.5">
               Tulis tanggapan, pengalaman, atau pertanyaan Anda terkait artikel ini.
             </p>
           </div>
@@ -208,14 +208,14 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
             onClick={() => setCommentMode('native')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
               commentMode === 'native'
-                ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-300 shadow-xs'
+                : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <MessageCircle className="w-3.5 h-3.5" />
             <span>Komentar Native</span>
             {nativeComments.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 text-[10px]">
+              <span className="px-1.5 py-0.2 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold text-[10px]">
                 {nativeComments.length}
               </span>
             )}
@@ -225,8 +225,8 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
             onClick={() => setCommentMode('cusdis')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
               commentMode === 'cusdis'
-                ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                ? 'bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-300 shadow-xs'
+                : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Globe className="w-3.5 h-3.5" />

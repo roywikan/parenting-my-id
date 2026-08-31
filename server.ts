@@ -1137,27 +1137,6 @@ app.get('/baca/:slug', (req, res, next) => {
 });
 
 // START EXPRESS + VITE SERVER
-async function startServerAISTUDIO() {
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
-
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server parenting.my.id running on http://localhost:${PORT}`);
-  });
-}
-
-// START EXPRESS + VITE SERVER by GEMINI
 async function startServer() {
   // Ensure static llms.txt and sitemap.xml are generated on server boot
   try {
