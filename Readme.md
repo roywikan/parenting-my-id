@@ -288,6 +288,9 @@ Portal Admin menyediakan 4 opsi fleksibel untuk pengaturan kolom komentar artike
 4. **🚫 Nonaktifkan (`none`)**: Menutup kolom komentar secara menyeluruh di semua artikel.
 
 *Catatan Integrasi Webhook Cusdis:* Tersedia endpoint webhook `/api/webhooks/cusdis` yang secara otomatis menyinkronkan komentar baru dari Cusdis ke database Cloudflare D1 sebagai backup data.
+
+---
+
 ## ✍️ LANGKAH 4: Panduan Penulis — Mengisi Artikel & Gambar dari Unsplash.com
 
 Penulis artikel memiliki akses ke **Editor WYSIWYG Rich Editor** lengkap dengan AI Assistant, SEO Auditor, dan Pengelola Gambar.
@@ -396,4 +399,3 @@ Sistem ini dikonfigurasi secara khusus untuk mencapai skor **95-100** pada **Goo
    - **Ukuran & Spasi Paragraf**: Teks isi artikel berukuran 17px (`1.0625rem`) di mobile dengan *line-height* renggang `1.6` (27px) dan jarak paragraf 18px (`1.125rem`).
    - **Skalabilitas Judul**: H1 (26px), H2 (21px), H3 (19px) di layar sentuh dengan ketebalan 700-800 dan *line-height* rapat `1.25 - 1.3`.
    - **Batas Lebar Baca**: Panjang baris dibatasi maksimal `68ch` dengan *horizontal padding* minimum 16px untuk kenyamanan mata saat membaca durasi panjang.
-

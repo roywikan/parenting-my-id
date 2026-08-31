@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Post, AutoLink, User, SiteConfig, PostRevision, NavLink } from '../types';
+import { Post, AutoLink, User, SiteConfig, PostRevision, NavLink, HomepageDisplayMode } from '../types';
 import { THEME_PRESETS } from '../lib/themes';
 import { DEFAULT_SITE_CONFIG } from '../lib/config';
 import { 
@@ -278,6 +278,93 @@ export default function AdminPortal({
   const [cfgAdminLoginSubtitle, setCfgAdminLoginSubtitle] = useState(siteConfig?.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1');
   const [cfgAdminLoginBtnText, setCfgAdminLoginBtnText] = useState(siteConfig?.admin_login_btn_text || 'Masuk Portal CMS');
 
+  // Homepage Display Mode & Sub-tab
+  const [cfgHomepageDisplayMode, setCfgHomepageDisplayMode] = useState<HomepageDisplayMode>(siteConfig?.homepage_display_mode || 'default');
+  const [selectedModelConfigTab, setSelectedModelConfigTab] = useState<HomepageDisplayMode>(siteConfig?.homepage_display_mode || 'default');
+
+  // 1. Event Model States
+  const [cfgEventBadgeText, setCfgEventBadgeText] = useState(siteConfig?.event_badge_text || 'Summit Nasional Parenting 2026');
+  const [cfgEventDateLocation, setCfgEventDateLocation] = useState(siteConfig?.event_date_location || '16 - 18 Oktober 2026 • JCC Senayan, Jakarta');
+  const [cfgEventTitle, setCfgEventTitle] = useState(siteConfig?.event_title || 'Indonesia Parenting Summit 2026: Membangun Fondasi Emas Keluarga Tangguh');
+  const [cfgEventSubtitle, setCfgEventSubtitle] = useState(siteConfig?.event_subtitle || 'Konferensi & lokakarya parenting terbesar di Indonesia. Dapatkan wawasan ilmiah terdepan langsung dari para dokter spesialis anak.');
+  const [cfgEventCtaText, setCfgEventCtaText] = useState(siteConfig?.event_cta_text || 'Daftar / Dapatkan Tiket');
+  const [cfgEventWhatsapp, setCfgEventWhatsapp] = useState(siteConfig?.event_whatsapp || '6281234567890');
+
+  // 2. Campaign Model States
+  const [cfgCampaignBadgeText, setCfgCampaignBadgeText] = useState(siteConfig?.campaign_badge_text || 'Aksi Sosial Nasional');
+  const [cfgCampaignTitle, setCfgCampaignTitle] = useState(siteConfig?.campaign_title || 'Gerakan 1.000 Hari Pertama: Wujudkan Generasi Bebas Stunting');
+  const [cfgCampaignSubtitle, setCfgCampaignSubtitle] = useState(siteConfig?.campaign_subtitle || 'Setiap anak Indonesia berhak mendapatkan nutrisi optimal dan kasih sayang sejak hari pertama kehidupan.');
+  const [cfgCampaignTargetAmount, setCfgCampaignTargetAmount] = useState(siteConfig?.campaign_target_amount || '500000000');
+  const [cfgCampaignCurrentAmount, setCfgCampaignCurrentAmount] = useState(siteConfig?.campaign_current_amount || '388500000');
+  const [cfgCampaignDonorCount, setCfgCampaignDonorCount] = useState(siteConfig?.campaign_donor_count || '1.428');
+
+  // 3. Microsite Model States
+  const [cfgMicrositeTitle, setCfgMicrositeTitle] = useState(siteConfig?.microsite_title || 'Parenting.my.id Official Hub');
+  const [cfgMicrositeBio, setCfgMicrositeBio] = useState(siteConfig?.microsite_bio || 'Pusat informasi, konsultasi dokter anak, panduan MPASI, dan komunitas orang tua cerdas di Indonesia.');
+  const [cfgMicrositeWaLabel, setCfgMicrositeWaLabel] = useState(siteConfig?.microsite_wa_label || 'Konsultasi Privat Parenting (WhatsApp)');
+  const [cfgMicrositeWaNumber, setCfgMicrositeWaNumber] = useState(siteConfig?.microsite_wa_number || '6281234567890');
+  const [cfgMicrositeEbookUrl, setCfgMicrositeEbookUrl] = useState(siteConfig?.microsite_ebook_url || '#');
+  const [cfgMicrositeTelegramUrl, setCfgMicrositeTelegramUrl] = useState(siteConfig?.microsite_telegram_url || 'https://t.me/parentingmyid');
+  const [cfgMicrositePodcastUrl, setCfgMicrositePodcastUrl] = useState(siteConfig?.microsite_podcast_url || 'https://spotify.com');
+  const [cfgMicrositeShopUrl, setCfgMicrositeShopUrl] = useState(siteConfig?.microsite_shop_url || '#');
+
+  // 4. Portfolio Model States
+  const [cfgPortfolioBadgeText, setCfgPortfolioBadgeText] = useState(siteConfig?.portfolio_badge_text || 'Showcase Portofolio & Rekam Jejak');
+  const [cfgPortfolioTitle, setCfgPortfolioTitle] = useState(siteConfig?.portfolio_title || 'Karya, Program Edukasi & Penelitian Parenting');
+  const [cfgPortfolioSubtitle, setCfgPortfolioSubtitle] = useState(siteConfig?.portfolio_subtitle || 'Dedikasi nyata dalam merancang program edukasi keluarga, publikasi ilmiah terakreditasi, dan buku panduan pengasuhan.');
+  const [cfgPortfolioStat1Val, setCfgPortfolioStat1Val] = useState(siteConfig?.portfolio_stat1_val || '50K+');
+  const [cfgPortfolioStat1Lbl, setCfgPortfolioStat1Lbl] = useState(siteConfig?.portfolio_stat1_lbl || 'Keluarga Terbantu');
+  const [cfgPortfolioStat2Val, setCfgPortfolioStat2Val] = useState(siteConfig?.portfolio_stat2_val || '120+');
+  const [cfgPortfolioStat2Lbl, setCfgPortfolioStat2Lbl] = useState(siteConfig?.portfolio_stat2_lbl || 'Workshop Nasional');
+  const [cfgPortfolioStat3Val, setCfgPortfolioStat3Val] = useState(siteConfig?.portfolio_stat3_val || '15+');
+  const [cfgPortfolioStat3Lbl, setCfgPortfolioStat3Lbl] = useState(siteConfig?.portfolio_stat3_lbl || 'Riset Terpublikasi');
+
+  // 5. Personal Branding Model States
+  const [cfgDoctorName, setCfgDoctorName] = useState(siteConfig?.doctor_name || 'dr. Siti Rahma, Sp.A(K), M.Kes');
+  const [cfgDoctorTitle, setCfgDoctorTitle] = useState(siteConfig?.doctor_title || 'Dokter Spesialis Anak & Konsultan Nutrisi Pediatrik');
+  const [cfgDoctorBadgeText, setCfgDoctorBadgeText] = useState(siteConfig?.doctor_badge_text || 'Dokter Spesialis Anak & Konsultan Pengasuhan');
+  const [cfgDoctorBio, setCfgDoctorBio] = useState(siteConfig?.doctor_bio || 'Membantu ratusan ribu orang tua muda di Indonesia menavigasi fase emas tumbuh kembang buah hati dengan pendekatan medis berbasis bukti.');
+  const [cfgDoctorAvatarUrl, setCfgDoctorAvatarUrl] = useState(siteConfig?.doctor_avatar_url || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=600&h=600&fit=crop&q=80');
+  const [cfgDoctorExperienceYears, setCfgDoctorExperienceYears] = useState(siteConfig?.doctor_experience_years || '15+ Tahun Pengalaman');
+  const [cfgDoctorBookingWhatsapp, setCfgDoctorBookingWhatsapp] = useState(siteConfig?.doctor_booking_whatsapp || '6281234567890');
+
+  // 6. Corporate & B2B Model States
+  const [cfgCorporateBadgeText, setCfgCorporateBadgeText] = useState(siteConfig?.corporate_badge_text || 'Solusi Korporasi & Employee Wellbeing');
+  const [cfgCorporateTitle, setCfgCorporateTitle] = useState(siteConfig?.corporate_title || 'Meningkatkan Produktivitas Karyawan Melalui Dukungan Pengasuhan Terpercaya');
+  const [cfgCorporateSubtitle, setCfgCorporateSubtitle] = useState(siteConfig?.corporate_subtitle || 'Program kemitraan Employee Assistance Program (EAP), daycare kantor, dan webinar parenting eksklusif untuk korporasi.');
+  const [cfgCorporateCtaProposal, setCfgCorporateCtaProposal] = useState(siteConfig?.corporate_cta_proposal || 'Unduh Proposal & Rate Card B2B');
+  const [cfgCorporateCtaConsult, setCfgCorporateCtaConsult] = useState(siteConfig?.corporate_cta_consult || 'Jadwalkan Konsultasi Korporasi');
+  const [cfgCorporateWhatsapp, setCfgCorporateWhatsapp] = useState(siteConfig?.corporate_whatsapp || '6281234567890');
+  const [cfgCorporateStat1Val, setCfgCorporateStat1Val] = useState(siteConfig?.corporate_stat1_val || '85+');
+  const [cfgCorporateStat1Lbl, setCfgCorporateStat1Lbl] = useState(siteConfig?.corporate_stat1_lbl || 'Korporasi Mitra');
+  const [cfgCorporateStat2Val, setCfgCorporateStat2Val] = useState(siteConfig?.corporate_stat2_val || '98%');
+  const [cfgCorporateStat2Lbl, setCfgCorporateStat2Lbl] = useState(siteConfig?.corporate_stat2_lbl || 'Retensi Karyawan');
+  const [cfgCorporateStat3Val, setCfgCorporateStat3Val] = useState(siteConfig?.corporate_stat3_val || '12.000+');
+  const [cfgCorporateStat3Lbl, setCfgCorporateStat3Lbl] = useState(siteConfig?.corporate_stat3_lbl || 'Karyawan Terbantu');
+
+  // 7. Product Landing Model States
+  const [cfgProductBadgeText, setCfgProductBadgeText] = useState(siteConfig?.product_badge_text || 'Edisi Spesial Panduan Pengasuhan Emas 2026');
+  const [cfgProductTitle, setCfgProductTitle] = useState(siteConfig?.product_title || 'Paket Komplit MPASI & Stimulasi Anak Anti-GTM');
+  const [cfgProductSubtitle, setCfgProductSubtitle] = useState(siteConfig?.product_subtitle || 'Solusi tuntas mengatasi Gerakan Tutup Mulut, memastikan asupan zat besi tercukupi, dan menstimulasi kecerdasan motorik balita.');
+  const [cfgProductPrice, setCfgProductPrice] = useState(siteConfig?.product_price || 'Rp 189.000');
+  const [cfgProductOriginalPrice, setCfgProductOriginalPrice] = useState(siteConfig?.product_original_price || 'Rp 299.000');
+  const [cfgProductDiscountTag, setCfgProductDiscountTag] = useState(siteConfig?.product_discount_tag || 'HEMAT 37%');
+  const [cfgProductCtaText, setCfgProductCtaText] = useState(siteConfig?.product_cta_text || 'Pesan Sekarang & Dapatkan Bonus');
+  const [cfgProductWhatsapp, setCfgProductWhatsapp] = useState(siteConfig?.product_whatsapp || '6281234567890');
+
+  // 8. Classified Ads Model States
+  const [cfgClassifiedMastheadTitle, setCfgClassifiedMastheadTitle] = useState(siteConfig?.classified_masthead_title || 'WARNA-WARTO PARENTING');
+  const [cfgClassifiedMastheadSubtitle, setCfgClassifiedMastheadSubtitle] = useState(siteConfig?.classified_masthead_subtitle || 'LEMBARAN IKLAN BARIS, PENGUMUMAN & WARTA KELUARGA');
+  const [cfgClassifiedEdition, setCfgClassifiedEdition] = useState(siteConfig?.classified_edition || '1988/2026');
+  const [cfgClassifiedPriceTag, setCfgClassifiedPriceTag] = useState(siteConfig?.classified_price_tag || 'HARGA ECERAN RP 500,-');
+  const [cfgClassifiedPhone, setCfgClassifiedPhone] = useState(siteConfig?.classified_phone || '(021) 7654321');
+
+  // 9. Knowledge Base Model States
+  const [cfgKbBadgeText, setCfgKbBadgeText] = useState(siteConfig?.kb_badge_text || 'Ensiklopedia & Pusat Bantuan Parenting');
+  const [cfgKbTitle, setCfgKbTitle] = useState(siteConfig?.kb_title || 'Bagaimana Kami Bisa Membantu Pengasuhan Anda?');
+  const [cfgKbSubtitle, setCfgKbSubtitle] = useState(siteConfig?.kb_subtitle || 'Cari jawaban terpercaya dari ribuan artikel, panduan medis, dan rekomendasi dokter spesialis anak.');
+  const [cfgKbSearchPlaceholder, setCfgKbSearchPlaceholder] = useState(siteConfig?.kb_search_placeholder || 'Ketik topik (misal: jadwal MPASI, anak demam, speech delay, tantrum)...');
+
   const [configSuccessMsg, setConfigSuccessMsg] = useState('');
   const [configErrMsg, setConfigErrMsg] = useState('');
   const [isSavingConfig, setIsSavingConfig] = useState(false);
@@ -295,6 +382,7 @@ export default function AdminPortal({
 
   useEffect(() => {
     if (siteConfig) {
+      setCfgHomepageDisplayMode(siteConfig.homepage_display_mode || 'default');
       setCfgActiveThemePreset(siteConfig.active_theme_preset || DEFAULT_SITE_CONFIG.active_theme_preset || 'corp-blue');
       setCfgSiteName(siteConfig.site_name || DEFAULT_SITE_CONFIG.site_name);
       setCfgSiteTagline(siteConfig.site_tagline || DEFAULT_SITE_CONFIG.site_tagline);
@@ -389,6 +477,81 @@ export default function AdminPortal({
       setCfgFooterBadge2(siteConfig.footer_badge_2 || 'Diperbarui Rutin');
       setCfgFooterBadge3(siteConfig.footer_badge_3 || '100% Gratis');
 
+      // 10 Model Display Values Sync
+      setCfgEventBadgeText(siteConfig.event_badge_text || 'Summit Nasional Parenting 2026');
+      setCfgEventDateLocation(siteConfig.event_date_location || '16 - 18 Oktober 2026 • JCC Senayan, Jakarta');
+      setCfgEventTitle(siteConfig.event_title || 'Indonesia Parenting Summit 2026: Membangun Fondasi Emas Keluarga Tangguh');
+      setCfgEventSubtitle(siteConfig.event_subtitle || 'Konferensi & lokakarya parenting terbesar di Indonesia. Dapatkan wawasan ilmiah terdepan langsung dari para dokter spesialis anak.');
+      setCfgEventCtaText(siteConfig.event_cta_text || 'Daftar / Dapatkan Tiket');
+      setCfgEventWhatsapp(siteConfig.event_whatsapp || '6281234567890');
+
+      setCfgCampaignBadgeText(siteConfig.campaign_badge_text || 'Aksi Sosial Nasional');
+      setCfgCampaignTitle(siteConfig.campaign_title || 'Gerakan 1.000 Hari Pertama: Wujudkan Generasi Bebas Stunting');
+      setCfgCampaignSubtitle(siteConfig.campaign_subtitle || 'Setiap anak Indonesia berhak mendapatkan nutrisi optimal dan kasih sayang sejak hari pertama kehidupan.');
+      setCfgCampaignTargetAmount(siteConfig.campaign_target_amount || '500000000');
+      setCfgCampaignCurrentAmount(siteConfig.campaign_current_amount || '388500000');
+      setCfgCampaignDonorCount(siteConfig.campaign_donor_count || '1.428');
+
+      setCfgMicrositeTitle(siteConfig.microsite_title || 'Parenting.my.id Official Hub');
+      setCfgMicrositeBio(siteConfig.microsite_bio || 'Pusat informasi, konsultasi dokter anak, panduan MPASI, dan komunitas orang tua cerdas di Indonesia.');
+      setCfgMicrositeWaLabel(siteConfig.microsite_wa_label || 'Konsultasi Privat Parenting (WhatsApp)');
+      setCfgMicrositeWaNumber(siteConfig.microsite_wa_number || '6281234567890');
+      setCfgMicrositeEbookUrl(siteConfig.microsite_ebook_url || '#');
+      setCfgMicrositeTelegramUrl(siteConfig.microsite_telegram_url || 'https://t.me/parentingmyid');
+      setCfgMicrositePodcastUrl(siteConfig.microsite_podcast_url || 'https://spotify.com');
+      setCfgMicrositeShopUrl(siteConfig.microsite_shop_url || '#');
+
+      setCfgPortfolioBadgeText(siteConfig.portfolio_badge_text || 'Showcase Portofolio & Rekam Jejak');
+      setCfgPortfolioTitle(siteConfig.portfolio_title || 'Karya, Program Edukasi & Penelitian Parenting');
+      setCfgPortfolioSubtitle(siteConfig.portfolio_subtitle || 'Dedikasi nyata dalam merancang program edukasi keluarga, publikasi ilmiah terakreditasi, dan buku panduan pengasuhan.');
+      setCfgPortfolioStat1Val(siteConfig.portfolio_stat1_val || '50K+');
+      setCfgPortfolioStat1Lbl(siteConfig.portfolio_stat1_lbl || 'Keluarga Terbantu');
+      setCfgPortfolioStat2Val(siteConfig.portfolio_stat2_val || '120+');
+      setCfgPortfolioStat2Lbl(siteConfig.portfolio_stat2_lbl || 'Workshop Nasional');
+      setCfgPortfolioStat3Val(siteConfig.portfolio_stat3_val || '15+');
+      setCfgPortfolioStat3Lbl(siteConfig.portfolio_stat3_lbl || 'Riset Terpublikasi');
+
+      setCfgDoctorName(siteConfig.doctor_name || 'dr. Siti Rahma, Sp.A(K), M.Kes');
+      setCfgDoctorTitle(siteConfig.doctor_title || 'Dokter Spesialis Anak & Konsultan Nutrisi Pediatrik');
+      setCfgDoctorBadgeText(siteConfig.doctor_badge_text || 'Dokter Spesialis Anak & Konsultan Pengasuhan');
+      setCfgDoctorBio(siteConfig.doctor_bio || 'Membantu ratusan ribu orang tua muda di Indonesia menavigasi fase emas tumbuh kembang buah hati dengan pendekatan medis berbasis bukti.');
+      setCfgDoctorAvatarUrl(siteConfig.doctor_avatar_url || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=600&h=600&fit=crop&q=80');
+      setCfgDoctorExperienceYears(siteConfig.doctor_experience_years || '15+ Tahun Pengalaman');
+      setCfgDoctorBookingWhatsapp(siteConfig.doctor_booking_whatsapp || '6281234567890');
+
+      setCfgCorporateBadgeText(siteConfig.corporate_badge_text || 'Solusi Korporasi & Employee Wellbeing');
+      setCfgCorporateTitle(siteConfig.corporate_title || 'Meningkatkan Produktivitas Karyawan Melalui Dukungan Pengasuhan Terpercaya');
+      setCfgCorporateSubtitle(siteConfig.corporate_subtitle || 'Program kemitraan Employee Assistance Program (EAP), daycare kantor, dan webinar parenting eksklusif untuk korporasi.');
+      setCfgCorporateCtaProposal(siteConfig.corporate_cta_proposal || 'Unduh Proposal & Rate Card B2B');
+      setCfgCorporateCtaConsult(siteConfig.corporate_cta_consult || 'Jadwalkan Konsultasi Korporasi');
+      setCfgCorporateWhatsapp(siteConfig.corporate_whatsapp || '6281234567890');
+      setCfgCorporateStat1Val(siteConfig.corporate_stat1_val || '85+');
+      setCfgCorporateStat1Lbl(siteConfig.corporate_stat1_lbl || 'Korporasi Mitra');
+      setCfgCorporateStat2Val(siteConfig.corporate_stat2_val || '98%');
+      setCfgCorporateStat2Lbl(siteConfig.corporate_stat2_lbl || 'Retensi Karyawan');
+      setCfgCorporateStat3Val(siteConfig.corporate_stat3_val || '12.000+');
+      setCfgCorporateStat3Lbl(siteConfig.corporate_stat3_lbl || 'Karyawan Terbantu');
+
+      setCfgProductBadgeText(siteConfig.product_badge_text || 'Edisi Spesial Panduan Pengasuhan Emas 2026');
+      setCfgProductTitle(siteConfig.product_title || 'Paket Komplit MPASI & Stimulasi Anak Anti-GTM');
+      setCfgProductSubtitle(siteConfig.product_subtitle || 'Solusi tuntas mengatasi Gerakan Tutup Mulut, memastikan asupan zat besi tercukupi, dan menstimulasi kecerdasan motorik balita.');
+      setCfgProductPrice(siteConfig.product_price || 'Rp 189.000');
+      setCfgProductOriginalPrice(siteConfig.product_original_price || 'Rp 299.000');
+      setCfgProductDiscountTag(siteConfig.product_discount_tag || 'HEMAT 37%');
+      setCfgProductCtaText(siteConfig.product_cta_text || 'Pesan Sekarang & Dapatkan Bonus');
+      setCfgProductWhatsapp(siteConfig.product_whatsapp || '6281234567890');
+
+      setCfgClassifiedMastheadTitle(siteConfig.classified_masthead_title || 'WARNA-WARTO PARENTING');
+      setCfgClassifiedMastheadSubtitle(siteConfig.classified_masthead_subtitle || 'LEMBARAN IKLAN BARIS, PENGUMUMAN & WARTA KELUARGA');
+      setCfgClassifiedEdition(siteConfig.classified_edition || '1988/2026');
+      setCfgClassifiedPriceTag(siteConfig.classified_price_tag || 'HARGA ECERAN RP 500,-');
+      setCfgClassifiedPhone(siteConfig.classified_phone || '(021) 7654321');
+
+      setCfgKbBadgeText(siteConfig.kb_badge_text || 'Ensiklopedia & Pusat Bantuan Parenting');
+      setCfgKbTitle(siteConfig.kb_title || 'Bagaimana Kami Bisa Membantu Pengasuhan Anda?');
+      setCfgKbSubtitle(siteConfig.kb_subtitle || 'Cari jawaban terpercaya dari ribuan artikel, panduan medis, dan rekomendasi dokter spesialis anak.');
+      setCfgKbSearchPlaceholder(siteConfig.kb_search_placeholder || 'Ketik topik (misal: jadwal MPASI, anak demam, speech delay, tantrum)...');
+
       hasInitializedFromPropsRef.current = true;
     }
   }, [siteConfig]);
@@ -399,6 +562,7 @@ export default function AdminPortal({
 
     const timer = setTimeout(() => {
       const draftConfig: SiteConfig = {
+        homepage_display_mode: cfgHomepageDisplayMode,
         active_theme_preset: cfgActiveThemePreset,
         site_name: cfgSiteName,
         mobile_admin_btn_label: cfgMobileAdminBtnLabel,
@@ -468,6 +632,81 @@ export default function AdminPortal({
         adsense_article_bottom: cfgAdsenseArticleBottom,
         adsense_sidebar: cfgAdsenseSidebar,
         adsense_sticky_footer: cfgAdsenseStickyFooter,
+
+        // 10 Model Display Values
+        event_badge_text: cfgEventBadgeText,
+        event_date_location: cfgEventDateLocation,
+        event_title: cfgEventTitle,
+        event_subtitle: cfgEventSubtitle,
+        event_cta_text: cfgEventCtaText,
+        event_whatsapp: cfgEventWhatsapp,
+
+        campaign_badge_text: cfgCampaignBadgeText,
+        campaign_title: cfgCampaignTitle,
+        campaign_subtitle: cfgCampaignSubtitle,
+        campaign_target_amount: cfgCampaignTargetAmount,
+        campaign_current_amount: cfgCampaignCurrentAmount,
+        campaign_donor_count: cfgCampaignDonorCount,
+
+        microsite_title: cfgMicrositeTitle,
+        microsite_bio: cfgMicrositeBio,
+        microsite_wa_label: cfgMicrositeWaLabel,
+        microsite_wa_number: cfgMicrositeWaNumber,
+        microsite_ebook_url: cfgMicrositeEbookUrl,
+        microsite_telegram_url: cfgMicrositeTelegramUrl,
+        microsite_podcast_url: cfgMicrositePodcastUrl,
+        microsite_shop_url: cfgMicrositeShopUrl,
+
+        portfolio_badge_text: cfgPortfolioBadgeText,
+        portfolio_title: cfgPortfolioTitle,
+        portfolio_subtitle: cfgPortfolioSubtitle,
+        portfolio_stat1_val: cfgPortfolioStat1Val,
+        portfolio_stat1_lbl: cfgPortfolioStat1Lbl,
+        portfolio_stat2_val: cfgPortfolioStat2Val,
+        portfolio_stat2_lbl: cfgPortfolioStat2Lbl,
+        portfolio_stat3_val: cfgPortfolioStat3Val,
+        portfolio_stat3_lbl: cfgPortfolioStat3Lbl,
+
+        doctor_name: cfgDoctorName,
+        doctor_title: cfgDoctorTitle,
+        doctor_badge_text: cfgDoctorBadgeText,
+        doctor_bio: cfgDoctorBio,
+        doctor_avatar_url: cfgDoctorAvatarUrl,
+        doctor_experience_years: cfgDoctorExperienceYears,
+        doctor_booking_whatsapp: cfgDoctorBookingWhatsapp,
+
+        corporate_badge_text: cfgCorporateBadgeText,
+        corporate_title: cfgCorporateTitle,
+        corporate_subtitle: cfgCorporateSubtitle,
+        corporate_cta_proposal: cfgCorporateCtaProposal,
+        corporate_cta_consult: cfgCorporateCtaConsult,
+        corporate_whatsapp: cfgCorporateWhatsapp,
+        corporate_stat1_val: cfgCorporateStat1Val,
+        corporate_stat1_lbl: cfgCorporateStat1Lbl,
+        corporate_stat2_val: cfgCorporateStat2Val,
+        corporate_stat2_lbl: cfgCorporateStat2Lbl,
+        corporate_stat3_val: cfgCorporateStat3Val,
+        corporate_stat3_lbl: cfgCorporateStat3Lbl,
+
+        product_badge_text: cfgProductBadgeText,
+        product_title: cfgProductTitle,
+        product_subtitle: cfgProductSubtitle,
+        product_price: cfgProductPrice,
+        product_original_price: cfgProductOriginalPrice,
+        product_discount_tag: cfgProductDiscountTag,
+        product_cta_text: cfgProductCtaText,
+        product_whatsapp: cfgProductWhatsapp,
+
+        classified_masthead_title: cfgClassifiedMastheadTitle,
+        classified_masthead_subtitle: cfgClassifiedMastheadSubtitle,
+        classified_edition: cfgClassifiedEdition,
+        classified_price_tag: cfgClassifiedPriceTag,
+        classified_phone: cfgClassifiedPhone,
+
+        kb_badge_text: cfgKbBadgeText,
+        kb_title: cfgKbTitle,
+        kb_subtitle: cfgKbSubtitle,
+        kb_search_placeholder: cfgKbSearchPlaceholder,
       };
 
       onLivePreviewChange(draftConfig);
@@ -490,7 +729,17 @@ export default function AdminPortal({
     cfgSocialFacebook, cfgSocialInstagram, cfgSocialTwitter, cfgFooterMenuLinksArray,
     cfgFooterCategoryLinksArray, cfgAdminLoginTitle, cfgAdminLoginSubtitle, cfgAdminLoginBtnText,
     cfgEnableAdsense, cfgAdsenseClientId, cfgAdsenseHeaderTop, cfgAdsenseArticleTop,
-    cfgAdsenseArticleMiddle, cfgAdsenseArticleBottom, cfgAdsenseSidebar, cfgAdsenseStickyFooter
+    cfgAdsenseArticleMiddle, cfgAdsenseArticleBottom, cfgAdsenseSidebar, cfgAdsenseStickyFooter,
+    cfgHomepageDisplayMode,
+    cfgEventBadgeText, cfgEventDateLocation, cfgEventTitle, cfgEventSubtitle, cfgEventCtaText, cfgEventWhatsapp,
+    cfgCampaignBadgeText, cfgCampaignTitle, cfgCampaignSubtitle, cfgCampaignTargetAmount, cfgCampaignCurrentAmount, cfgCampaignDonorCount,
+    cfgMicrositeTitle, cfgMicrositeBio, cfgMicrositeWaLabel, cfgMicrositeWaNumber, cfgMicrositeEbookUrl, cfgMicrositeTelegramUrl, cfgMicrositePodcastUrl, cfgMicrositeShopUrl,
+    cfgPortfolioBadgeText, cfgPortfolioTitle, cfgPortfolioSubtitle, cfgPortfolioStat1Val, cfgPortfolioStat1Lbl, cfgPortfolioStat2Val, cfgPortfolioStat2Lbl, cfgPortfolioStat3Val, cfgPortfolioStat3Lbl,
+    cfgDoctorName, cfgDoctorTitle, cfgDoctorBadgeText, cfgDoctorBio, cfgDoctorAvatarUrl, cfgDoctorExperienceYears, cfgDoctorBookingWhatsapp,
+    cfgCorporateBadgeText, cfgCorporateTitle, cfgCorporateSubtitle, cfgCorporateCtaProposal, cfgCorporateCtaConsult, cfgCorporateWhatsapp, cfgCorporateStat1Val, cfgCorporateStat1Lbl, cfgCorporateStat2Val, cfgCorporateStat2Lbl, cfgCorporateStat3Val, cfgCorporateStat3Lbl,
+    cfgProductBadgeText, cfgProductTitle, cfgProductSubtitle, cfgProductPrice, cfgProductOriginalPrice, cfgProductDiscountTag, cfgProductCtaText, cfgProductWhatsapp,
+    cfgClassifiedMastheadTitle, cfgClassifiedMastheadSubtitle, cfgClassifiedEdition, cfgClassifiedPriceTag, cfgClassifiedPhone,
+    cfgKbBadgeText, cfgKbTitle, cfgKbSubtitle, cfgKbSearchPlaceholder
   ]);
 
   // Autofill Demo High-CTR AdSense Snippets
@@ -530,6 +779,7 @@ export default function AdminPortal({
 
     try {
       const updatedCfg: SiteConfig = {
+        homepage_display_mode: cfgHomepageDisplayMode,
         active_theme_preset: cfgActiveThemePreset,
         site_name: cfgSiteName,
         mobile_admin_btn_label: cfgMobileAdminBtnLabel,
@@ -605,7 +855,82 @@ export default function AdminPortal({
         footer_category_links: cfgFooterCategoryLinksArray,
         admin_login_title: cfgAdminLoginTitle,
         admin_login_subtitle: cfgAdminLoginSubtitle,
-        admin_login_btn_text: cfgAdminLoginBtnText
+        admin_login_btn_text: cfgAdminLoginBtnText,
+
+        // 10 Model Display Values
+        event_badge_text: cfgEventBadgeText,
+        event_date_location: cfgEventDateLocation,
+        event_title: cfgEventTitle,
+        event_subtitle: cfgEventSubtitle,
+        event_cta_text: cfgEventCtaText,
+        event_whatsapp: cfgEventWhatsapp,
+
+        campaign_badge_text: cfgCampaignBadgeText,
+        campaign_title: cfgCampaignTitle,
+        campaign_subtitle: cfgCampaignSubtitle,
+        campaign_target_amount: cfgCampaignTargetAmount,
+        campaign_current_amount: cfgCampaignCurrentAmount,
+        campaign_donor_count: cfgCampaignDonorCount,
+
+        microsite_title: cfgMicrositeTitle,
+        microsite_bio: cfgMicrositeBio,
+        microsite_wa_label: cfgMicrositeWaLabel,
+        microsite_wa_number: cfgMicrositeWaNumber,
+        microsite_ebook_url: cfgMicrositeEbookUrl,
+        microsite_telegram_url: cfgMicrositeTelegramUrl,
+        microsite_podcast_url: cfgMicrositePodcastUrl,
+        microsite_shop_url: cfgMicrositeShopUrl,
+
+        portfolio_badge_text: cfgPortfolioBadgeText,
+        portfolio_title: cfgPortfolioTitle,
+        portfolio_subtitle: cfgPortfolioSubtitle,
+        portfolio_stat1_val: cfgPortfolioStat1Val,
+        portfolio_stat1_lbl: cfgPortfolioStat1Lbl,
+        portfolio_stat2_val: cfgPortfolioStat2Val,
+        portfolio_stat2_lbl: cfgPortfolioStat2Lbl,
+        portfolio_stat3_val: cfgPortfolioStat3Val,
+        portfolio_stat3_lbl: cfgPortfolioStat3Lbl,
+
+        doctor_name: cfgDoctorName,
+        doctor_title: cfgDoctorTitle,
+        doctor_badge_text: cfgDoctorBadgeText,
+        doctor_bio: cfgDoctorBio,
+        doctor_avatar_url: cfgDoctorAvatarUrl,
+        doctor_experience_years: cfgDoctorExperienceYears,
+        doctor_booking_whatsapp: cfgDoctorBookingWhatsapp,
+
+        corporate_badge_text: cfgCorporateBadgeText,
+        corporate_title: cfgCorporateTitle,
+        corporate_subtitle: cfgCorporateSubtitle,
+        corporate_cta_proposal: cfgCorporateCtaProposal,
+        corporate_cta_consult: cfgCorporateCtaConsult,
+        corporate_whatsapp: cfgCorporateWhatsapp,
+        corporate_stat1_val: cfgCorporateStat1Val,
+        corporate_stat1_lbl: cfgCorporateStat1Lbl,
+        corporate_stat2_val: cfgCorporateStat2Val,
+        corporate_stat2_lbl: cfgCorporateStat2Lbl,
+        corporate_stat3_val: cfgCorporateStat3Val,
+        corporate_stat3_lbl: cfgCorporateStat3Lbl,
+
+        product_badge_text: cfgProductBadgeText,
+        product_title: cfgProductTitle,
+        product_subtitle: cfgProductSubtitle,
+        product_price: cfgProductPrice,
+        product_original_price: cfgProductOriginalPrice,
+        product_discount_tag: cfgProductDiscountTag,
+        product_cta_text: cfgProductCtaText,
+        product_whatsapp: cfgProductWhatsapp,
+
+        classified_masthead_title: cfgClassifiedMastheadTitle,
+        classified_masthead_subtitle: cfgClassifiedMastheadSubtitle,
+        classified_edition: cfgClassifiedEdition,
+        classified_price_tag: cfgClassifiedPriceTag,
+        classified_phone: cfgClassifiedPhone,
+
+        kb_badge_text: cfgKbBadgeText,
+        kb_title: cfgKbTitle,
+        kb_subtitle: cfgKbSubtitle,
+        kb_search_placeholder: cfgKbSearchPlaceholder
       };
 
       const ok = await onSaveConfig(updatedCfg);
@@ -2070,6 +2395,1166 @@ export default function AdminPortal({
                 />
               </div>
 
+            </div>
+
+            {/* SECTION HOMEPAGE DISPLAY MODE SELECTOR */}
+            <div className="space-y-4 pt-6 border-t-2 border-rose-500/20 bg-rose-50/40 dark:bg-rose-950/20 p-5 rounded-3xl border border-rose-200/80 dark:border-rose-900/40">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-rose-600 text-white shadow-md">
+                  <Layout className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <span>Model Display Website (Homepage Layout Mode)</span>
+                    <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
+                      10 Pilihan Model
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Pilih tampilan beranda (frontpage) yang ingin disajikan kepada pengunjung. Sistem akan menyesuaikan tata letak dan fitur sesuai model yang Anda pilih.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2">
+                {[
+                  {
+                    id: 'default',
+                    label: 'Default (Blog & Magz)',
+                    desc: 'Portal majalah edukasi parenting standar dengan hero banner, filter topik, auto-links & grid artikel.',
+                    badge: 'Standar',
+                  },
+                  {
+                    id: 'event',
+                    label: 'Event & Konferensi',
+                    desc: 'Tata letak seminar/summit dengan countdown timer, daftar narasumber, jadwal sesi & tiket.',
+                    badge: 'Summit',
+                  },
+                  {
+                    id: 'campaign',
+                    label: 'Campaign & Petisi',
+                    desc: 'Gerakan sosial bebas stunting dengan bar target donasi, form petisi & pilar aksi nyata.',
+                    badge: 'Aksi Sosial',
+                  },
+                  {
+                    id: 'microsite',
+                    label: 'Microsite / Bio Links',
+                    desc: 'Halaman profil ringkas tautan cepat (WA konsultasi, e-book, grup telegram, podcast).',
+                    badge: 'Link in Bio',
+                  },
+                  {
+                    id: 'portfolio',
+                    label: 'Portofolio & Karya',
+                    desc: 'Showcase portofolio program riset, buku panduan & karya dengan filter kategori visual.',
+                    badge: 'Showcase',
+                  },
+                  {
+                    id: 'personal_branding',
+                    label: 'Personal Branding',
+                    desc: 'Profil resmi dokter/pakar parenting dengan kredensial, form booking privat & karya tulis.',
+                    badge: 'Profil Pakar',
+                  },
+                  {
+                    id: 'corporate',
+                    label: 'Corporate & B2B',
+                    desc: 'Profil solusi perusahaan (EAP, Daycare kantor) lengkap dengan proposal form & metrik B2B.',
+                    badge: 'Bisnis',
+                  },
+                  {
+                    id: 'product_landing',
+                    label: 'Product Landing Page',
+                    desc: 'Showcase paket produk MPASI & stimulasi anak lengkap dengan rating, paket harga & FAQ.',
+                    badge: 'Penjualan',
+                  },
+                  {
+                    id: 'classified_ads',
+                    label: 'Iklan Baris Koran Dulu',
+                    desc: 'Nuansa vintage koran cetak nostalgia, frame ganda antik, kolom iklan & formulir pasang iklan.',
+                    badge: 'Nostalgia',
+                  },
+                  {
+                    id: 'knowledge_base',
+                    label: 'Knowledge Base',
+                    desc: 'Pusat bantuan & ensiklopedia pengasuhan terstruktur berdasarkan kategori topik terpadu.',
+                    badge: 'Ensiklopedia',
+                  },
+                ].map((mode) => (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => setCfgHomepageDisplayMode(mode.id as HomepageDisplayMode)}
+                    className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition-all relative overflow-hidden ${
+                      cfgHomepageDisplayMode === mode.id
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-lg shadow-rose-600/30 ring-2 ring-rose-400'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white hover:border-rose-400 shadow-2xs'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                          cfgHomepageDisplayMode === mode.id
+                            ? 'bg-white text-rose-700'
+                            : 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300'
+                        }`}>
+                          {mode.badge}
+                        </span>
+                        {cfgHomepageDisplayMode === mode.id && (
+                          <CheckCircle2 className="w-4 h-4 text-white" />
+                        )}
+                      </div>
+                      <h5 className="font-extrabold text-xs mb-1.5">{mode.label}</h5>
+                      <p className={`text-[11px] leading-relaxed ${
+                        cfgHomepageDisplayMode === mode.id ? 'text-rose-100' : 'text-slate-500 dark:text-slate-400'
+                      }`}>
+                        {mode.desc}
+                      </p>
+                    </div>
+
+                    <div className="pt-3 mt-2 border-t border-current/15 text-[10px] font-bold">
+                      {cfgHomepageDisplayMode === mode.id ? '✓ Sedang Aktif' : 'Klik untuk Mengaktifkan'}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* DEDICATED INPUT SECTION: WORDING & DATA KUSTOMISASI UNTUK 10 MODEL HOMEPAGE */}
+              <div className="mt-6 p-5 rounded-3xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-rose-500 text-white shadow-sm">
+                      <Edit3 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>Kustomisasi Teks & Data Model Frontpage</span>
+                        <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
+                          10 Model Siap Pakai
+                        </span>
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Ubah judul banner, sub-judul, target donasi, harga promo, atau nomor WhatsApp tiap model tanpa mengedit file kode.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                    <span>Model Aktif:</span>
+                    <span className="font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wide">
+                      {cfgHomepageDisplayMode}
+                    </span>
+                  </div>
+                </div>
+
+                {/* TAB SWITCHER MODEL YANG INGIN DIKUSTOMISASI */}
+                <div className="flex flex-wrap gap-1.5 p-1.5 bg-slate-200/60 dark:bg-slate-800/80 rounded-2xl">
+                  {[
+                    { id: 'default', label: 'Default' },
+                    { id: 'event', label: 'Event' },
+                    { id: 'campaign', label: 'Campaign' },
+                    { id: 'microsite', label: 'Microsite' },
+                    { id: 'portfolio', label: 'Portofolio' },
+                    { id: 'personal_branding', label: 'Personal' },
+                    { id: 'corporate', label: 'Corporate B2B' },
+                    { id: 'product_landing', label: 'Product Landing' },
+                    { id: 'classified_ads', label: 'Iklan Baris' },
+                    { id: 'knowledge_base', label: 'Knowledge Base' },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setSelectedModelConfigTab(tab.id as HomepageDisplayMode)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                        selectedModelConfigTab === tab.id
+                          ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs ring-1 ring-black/5 dark:ring-white/10'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <span>{tab.label}</span>
+                      {cfgHomepageDisplayMode === tab.id && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 1. DEFAULT (BLOG & MAGZ) PANEL */}
+                {selectedModelConfigTab === 'default' && (
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase text-rose-600 dark:text-rose-400">
+                        1. Pengaturan Teks Model Default (Blog & Magz)
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">hero_title / hero_subtitle</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Badge Teks Hero (hero_badge_text)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgHeroBadgeText}
+                          onChange={(e) => setCfgHeroBadgeText(e.target.value)}
+                          placeholder="Misal: Portal Nomor 1"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Teks Tombol CTA Hero (hero_cta_text)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgHeroCtaText}
+                          onChange={(e) => setCfgHeroCtaText(e.target.value)}
+                          placeholder="Misal: Jelajahi Artikel"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Judul Utama Hero Banner (hero_title)
+                      </label>
+                      <input
+                        type="text"
+                        value={cfgHeroTitle}
+                        onChange={(e) => setCfgHeroTitle(e.target.value)}
+                        placeholder="Misal: Panduan Pengasuhan Anak Terpercaya"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Sub-Judul Hero Banner (hero_subtitle)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={cfgHeroSubtitle}
+                        onChange={(e) => setCfgHeroSubtitle(e.target.value)}
+                        placeholder="Misal: Temukan artikel, tips nutrisi, dan edukasi tumbuh kembang anak."
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. EVENT & SUMMIT PANEL */}
+                {selectedModelConfigTab === 'event' && (
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase text-rose-600 dark:text-rose-400">
+                        2. Pengaturan Wording & Data Model Event & Konferensi
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">event_*</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Badge Acara (event_badge_text)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgEventBadgeText}
+                          onChange={(e) => setCfgEventBadgeText(e.target.value)}
+                          placeholder="Summit Nasional Parenting 2026"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Tanggal & Lokasi Acara (event_date_location)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgEventDateLocation}
+                          onChange={(e) => setCfgEventDateLocation(e.target.value)}
+                          placeholder="16 - 18 Oktober 2026 • JCC Senayan, Jakarta"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Judul Utama Acara (event_title)
+                      </label>
+                      <input
+                        type="text"
+                        value={cfgEventTitle}
+                        onChange={(e) => setCfgEventTitle(e.target.value)}
+                        placeholder="Indonesia Parenting Summit 2026: Membangun Fondasi Emas Keluarga Tangguh"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Sub-Judul & Narasi Acara (event_subtitle)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={cfgEventSubtitle}
+                        onChange={(e) => setCfgEventSubtitle(e.target.value)}
+                        placeholder="Konferensi & lokakarya parenting terbesar di Indonesia. Dapatkan wawasan ilmiah terdepan..."
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Teks Tombol Tiket (event_cta_text)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgEventCtaText}
+                          onChange={(e) => setCfgEventCtaText(e.target.value)}
+                          placeholder="Daftar / Dapatkan Tiket"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          WhatsApp Tiket/Panitia (event_whatsapp)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgEventWhatsapp}
+                          onChange={(e) => setCfgEventWhatsapp(e.target.value)}
+                          placeholder="6281234567890"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. CAMPAIGN & PETISI PANEL */}
+                {selectedModelConfigTab === 'campaign' && (
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase text-rose-600 dark:text-rose-400">
+                        3. Pengaturan Wording & Metrik Donasi Campaign
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">campaign_*</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Badge Kampanye (campaign_badge_text)
+                      </label>
+                      <input
+                        type="text"
+                        value={cfgCampaignBadgeText}
+                        onChange={(e) => setCfgCampaignBadgeText(e.target.value)}
+                        placeholder="Aksi Sosial Nasional"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Judul Utama Kampanye (campaign_title)
+                      </label>
+                      <input
+                        type="text"
+                        value={cfgCampaignTitle}
+                        onChange={(e) => setCfgCampaignTitle(e.target.value)}
+                        placeholder="Gerakan 1.000 Hari Pertama: Wujudkan Generasi Bebas Stunting"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Sub-Judul & Narasi Kampanye (campaign_subtitle)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={cfgCampaignSubtitle}
+                        onChange={(e) => setCfgCampaignSubtitle(e.target.value)}
+                        placeholder="Setiap anak Indonesia berhak mendapatkan nutrisi optimal dan kasih sayang..."
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Target Donasi (campaign_target_amount)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgCampaignTargetAmount}
+                          onChange={(e) => setCfgCampaignTargetAmount(e.target.value)}
+                          placeholder="500000000"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Donasi Terkumpul (campaign_current_amount)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgCampaignCurrentAmount}
+                          onChange={(e) => setCfgCampaignCurrentAmount(e.target.value)}
+                          placeholder="388500000"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Jumlah Donatur (campaign_donor_count)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgCampaignDonorCount}
+                          onChange={(e) => setCfgCampaignDonorCount(e.target.value)}
+                          placeholder="1.428"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. MICROSITE / BIO LINKS PANEL */}
+                {selectedModelConfigTab === 'microsite' && (
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase text-rose-600 dark:text-rose-400">
+                        4. Pengaturan Tautan & Kontak Microsite / Bio Links
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">microsite_*</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Judul Profil Hub (microsite_title)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgMicrositeTitle}
+                          onChange={(e) => setCfgMicrositeTitle(e.target.value)}
+                          placeholder="Parenting.my.id Official Hub"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Nomor WhatsApp Utama (microsite_wa_number)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgMicrositeWaNumber}
+                          onChange={(e) => setCfgMicrositeWaNumber(e.target.value)}
+                          placeholder="6281234567890"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Bio Singkat Pengantar (microsite_bio)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={cfgMicrositeBio}
+                        onChange={(e) => setCfgMicrositeBio(e.target.value)}
+                        placeholder="Pusat informasi, konsultasi dokter anak, panduan MPASI..."
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Label Tombol WhatsApp (microsite_wa_label)
+                      </label>
+                      <input
+                        type="text"
+                        value={cfgMicrositeWaLabel}
+                        onChange={(e) => setCfgMicrositeWaLabel(e.target.value)}
+                        placeholder="Konsultasi Privat Parenting (WhatsApp)"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          URL Download E-Book (microsite_ebook_url)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgMicrositeEbookUrl}
+                          onChange={(e) => setCfgMicrositeEbookUrl(e.target.value)}
+                          placeholder="https://..."
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          URL Komunitas Telegram (microsite_telegram_url)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgMicrositeTelegramUrl}
+                          onChange={(e) => setCfgMicrositeTelegramUrl(e.target.value)}
+                          placeholder="https://t.me/parentingmyid"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          URL Podcast Spotify (microsite_podcast_url)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgMicrositePodcastUrl}
+                          onChange={(e) => setCfgMicrositePodcastUrl(e.target.value)}
+                          placeholder="https://spotify.com"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          URL Toko / Belanja (microsite_shop_url)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgMicrositeShopUrl}
+                          onChange={(e) => setCfgMicrositeShopUrl(e.target.value)}
+                          placeholder="https://tokopedia.com/..."
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. PORTFOLIO PANEL */}
+                {selectedModelConfigTab === 'portfolio' && (
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase text-rose-600 dark:text-rose-400">
+                        5. Pengaturan Wording & Metrik Portofolio Showcase
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">portfolio_*</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Badge Portofolio (portfolio_badge_text)
+                      </label>
+                      <input
+                        type="text"
+                        value={cfgPortfolioBadgeText}
+                        onChange={(e) => setCfgPortfolioBadgeText(e.target.value)}
+                        placeholder="Showcase Portofolio & Rekam Jejak"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Judul Utama Portofolio (portfolio_title)
+                      </label>
+                      <input
+                        type="text"
+                        value={cfgPortfolioTitle}
+                        onChange={(e) => setCfgPortfolioTitle(e.target.value)}
+                        placeholder="Karya, Program Edukasi & Penelitian Parenting"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Sub-Judul Portofolio (portfolio_subtitle)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={cfgPortfolioSubtitle}
+                        onChange={(e) => setCfgPortfolioSubtitle(e.target.value)}
+                        placeholder="Dedikasi nyata dalam merancang program edukasi keluarga..."
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Statistik 1 (Nilai & Label)</label>
+                        <input
+                          type="text"
+                          value={cfgPortfolioStat1Val}
+                          onChange={(e) => setCfgPortfolioStat1Val(e.target.value)}
+                          placeholder="50K+"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold mb-1"
+                        />
+                        <input
+                          type="text"
+                          value={cfgPortfolioStat1Lbl}
+                          onChange={(e) => setCfgPortfolioStat1Lbl(e.target.value)}
+                          placeholder="Keluarga Terbantu"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Statistik 2 (Nilai & Label)</label>
+                        <input
+                          type="text"
+                          value={cfgPortfolioStat2Val}
+                          onChange={(e) => setCfgPortfolioStat2Val(e.target.value)}
+                          placeholder="120+"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold mb-1"
+                        />
+                        <input
+                          type="text"
+                          value={cfgPortfolioStat2Lbl}
+                          onChange={(e) => setCfgPortfolioStat2Lbl(e.target.value)}
+                          placeholder="Workshop Nasional"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Statistik 3 (Nilai & Label)</label>
+                        <input
+                          type="text"
+                          value={cfgPortfolioStat3Val}
+                          onChange={(e) => setCfgPortfolioStat3Val(e.target.value)}
+                          placeholder="15+"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold mb-1"
+                        />
+                        <input
+                          type="text"
+                          value={cfgPortfolioStat3Lbl}
+                          onChange={(e) => setCfgPortfolioStat3Lbl(e.target.value)}
+                          placeholder="Riset Terpublikasi"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 6. PERSONAL BRANDING PANEL */}
+                {selectedModelConfigTab === 'personal_branding' && (
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase text-rose-600 dark:text-rose-400">
+                        6. Pengaturan Profil Personal Branding (Dokter / Pakar)
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">doctor_*</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Nama Lengkap & Gelar (doctor_name)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgDoctorName}
+                          onChange={(e) => setCfgDoctorName(e.target.value)}
+                          placeholder="dr. Siti Rahma, Sp.A(K), M.Kes"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Spesialisasi / Gelar Singkat (doctor_title)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgDoctorTitle}
+                          onChange={(e) => setCfgDoctorTitle(e.target.value)}
+                          placeholder="Dokter Spesialis Anak & Konsultan Nutrisi Pediatrik"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Badge / Status Kategori (doctor_badge_text)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgDoctorBadgeText}
+                          onChange={(e) => setCfgDoctorBadgeText(e.target.value)}
+                          placeholder="Dokter Spesialis Anak & Konsultan Pengasuhan"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Tahun Pengalaman (doctor_experience_years)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgDoctorExperienceYears}
+                          onChange={(e) => setCfgDoctorExperienceYears(e.target.value)}
+                          placeholder="15+ Tahun Pengalaman"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Biografi & Narasi Dokter (doctor_bio)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={cfgDoctorBio}
+                        onChange={(e) => setCfgDoctorBio(e.target.value)}
+                        placeholder="Membantu ratusan ribu orang tua muda di Indonesia..."
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          URL Foto Profil Dokter (doctor_avatar_url)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgDoctorAvatarUrl}
+                          onChange={(e) => setCfgDoctorAvatarUrl(e.target.value)}
+                          placeholder="https://images.unsplash.com/photo-..."
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          WhatsApp Booking Privat (doctor_booking_whatsapp)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgDoctorBookingWhatsapp}
+                          onChange={(e) => setCfgDoctorBookingWhatsapp(e.target.value)}
+                          placeholder="6281234567890"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 7. CORPORATE & B2B PANEL */}
+                {selectedModelConfigTab === 'corporate' && (
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase text-rose-600 dark:text-rose-400">
+                        7. Pengaturan Solusi Corporate & B2B Kemitraan
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">corporate_*</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Badge Solusi Bisnis (corporate_badge_text)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgCorporateBadgeText}
+                          onChange={(e) => setCfgCorporateBadgeText(e.target.value)}
+                          placeholder="Solusi Korporasi & Employee Wellbeing"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          WhatsApp Kemitraan Korporasi (corporate_whatsapp)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgCorporateWhatsapp}
+                          onChange={(e) => setCfgCorporateWhatsapp(e.target.value)}
+                          placeholder="6281234567890"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Judul Utama Solusi Korporasi (corporate_title)
+                      </label>
+                      <input
+                        type="text"
+                        value={cfgCorporateTitle}
+                        onChange={(e) => setCfgCorporateTitle(e.target.value)}
+                        placeholder="Meningkatkan Produktivitas Karyawan Melalui Dukungan Pengasuhan Terpercaya"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Sub-Judul & Program Korporasi (corporate_subtitle)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={cfgCorporateSubtitle}
+                        onChange={(e) => setCfgCorporateSubtitle(e.target.value)}
+                        placeholder="Program kemitraan Employee Assistance Program (EAP), daycare kantor..."
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Teks Tombol Proposal B2B (corporate_cta_proposal)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgCorporateCtaProposal}
+                          onChange={(e) => setCfgCorporateCtaProposal(e.target.value)}
+                          placeholder="Unduh Proposal & Rate Card B2B"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Teks Tombol Konsultasi (corporate_cta_consult)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgCorporateCtaConsult}
+                          onChange={(e) => setCfgCorporateCtaConsult(e.target.value)}
+                          placeholder="Jadwalkan Konsultasi Korporasi"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Metrik 1 (Nilai & Label)</label>
+                        <input
+                          type="text"
+                          value={cfgCorporateStat1Val}
+                          onChange={(e) => setCfgCorporateStat1Val(e.target.value)}
+                          placeholder="85+"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold mb-1"
+                        />
+                        <input
+                          type="text"
+                          value={cfgCorporateStat1Lbl}
+                          onChange={(e) => setCfgCorporateStat1Lbl(e.target.value)}
+                          placeholder="Korporasi Mitra"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Metrik 2 (Nilai & Label)</label>
+                        <input
+                          type="text"
+                          value={cfgCorporateStat2Val}
+                          onChange={(e) => setCfgCorporateStat2Val(e.target.value)}
+                          placeholder="98%"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold mb-1"
+                        />
+                        <input
+                          type="text"
+                          value={cfgCorporateStat2Lbl}
+                          onChange={(e) => setCfgCorporateStat2Lbl(e.target.value)}
+                          placeholder="Retensi Karyawan"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Metrik 3 (Nilai & Label)</label>
+                        <input
+                          type="text"
+                          value={cfgCorporateStat3Val}
+                          onChange={(e) => setCfgCorporateStat3Val(e.target.value)}
+                          placeholder="12.000+"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold mb-1"
+                        />
+                        <input
+                          type="text"
+                          value={cfgCorporateStat3Lbl}
+                          onChange={(e) => setCfgCorporateStat3Lbl(e.target.value)}
+                          placeholder="Karyawan Terbantu"
+                          className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 8. PRODUCT LANDING PAGE PANEL */}
+                {selectedModelConfigTab === 'product_landing' && (
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase text-rose-600 dark:text-rose-400">
+                        8. Pengaturan Penjualan Paket Produk Landing Page
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">product_*</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Badge Produk Promo (product_badge_text)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgProductBadgeText}
+                          onChange={(e) => setCfgProductBadgeText(e.target.value)}
+                          placeholder="Edisi Spesial Panduan Pengasuhan Emas 2026"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Nomor WhatsApp Order (product_whatsapp)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgProductWhatsapp}
+                          onChange={(e) => setCfgProductWhatsapp(e.target.value)}
+                          placeholder="6281234567890"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Nama / Judul Paket Produk (product_title)
+                      </label>
+                      <input
+                        type="text"
+                        value={cfgProductTitle}
+                        onChange={(e) => setCfgProductTitle(e.target.value)}
+                        placeholder="Paket Komplit MPASI & Stimulasi Anak Anti-GTM"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Sub-Judul / Manfaat Utama (product_subtitle)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={cfgProductSubtitle}
+                        onChange={(e) => setCfgProductSubtitle(e.target.value)}
+                        placeholder="Solusi tuntas mengatasi Gerakan Tutup Mulut, memastikan asupan zat besi..."
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Harga Promo (product_price)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgProductPrice}
+                          onChange={(e) => setCfgProductPrice(e.target.value)}
+                          placeholder="Rp 189.000"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Harga Coret (product_original_price)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgProductOriginalPrice}
+                          onChange={(e) => setCfgProductOriginalPrice(e.target.value)}
+                          placeholder="Rp 299.000"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Tag Diskon (product_discount_tag)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgProductDiscountTag}
+                          onChange={(e) => setCfgProductDiscountTag(e.target.value)}
+                          placeholder="HEMAT 37%"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Teks Tombol Order (product_cta_text)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgProductCtaText}
+                          onChange={(e) => setCfgProductCtaText(e.target.value)}
+                          placeholder="Pesan Sekarang & Dapatkan Bonus"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 9. CLASSIFIED ADS VINTAGE NEWSPAPER PANEL */}
+                {selectedModelConfigTab === 'classified_ads' && (
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase text-rose-600 dark:text-rose-400">
+                        9. Pengaturan Wording Iklan Baris Koran Jaman Dulu
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">classified_*</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Judul Kepala Koran / Masthead (classified_masthead_title)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgClassifiedMastheadTitle}
+                          onChange={(e) => setCfgClassifiedMastheadTitle(e.target.value)}
+                          placeholder="WARNA-WARTO PARENTING"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Sub-Judul Masthead Koran (classified_masthead_subtitle)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgClassifiedMastheadSubtitle}
+                          onChange={(e) => setCfgClassifiedMastheadSubtitle(e.target.value)}
+                          placeholder="LEMBARAN IKLAN BARIS, PENGUMUMAN & WARTA KELUARGA"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          No. Edisi & Tahun (classified_edition)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgClassifiedEdition}
+                          onChange={(e) => setCfgClassifiedEdition(e.target.value)}
+                          placeholder="1988/2026"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Label Harga Eceran (classified_price_tag)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgClassifiedPriceTag}
+                          onChange={(e) => setCfgClassifiedPriceTag(e.target.value)}
+                          placeholder="HARGA ECERAN RP 500,-"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Telepon Redaksi Iklan (classified_phone)
+                        </label>
+                        <input
+                          type="text"
+                          value={cfgClassifiedPhone}
+                          onChange={(e) => setCfgClassifiedPhone(e.target.value)}
+                          placeholder="(021) 7654321"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 10. KNOWLEDGE BASE PANEL */}
+                {selectedModelConfigTab === 'knowledge_base' && (
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase text-rose-600 dark:text-rose-400">
+                        10. Pengaturan Wording Knowledge Base & Ensiklopedia
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">kb_*</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Badge Ensiklopedia (kb_badge_text)
+                      </label>
+                      <input
+                        type="text"
+                        value={cfgKbBadgeText}
+                        onChange={(e) => setCfgKbBadgeText(e.target.value)}
+                        placeholder="Ensiklopedia & Pusat Bantuan Parenting"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Judul Utama Pusat Bantuan (kb_title)
+                      </label>
+                      <input
+                        type="text"
+                        value={cfgKbTitle}
+                        onChange={(e) => setCfgKbTitle(e.target.value)}
+                        placeholder="Bagaimana Kami Bisa Membantu Pengasuhan Anda?"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Sub-Judul & Panduan Cari (kb_subtitle)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={cfgKbSubtitle}
+                        onChange={(e) => setCfgKbSubtitle(e.target.value)}
+                        placeholder="Cari jawaban terpercaya dari ribuan artikel, panduan medis..."
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Placeholder Kolom Pencarian (kb_search_placeholder)
+                      </label>
+                      <input
+                        type="text"
+                        value={cfgKbSearchPlaceholder}
+                        onChange={(e) => setCfgKbSearchPlaceholder(e.target.value)}
+                        placeholder="Ketik topik (misal: jadwal MPASI, anak demam, speech delay, tantrum)..."
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* SECTION NAV BUILDER: TOP BAR, HAMBURGER & FOOTER */}

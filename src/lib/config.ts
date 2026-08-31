@@ -7,6 +7,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   site_logo_url: '',
   site_logo_icon: 'Heart',
   site_favicon_url: '/favicon.ico',
+  homepage_display_mode: 'default',
   header_nav_links: [
     { label: 'Pola Asuh', url: '/kategori/pola-asuh' },
     { label: 'Tumbuh Kembang', url: '/kategori/tumbuh-kembang' },
@@ -97,7 +98,100 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   adsense_article_middle: '',
   adsense_article_bottom: '',
   adsense_sidebar: '',
-  adsense_sticky_footer: ''
+  adsense_sticky_footer: '',
+
+  // --- CUSTOMIZABLE FRONTPAGE WORDING & DATA (10 Models) ---
+  // Model 1: Default Blog & Magz
+  default_hero_badge: 'Portal Nomor 1',
+  default_hero_title: 'Panduan Pengasuhan Anak Terpercaya',
+  default_hero_subtitle: 'Temukan artikel, tips nutrisi, dan edukasi tumbuh kembang anak untuk orang tua modern.',
+  default_newsletter_title: 'Dapatkan Panduan Parenting Mingguan',
+  default_newsletter_subtitle: 'Bergabunglah bersama 25.000+ orang tua hebat lainnya untuk tips eksklusif.',
+
+  // Model 2: Event & Konferensi
+  event_badge_text: 'Summit Nasional Parenting 2026',
+  event_title: 'Konferensi Nasional Pola Asuh & Tumbuh Kembang Anak Indonesia 2026',
+  event_subtitle: 'Forum edukasi parenting terbesar yang menghadirkan dokter spesialis anak, psikolog perkembangan, dan praktisi pendidikan.',
+  event_date_location: '16-18 Oktober 2026 • Grand Ballroom Jakarta & Live Streaming',
+  event_cta_text: 'Daftar & Pesan Tiket',
+  event_whatsapp: '6281234567890',
+
+  // Model 3: Campaign & Petisi
+  campaign_badge_text: 'Aksi Sosial Nasional',
+  campaign_title: 'Gerakan Bersama Bebas Stunting: Lindungi 1000 Hari Pertama Anak',
+  campaign_subtitle: 'Bantu 50.000 balita di pelosok negeri mendapatkan asupan protein hewani dan suplemen mikronutrien penting.',
+  campaign_target_amount: '500.000.000',
+  campaign_current_amount: '342.850.000',
+  campaign_donor_count: '1.428',
+  campaign_cta_text: 'Salurkan Donasi Sekarang',
+  campaign_whatsapp: '6281234567890',
+
+  // Model 4: Microsite / Bio Links
+  microsite_title: 'Parenting.my.id Official Hub',
+  microsite_bio: 'Pusat informasi, konsultasi dokter anak, panduan MPASI, dan komunitas orang tua cerdas di Indonesia.',
+  microsite_wa_number: '6281234567890',
+  microsite_wa_label: 'Konsultasi Privat Parenting (WhatsApp)',
+  microsite_telegram_url: 'https://t.me/parentingmyid',
+  microsite_ebook_url: '#',
+  microsite_podcast_url: 'https://spotify.com',
+  microsite_shop_url: '#',
+
+  // Model 5: Portofolio & Karya
+  portfolio_badge_text: 'Rekam Jejak & Publikasi',
+  portfolio_title: 'Portofolio Riset, Kurikulum & Program Edukasi',
+  portfolio_subtitle: 'Dokumentasi hasil karya ilmiah, program pendampingan keluarga, dan modul nutrisi yang telah kami kembangkan.',
+  portfolio_stat1_val: '120+',
+  portfolio_stat1_lbl: 'Modul & E-Book Terbit',
+  portfolio_stat2_val: '45+',
+  portfolio_stat2_lbl: 'Riset Klinis Tumbuh Kembang',
+  portfolio_stat3_val: '85.000+',
+  portfolio_stat3_lbl: 'Keluarga Terbantu',
+  portfolio_whatsapp: '6281234567890',
+
+  // Model 6: Personal Branding Dokter / Pakar
+  doctor_badge_text: 'Pakar & Praktisi Terpercaya',
+  doctor_name: 'dr. Siti Rahma, Sp.A(K), M.Kes',
+  doctor_title: 'Dokter Spesialis Anak & Konsultan Nutrisi Pediatrik',
+  doctor_bio: 'Berpengalaman lebih dari 15 tahun mendampingi ribuan orang tua dalam mengoptimalkan 1000 Hari Pertama Kehidupan (HPK) dan penanganan masalah makan anak.',
+  doctor_experience_years: '15+ Tahun Pengalaman',
+  doctor_consultation_rate: 'Rp 250.000 / Sesi',
+  doctor_whatsapp: '6281234567890',
+  doctor_avatar_url: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&h=500&fit=crop&q=80',
+
+  // Model 7: Corporate & B2B
+  corporate_badge_text: 'Solusi Korporasi & Institusi Edukasi',
+  corporate_title: 'Meningkatkan Produktivitas Karyawan Melalui Dukungan Pengasuhan Terpercaya',
+  corporate_subtitle: 'Kami bermitra dengan perusahaan terdepan untuk menyediakan program Employee Assistance Parenting (EAP), konsultasi daycare in-house, dan lokakarya kesehatan anak bagi karyawan.',
+  corporate_stat1_val: '98.4%',
+  corporate_stat1_lbl: 'Kepuasan Klien B2B',
+  corporate_stat2_val: '45%',
+  corporate_stat2_lbl: 'Penurunan Absenteeism',
+  corporate_whatsapp: '6281234567890',
+  corporate_email: 'b2b@parenting.my.id',
+
+  // Model 8: Product Landing Page
+  product_badge_text: 'Best Seller • Rekomendasi Dokter',
+  product_title: 'Paket Lengkap MPASI Cerdas & Stimulasi Sensori Balita',
+  product_subtitle: 'Solusi praktis anti-GTM lengkap dengan buku resep 1000 hari pertama, kartu sensorik motorik, dan konsultasi gizi.',
+  product_price: 'Rp 189.000',
+  product_original_price: 'Rp 299.000',
+  product_discount_tag: 'HEMAT 37%',
+  product_whatsapp: '6281234567890',
+  product_cta_text: 'Pesan Paket Sekarang via WhatsApp',
+
+  // Model 9: Iklan Baris Koran Dulu
+  newspaper_name: 'WARTA PARENTING NUSANTARA',
+  newspaper_edition: 'EDISI SPESIAL • TAHUN KE-XXIV',
+  newspaper_motto: 'Harian Suara Orang Tua & Keluarga Bijak — Terbit Sejak 1985',
+  newspaper_ads_phone: '0812-3456-7890 / 021-5551234',
+  newspaper_rate_text: 'Tarif Pasang Iklan: Rp 25.000 / Baris',
+
+  // Model 10: Knowledge Base
+  kb_badge_text: 'Pusat Panduan Terpadu',
+  kb_title: 'Ensiklopedia & Pusat Pengetahuan Pengasuhan Anak',
+  kb_subtitle: 'Temukan jawaban medis dan psikologis terpercaya untuk setiap tahap tumbuh kembang buah hati.',
+  kb_search_placeholder: 'Cari panduan (contoh: MPASI 6 bulan, demam anak, tantrum)...',
+  kb_helpdesk_whatsapp: '6281234567890'
 };
 
 export async function loadSiteConfig(): Promise<SiteConfig> {
