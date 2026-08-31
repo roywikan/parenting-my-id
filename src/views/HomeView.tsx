@@ -147,7 +147,7 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
             <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
             <span>{siteConfig?.autolink_ticker_label || 'Topik Trending:'}</span>
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-none">
+          <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-none min-h-[36px]">
             {autolinks.map((link) => (
               <button
                 key={link.id}
@@ -155,7 +155,7 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                   const targetSlug = link.targetUrl.split('/').pop() || '';
                   if (targetSlug) onSelectPost(targetSlug);
                 }}
-                className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-rose-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 hover:border-rose-500 hover:text-rose-700 dark:hover:text-rose-300 transition-all shadow-2xs font-bold flex items-center gap-1 group shrink-0 whitespace-nowrap"
+                className="h-[32px] px-3 py-1 rounded-lg bg-white dark:bg-slate-900 border border-rose-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 hover:border-rose-500 hover:text-rose-700 dark:hover:text-rose-300 transition-all shadow-2xs font-bold inline-flex items-center gap-1 group shrink-0 whitespace-nowrap leading-none"
               >
                 <span>#{link.keyword}</span>
                 <span className="text-[10px] text-rose-700 dark:text-rose-300 font-black group-hover:translate-x-0.5 transition-transform">↗</span>
@@ -165,11 +165,15 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
         </div>
       )}
 
-      {/* FEATURED POST (HERO ITEM) */}
+      {/* FEATURED POST (HERO ITEM - FIXED ZERO-CLS CONTAINER) */}
       {featuredPost && !searchQuery && activeCategory === 'Semua' && (
-        <section className="group cursor-pointer min-h-[380px]" onClick={() => onSelectPost(featuredPost.slug)}>
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0 min-h-[380px]">
-            <div className="lg:col-span-7 relative aspect-[16/9] lg:aspect-none h-64 sm:h-72 lg:h-full min-h-[256px] lg:min-h-[380px] overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0">
+        <section
+          className="group cursor-pointer h-auto lg:h-[420px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900"
+          onClick={() => onSelectPost(featuredPost.slug)}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 h-auto lg:h-[420px] w-full overflow-hidden">
+            {/* HERO IMAGE CONTAINER (LOCKED 16:9 ON MOBILE, FIXED 420px ON DESKTOP) */}
+            <div className="lg:col-span-7 relative aspect-[16/9] lg:aspect-auto h-64 sm:h-72 lg:h-[420px] w-full overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0">
               <img
                 src={optimizeUnsplashUrl(featuredPost.featuredImage, 700, 55)}
                 srcSet={getUnsplashSrcSet(featuredPost.featuredImage, [400, 700], 55)}
@@ -181,22 +185,23 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                 decoding="async"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <div className="absolute top-4 left-4">
-                <span className="px-3 py-1 rounded-full bg-rose-700 text-white text-xs font-black shadow-md uppercase tracking-wider">
+              <div className="absolute top-4 left-4 min-h-[28px] flex items-center">
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-rose-800 text-white text-xs font-black shadow-md uppercase tracking-wider leading-none">
                   UTAMA • {featuredPost.category}
                 </span>
               </div>
             </div>
 
-            <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between min-h-[320px] lg:min-h-[380px]">
+            {/* HERO CONTENT CONTAINER (LOCKED DESKTOP HEIGHT WITH ZERO JUMP) */}
+            <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between h-auto lg:h-[420px] overflow-hidden">
               <div className="space-y-4">
-                <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 font-semibold shrink-0">
-                  <span className="flex items-center gap-1 font-semibold">
+                <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 font-semibold shrink-0 min-h-[20px]">
+                  <span className="flex items-center gap-1 font-bold">
                     <Clock className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
                     {featuredPost.readTimeMinutes} menit baca
                   </span>
                   <span>•</span>
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 font-bold">
                     <Eye className="w-3.5 h-3.5 shrink-0 text-slate-600 dark:text-slate-400" />
                     {featuredPost.views} pembaca
                   </span>
@@ -206,7 +211,7 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                   {featuredPost.title}
                 </h2>
 
-                <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed line-clamp-3">
+                <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed line-clamp-3 min-h-[3.75rem] sm:min-h-[4.5rem]">
                   {featuredPost.excerpt}
                 </p>
               </div>
@@ -219,13 +224,13 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                     width={36}
                     height={36}
                     decoding="async"
-                    className="w-9 h-9 rounded-full object-cover border border-rose-200 shrink-0"
+                    className="w-9 h-9 rounded-full object-cover border border-rose-300 shrink-0"
                   />
                   <div className="shrink-0">
                     <div className="text-xs font-bold text-slate-900 dark:text-white">
                       {featuredPost.authorName}
                     </div>
-                    <div className="text-[10px] text-slate-700 dark:text-slate-300 font-medium">Tim Pakar Parenting</div>
+                    <div className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold">Tim Pakar Parenting</div>
                   </div>
                 </div>
 
@@ -277,7 +282,7 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
       {/* ARTICLES GRID */}
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-rose-500" />
             <span>
               {searchQuery
@@ -286,7 +291,7 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                 ? 'Daftar Artikel Terbaru'
                 : `Kategori: ${activeCategory}`}
             </span>
-          </h3>
+          </h2>
           <span className="text-xs text-slate-700 dark:text-slate-300 font-bold">
             {regularPosts.length} Artikel ditemukan
           </span>
@@ -344,23 +349,23 @@ export default function HomeView({ posts, autolinks, onSelectPost, selectedCateg
                   </div>
 
                   <div className="p-5 space-y-3">
-                    <div className="flex items-center gap-3 text-[11px] text-slate-700 dark:text-slate-300 font-semibold">
-                      <span className="flex items-center gap-1 font-semibold">
+                    <div className="flex items-center gap-3 text-[11px] text-slate-700 dark:text-slate-300 font-bold">
+                      <span className="flex items-center gap-1 font-bold">
                         <Clock className="w-3 h-3 text-slate-600 dark:text-slate-400" />
                         {post.readTimeMinutes} mnt
                       </span>
                       <span>•</span>
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 font-bold">
                         <Eye className="w-3 h-3 text-slate-600 dark:text-slate-400" />
                         {post.views}
                       </span>
                     </div>
 
-                    <h4 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-rose-700 dark:group-hover:text-rose-400 transition-colors leading-snug line-clamp-2">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-rose-700 dark:group-hover:text-rose-400 transition-colors leading-snug line-clamp-2 min-h-[3rem]">
                       {post.title}
-                    </h4>
+                    </h3>
 
-                    <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-3 leading-relaxed">
+                    <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-3 leading-relaxed min-h-[3.75rem]">
                       {post.excerpt}
                     </p>
                   </div>

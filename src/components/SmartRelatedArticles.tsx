@@ -64,11 +64,11 @@ export default function SmartRelatedArticles({
           <div className="p-1.5 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400">
             <Sparkles className="w-4 h-4" />
           </div>
-          <h3 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h2 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
             Artikel Terkait Rekomendasi
-          </h3>
+          </h2>
         </div>
-        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
           Relevansi Topik Otomatis
         </span>
       </div>
@@ -105,23 +105,23 @@ export default function SmartRelatedArticles({
                 </div>
               )}
 
-              <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 line-clamp-2 leading-snug transition-colors mb-2">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-rose-700 dark:group-hover:text-rose-300 line-clamp-2 leading-snug transition-colors mb-2 min-h-[2.5rem]">
                 {post.title}
-              </h4>
+              </h3>
 
               {post.excerpt && (
-                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3 leading-relaxed">
+                <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-2 mb-3 leading-relaxed">
                   {post.excerpt}
                 </p>
               )}
             </div>
 
-            <div className="flex items-center justify-between text-[11px] font-medium text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800/80">
               <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
+                <Clock className="w-3 h-3 text-slate-600 dark:text-slate-400" />
                 {post.readTimeMinutes || 5} mnt
               </span>
-              <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-bold group-hover:translate-x-0.5 transition-transform">
+              <span className="flex items-center gap-1 text-rose-700 dark:text-rose-300 font-extrabold group-hover:translate-x-0.5 transition-transform">
                 Baca <ArrowRight className="w-3 h-3" />
               </span>
             </div>

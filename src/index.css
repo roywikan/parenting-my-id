@@ -15,6 +15,118 @@
   --color-rose-900: color-mix(in srgb, var(--color-primary, #e11d48) 55%, black);
   --color-rose-950: color-mix(in srgb, var(--color-primary, #e11d48) 40%, black);
   
-  --font-sans: var(--font-sans, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");
-  --font-heading: var(--font-heading, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");
+  --font-sans: var(--font-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
+  --font-heading: var(--font-heading, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
 }
+
+/* Zero CLS & Font Rendering Stabilization */
+html {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reserve and prevent font shift during load */
+* {
+  font-display: swap;
+}
+
+/* HIGH READABILITY & EYE COMFORT TYPOGRAPHY FOR MOBILE / PARENTS */
+@layer utilities {
+  /* Article Content Body High Readability */
+  .article-body {
+    max-width: 68ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .article-body p {
+    font-size: 1.0625rem; /* 17px for eye-friendly mobile reading */
+    line-height: 1.6; /* 27px line-height for loose, spacious reading */
+    margin-bottom: 1.125rem; /* 18px margin bottom */
+  }
+
+  @media (min-width: 640px) {
+    .article-body p {
+      font-size: 1.125rem; /* 18px on tablet/desktop */
+      line-height: 1.65;
+      margin-bottom: 1.25rem; /* 20px margin bottom */
+    }
+  }
+
+  /* Headings Typography */
+  .article-body h1,
+  h1.readable-heading {
+    font-size: 1.625rem; /* 26px on mobile (24px - 28px range) */
+    line-height: 1.25;
+    font-weight: 800;
+    margin-top: 1.75rem;
+    margin-bottom: 0.875rem;
+  }
+
+  .article-body h2,
+  h2.readable-heading {
+    font-size: 1.3125rem; /* 21px on mobile (20px - 22px range) */
+    line-height: 1.25;
+    font-weight: 700;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .article-body h3,
+  h3.readable-heading {
+    font-size: 1.1875rem; /* 19px on mobile (18px - 20px range) */
+    line-height: 1.3;
+    font-weight: 700;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .article-body h1,
+    h1.readable-heading {
+      font-size: 2.25rem; /* 36px on desktop */
+      line-height: 1.25;
+    }
+
+    .article-body h2,
+    h2.readable-heading {
+      font-size: 1.625rem; /* 26px on desktop */
+      line-height: 1.3;
+    }
+
+    .article-body h3,
+    h3.readable-heading {
+      font-size: 1.3125rem; /* 21px on desktop */
+      line-height: 1.35;
+    }
+  }
+
+  /* Lists & Blockquotes within article body */
+  .article-body ul,
+  .article-body ol {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    margin-bottom: 1.125rem;
+    padding-left: 1.5rem;
+  }
+
+  .article-body li {
+    margin-bottom: 0.5rem;
+  }
+
+  .article-body blockquote {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
+    padding-left: 1rem;
+  }
+
+  /* Metadata / Small text elements */
+  .meta-subtext {
+    font-size: 0.8125rem; /* 13px */
+    line-height: 1.4;
+  }
+}
+

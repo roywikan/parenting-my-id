@@ -444,7 +444,7 @@ export default function App() {
         />
       </div>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 min-h-[900px]">
         {currentView === 'home' && (
           <HomeView
             posts={posts}
@@ -458,9 +458,31 @@ export default function App() {
 
         {currentView === 'article' && (
           <Suspense fallback={
-            <div className="py-20 text-center space-y-3">
-              <div className="w-10 h-10 border-4 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-sm text-slate-500 font-bold">Memuat Detail Artikel...</p>
+            <div className="max-w-4xl mx-auto space-y-8 py-4 sm:py-6 min-h-[900px] animate-pulse">
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                <div className="h-4 w-4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded-md" />
+              </div>
+              <div className="space-y-4">
+                <div className="h-6 w-28 bg-rose-200 dark:bg-rose-950/40 rounded-full" />
+                <div className="h-10 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                <div className="h-5 w-full bg-slate-100 dark:bg-slate-800/60 rounded-xl" />
+                <div className="flex items-center gap-4 pt-2">
+                  <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800" />
+                  <div className="space-y-2">
+                    <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                    <div className="h-3 w-48 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                  </div>
+                </div>
+              </div>
+              <div className="w-full aspect-[16/9] max-h-[480px] rounded-3xl bg-slate-200 dark:bg-slate-800" />
+              <div className="space-y-4 pt-4">
+                <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded" />
+                <div className="h-4 w-11/12 bg-slate-200 dark:bg-slate-800 rounded" />
+                <div className="h-4 w-4/5 bg-slate-200 dark:bg-slate-800 rounded" />
+                <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded" />
+              </div>
             </div>
           }>
             <ArticleDetailView
