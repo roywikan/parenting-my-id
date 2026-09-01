@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Heart, Target, Users, ArrowRight, CheckCircle2, ShieldCheck, Share2, Sparkles, MessageCircle, AlertCircle } from 'lucide-react';
+import HeroPerformanceBox from '../HeroPerformanceBox';
 import { optimizeUnsplashUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -87,6 +88,9 @@ export default function CampaignHomeLayout({ posts, onSelectPost, siteConfig }: 
                 <span>Aktif Berjalan</span>
               </div>
             </div>
+
+            {/* PERFORMANCE METRICS BOX */}
+            <HeroPerformanceBox siteConfig={siteConfig} />
           </div>
 
           {/* INTERACTIVE DONATION / PETITION BOX */}

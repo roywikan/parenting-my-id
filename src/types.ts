@@ -105,12 +105,36 @@ export interface SiteConfig {
 
   // Performance Metric Box (Customizable by Admin)
   show_performance_box?: boolean;
+  metric_1_show?: boolean;
+  metric_2_show?: boolean;
+  metric_3_show?: boolean;
+  metric1_show?: boolean;
+  metric2_show?: boolean;
+  metric3_show?: boolean;
+
   metric1_value?: string;
   metric1_label?: string;
+  metric1_anim_type?: 'fixed' | 'count_up' | 'count_down';
+  metric1_start_val?: number;
+  metric1_end_val?: number;
+  metric1_duration?: number;
+  metric1_unit?: string;
+
   metric2_value?: string;
   metric2_label?: string;
+  metric2_anim_type?: 'fixed' | 'count_up' | 'count_down';
+  metric2_start_val?: number;
+  metric2_end_val?: number;
+  metric2_duration?: number;
+  metric2_unit?: string;
+
   metric3_value?: string;
   metric3_label?: string;
+  metric3_anim_type?: 'fixed' | 'count_up' | 'count_down';
+  metric3_start_val?: number;
+  metric3_end_val?: number;
+  metric3_duration?: number;
+  metric3_unit?: string;
   
   // AdSense & Strategic Ad Placements
   enable_adsense?: boolean;

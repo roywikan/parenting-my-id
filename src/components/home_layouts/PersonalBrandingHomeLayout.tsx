@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Award, BookOpen, Calendar, CheckCircle2, MessageCircle, Sparkles, Star, ArrowRight, ShieldCheck, Mail } from 'lucide-react';
+import HeroPerformanceBox from '../HeroPerformanceBox';
 import { optimizeUnsplashUrl, getOptimizedAvatarUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -80,7 +81,7 @@ export default function PersonalBrandingHomeLayout({ posts, onSelectPost, siteCo
               </div>
             </div>
 
-            {/* ACTION BUTTONS */}
+            {/* ACTION BUTTONS & PERFORMANCE METRICS */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={() => setBookingOpen(true)}
@@ -95,6 +96,16 @@ export default function PersonalBrandingHomeLayout({ posts, onSelectPost, siteCo
               >
                 Baca Panduan Resmi
               </a>
+            </div>
+
+            {/* PERFORMANCE METRICS BOX */}
+            <div className="pt-2">
+              <HeroPerformanceBox
+                siteConfig={siteConfig}
+                containerClassName="gap-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl shadow-sm text-center"
+                valueClassName="text-xl font-black text-rose-600 dark:text-rose-400"
+                labelClassName="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase"
+              />
             </div>
           </div>
         </div>

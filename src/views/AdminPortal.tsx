@@ -266,12 +266,32 @@ export default function AdminPortal({
 
   // Performance Metric Box Config States
   const [cfgShowPerformanceBox, setCfgShowPerformanceBox] = useState<boolean>(siteConfig?.show_performance_box ?? true);
+  const [cfgMetric1Show, setCfgMetric1Show] = useState<boolean>((siteConfig?.metric_1_show ?? siteConfig?.metric1_show) !== false);
+  const [cfgMetric2Show, setCfgMetric2Show] = useState<boolean>((siteConfig?.metric_2_show ?? siteConfig?.metric2_show) !== false);
+  const [cfgMetric3Show, setCfgMetric3Show] = useState<boolean>((siteConfig?.metric_3_show ?? siteConfig?.metric3_show) !== false);
   const [cfgMetric1Value, setCfgMetric1Value] = useState<string>(siteConfig?.metric1_value || '99+');
   const [cfgMetric1Label, setCfgMetric1Label] = useState<string>(siteConfig?.metric1_label || 'Kecepatan');
+  const [cfgMetric1AnimType, setCfgMetric1AnimType] = useState<'fixed' | 'count_up' | 'count_down'>(siteConfig?.metric1_anim_type || 'fixed');
+  const [cfgMetric1StartVal, setCfgMetric1StartVal] = useState<number>(siteConfig?.metric1_start_val ?? 0);
+  const [cfgMetric1EndVal, setCfgMetric1EndVal] = useState<number>(siteConfig?.metric1_end_val ?? 99);
+  const [cfgMetric1Duration, setCfgMetric1Duration] = useState<number>(siteConfig?.metric1_duration ?? 2000);
+  const [cfgMetric1Unit, setCfgMetric1Unit] = useState<string>(siteConfig?.metric1_unit ?? '+');
+
   const [cfgMetric2Value, setCfgMetric2Value] = useState<string>(siteConfig?.metric2_value || '100');
   const [cfgMetric2Label, setCfgMetric2Label] = useState<string>(siteConfig?.metric2_label || 'Kualitas');
+  const [cfgMetric2AnimType, setCfgMetric2AnimType] = useState<'fixed' | 'count_up' | 'count_down'>(siteConfig?.metric2_anim_type || 'fixed');
+  const [cfgMetric2StartVal, setCfgMetric2StartVal] = useState<number>(siteConfig?.metric2_start_val ?? 0);
+  const [cfgMetric2EndVal, setCfgMetric2EndVal] = useState<number>(siteConfig?.metric2_end_val ?? 100);
+  const [cfgMetric2Duration, setCfgMetric2Duration] = useState<number>(siteConfig?.metric2_duration ?? 2000);
+  const [cfgMetric2Unit, setCfgMetric2Unit] = useState<string>(siteConfig?.metric2_unit ?? '');
+
   const [cfgMetric3Value, setCfgMetric3Value] = useState<string>(siteConfig?.metric3_value || '0ms');
   const [cfgMetric3Label, setCfgMetric3Label] = useState<string>(siteConfig?.metric3_label || 'Respon Delay');
+  const [cfgMetric3AnimType, setCfgMetric3AnimType] = useState<'fixed' | 'count_up' | 'count_down'>(siteConfig?.metric3_anim_type || 'fixed');
+  const [cfgMetric3StartVal, setCfgMetric3StartVal] = useState<number>(siteConfig?.metric3_start_val ?? 100);
+  const [cfgMetric3EndVal, setCfgMetric3EndVal] = useState<number>(siteConfig?.metric3_end_val ?? 0);
+  const [cfgMetric3Duration, setCfgMetric3Duration] = useState<number>(siteConfig?.metric3_duration ?? 2000);
+  const [cfgMetric3Unit, setCfgMetric3Unit] = useState<string>(siteConfig?.metric3_unit ?? 'ms');
 
   // Admin Login Text Config
   const [cfgAdminLoginTitle, setCfgAdminLoginTitle] = useState(siteConfig?.admin_login_title || 'Portal Admin Parenting.my.id');
@@ -438,12 +458,32 @@ export default function AdminPortal({
       setCfgHeroCtaLink(siteConfig.hero_cta_link || DEFAULT_SITE_CONFIG.hero_cta_link);
 
       setCfgShowPerformanceBox(siteConfig.show_performance_box ?? true);
+      setCfgMetric1Show((siteConfig.metric_1_show ?? siteConfig.metric1_show) !== false);
+      setCfgMetric2Show((siteConfig.metric_2_show ?? siteConfig.metric2_show) !== false);
+      setCfgMetric3Show((siteConfig.metric_3_show ?? siteConfig.metric3_show) !== false);
       setCfgMetric1Value(siteConfig.metric1_value || '99+');
       setCfgMetric1Label(siteConfig.metric1_label || 'Kecepatan');
+      setCfgMetric1AnimType(siteConfig.metric1_anim_type || 'fixed');
+      setCfgMetric1StartVal(siteConfig.metric1_start_val ?? 0);
+      setCfgMetric1EndVal(siteConfig.metric1_end_val ?? 99);
+      setCfgMetric1Duration(siteConfig.metric1_duration ?? 2000);
+      setCfgMetric1Unit(siteConfig.metric1_unit ?? '+');
+
       setCfgMetric2Value(siteConfig.metric2_value || '100');
       setCfgMetric2Label(siteConfig.metric2_label || 'Kualitas');
+      setCfgMetric2AnimType(siteConfig.metric2_anim_type || 'fixed');
+      setCfgMetric2StartVal(siteConfig.metric2_start_val ?? 0);
+      setCfgMetric2EndVal(siteConfig.metric2_end_val ?? 100);
+      setCfgMetric2Duration(siteConfig.metric2_duration ?? 2000);
+      setCfgMetric2Unit(siteConfig.metric2_unit ?? '');
+
       setCfgMetric3Value(siteConfig.metric3_value || '0ms');
       setCfgMetric3Label(siteConfig.metric3_label || 'Respon Delay');
+      setCfgMetric3AnimType(siteConfig.metric3_anim_type || 'fixed');
+      setCfgMetric3StartVal(siteConfig.metric3_start_val ?? 100);
+      setCfgMetric3EndVal(siteConfig.metric3_end_val ?? 0);
+      setCfgMetric3Duration(siteConfig.metric3_duration ?? 2000);
+      setCfgMetric3Unit(siteConfig.metric3_unit ?? 'ms');
 
       setCfgPostsPerPage(siteConfig.posts_per_page || 9);
       setCfgEnableFeaturedPost(siteConfig.enable_featured_post ?? true);
@@ -599,12 +639,35 @@ export default function AdminPortal({
         hero_cta_text: cfgHeroCtaText,
         hero_cta_link: cfgHeroCtaLink,
         show_performance_box: cfgShowPerformanceBox,
+        metric_1_show: cfgMetric1Show,
+        metric_2_show: cfgMetric2Show,
+        metric_3_show: cfgMetric3Show,
+        metric1_show: cfgMetric1Show,
+        metric2_show: cfgMetric2Show,
+        metric3_show: cfgMetric3Show,
         metric1_value: cfgMetric1Value,
         metric1_label: cfgMetric1Label,
+        metric1_anim_type: cfgMetric1AnimType,
+        metric1_start_val: Number(cfgMetric1StartVal),
+        metric1_end_val: Number(cfgMetric1EndVal),
+        metric1_duration: Number(cfgMetric1Duration),
+        metric1_unit: cfgMetric1Unit,
+
         metric2_value: cfgMetric2Value,
         metric2_label: cfgMetric2Label,
+        metric2_anim_type: cfgMetric2AnimType,
+        metric2_start_val: Number(cfgMetric2StartVal),
+        metric2_end_val: Number(cfgMetric2EndVal),
+        metric2_duration: Number(cfgMetric2Duration),
+        metric2_unit: cfgMetric2Unit,
+
         metric3_value: cfgMetric3Value,
         metric3_label: cfgMetric3Label,
+        metric3_anim_type: cfgMetric3AnimType,
+        metric3_start_val: Number(cfgMetric3StartVal),
+        metric3_end_val: Number(cfgMetric3EndVal),
+        metric3_duration: Number(cfgMetric3Duration),
+        metric3_unit: cfgMetric3Unit,
         posts_per_page: Number(cfgPostsPerPage),
         enable_featured_post: cfgEnableFeaturedPost,
         pagination_type: cfgPaginationType,
@@ -722,8 +785,10 @@ export default function AdminPortal({
     cfgHeaderNavLinksArray, cfgHamburgerNavLinksArray, cfgEnableSearchBar, cfgEnableThemeToggle,
     cfgSeoMetaTitle, cfgSeoMetaDesc, cfgSeoDefaultOgImage, cfgShowHeroSection,
     cfgHeroTitle, cfgHeroSubtitle, cfgHeroCtaText, cfgHeroCtaLink,
-    cfgShowPerformanceBox, cfgMetric1Value, cfgMetric1Label, cfgMetric2Value, cfgMetric2Label,
-    cfgMetric3Value, cfgMetric3Label, cfgPostsPerPage, cfgEnableFeaturedPost,
+    cfgShowPerformanceBox, cfgMetric1Show, cfgMetric2Show, cfgMetric3Show, cfgMetric1Value, cfgMetric1Label, cfgMetric1AnimType, cfgMetric1StartVal, cfgMetric1EndVal, cfgMetric1Duration, cfgMetric1Unit,
+    cfgMetric2Value, cfgMetric2Label, cfgMetric2AnimType, cfgMetric2StartVal, cfgMetric2EndVal, cfgMetric2Duration, cfgMetric2Unit,
+    cfgMetric3Value, cfgMetric3Label, cfgMetric3AnimType, cfgMetric3StartVal, cfgMetric3EndVal, cfgMetric3Duration, cfgMetric3Unit,
+    cfgPostsPerPage, cfgEnableFeaturedPost,
     cfgPaginationType, cfgCommentEngineMode, cfgShowSidebar, cfgPopularPostsCount,
     cfgCategoriesWidgetLimit, cfgSidebarBannerCode, cfgFooterAboutText, cfgFooterCopyrightText,
     cfgSocialFacebook, cfgSocialInstagram, cfgSocialTwitter, cfgFooterMenuLinksArray,
@@ -829,12 +894,35 @@ export default function AdminPortal({
         hero_cta_text: cfgHeroCtaText,
         hero_cta_link: cfgHeroCtaLink,
         show_performance_box: cfgShowPerformanceBox,
+        metric_1_show: cfgMetric1Show,
+        metric_2_show: cfgMetric2Show,
+        metric_3_show: cfgMetric3Show,
+        metric1_show: cfgMetric1Show,
+        metric2_show: cfgMetric2Show,
+        metric3_show: cfgMetric3Show,
         metric1_value: cfgMetric1Value,
         metric1_label: cfgMetric1Label,
+        metric1_anim_type: cfgMetric1AnimType,
+        metric1_start_val: Number(cfgMetric1StartVal),
+        metric1_end_val: Number(cfgMetric1EndVal),
+        metric1_duration: Number(cfgMetric1Duration),
+        metric1_unit: cfgMetric1Unit,
+
         metric2_value: cfgMetric2Value,
         metric2_label: cfgMetric2Label,
+        metric2_anim_type: cfgMetric2AnimType,
+        metric2_start_val: Number(cfgMetric2StartVal),
+        metric2_end_val: Number(cfgMetric2EndVal),
+        metric2_duration: Number(cfgMetric2Duration),
+        metric2_unit: cfgMetric2Unit,
+
         metric3_value: cfgMetric3Value,
         metric3_label: cfgMetric3Label,
+        metric3_anim_type: cfgMetric3AnimType,
+        metric3_start_val: Number(cfgMetric3StartVal),
+        metric3_end_val: Number(cfgMetric3EndVal),
+        metric3_duration: Number(cfgMetric3Duration),
+        metric3_unit: cfgMetric3Unit,
 
         posts_per_page: Number(cfgPostsPerPage),
         enable_featured_post: cfgEnableFeaturedPost,
@@ -3784,62 +3872,266 @@ export default function AdminPortal({
                   </label>
                 </div>
 
-                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-                  <span className="text-xs font-bold text-rose-600 dark:text-rose-400 block">Kustomisasi Angka & Label Metrik Performa</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-rose-600 dark:text-rose-400 block">Kustomisasi Angka, Animasi & Satuan Metrik Performa</span>
+                    <span className="text-[10px] font-semibold text-slate-500">Live Animasi Saat Scroll (requestAnimationFrame)</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Metric 1 */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Metrik 1 (Nilai & Label)</label>
-                      <input
-                        type="text"
-                        value={cfgMetric1Value}
-                        onChange={(e) => setCfgMetric1Value(e.target.value)}
-                        placeholder="Misal: 99+"
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold mb-1"
-                      />
-                      <input
-                        type="text"
-                        value={cfgMetric1Label}
-                        onChange={(e) => setCfgMetric1Label(e.target.value)}
-                        placeholder="Misal: Kecepatan"
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs"
-                      />
+                    <div className="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={cfgMetric1Show}
+                            onChange={(e) => setCfgMetric1Show(e.target.checked)}
+                            className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500"
+                          />
+                          <span className="text-xs font-bold text-rose-600 dark:text-rose-400">Tampilkan Metrik 1</span>
+                        </label>
+                        <span className="text-[10px] text-slate-400 font-mono">metric_1_show</span>
+                      </div>
+                      
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Label Metrik</label>
+                        <input
+                          type="text"
+                          value={cfgMetric1Label}
+                          onChange={(e) => setCfgMetric1Label(e.target.value)}
+                          placeholder="Kecepatan"
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-semibold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Mode Animasi</label>
+                        <select
+                          value={cfgMetric1AnimType}
+                          onChange={(e) => setCfgMetric1AnimType(e.target.value as any)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-semibold"
+                        >
+                          <option value="fixed">Statis / Fixed</option>
+                          <option value="count_up">Count Up (Naik)</option>
+                          <option value="count_down">Count Down (Turun)</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Angka Awal</label>
+                          <input
+                            type="number"
+                            value={cfgMetric1StartVal}
+                            onChange={(e) => setCfgMetric1StartVal(Number(e.target.value))}
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Angka Akhir</label>
+                          <input
+                            type="number"
+                            value={cfgMetric1EndVal}
+                            onChange={(e) => setCfgMetric1EndVal(Number(e.target.value))}
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-bold text-emerald-600"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Durasi (ms)</label>
+                          <input
+                            type="number"
+                            step="100"
+                            value={cfgMetric1Duration}
+                            onChange={(e) => setCfgMetric1Duration(Number(e.target.value))}
+                            placeholder="2000"
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Satuan / Unit</label>
+                          <input
+                            type="text"
+                            value={cfgMetric1Unit}
+                            onChange={(e) => setCfgMetric1Unit(e.target.value)}
+                            placeholder="misal: +, %, ms"
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-bold"
+                          />
+                        </div>
+                      </div>
                     </div>
+
                     {/* Metric 2 */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Metrik 2 (Nilai & Label)</label>
-                      <input
-                        type="text"
-                        value={cfgMetric2Value}
-                        onChange={(e) => setCfgMetric2Value(e.target.value)}
-                        placeholder="Misal: 100"
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold mb-1"
-                      />
-                      <input
-                        type="text"
-                        value={cfgMetric2Label}
-                        onChange={(e) => setCfgMetric2Label(e.target.value)}
-                        placeholder="Misal: Kualitas"
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs"
-                      />
+                    <div className="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={cfgMetric2Show}
+                            onChange={(e) => setCfgMetric2Show(e.target.checked)}
+                            className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500"
+                          />
+                          <span className="text-xs font-bold text-rose-600 dark:text-rose-400">Tampilkan Metrik 2</span>
+                        </label>
+                        <span className="text-[10px] text-slate-400 font-mono">metric_2_show</span>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Label Metrik</label>
+                        <input
+                          type="text"
+                          value={cfgMetric2Label}
+                          onChange={(e) => setCfgMetric2Label(e.target.value)}
+                          placeholder="Kualitas"
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-semibold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Mode Animasi</label>
+                        <select
+                          value={cfgMetric2AnimType}
+                          onChange={(e) => setCfgMetric2AnimType(e.target.value as any)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-semibold"
+                        >
+                          <option value="fixed">Statis / Fixed</option>
+                          <option value="count_up">Count Up (Naik)</option>
+                          <option value="count_down">Count Down (Turun)</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Angka Awal</label>
+                          <input
+                            type="number"
+                            value={cfgMetric2StartVal}
+                            onChange={(e) => setCfgMetric2StartVal(Number(e.target.value))}
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Angka Akhir</label>
+                          <input
+                            type="number"
+                            value={cfgMetric2EndVal}
+                            onChange={(e) => setCfgMetric2EndVal(Number(e.target.value))}
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-bold text-emerald-600"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Durasi (ms)</label>
+                          <input
+                            type="number"
+                            step="100"
+                            value={cfgMetric2Duration}
+                            onChange={(e) => setCfgMetric2Duration(Number(e.target.value))}
+                            placeholder="2000"
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Satuan / Unit</label>
+                          <input
+                            type="text"
+                            value={cfgMetric2Unit}
+                            onChange={(e) => setCfgMetric2Unit(e.target.value)}
+                            placeholder="misal: %, users"
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-bold"
+                          />
+                        </div>
+                      </div>
                     </div>
+
                     {/* Metric 3 */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Metrik 3 (Nilai & Label)</label>
-                      <input
-                        type="text"
-                        value={cfgMetric3Value}
-                        onChange={(e) => setCfgMetric3Value(e.target.value)}
-                        placeholder="Misal: 0ms"
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold mb-1"
-                      />
-                      <input
-                        type="text"
-                        value={cfgMetric3Label}
-                        onChange={(e) => setCfgMetric3Label(e.target.value)}
-                        placeholder="Misal: Respon Delay"
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs"
-                      />
+                    <div className="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={cfgMetric3Show}
+                            onChange={(e) => setCfgMetric3Show(e.target.checked)}
+                            className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500"
+                          />
+                          <span className="text-xs font-bold text-rose-600 dark:text-rose-400">Tampilkan Metrik 3</span>
+                        </label>
+                        <span className="text-[10px] text-slate-400 font-mono">metric_3_show</span>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Label Metrik</label>
+                        <input
+                          type="text"
+                          value={cfgMetric3Label}
+                          onChange={(e) => setCfgMetric3Label(e.target.value)}
+                          placeholder="Respon Delay"
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-semibold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Mode Animasi</label>
+                        <select
+                          value={cfgMetric3AnimType}
+                          onChange={(e) => setCfgMetric3AnimType(e.target.value as any)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-semibold"
+                        >
+                          <option value="fixed">Statis / Fixed</option>
+                          <option value="count_up">Count Up (Naik)</option>
+                          <option value="count_down">Count Down (Turun)</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Angka Awal</label>
+                          <input
+                            type="number"
+                            value={cfgMetric3StartVal}
+                            onChange={(e) => setCfgMetric3StartVal(Number(e.target.value))}
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Angka Akhir</label>
+                          <input
+                            type="number"
+                            value={cfgMetric3EndVal}
+                            onChange={(e) => setCfgMetric3EndVal(Number(e.target.value))}
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-bold text-emerald-600"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Durasi (ms)</label>
+                          <input
+                            type="number"
+                            step="100"
+                            value={cfgMetric3Duration}
+                            onChange={(e) => setCfgMetric3Duration(Number(e.target.value))}
+                            placeholder="2000"
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Satuan / Unit</label>
+                          <input
+                            type="text"
+                            value={cfgMetric3Unit}
+                            onChange={(e) => setCfgMetric3Unit(e.target.value)}
+                            placeholder="misal: ms, dt, view"
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-bold"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Search, BookOpen, HelpCircle, FileText, ChevronRight, Sparkles, FolderOpen, Tag, ArrowRight } from 'lucide-react';
+import HeroPerformanceBox from '../HeroPerformanceBox';
 import { optimizeUnsplashUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -66,6 +67,11 @@ export default function KnowledgeBaseHomeLayout({ posts, onSelectPost, siteConfi
             placeholder={siteConfig?.kb_search_placeholder || 'Ketik topik (misal: jadwal MPASI, anak demam, speech delay, tantrum)...'}
             className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white text-slate-900 placeholder:text-slate-400 font-semibold text-sm shadow-2xl focus:outline-hidden focus:ring-4 focus:ring-rose-500/40"
           />
+        </div>
+
+        {/* PERFORMANCE METRICS BOX */}
+        <div className="pt-2 max-w-xl mx-auto">
+          <HeroPerformanceBox siteConfig={siteConfig} />
         </div>
       </section>
 

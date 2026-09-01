@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { ShoppingBag, Star, CheckCircle2, ShieldCheck, Zap, ArrowRight, HelpCircle, ChevronDown, BookOpen, Gift, Truck } from 'lucide-react';
+import HeroPerformanceBox from '../HeroPerformanceBox';
 import { optimizeUnsplashUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -102,6 +103,11 @@ export default function ProductLandingHomeLayout({ posts, onSelectPost, siteConf
                 <Truck className="w-4 h-4 text-emerald-300" />
                 Gratis Ongkir Seluruh Indonesia
               </span>
+            </div>
+
+            {/* PERFORMANCE METRICS BOX */}
+            <div className="pt-2">
+              <HeroPerformanceBox siteConfig={siteConfig} />
             </div>
           </div>
 

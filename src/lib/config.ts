@@ -83,12 +83,35 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
 
   // Performance Metric Box Defaults
   show_performance_box: true,
+  metric_1_show: true,
+  metric_2_show: true,
+  metric_3_show: true,
+  metric1_show: true,
+  metric2_show: true,
+  metric3_show: true,
   metric1_value: '99+',
   metric1_label: 'Kecepatan',
+  metric1_anim_type: 'fixed',
+  metric1_start_val: 0,
+  metric1_end_val: 99,
+  metric1_duration: 2000,
+  metric1_unit: '+',
+
   metric2_value: '100',
   metric2_label: 'Kualitas',
+  metric2_anim_type: 'fixed',
+  metric2_start_val: 0,
+  metric2_end_val: 100,
+  metric2_duration: 2000,
+  metric2_unit: '',
+
   metric3_value: '0ms',
   metric3_label: 'Respon Delay',
+  metric3_anim_type: 'fixed',
+  metric3_start_val: 100,
+  metric3_end_val: 0,
+  metric3_duration: 2000,
+  metric3_unit: 'ms',
 
   // Strategic AdSense Placements
   enable_adsense: true,

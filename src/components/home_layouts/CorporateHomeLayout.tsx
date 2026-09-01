@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Building2, ShieldCheck, Users2, BarChart3, ArrowRight, CheckCircle2, Mail, Phone, Globe, BookOpen } from 'lucide-react';
+import HeroPerformanceBox from '../HeroPerformanceBox';
 import { optimizeUnsplashUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -56,6 +57,11 @@ export default function CorporateHomeLayout({ posts, onSelectPost, siteConfig }:
               >
                 Jelajahi Layanan
               </a>
+            </div>
+
+            {/* PERFORMANCE METRICS BOX */}
+            <div className="pt-2">
+              <HeroPerformanceBox siteConfig={siteConfig} />
             </div>
           </div>
 

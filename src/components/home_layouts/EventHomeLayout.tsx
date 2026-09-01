@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Calendar, MapPin, Clock, Users, Ticket, ArrowRight, Video, CheckCircle2, ShieldCheck, Sparkles, BookOpen } from 'lucide-react';
+import HeroPerformanceBox from '../HeroPerformanceBox';
 import { optimizeUnsplashUrl, getOptimizedAvatarUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -151,22 +152,27 @@ export default function EventHomeLayout({ posts, onSelectPost, siteConfig }: Lay
             </div>
           </div>
 
-          {/* CALL TO ACTION BUTTONS */}
-          <div className="pt-4 flex flex-wrap items-center gap-4">
-            <button
-              onClick={() => setTicketModalOpen(true)}
-              className="px-7 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-sm shadow-xl shadow-rose-600/30 transition-all hover:scale-105 inline-flex items-center gap-2"
-            >
-              <Ticket className="w-4 h-4" />
-              <span>{siteConfig?.event_cta_text || 'Daftar / Dapatkan Tiket'}</span>
-            </button>
-            <a
-              href="#agenda-sesi"
-              className="px-6 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition-all inline-flex items-center gap-2"
-            >
-              <span>Lihat Susunan Acara</span>
-              <ArrowRight className="w-4 h-4" />
-            </a>
+          {/* CALL TO ACTION BUTTONS & PERFORMANCE METRICS */}
+          <div className="pt-4 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                onClick={() => setTicketModalOpen(true)}
+                className="px-7 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-sm shadow-xl shadow-rose-600/30 transition-all hover:scale-105 inline-flex items-center gap-2"
+              >
+                <Ticket className="w-4 h-4" />
+                <span>{siteConfig?.event_cta_text || 'Daftar / Dapatkan Tiket'}</span>
+              </button>
+              <a
+                href="#agenda-sesi"
+                className="px-6 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition-all inline-flex items-center gap-2"
+              >
+                <span>Lihat Susunan Acara</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+
+            {/* PERFORMANCE METRICS BOX */}
+            <HeroPerformanceBox siteConfig={siteConfig} />
           </div>
         </div>
       </section>

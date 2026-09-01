@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Search, PlusCircle, CheckCircle2, Newspaper, Tag, Phone, MapPin, Eye } from 'lucide-react';
+import HeroPerformanceBox from '../HeroPerformanceBox';
 
 interface LayoutProps {
   posts: Post[];
@@ -119,6 +120,16 @@ export default function ClassifiedAdsHomeLayout({ posts, onSelectPost, siteConfi
           <span>{siteConfig?.classified_masthead_subtitle || 'LEMBARAN IKLAN BARIS, PENGUMUMAN & WARTA KELUARGA'}</span>
           <span>SENIN - MINGGU • TERBIT SETIAP HARI</span>
           <span>REDAKSI & TATA USAHA TELP. {siteConfig?.classified_phone || '(021) 7654321'}</span>
+        </div>
+
+        {/* PERFORMANCE METRICS BOX */}
+        <div className="pt-2 max-w-xl mx-auto">
+          <HeroPerformanceBox
+            siteConfig={siteConfig}
+            containerClassName="font-sans gap-3 bg-[#f2ebd9] dark:bg-[#25221d] border-2 border-[#3c362e] dark:border-[#5c5448] p-3 rounded-xl text-center"
+            valueClassName="text-xl font-black text-[#8b1e1e] dark:text-[#f87171]"
+            labelClassName="text-[10px] text-[#4a4339] dark:text-[#b8ad9c] font-bold uppercase tracking-wider"
+          />
         </div>
       </header>
 

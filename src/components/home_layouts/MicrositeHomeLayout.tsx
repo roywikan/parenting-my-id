@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Share2, Check, BookOpen, MessageCircle, Download, ExternalLink, Headphones, ShoppingBag, Sparkles, Heart } from 'lucide-react';
+import HeroPerformanceBox from '../HeroPerformanceBox';
 import { optimizeUnsplashUrl, getOptimizedAvatarUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -101,6 +102,16 @@ export default function MicrositeHomeLayout({ posts, onSelectPost, siteConfig }:
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5" />}
             <span>{copied ? 'Tautan Disalin!' : 'Bagikan Halaman'}</span>
           </button>
+        </div>
+
+        {/* PERFORMANCE METRICS BOX */}
+        <div className="pt-2">
+          <HeroPerformanceBox
+            siteConfig={siteConfig}
+            containerClassName="gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 text-center w-full"
+            valueClassName="text-xl font-black text-rose-600 dark:text-rose-400"
+            labelClassName="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-semibold"
+          />
         </div>
       </section>
 

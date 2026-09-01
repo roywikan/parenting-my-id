@@ -1,6 +1,7 @@
 import { Post, AutoLink, SiteConfig } from '../../types';
 import { Search, Clock, Eye, Sparkles, ArrowRight, BookOpen, Zap } from 'lucide-react';
 import AdSlot from '../AdSlot';
+import HeroPerformanceBox from '../HeroPerformanceBox';
 import { optimizeUnsplashUrl, getUnsplashSrcSet, getOptimizedAvatarUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -69,34 +70,7 @@ export default function DefaultHomeLayout({
             </div>
 
             {/* PERFORMANCE METRICS BOX */}
-            {siteConfig?.show_performance_box !== false && (
-              <div className="grid grid-cols-3 gap-3 bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-center w-full md:w-auto shrink-0">
-                <div>
-                  <div className="text-xl sm:text-2xl font-black text-emerald-400">
-                    {siteConfig?.metric1_value ?? '99+'}
-                  </div>
-                  <div className="text-[10px] text-rose-200 uppercase font-semibold">
-                    {siteConfig?.metric1_label ?? 'Kecepatan'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xl sm:text-2xl font-black text-emerald-400">
-                    {siteConfig?.metric2_value ?? '100'}
-                  </div>
-                  <div className="text-[10px] text-rose-200 uppercase font-semibold">
-                    {siteConfig?.metric2_label ?? 'Kualitas'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xl sm:text-2xl font-black text-emerald-400">
-                    {siteConfig?.metric3_value ?? '0ms'}
-                  </div>
-                  <div className="text-[10px] text-rose-200 uppercase font-semibold">
-                    {siteConfig?.metric3_label ?? 'Respon Delay'}
-                  </div>
-                </div>
-              </div>
-            )}
+            <HeroPerformanceBox siteConfig={siteConfig} />
           </div>
         </section>
       )}
