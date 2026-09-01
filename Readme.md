@@ -291,6 +291,21 @@ Portal Admin menyediakan 4 opsi fleksibel untuk pengaturan kolom komentar artike
 
 ---
 
+### F. Hak Akses Berbasis Peran (Role-Based Access Control - RBAC)
+Untuk menjaga keamanan dan integritas sistem, akun dengan peran non-admin (`role: 'writer'`) secara ketat dibatasi dari fitur-fitur administratif sensitif:
+- 🚫 **Dilarang Akses (Hanya untuk Admin / `role: 'admin'`)**:
+  - **Kelola Tim & Penulis** (Tab Manajemen Penulis/Editor)
+  - **Auto-Linking Engine** (Tab Manajemen Auto-Link SEO)
+  - **SEO Inspector** (Tab Inspector Sitemap & Feed XML)
+  - **Cusdis Komentar & Webhook** (Tab Moderasi & Config Komentar)
+  - **Hard Link Admin Logout** (Box URL Logout Langsung di Tab Security)
+  - **Configs Situs** (Tab Pengaturan Terpusat Website)
+- ✅ **Hak Akses Penulis (`role: 'writer'`)**:
+  - Menulis, mengedit, dan mengelola artikel milik sendiri di **Rich WYSIWYG Editor**.
+  - Mengubah profil pribadi (nama, bio, avatar, password) di Tab **Profil & Password Saya**.
+
+---
+
 ## 🎨 Panduan Kustomisasi 10 Model Display Frontpage / Home Layout
 
 Sistem **parenting.my.id** menyediakan **10 Pilihan Model Tampilan Beranda (Frontpage Display Modes)** yang dapat diganti secara instan tanpa perlu mengubah atau mengedit file kode program. Seluruh teks judul, narasi, badge, metrik statistik, hingga nomor WhatsApp kontak dapat diubah secara interaktif melalui **Portal Admin (`/admin`)**.

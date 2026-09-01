@@ -139,6 +139,16 @@ export default function AdminPortal({
     fetchComments();
   }, []);
 
+  // Guard effect: Non-admin users (non role admin) cannot access restricted features
+  useEffect(() => {
+    if (currentUser && currentUser.role !== 'admin') {
+      const adminOnlyTabs = ['writers', 'autolinks', 'sitemap', 'comments', 'config'];
+      if (adminOnlyTabs.includes(activeTab)) {
+        setActiveTab('posts');
+      }
+    }
+  }, [currentUser, activeTab]);
+
   // Editor State
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
   const [editorTitle, setEditorTitle] = useState('');
@@ -1488,69 +1498,71 @@ export default function AdminPortal({
           <span>Rich WYSIWYG Editor</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab('writers')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-            activeTab === 'writers'
-              ? 'bg-rose-600 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          <span>Kelola Tim & Penulis ({writers.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('autolinks')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-            activeTab === 'autolinks'
-              ? 'bg-rose-600 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <LinkIcon className="w-4 h-4" />
-          <span>Auto-Linking Engine ({autolinks.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('sitemap')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-            activeTab === 'sitemap'
-              ? 'bg-rose-600 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Zap className="w-4 h-4" />
-          <span>SEO Inspector</span>
-        </button>
-
-        <button
-          onClick={() => {
-            setActiveTab('comments');
-            fetchComments();
-          }}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-            activeTab === 'comments'
-              ? 'bg-rose-600 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <MessageSquare className="w-4 h-4" />
-          <span>💬 Cusdis Komentar & Webhook ({comments.length})</span>
-        </button>
-
         {currentUser?.role === 'admin' && (
-          <button
-            onClick={() => setActiveTab('config')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeTab === 'config'
-                ? 'bg-rose-600 text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Settings className="w-4 h-4" />
-            <span>⚙️ Configs Situs</span>
-          </button>
+          <>
+            <button
+              onClick={() => setActiveTab('writers')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === 'writers'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Kelola Tim & Penulis ({writers.length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('autolinks')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === 'autolinks'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <LinkIcon className="w-4 h-4" />
+              <span>Auto-Linking Engine ({autolinks.length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('sitemap')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === 'sitemap'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Zap className="w-4 h-4" />
+              <span>SEO Inspector</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('comments');
+                fetchComments();
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === 'comments'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>💬 Cusdis Komentar & Webhook ({comments.length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('config')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === 'config'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+              <span>⚙️ Configs Situs</span>
+            </button>
+          </>
         )}
 
         <button
@@ -1679,7 +1691,7 @@ export default function AdminPortal({
       {/* ------------------------------------------------------------- */}
       {/* TAB 3: KELOLA TIM EDITORIAL & PENULIS (E-E-A-T) */}
       {/* ------------------------------------------------------------- */}
-      {activeTab === 'writers' && (
+      {activeTab === 'writers' && currentUser?.role === 'admin' && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
             <div>
@@ -1995,7 +2007,7 @@ export default function AdminPortal({
       {/* ------------------------------------------------------------- */}
       {/* TAB 3: AUTO-LINKING ENGINE MANAGER */}
       {/* ------------------------------------------------------------- */}
-      {activeTab === 'autolinks' && (
+      {activeTab === 'autolinks' && currentUser?.role === 'admin' && (
         <div className="space-y-6">
           <div className="bg-rose-50 dark:bg-slate-800/60 p-6 rounded-3xl border border-rose-100 dark:border-slate-700 space-y-2">
             <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
@@ -2104,7 +2116,7 @@ export default function AdminPortal({
       {/* ------------------------------------------------------------- */}
       {/* TAB 4: SEO & SITEMAP INSPECTOR */}
       {/* ------------------------------------------------------------- */}
-      {activeTab === 'sitemap' && (
+      {activeTab === 'sitemap' && currentUser?.role === 'admin' && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
             <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
@@ -2146,7 +2158,7 @@ export default function AdminPortal({
       {/* ------------------------------------------------------------- */}
       {/* TAB 5: CENTRALIZED CONFIGS FORM */}
       {/* ------------------------------------------------------------- */}
-      {activeTab === 'config' && (
+      {activeTab === 'config' && currentUser?.role === 'admin' && (
         <form onSubmit={handleSaveConfigSubmit} className="space-y-8">
           <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -4693,53 +4705,55 @@ export default function AdminPortal({
         <div className="space-y-8">
           
           {/* HARD LOGOUT DIRECT LINK INFO BOX */}
-          <div className="bg-gradient-to-r from-rose-900 via-slate-900 to-rose-950 text-white p-6 rounded-3xl border border-rose-800 shadow-xl space-y-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-[11px] font-bold border border-rose-500/30">
-                  <LogOut className="w-3.5 h-3.5 text-rose-400" />
-                  <span>Hard Link Admin Logout</span>
+          {currentUser?.role === 'admin' && (
+            <div className="bg-gradient-to-r from-rose-900 via-slate-900 to-rose-950 text-white p-6 rounded-3xl border border-rose-800 shadow-xl space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-[11px] font-bold border border-rose-500/30">
+                    <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Hard Link Admin Logout</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white">
+                    URL Logout Langsung (Hard Link)
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    Anda bisa logout langsung kapan saja tanpa menekan tombol di UI dengan membuka URL hard link berikut di browser:
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold text-white">
-                  URL Logout Langsung (Hard Link)
-                </h3>
-                <p className="text-xs text-slate-300">
-                  Anda bisa logout langsung kapan saja tanpa menekan tombol di UI dengan membuka URL hard link berikut di browser:
-                </p>
+
+                {onLogout && (
+                  <button
+                    onClick={onLogout}
+                    className="px-4 py-2 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md transition-all shrink-0 flex items-center gap-1.5"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Logout Sekarang</span>
+                  </button>
+                )}
               </div>
 
-              {onLogout && (
+              <div className="p-3.5 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-between gap-3 font-mono text-xs text-rose-300">
+                <span className="truncate">{logoutHardLink}</span>
                 <button
-                  onClick={onLogout}
-                  className="px-4 py-2 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md transition-all shrink-0 flex items-center gap-1.5"
+                  type="button"
+                  onClick={copyLogoutLink}
+                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-sans font-bold flex items-center gap-1.5 transition-colors shrink-0"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span>Logout Sekarang</span>
+                  {copiedLogoutLink ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Tersalin!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Salin Link</span>
+                    </>
+                  )}
                 </button>
-              )}
+              </div>
             </div>
-
-            <div className="p-3.5 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-between gap-3 font-mono text-xs text-rose-300">
-              <span className="truncate">{logoutHardLink}</span>
-              <button
-                type="button"
-                onClick={copyLogoutLink}
-                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-sans font-bold flex items-center gap-1.5 transition-colors shrink-0"
-              >
-                {copiedLogoutLink ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Tersalin!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>Salin Link</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+          )}
 
           {/* EDIT CREDENTIALS FORM */}
           <form onSubmit={handleUpdateCredsSubmit} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
@@ -4849,7 +4863,7 @@ export default function AdminPortal({
       {/* ------------------------------------------------------------- */}
       {/* TAB 8: CUSDIS COMMENTS & WEBHOOK MANAGEMENT */}
       {/* ------------------------------------------------------------- */}
-      {activeTab === 'comments' && (
+      {activeTab === 'comments' && currentUser?.role === 'admin' && (
         <div className="space-y-8">
           {/* COMMENT ENGINE MODE SELECTION CARD */}
           <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
