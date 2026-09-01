@@ -74,6 +74,18 @@ let mockUsers = [
   },
   {
     id: 2,
+    email: 'editor@parenting.my.id',
+    password: 'editor123',
+    name: 'Maya Putri, S.Psi',
+    title: 'Editor Senior & Moderasi Konten Parenting',
+    role: 'editor',
+    avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=60&q=60&fm=webp',
+    bio: 'Editor konten kesehatan dan pengasuhan anak dengan sertifikasi jurnalistik edukasi keluarga.',
+    socialInstagram: 'https://instagram.com/mayaputri.editor',
+    socialLinkedin: 'https://linkedin.com/in/maya-putri-editor',
+  },
+  {
+    id: 3,
     email: 'penulis@parenting.my.id',
     password: 'writer123',
     name: 'Ahmad Zulkarnain, S.Ked',
@@ -85,7 +97,7 @@ let mockUsers = [
     socialLinkedin: 'https://linkedin.com/in/ahmad-zulkarnain',
   },
   {
-    id: 3,
+    id: 4,
     email: 'siti.aminah@parenting.my.id',
     password: 'writer123',
     name: 'Siti Aminah, S.Gz',
@@ -595,7 +607,7 @@ app.delete('/api/users/:id', (req, res) => {
 
 // POST Create or Update Post (With Multi-Author, Auto-Save Draft & Revision History max 3)
 app.post('/api/posts', (req, res) => {
-  const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, status, metaTitle, metaDescription, tags } = req.body;
+  const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, co_writers, status, rejectionReason, metaTitle, metaDescription, tags } = req.body;
 
   if (!title || !contentMarkdown) {
     return res.status(400).json({ error: 'Judul dan konten markdown wajib diisi.' });
@@ -604,12 +616,12 @@ app.post('/api/posts', (req, res) => {
   const generatedSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const author = mockUsers.find((u) => u.id === (authorId || 1)) || mockUsers[0];
 
+  const effectiveCoAuthorIds = Array.isArray(coAuthorIds) ? coAuthorIds : (Array.isArray(co_writers) ? co_writers : []);
+
   // Resolve Co-Authors
-  const coAuthors = Array.isArray(coAuthorIds)
-    ? mockUsers
-        .filter((u) => coAuthorIds.includes(u.id) && u.id !== author.id)
-        .map(({ password, ...u }) => u)
-    : [];
+  const coAuthors = mockUsers
+    .filter((u) => effectiveCoAuthorIds.includes(u.id) && u.id !== author.id)
+    .map(({ password, ...u }) => u);
 
   if (id) {
     // Update existing post
@@ -651,10 +663,12 @@ app.post('/api/posts', (req, res) => {
           linkedin: author.socialLinkedin,
           website: author.socialWebsite,
         },
-        coAuthorIds: coAuthorIds || [],
+        coAuthorIds: effectiveCoAuthorIds,
+        co_writers: effectiveCoAuthorIds,
         coAuthors,
         revisions: updatedRevisions,
-        status: status || 'draft',
+        status: status || existingPost.status || 'draft',
+        rejectionReason: rejectionReason !== undefined ? rejectionReason : existingPost.rejectionReason,
         metaTitle: metaTitle || `${title} | Parenting.my.id`,
         metaDescription: metaDescription || excerpt || 'Artikel edukasi parenting Indonesia.',
         tags: tags || 'parenting, anak',
@@ -689,10 +703,12 @@ app.post('/api/posts', (req, res) => {
       linkedin: author.socialLinkedin,
       website: author.socialWebsite,
     },
-    coAuthorIds: coAuthorIds || [],
+    coAuthorIds: effectiveCoAuthorIds,
+    co_writers: effectiveCoAuthorIds,
     coAuthors,
     revisions: [],
     status: status || 'draft',
+    rejectionReason: rejectionReason || '',
     metaTitle: metaTitle || `${title} | Parenting.my.id`,
     metaDescription: metaDescription || excerpt || 'Artikel edukasi parenting Indonesia.',
     tags: tags || 'parenting, anak',

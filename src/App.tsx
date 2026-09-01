@@ -35,6 +35,9 @@ export default function App() {
 
   const effectiveConfig = liveDraftConfig || siteConfig;
 
+  // Filter published posts for public view
+  const publishedPosts = posts.filter((p) => !p.status || p.status === 'published');
+
   // Fetch Posts, Autolinks & Config on initial mount
   useEffect(() => {
     // 1. Critical fetch: Posts & Site Config
@@ -174,8 +177,13 @@ export default function App() {
       setCurrentUser(adminUser);
       localStorage.setItem('parenting_user', JSON.stringify(adminUser));
       return true;
+    } else if (email === 'editor@parenting.my.id' && pass === 'editor123') {
+      const editorUser = INITIAL_USERS[1];
+      setCurrentUser(editorUser);
+      localStorage.setItem('parenting_user', JSON.stringify(editorUser));
+      return true;
     } else if (email === 'penulis@parenting.my.id' && pass === 'writer123') {
-      const writerUser = INITIAL_USERS[1];
+      const writerUser = INITIAL_USERS[2];
       setCurrentUser(writerUser);
       localStorage.setItem('parenting_user', JSON.stringify(writerUser));
       return true;
@@ -448,7 +456,7 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 min-h-[900px]">
         {currentView === 'home' && (
           <HomeView
-            posts={posts}
+            posts={publishedPosts}
             autolinks={autolinks}
             onSelectPost={(slug) => handleNavigate('article', slug)}
             selectedCategory={selectedCategory}
@@ -488,7 +496,7 @@ export default function App() {
           }>
             <ArticleDetailView
               slug={activeSlug}
-              posts={posts}
+              posts={currentUser ? posts : publishedPosts}
               autolinks={autolinks}
               isPostsLoading={isPostsLoading}
               onRefreshPosts={fetchPosts}

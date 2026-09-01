@@ -15,6 +15,17 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 2,
+    email: 'editor@parenting.my.id',
+    name: 'Maya Putri, S.Psi',
+    title: 'Editor Senior & Moderasi Konten Parenting',
+    role: 'editor',
+    avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=80&q=50&fm=webp',
+    bio: 'Editor konten kesehatan dan pengasuhan anak dengan sertifikasi jurnalistik edukasi keluarga.',
+    socialInstagram: 'https://instagram.com/mayaputri.editor',
+    socialLinkedin: 'https://linkedin.com/in/maya-putri-editor',
+  },
+  {
+    id: 3,
     email: 'penulis@parenting.my.id',
     name: 'Ahmad Zulkarnain, S.Ked',
     title: 'Edukator Kesehatan Anak & Spesialis Gizi Balita',
@@ -25,7 +36,7 @@ export const INITIAL_USERS: User[] = [
     socialLinkedin: 'https://linkedin.com/in/ahmad-zulkarnain',
   },
   {
-    id: 3,
+    id: 4,
     email: 'siti.aminah@parenting.my.id',
     name: 'Siti Aminah, S.Gz',
     title: 'Ahli Gizi Ibu & Anak (Certified Nutritionist)',
@@ -233,5 +244,35 @@ Ajak juga **balita** aktif bergerak lewat permainan ringan seperti **sensory pla
     views: 310,
     createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
     updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+  },
+  {
+    id: 4,
+    title: 'Strategi Menghadapi Tantrum Balita dengan Tenang Tanpa Emosi di Tempat Umum',
+    slug: 'strategi-menghadapi-tantrum-balita-dengan-tenang',
+    contentMarkdown: `## Menghadapi Tantrum Balita Secara Bijak
+
+Tantrum adalah respons emosional yang wajar pada balita saat mereka belum mampu mengutarakannya lewat kata-kata. Saat si kecil mengalami tantrum di supermarket atau tempat umum, orang tua sering kali merasa panik atau malu.
+
+### 4 Langkah Utama Menangani Tantrum:
+1. **Tetap Tenang & Jaga Emosi Diri:** Tarik napas dalam-dalam. Ingat bahwa Anda adalah jangkar emosi anak.
+2. **Bawa ke Tempat yang Lebih Sepi:** Ajak si kecil berpindah ke area tenang untuk meredakan stimulasi berlebih.
+3. **Validasi Perasaan Anak:** Katakan *"Ibu tahu kamu lelah dan marah, Ibu ada di sini mendampingimu."*
+4. **Berikan Pelukan Kompasional:** Jangan berdebat saat emosinya meluap. Tunggu hingga balita tenang baru ajak bicara.`,
+    excerpt: 'Simak 4 langkah praktis penanganan tantrum pada balita tanpa marah-marah, menjaga kesehatan emosi anak dan ketenangan orang tua.',
+    featuredImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=700&q=65&fm=webp',
+    category: 'Psikologi Ibu',
+    readTimeMinutes: 5,
+    authorId: 3,
+    authorName: 'Ahmad Zulkarnain, S.Ked',
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=60&q=60&fm=webp',
+    authorRole: 'writer',
+    status: 'pending_approval',
+    coAuthorIds: [4],
+    metaTitle: 'Strategi Menghadapi Tantrum Balita Tanpa Emosi | Parenting.my.id',
+    metaDescription: 'Panduan menenangkan tantrum balita di tempat umum dengan pendekatan kompasional.',
+    tags: 'tantrum, balita, psikologi anak, edukasi orang tua',
+    views: 15,
+    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
   },
 ];

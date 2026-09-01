@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Post, AutoLink, User, SiteConfig, PostRevision, NavLink, HomepageDisplayMode } from '../types';
+import { Post, AutoLink, User, SiteConfig, PostRevision, NavLink, HomepageDisplayMode, UserRole, PostStatus } from '../types';
 import { THEME_PRESETS } from '../lib/themes';
 import { DEFAULT_SITE_CONFIG } from '../lib/config';
 import { 
@@ -110,8 +110,11 @@ export default function AdminPortal({
   const [wName, setWName] = useState('');
   const [wEmail, setWEmail] = useState('');
   const [wPassword, setWPassword] = useState('');
-  const [wRole, setWRole] = useState<'admin' | 'writer'>('writer');
+  const [wRole, setWRole] = useState<UserRole>('writer');
   const [wAvatar, setWAvatar] = useState('');
+
+  // Post list filter state
+  const [postStatusFilter, setPostStatusFilter] = useState<'all' | 'pending_approval' | 'draft' | 'published' | 'rejected'>('all');
   const [wTitle, setWTitle] = useState('');
   const [wBio, setWBio] = useState('');
   const [wInstagram, setWInstagram] = useState('');
@@ -409,6 +412,17 @@ export default function AdminPortal({
       setCredBio(currentUser.bio || '');
     }
   }, [currentUser]);
+
+  // RBAC Tab Security Guard for Non-Admin Users
+  useEffect(() => {
+    if (!currentUser) return;
+    if (currentUser.role !== 'admin') {
+      const adminOnlyTabs = ['writers', 'autolinks', 'sitemap', 'comments', 'config'];
+      if (adminOnlyTabs.includes(activeTab)) {
+        setActiveTab('posts');
+      }
+    }
+  }, [currentUser, activeTab]);
 
   useEffect(() => {
     if (siteConfig) {
@@ -1233,7 +1247,7 @@ export default function AdminPortal({
   };
 
   // Save / Publish Post Form Submit
-  const handlePublishSubmit = async (status: 'draft' | 'published') => {
+  const handlePublishSubmit = async (status: PostStatus, rejectionReason?: string) => {
     if (!editorTitle || !editorMarkdown) return;
 
     await onSavePost({
@@ -1245,6 +1259,7 @@ export default function AdminPortal({
       excerpt: editorExcerpt || editorMarkdown.slice(0, 150) + '...',
       featuredImage: editorImage,
       status: status,
+      rejectionReason: rejectionReason,
       metaTitle: editorMetaTitle || `${editorTitle} | Parenting.my.id`,
       metaDescription: editorMetaDesc || editorExcerpt,
       tags: editorTags,
@@ -1483,7 +1498,7 @@ export default function AdminPortal({
           }`}
         >
           <FileText className="w-4 h-4" />
-          <span>Kelola Artikel ({posts.length})</span>
+          <span>{currentUser?.role === 'writer' ? 'Artikel Saya' : currentUser?.role === 'editor' ? 'Moderasi Artikel Redaksi' : 'Kelola Artikel'} ({posts.length})</span>
         </button>
 
         <button
@@ -1495,7 +1510,7 @@ export default function AdminPortal({
           }`}
         >
           <Edit3 className="w-4 h-4" />
-          <span>Rich WYSIWYG Editor</span>
+          <span>Editor Draf Artikel</span>
         </button>
 
         {currentUser?.role === 'admin' && (
@@ -1581,72 +1596,240 @@ export default function AdminPortal({
       {/* ------------------------------------------------------------- */}
       {/* TAB 1: MANAGE POSTS LIST */}
       {/* ------------------------------------------------------------- */}
-      {activeTab === 'posts' && (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-              Daftar Artikel di Cloudflare D1 Database
-            </h3>
-            <span className="text-xs text-slate-500">
-              Total {posts.length} Artikel
-            </span>
-          </div>
+      {activeTab === 'posts' && (() => {
+        const userRole = currentUser?.role || 'writer';
+        const userPosts = posts.filter((post) => {
+          if (userRole === 'writer') {
+            const isAuthor = post.authorId === currentUser?.id;
+            const isCoAuthor = (post.coAuthorIds || post.co_writers || []).includes(currentUser?.id || -1);
+            return isAuthor || isCoAuthor;
+          }
+          return true;
+        });
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px]">
-                <tr>
-                  <th className="p-4">Judul Artikel</th>
-                  <th className="p-4">Kategori</th>
-                  <th className="p-4">Penulis</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Pembaca</th>
-                  <th className="p-4 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {posts.map((post) => (
-                  <tr key={post.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="p-4 font-bold text-slate-900 dark:text-white max-w-xs truncate">
-                      {post.title}
-                    </td>
-                    <td className="p-4">
-                      <span className="px-2 py-1 rounded bg-rose-50 text-rose-600 font-semibold text-[10px]">
-                        {post.category}
+        const filteredPosts = userPosts.filter((post) => {
+          if (postStatusFilter === 'all') return true;
+          const status = post.status || 'published';
+          return status === postStatusFilter;
+        });
+
+        const pendingCount = userPosts.filter(p => p.status === 'pending_approval').length;
+        const draftCount = userPosts.filter(p => p.status === 'draft').length;
+        const publishedCount = userPosts.filter(p => !p.status || p.status === 'published').length;
+        const rejectedCount = userPosts.filter(p => p.status === 'rejected').length;
+
+        return (
+          <div className="space-y-4">
+            {/* WRITER / EDITOR ANNOUNCEMENT BANNER */}
+            {userRole === 'writer' && (
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-rose-500/10 border border-rose-200 dark:border-rose-900/50 text-xs text-slate-700 dark:text-slate-300 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                    ✍️
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-slate-900 dark:text-white">Portal Khusus Penulis (Distraction-Free)</h4>
+                    <p className="text-[11px] text-slate-500">Tulis draf artikel Anda, sertakan gambar &amp; ringkasan, lalu klik <strong>"Kirim untuk Ditinjau"</strong> agar diperiksa oleh Tim Redaksi/Editor.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleCreateNewPost}
+                  className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shrink-0 shadow-sm transition-all"
+                >
+                  + Tulis Draf Baru
+                </button>
+              </div>
+            )}
+
+            {userRole === 'editor' && pendingCount > 0 && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-300 dark:border-amber-900 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-sm shrink-0 animate-bounce">
+                    ⏳
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold">Ada {pendingCount} Artikel Menunggu Moderasi &amp; Persetujuan Redaksi</h4>
+                    <p className="text-[11px] opacity-90">Periksa artikel yang dikirim Penulis, setujui untuk terbit langsung ke website, atau berikan catatan revisi.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setPostStatusFilter('pending_approval')}
+                  className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 shadow-sm transition-all"
+                >
+                  Lihat Artikel Pending
+                </button>
+              </div>
+            )}
+
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+                    {userRole === 'writer' ? 'Daftar Artikel Draf & Status Pengajuan' : 'Daftar Artikel Website (Cloudflare D1)'}
+                  </h3>
+                  <span className="text-xs text-slate-500">
+                    Menampilkan {filteredPosts.length} dari total {userPosts.length} artikel
+                  </span>
+                </div>
+
+                {/* STATUS FILTER BUTTONS */}
+                <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-[11px] font-bold overflow-x-auto max-w-full">
+                  <button
+                    onClick={() => setPostStatusFilter('all')}
+                    className={`px-3 py-1.5 rounded-xl transition-all ${
+                      postStatusFilter === 'all'
+                        ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    Semua ({userPosts.length})
+                  </button>
+                  <button
+                    onClick={() => setPostStatusFilter('pending_approval')}
+                    className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 ${
+                      postStatusFilter === 'pending_approval'
+                        ? 'bg-amber-500 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-amber-600'
+                    }`}
+                  >
+                    <span>⏳ Menunggu</span>
+                    {pendingCount > 0 && (
+                      <span className="px-1.5 py-0.2 rounded-full bg-amber-600 text-white text-[9px] font-extrabold">
+                        {pendingCount}
                       </span>
-                    </td>
-                    <td className="p-4">{post.authorName || 'Dr. Ratna Sari'}</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                        post.status === 'published' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {post.status}
-                      </span>
-                    </td>
-                    <td className="p-4 font-mono">{post.views}</td>
-                    <td className="p-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleEditPost(post)}
-                        className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-rose-50 hover:text-rose-600 font-bold"
-                      >
-                        Edit
-                      </button>
-                      {(currentUser.role === 'admin' || post.authorId === currentUser.id) && (
-                        <button
-                          onClick={() => onDeletePost(post.id)}
-                          className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold"
-                        >
-                          Hapus
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setPostStatusFilter('draft')}
+                    className={`px-3 py-1.5 rounded-xl transition-all ${
+                      postStatusFilter === 'draft'
+                        ? 'bg-slate-700 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    📝 Draf ({draftCount})
+                  </button>
+                  <button
+                    onClick={() => setPostStatusFilter('published')}
+                    className={`px-3 py-1.5 rounded-xl transition-all ${
+                      postStatusFilter === 'published'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600'
+                    }`}
+                  >
+                    ✅ Diterbitkan ({publishedCount})
+                  </button>
+                  <button
+                    onClick={() => setPostStatusFilter('rejected')}
+                    className={`px-3 py-1.5 rounded-xl transition-all ${
+                      postStatusFilter === 'rejected'
+                        ? 'bg-rose-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-rose-600'
+                    }`}
+                  >
+                    ❌ Revisi ({rejectedCount})
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                  <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="p-4">Judul Artikel</th>
+                      <th className="p-4">Kategori</th>
+                      <th className="p-4">Penulis</th>
+                      <th className="p-4">Status Pengajuan</th>
+                      <th className="p-4">Pembaca</th>
+                      <th className="p-4 text-right">Aksi Moderasi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {filteredPosts.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-slate-400 font-semibold">
+                          Tidak ada artikel dalam kategori status ini.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredPosts.map((post) => (
+                        <tr key={post.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                          <td className="p-4 font-bold text-slate-900 dark:text-white max-w-xs">
+                            <div className="truncate font-semibold">{post.title}</div>
+                            {post.status === 'rejected' && post.rejectionReason && (
+                              <div className="text-[10px] text-rose-600 dark:text-rose-400 mt-1 bg-rose-50 dark:bg-rose-950/50 p-1.5 rounded-lg border border-rose-200 dark:border-rose-900 font-normal">
+                                💬 <strong>Catatan Revisi Editor:</strong> {post.rejectionReason}
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            <span className="px-2 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-semibold text-[10px]">
+                              {post.category}
+                            </span>
+                          </td>
+                          <td className="p-4 font-medium">{post.authorName || 'Dr. Ratna Sari'}</td>
+                          <td className="p-4">
+                            {post.status === 'pending_approval' && (
+                              <span className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800 inline-flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                                ⏳ Menunggu Ditinjau
+                              </span>
+                            )}
+                            {(!post.status || post.status === 'published') && (
+                              <span className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                ✅ Diterbitkan
+                              </span>
+                            )}
+                            {post.status === 'draft' && (
+                              <span className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                📝 Draf
+                              </span>
+                            )}
+                            {post.status === 'rejected' && (
+                              <span className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                                ❌ Perlu Revisi
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4 font-mono font-bold text-slate-500">{post.views || 0}</td>
+                          <td className="p-4 text-right space-x-1.5 whitespace-nowrap">
+                            <button
+                              onClick={() => handleEditPost(post)}
+                              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 text-xs font-bold transition-all"
+                            >
+                              {userRole === 'writer' ? 'Edit & Tinjau' : 'Edit Artikel'}
+                            </button>
+
+                            {(userRole === 'admin' || userRole === 'editor') && post.status === 'pending_approval' && (
+                              <button
+                                onClick={() => {
+                                  handleEditPost(post);
+                                }}
+                                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-xs transition-all"
+                              >
+                                Moderasi &amp; Terbit
+                              </button>
+                            )}
+
+                            {(currentUser.role === 'admin' || post.authorId === currentUser.id) && (
+                              <button
+                                onClick={() => onDeletePost(post.id)}
+                                className="px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold transition-all"
+                              >
+                                Hapus
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ------------------------------------------------------------- */}
       {/* TAB 2: RICH WYSIWYG & MARKDOWN EDITOR */}
@@ -1685,6 +1868,9 @@ export default function AdminPortal({
           setCoAuthorIds={setEditorCoAuthorIds}
           revisions={posts.find(p => p.id === editingPostId)?.revisions || []}
           onRestoreRevision={handleRestoreRevision}
+          userRole={currentUser?.role || 'writer'}
+          currentStatus={editorStatus}
+          rejectionReason={posts.find(p => p.id === editingPostId)?.rejectionReason}
         />
       )}
 
@@ -1905,8 +2091,9 @@ export default function AdminPortal({
                     onChange={(e: any) => setWRole(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold"
                   >
-                    <option value="writer">Penulis / Kontributor</option>
-                    <option value="admin">Administrator (Akses Penuh)</option>
+                    <option value="writer">Writer (Penulis - Hanya Draf & Pengajuan)</option>
+                    <option value="editor">Editor (Redaksi & Moderasi Persetujuan)</option>
+                    <option value="admin">Administrator (Akses Penuh Seluruh Config)</option>
                   </select>
                 </div>
               </div>

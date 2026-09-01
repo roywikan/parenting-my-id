@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'writer';
+export type UserRole = 'admin' | 'editor' | 'writer';
 
 export interface User {
   id: number;
@@ -250,7 +250,7 @@ export interface SiteConfig {
   kb_helpdesk_whatsapp?: string;
 }
 
-export type PostStatus = 'draft' | 'published';
+export type PostStatus = 'draft' | 'pending_approval' | 'published' | 'rejected';
 
 export interface Post {
   id: number;
@@ -271,10 +271,12 @@ export interface Post {
   authorSocials?: { instagram?: string; linkedin?: string; website?: string };
   
   coAuthorIds?: number[];
+  co_writers?: number[];
   coAuthors?: User[];
   revisions?: PostRevision[];
 
   status: PostStatus;
+  rejectionReason?: string;
   metaTitle?: string;
   metaDescription?: string;
   tags: string;

@@ -2,14 +2,14 @@ import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { marked } from 'marked';
 import { applyAutoLinks, calculateReadTime, preprocessMarkdownLineBreaks } from '../lib/autolink';
 import { sanitizeAndOptimizeImageUrl, sanitizeMarkdownImageUrls } from '../lib/imageUtils';
-import { AutoLink, User, PostRevision } from '../types';
+import { AutoLink, User, PostRevision, UserRole, PostStatus } from '../types';
 import SeoAuditWidget from './SeoAuditWidget';
 import { 
   Bold, Italic, Strikethrough, Heading1, Heading2, Heading3, 
   List, ListOrdered, CheckSquare, Quote, Code, Table, Minus, 
   Link as LinkIcon, Image as ImageIcon, Upload, Eye, Edit3, Columns, 
   Undo, Redo, Sparkles, CheckCircle2, RefreshCw, X, Copy, Check, FileText,
-  Users, History, RotateCcw, Award, ShieldCheck
+  Users, History, RotateCcw, Award, ShieldCheck, Send, AlertTriangle, AlertCircle, ThumbsUp, XCircle
 } from 'lucide-react';
 
 interface RichPostEditorProps {
@@ -34,7 +34,7 @@ interface RichPostEditorProps {
   autoSaveStatus: 'saved' | 'saving' | 'dirty';
   isAiLoading: boolean;
   onAiGenerateMeta: () => void;
-  onPublishSubmit: (status: 'draft' | 'published') => void;
+  onPublishSubmit: (status: PostStatus, rejectionReason?: string) => void;
   uploadingImage: boolean;
   onImageUpload: (file: File) => Promise<string | null>;
   autolinks: AutoLink[];
@@ -45,6 +45,9 @@ interface RichPostEditorProps {
   setCoAuthorIds?: (ids: number[]) => void;
   revisions?: PostRevision[];
   onRestoreRevision?: (rev: PostRevision) => void;
+  userRole?: UserRole;
+  currentStatus?: PostStatus;
+  rejectionReason?: string;
 }
 
 export default function RichPostEditor({
@@ -80,7 +83,14 @@ export default function RichPostEditor({
   setCoAuthorIds,
   revisions = [],
   onRestoreRevision,
+  userRole = 'writer',
+  currentStatus = 'draft',
+  rejectionReason = '',
 }: RichPostEditorProps) {
+  // Rejection modal state
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectNote, setRejectNote] = useState('');
+
   // Editor view modes: 'write' | 'split' | 'preview'
   const [viewMode, setViewMode] = useState<'write' | 'split' | 'preview'>('split');
   
@@ -347,24 +357,143 @@ export default function RichPostEditor({
           )}
         </div>
 
-        {/* SAVE & PUBLISH ACTION BUTTONS */}
-        <div className="flex items-center gap-2">
+        {/* SAVE & PUBLISH ROLE-BASED ACTION BUTTONS */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Simpan Draf (All roles) */}
           <button
             type="button"
             onClick={() => onPublishSubmit('draft')}
-            className="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700 transition-colors border border-slate-700"
+            className="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700 transition-colors border border-slate-700 flex items-center gap-1.5"
           >
-            Simpan Draf
+            <FileText className="w-3.5 h-3.5 text-slate-400" />
+            <span>Simpan Draf</span>
           </button>
-          <button
-            type="button"
-            onClick={() => onPublishSubmit('published')}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 text-white text-xs font-bold hover:from-rose-500 hover:to-pink-500 shadow-md transition-all"
-          >
-            Publikasikan Artikel 🚀
-          </button>
+
+          {/* Writer Specific Action */}
+          {userRole === 'writer' && (
+            <button
+              type="button"
+              onClick={() => onPublishSubmit('pending_approval')}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs font-bold hover:from-amber-500 hover:to-orange-500 shadow-md transition-all flex items-center gap-1.5"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Kirim untuk Ditinjau 🚀</span>
+            </button>
+          )}
+
+          {/* Editor & Admin Actions */}
+          {(userRole === 'editor' || userRole === 'admin') && (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowRejectModal(true)}
+                className="px-3.5 py-2 rounded-xl bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 text-xs font-bold transition-colors border border-rose-800/60 flex items-center gap-1.5"
+              >
+                <XCircle className="w-3.5 h-3.5" />
+                <span>Tolak / Minta Revisi</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onPublishSubmit('published')}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold hover:from-emerald-500 hover:to-teal-500 shadow-md transition-all flex items-center gap-1.5"
+              >
+                <ThumbsUp className="w-3.5 h-3.5" />
+                <span>Setujui & Terbitkan ✅</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
+
+      {/* REJECTION / WORKFLOW NOTIFICATION BANNER */}
+      {currentStatus === 'rejected' && (
+        <div className="bg-rose-950/60 border-2 border-rose-800/80 rounded-2xl p-4 flex items-start gap-3 text-rose-200 shadow-sm animate-fade-in">
+          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h4 className="text-xs font-extrabold uppercase tracking-wider text-rose-300">
+              Artikel Perlu Revisi / Ditolak oleh Editor
+            </h4>
+            <p className="text-xs text-rose-200 leading-relaxed">
+              {rejectionReason || 'Silakan tinjau kembali tata bahasa, sumber referensi, atau kelengkapan isi artikel ini sebelum mengajukan ulang.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {currentStatus === 'pending_approval' && (
+        <div className="bg-amber-950/40 border border-amber-800/60 rounded-2xl p-4 flex items-center justify-between text-amber-200 shadow-sm">
+          <div className="flex items-center gap-3">
+            <Send className="w-5 h-5 text-amber-400 shrink-0 animate-pulse" />
+            <div>
+              <h4 className="text-xs font-bold text-amber-300">Menunggu Ditinjau oleh Editor</h4>
+              <p className="text-[11px] text-amber-200/80">
+                Artikel ini sudah dikirim dan saat ini berada di antrean moderasi Redaksi.
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-extrabold uppercase bg-amber-900/60 text-amber-300 border border-amber-700/80 px-2.5 py-1 rounded-full">
+            Pending Approval
+          </span>
+        </div>
+      )}
+
+      {/* REJECTION REASON MODAL (FOR EDITORS / ADMINS) */}
+      {showRejectModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-rose-400">
+                <AlertCircle className="w-5 h-5" />
+                <h3 className="text-sm font-bold">Minta Revisi / Tolak Artikel</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRejectModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Tuliskan catatan revisi atau alasan penolakan secara spesifik agar Penulis dapat memperbaiki artikel ini.
+            </p>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                Catatan Revisi / Alasan Penolakan:
+              </label>
+              <textarea
+                value={rejectNote}
+                onChange={(e) => setRejectNote(e.target.value)}
+                placeholder="Contoh: Tolak artikel ini. Tambahkan referensi medis dan perbaiki penulisan istilah kesehatan."
+                rows={4}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-hidden focus:border-rose-500"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowRejectModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-bold"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowRejectModal(false);
+                  onPublishSubmit('rejected', rejectNote || 'Perlu perbaikan artikel.');
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md"
+              >
+                Kirim Catatan Revisi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ------------------------------------------------------------- */}
       {/* MAIN CONTENT EDITOR SECTION */}
