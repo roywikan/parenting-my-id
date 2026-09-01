@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS users (
   password TEXT NOT NULL,
   name TEXT NOT NULL,
   title TEXT,
-  role TEXT DEFAULT 'writer',
+  role TEXT DEFAULT 'writer', -- Menerima: 'admin', 'editor', 'writer'
   avatar TEXT,
   bio TEXT,
   social_instagram TEXT,
@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS posts (
   author_id INTEGER,
   co_author_ids TEXT,
   revisions TEXT,
-  status TEXT DEFAULT 'draft',
+  status TEXT DEFAULT 'draft', -- Menerima: 'draft', 'pending_approval', 'published', 'rejected'
+  rejection_reason TEXT,
   meta_title TEXT,
   meta_description TEXT,
   tags TEXT,
@@ -114,7 +115,7 @@ CREATE TABLE IF NOT EXISTS site_config (
 
 ```
 
-atau yang sudah terisi:
+atau skema lengkap terisi awal (Default Seed):
 
 ```sql
 CREATE TABLE IF NOT EXISTS _cf_KV (
@@ -125,13 +126,13 @@ CREATE TABLE IF NOT EXISTS _cf_KV (
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
+  password_hash TEXT,
+  password TEXT NOT NULL,
   name TEXT NOT NULL,
-  role TEXT CHECK(role IN ('admin', 'writer')) NOT NULL DEFAULT 'writer',
+  role TEXT DEFAULT 'writer', -- 'admin', 'editor', 'writer'
   avatar TEXT DEFAULT 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
   bio TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  password TEXT,
   title TEXT,
   social_instagram TEXT,
   social_linkedin TEXT,
@@ -148,7 +149,8 @@ CREATE TABLE IF NOT EXISTS posts (
   category TEXT NOT NULL DEFAULT 'Pola Asuh',
   read_time_minutes INTEGER DEFAULT 5,
   author_id INTEGER NOT NULL,
-  status TEXT CHECK(status IN ('draft', 'published')) NOT NULL DEFAULT 'draft',
+  status TEXT DEFAULT 'draft', -- 'draft', 'pending_approval', 'published', 'rejected'
+  rejection_reason TEXT,
   meta_title TEXT,
   meta_description TEXT,
   tags TEXT DEFAULT 'parenting, anak, keluarga',
@@ -193,7 +195,13 @@ CREATE TABLE IF NOT EXISTS site_config (
 
 ```
 
-*(Catatan: Jika Anda meng-upgrade D1 dari versi terdahulu, jalankan `ALTER TABLE users ADD COLUMN title TEXT;` dsb jika ada kolom yang belum tersedia).*
+### ⚡ Skrip Migrasi SQL (Bila Meng-upgrade Database D1 Lama)
+Jika Anda meng-upgrade database Cloudflare D1 yang **sudah dibuat sebelumnya**, jalankan skrip perbaikan/tambahan kolom berikut di Console Cloudflare D1:
+
+```sql
+-- Tambah kolom catatan revisi pada tabel posts (jika belum ada)
+ALTER TABLE posts ADD COLUMN rejection_reason TEXT;
+```
 
 ### C. Deploy ke Cloudflare Pages / Workers
 1. Kembali ke Cloudflare Dashboard -> **Workers & Pages**.
