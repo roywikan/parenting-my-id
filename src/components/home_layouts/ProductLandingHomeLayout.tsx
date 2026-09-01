@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { ShoppingBag, Star, CheckCircle2, ShieldCheck, Zap, ArrowRight, HelpCircle, ChevronDown, BookOpen, Gift, Truck } from 'lucide-react';
 import { optimizeUnsplashUrl } from '../../lib/imageUtils';

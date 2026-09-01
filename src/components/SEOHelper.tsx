@@ -5,6 +5,7 @@ interface SEOProps {
   title: string;
   description: string;
   image?: string;
+  ogImage?: string;
   canonicalUrl?: string;
   type?: string;
   authorName?: string;
@@ -16,12 +17,14 @@ interface SEOProps {
   contentMarkdown?: string;
   siteName?: string;
   siteLogo?: string;
+  articleData?: any;
 }
 
 export default function SEOHelper({
   title,
   description,
-  image = 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=80',
+  image,
+  ogImage,
   canonicalUrl = 'https://parenting.my.id',
   type = 'article',
   authorName = 'Tim Redaksi Parenting.my.id',
@@ -33,7 +36,9 @@ export default function SEOHelper({
   contentMarkdown = '',
   siteName = 'Parenting.my.id',
   siteLogo = 'https://parenting.my.id/favicon-32x32.png',
+  articleData,
 }: SEOProps) {
+  const finalImage = ogImage || image || 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=80';
   useEffect(() => {
     // 1. Document Title
     document.title = title;
@@ -60,7 +65,7 @@ export default function SEOHelper({
     updateMeta('meta[name="keywords"]', keywords.join(', '));
     updateMeta('meta[name="author"]', authorName);
 
-    const optimizedOgImage = optimizeUnsplashUrl(image, 1200, 75, 'webp', 630);
+    const optimizedOgImage = optimizeUnsplashUrl(finalImage, 1200, 75, 'webp', 630);
 
     // 3. OpenGraph Meta Tags
     updateMeta('meta[property="og:title"]', title);

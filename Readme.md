@@ -291,6 +291,57 @@ Portal Admin menyediakan 4 opsi fleksibel untuk pengaturan kolom komentar artike
 
 ---
 
+## 🎨 Panduan Kustomisasi 10 Model Display Frontpage / Home Layout
+
+Sistem **parenting.my.id** menyediakan **10 Pilihan Model Tampilan Beranda (Frontpage Display Modes)** yang dapat diganti secara instan tanpa perlu mengubah atau mengedit file kode program. Seluruh teks judul, narasi, badge, metrik statistik, hingga nomor WhatsApp kontak dapat diubah secara interaktif melalui **Portal Admin (`/admin`)**.
+
+### A. Cara Mengganti Model Display Beranda
+1. Buka dan masuk ke **Portal Admin** pada URL `/admin`.
+2. Klik tab **Config Situs** pada sidebar/menu admin.
+3. Gulir ke bagian **Pilih Model Display Frontpage (Layout Beranda)**.
+4. Pilih salah satu dari 10 model display yang tersedia (Default Blog, Event, Campaign, Microsite, Portfolio, Personal Branding Dokter, Corporate B2B, Product Landing Page, Vintage Newspaper Classifieds, atau Knowledge Base).
+5. Pada bagian **Pengaturan Wording & Variable Wajah Beranda**, klik tab model yang sesuai untuk mengisi teks dan nomor WhatsApp khusus.
+6. Klik tombol **Simpan Konfigurasi Situs** di bagian bawah. Perubahan akan langsung aktif secara otomatis di seluruh peramban pengunjung.
+
+---
+
+### B. Pemetaan Variabel Wording & WhatsApp Tiap Model di Portal Admin
+
+| No | Nama Model Display | Tab di Portal Admin (`/admin`) | Variabel `siteConfig` yang Dipetakan | Fungsi & Kustomisasi Wording |
+|---|---|---|---|---|
+| **1** | **Default Blog & Majalah** | `1. Default Majalah` | `hero_badge_text`, `hero_title`, `hero_subtitle`, `hero_cta_text`, `hero_cta_link`, `show_hero_section`, `show_performance_box`, `metric1_*`, `metric2_*`, `metric3_*` | Mengatur badge promo header, judul utama majalah parenting, sub-judul deskripsi, tautan tombol CTA hero, serta 3 indikator metrik performa situs. |
+| **2** | **Event, Konferensi & Seminar** | `2. Event & Summit` | `event_badge_text`, `event_date_location`, `event_title`, `event_subtitle`, `event_cta_text`, `event_whatsapp` | Mengatur nama kegiatan/summit, tanggal & lokasi acara, judul utama event, deskripsi lokakarya, teks tombol pendaftaran, dan **Nomor WhatsApp Panitia Tiket** (misal: `6281234567890`). |
+| **3** | **Campaign, Petisi & Aksi Sosial** | `3. Aksi Sosial Campaign` | `campaign_badge_text`, `campaign_title`, `campaign_subtitle`, `campaign_target_amount`, `campaign_current_amount`, `campaign_donor_count` | Mengatur badge gerakan sosial (misal: *Bebas Stunting*), judul advokasi, deskripsi aksi, target donasi (dalam Rupiah), jumlah dana terkumpul saat ini, dan total donatur/pendukung. |
+| **4** | **Microsite / Bio Links** | `4. Microsite Bio Link` | `microsite_title`, `microsite_bio`, `microsite_wa_label`, `microsite_wa_number`, `microsite_ebook_url`, `microsite_telegram_url`, `microsite_podcast_url`, `microsite_shop_url` | Mengatur nama portal/hub, biografi singkat, label & **Nomor WhatsApp Konsultasi Privat**, serta URL tautan cepat untuk E-Book Gratis, Komunitas Telegram, Spotify Podcast, dan Toko Online. |
+| **5** | **Portofolio Karya & Riset** | `5. Portofolio & Riset` | `portfolio_badge_text`, `portfolio_title`, `portfolio_subtitle`, `portfolio_stat1_val`, `portfolio_stat1_lbl`, `portfolio_stat2_val`, `portfolio_stat2_lbl`, `portfolio_stat3_val`, `portfolio_stat3_lbl` | Mengatur badge showcase karya, judul portofolio riset, narasi latar belakang, serta 3 metrik statistik dampak (misal: *Keluarga Terbantu*, *Workshop*, *Riset Terpublikasi*). |
+| **6** | **Personal Branding Dokter / Pakar** | `6. Profil Personal Branding` | `doctor_name`, `doctor_title`, `doctor_badge_text`, `doctor_bio`, `doctor_avatar_url`, `doctor_experience_years`, `doctor_booking_whatsapp` | Mengatur nama lengkap & gelar dokter/psikolog, spesialisasi medis, badge profil, biografi naratif, URL foto profil, tahun pengalaman, dan **Nomor WhatsApp Booking Konsultasi Privat**. |
+| **7** | **Corporate & B2B Profile** | `7. Solusi Corporate B2B` | `corporate_badge_text`, `corporate_title`, `corporate_subtitle`, `corporate_cta_proposal`, `corporate_cta_consult`, `corporate_whatsapp`, `corporate_stat1_*`, `corporate_stat2_*`, `corporate_stat3_*` | Mengatur badge solusi bisnis korporasi, judul program *Employee Wellbeing*, sub-judul EAP/daycare kantor, teks tombol proposal B2B, teks tombol jadwal konsultasi, **Nomor WhatsApp Kemitraan B2B**, dan metrik statistik mitra. |
+| **8** | **Product Landing Page** | `8. Penjualan Produk Landing Page` | `product_badge_text`, `product_title`, `product_subtitle`, `product_price`, `product_original_price`, `product_discount_tag`, `product_cta_text`, `product_whatsapp` | Mengatur badge promo produk, nama paket produk MPASI/buku, deskripsi manfaat, harga promo (Rp), harga coret (Rp), tag persentase diskon (misal: *HEMAT 37%*), teks tombol order, dan **Nomor WhatsApp Pemesanan Direct**. |
+| **9** | **Iklan Baris Koran Jaman Dulu** | `9. Wording Iklan Baris Koran` | `classified_masthead_title`, `classified_masthead_subtitle`, `classified_edition`, `classified_price_tag`, `classified_phone` | Mengatur judul kepala koran (*Masthead*), sub-judul lembaran iklan baris, nomor edisi & tahun nostalgia, label harga eceran klasik, dan nomor telepon redaksi/iklan baris. |
+| **10** | **Knowledge Base & Ensiklopedia** | `10. Wording Knowledge Base` | `kb_badge_text`, `kb_title`, `kb_subtitle`, `kb_search_placeholder` | Mengatur badge ensiklopedia parenting, judul utama pusat bantuan pengasuhan, sub-judul panduan cari, dan teks *placeholder* di dalam kolom pencarian topik. |
+
+---
+
+## 🔒 Fitur Keamanan Eksklusif (Security First Architecture)
+
+Sistem telah dilengkapi dengan 3 lapisan proteksi keamanan aktif untuk menjamin stabilitas area Portal Admin (`/admin`):
+1. **Proteksi Anti Brute Force**: Pembatasan batas percobaan login (rate limiting) pada endpoint otentikasi admin `/api/login` untuk mencegah serangan kamus atau peretasan kata sandi secara masal.
+2. **Proteksi Anti XSS (Cross-Site Scripting)**: Seluruh input teks, deskripsi, komentar, dan konten markdown dibersihkan secara otomatis (*sanitized*) sebelum disimpan ke database D1 atau dirender ke DOM peramban.
+3. **Proteksi Anti Leech & Hotlinking**: Endpoint gambar dan file pendukung menggunakan validasi referer dan header keaslian untuk mencegah pencurian bandwidth CDN oleh situs pihak ketiga.
+
+---
+
+## 🤖 Optimasi SEO Googlebot & Aksesibilitas Mesin Pencari
+
+Seluruh halaman dan endpoint render statis/dinamis telah diuji dan digaransi **100% ramah SEO (SEO-Friendly)** dan dapat di-crawl oleh Googlebot tanpa error:
+- **Homepage (`/`)**: Mendukung SSR / static rendering dengan tag meta OpenGraph lengkap dan structured data JSON-LD.
+- **Kategori (`/category/[slug]`)**: Render HTML bersih tanpa dependensi JavaScript yang menghambat crawler.
+- **Tag (`/tags/[tag]`)**: Indeks kata kunci terstruktur untuk pengelompokan topik artikel.
+- **Detail Artikel (`/baca/[slug]`)**: Menghasilkan skema `BlogPosting` dan `BreadcrumbList` otomatis.
+- **File XML & Teks Mesin**: `/sitemap.xml`, `/feed.xml`, `/robots.txt`, `/llms.txt`, dan `/llms-full.txt` dirender secara real-time dari database D1.
+
+---
+
 ## ✍️ LANGKAH 4: Panduan Penulis — Mengisi Artikel & Gambar dari Unsplash.com
 
 Penulis artikel memiliki akses ke **Editor WYSIWYG Rich Editor** lengkap dengan AI Assistant, SEO Auditor, dan Pengelola Gambar.

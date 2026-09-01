@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Award, BookOpen, Calendar, CheckCircle2, MessageCircle, Sparkles, Star, ArrowRight, ShieldCheck, Mail } from 'lucide-react';
 import { optimizeUnsplashUrl, getOptimizedAvatarUrl } from '../../lib/imageUtils';

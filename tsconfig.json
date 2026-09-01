@@ -21,9 +21,15 @@
       ]
     },
     "types": [
-      "@cloudflare/workers-types"
+      "node"
     ],
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "functions",
+    "dist",
+    "node_modules",
+    "src/index.ts"
+  ]
 }

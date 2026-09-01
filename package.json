@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "node scripts/generate-static-files.js && vite build && node scripts/generate-static-files.js postbuild && esbuild server.ts --bundle --platform=node --format=esm --packages=external --sourcemap --outfile=dist/server.js",
-    "start": "node dist/server.js",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "start": "node dist/server.cjs",
     "clean": "rm -rf dist server.js server.cjs",
     "lint": "tsc --noEmit"
   },
@@ -24,7 +24,6 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260812.1",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
