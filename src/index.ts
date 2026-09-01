@@ -1,5 +1,5 @@
 /**
- * Cloudflare Worker & Pages Router Entry Point for Parenting.my.id
+ * Cloudflare Worker & Pages Router Entry Point
  * Connects directly to Cloudflare D1 Database and GitHub REST API.
  */
 
@@ -16,7 +16,7 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
-    const siteUrl = env.SITE_URL || 'https://parenting.my.id';
+    const siteUrl = env.SITE_URL || 'https://domain.com';
 
     // CORS Headers for API
     const corsHeaders = {
@@ -40,9 +40,9 @@ export default {
           (post: any) => `* [${post.title}](${siteUrl}/baca/${post.slug}): ${post.excerpt || ''}`
         ).join('\n');
 
-        const content = `# Parenting.my.id
+        const content = `# llms.txt Website Hub
 
-> Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.
+> Portal berita, artikel, dan informasi edukatif terpercaya.
 
 ## Artikel Terkait & Panduan Utama
 
@@ -109,9 +109,9 @@ ${articleLinks}
         const rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
   <channel>
-    <title>Parenting.my.id - Edukasi &amp; Pola Asuh Anak Modern</title>
+    <title>Website - Edukasi &amp; Informasi Terpercaya</title>
     <link>${siteUrl}</link>
-    <description>Portal artikel parenting, gizi anak, stimulasi balita, dan pencegahan stunting di Indonesia.</description>
+    <description>Portal artikel, edukasi, dan informasi terpercaya.</description>
     <language>id-id</language>
     ${items}
   </channel>
@@ -298,7 +298,7 @@ ${articleLinks}
             status: 'online',
             success: true,
             message: 'Cusdis Webhook Endpoint Cloudflare Worker aktif dan siap menerima payload POST dari Cusdis!',
-            endpoint: 'https://parenting.my.id/api/webhooks/cusdis',
+            endpoint: `${siteUrl}/api/webhooks/cusdis`,
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -526,10 +526,10 @@ ${articleLinks}
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',
-              'User-Agent': 'Parenting-Cloudflare-Worker'
+              'User-Agent': 'CMS-Cloudflare-Worker'
             },
             body: JSON.stringify({
-              message: `upload: ${filename} via Parenting.my.id CMS`,
+              message: `upload: ${filename} via CMS`,
               content: base64Content.replace(/^data:.*?;base64,/, ''),
               branch
             })
@@ -554,6 +554,6 @@ ${articleLinks}
     }
 
     // Default static file request passthrough
-    return new Response('Parenting.my.id Cloudflare Worker Running', { status: 200 });
+    return new Response('Cloudflare Worker Running', { status: 200 });
   },
 };

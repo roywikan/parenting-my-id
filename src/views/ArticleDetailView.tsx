@@ -252,7 +252,7 @@ export default function ArticleDetailView({
     );
   }
 
-  const articleUrl = `https://parenting.my.id/baca/${post.slug}`;
+  const articleUrl = typeof window !== 'undefined' ? `${window.location.origin}/baca/${post.slug}` : `/baca/${post.slug}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(articleUrl);
@@ -265,20 +265,20 @@ export default function ArticleDetailView({
   return (
     <article className="max-w-4xl mx-auto space-y-8 pb-16 min-h-[900px]">
       <SEOHelper
-        title={`${post.title} | Parenting.my.id`}
+        title={`${post.title} | ${siteConfig?.site_name || 'Website'}`}
         description={post.metaDescription || post.excerpt}
         image={post.featuredImage}
         canonicalUrl={articleUrl}
         type="article"
-        authorName={post.authorName || 'Dr. Ratna Sari, M.Psi'}
-        authorRole={post.authorTitle || 'Spesialis Psikologi Anak & Praktisi Parenting'}
+        authorName={post.authorName || 'Tim Redaksi'}
+        authorRole={post.authorTitle || 'Penulis & Kontributor Konten'}
         datePublished={post.createdAt}
         dateModified={post.updatedAt || post.createdAt}
-        category={post.category || 'Parenting'}
+        category={post.category || 'Artikel'}
         keywords={post.tags ? post.tags.split(',').map((t) => t.trim()) : []}
         contentMarkdown={post.contentMarkdown}
-        siteName={siteConfig?.site_name || 'Parenting.my.id'}
-        siteLogo={siteConfig?.site_logo_icon || 'https://parenting.my.id/favicon-32x32.png'}
+        siteName={siteConfig?.site_name || 'Website'}
+        siteLogo={siteConfig?.site_logo_icon || ''}
       />
 
       {/* BREADCRUMB & BACK NAVIGATION */}
@@ -353,7 +353,7 @@ export default function ArticleDetailView({
                   <span>{post.authorName || 'Dr. Ratna Sari, M.Psi'}</span>
                 </div>
                 <div className="text-[11px] text-rose-800 dark:text-rose-300 font-bold">
-                  {post.authorTitle || 'Spesialis Psikologi Anak & Praktisi Parenting'}
+                  {post.authorTitle || 'Penulis & Kontributor Konten'}
                 </div>
               </div>
             </div>
@@ -550,7 +550,7 @@ export default function ArticleDetailView({
                     </h3>
                   </div>
                   <p className="text-xs text-rose-700 dark:text-rose-300 font-bold pt-0.5">
-                    {post.authorTitle || 'Spesialis Psikologi Anak & Praktisi Parenting'}
+                    {post.authorTitle || 'Penulis & Kontributor Konten'}
                   </p>
                 </div>
 
@@ -628,7 +628,7 @@ export default function ArticleDetailView({
                       {co.title || 'Edukator Kesehatan Anak'}
                     </div>
                     <p className="text-[11px] text-slate-500 line-clamp-2 leading-snug">
-                      {co.bio || 'Kontributor riset dan edukasi parenting.'}
+                      {co.bio || 'Kontributor riset dan edukasi.'}
                     </p>
                   </div>
                 </div>

@@ -110,14 +110,14 @@ export default function RichPostEditor({
   const [unsplashSearch, setUnsplashSearch] = useState('');
 
   const UNSPLASH_PRESETS = [
-    { label: 'Bayi & Balita', url: 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=800&q=65&fm=webp' },
-    { label: 'Pola Asuh & Ibu', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=65&fm=webp' },
-    { label: 'Kehamilan & Menyusui', url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=800&q=65&fm=webp' },
-    { label: 'Nutrisi & Gizi Makanan', url: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=65&fm=webp' },
-    { label: 'Sensory Play & Main', url: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=800&q=65&fm=webp' },
-    { label: 'Keluarga Bahagia', url: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=65&fm=webp' },
-    { label: 'Sekolah & Belajar', url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=65&fm=webp' },
-    { label: 'Kesehatan Anak', url: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Edukasi & Keluarga', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Teknologi & Workspace', url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Gaya Hidup & Kesehatan', url: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Nutrisi & Makanan', url: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Kreatif & Seni', url: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Komunitas & Tim', url: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Sekolah & Pendidikan', url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=65&fm=webp' },
+    { label: 'Kesehatan & Medis', url: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=65&fm=webp' },
   ];
 
   // Undo / Redo History Stack
@@ -507,13 +507,13 @@ export default function RichPostEditor({
             {/* TITLE FIELD */}
             <div>
               <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                Judul Artikel Parenting
+                Judul Artikel
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Contoh: Panduan Lengkap Pola Asuh Demokratis Anak..."
+                placeholder="Contoh: Panduan Lengkap & Strategi Terbaru..."
                 className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-lg font-extrabold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all placeholder:font-normal placeholder:text-slate-400"
               />
             </div>
@@ -528,7 +528,7 @@ export default function RichPostEditor({
                   type="text"
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
-                  placeholder="panduan-pola-asuh-demokratis"
+                  placeholder="panduan-lengkap-strategi-terbaru"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
               </div>
@@ -537,16 +537,23 @@ export default function RichPostEditor({
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Kategori Artikel
                 </label>
-                <select
+                <input
+                  type="text"
+                  list="category-suggestions"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
+                  placeholder="Ketik atau pilih kategori (cth: Berita, Edukasi...)"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                >
-                  <option value="Pola Asuh">Pola Asuh</option>
-                  <option value="Tumbuh Kembang">Tumbuh Kembang</option>
-                  <option value="Kesehatan & Gizi">Kesehatan & Gizi</option>
-                  <option value="Psikologi Ibu">Psikologi Ibu</option>
-                </select>
+                />
+                <datalist id="category-suggestions">
+                  <option value="Berita & Opini" />
+                  <option value="Edukasi & Panduan" />
+                  <option value="Kesehatan & Gizi" />
+                  <option value="Gaya Hidup & Keluarga" />
+                  <option value="Teknologi & Informasi" />
+                  <option value="Pola Asuh" />
+                  <option value="Umum" />
+                </datalist>
               </div>
             </div>
 
@@ -644,7 +651,7 @@ export default function RichPostEditor({
                 <div className="flex items-center gap-0.5 px-2 border-r border-slate-200 dark:border-slate-700">
                   <button
                     type="button"
-                    onClick={() => applyFormatting('> ', '', 'Kutipan mutiara parenting')}
+                    onClick={() => applyFormatting('> ', '', 'Kutipan mutiara atau inspirasi')}
                     className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
                     title="Kutipan / Blockquote (>)"
                   >
@@ -749,7 +756,7 @@ export default function RichPostEditor({
                     rows={18}
                     value={markdown}
                     onChange={(e) => updateMarkdownWithHistory(e.target.value)}
-                    placeholder="Tulis artikel parenting lengkap dengan format markdown di sini..."
+                    placeholder="Tulis artikel lengkap dengan format markdown di sini..."
                     className="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-800 font-mono text-sm leading-relaxed text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   />
                 </div>
@@ -846,7 +853,7 @@ export default function RichPostEditor({
             <div className="flex items-center justify-between">
               <span className="text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300" />
-                Parenting AI Assistant
+                AI Content Assistant
               </span>
             </div>
             <p className="text-xs text-rose-100 leading-relaxed">
@@ -1288,7 +1295,7 @@ export default function RichPostEditor({
                         type="text"
                         value={imageAlt}
                         onChange={(e) => setImageAlt(e.target.value)}
-                        placeholder="Contoh: Ilustrasi parenting anak usia dini"
+                        placeholder="Contoh: Ilustrasi pendukung artikel"
                         className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs"
                       />
                     </div>
@@ -1322,7 +1329,7 @@ export default function RichPostEditor({
             {imageTab === 'unsplash' && (
               <div className="space-y-3 py-1">
                 <p className="text-xs text-slate-600 dark:text-slate-300">
-                  Pilih foto bebas royalti Unsplash bertema Parenting atau ketik kata kunci custom:
+                  Pilih foto bebas royalti Unsplash atau ketik kata kunci custom:
                 </p>
 
                 <div className="flex gap-2">

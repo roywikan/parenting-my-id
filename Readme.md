@@ -417,6 +417,27 @@ Untuk memasukkan gambar di tengah-tengah teks tulisan artikel:
 
 ---
 
+## 🏷️ Petunjuk Cara Membuat & Mengelola Kategori Artikel Baru
+
+Sistem ini mendukung pengelolaan kategori artikel secara **dinamis dan fleksibel**:
+
+### 1. Membuat Kategori Baru Saat Penulisan Artikel (Form Editor)
+1. Masuk ke **Portal Admin** (`/admin`) dan buka menu **Tulis Artikel Baru** atau **Edit Artikel**.
+2. Cari bidang input **Kategori Artikel**.
+3. Pilih salah satu kategori yang sudah ada dari daftar saran (*datalist*), atau **langsung ketikkan nama kategori baru** yang Anda inginkan (misalnya: `Teknologi`, `Gaya Hidup`, `Finansial`, `Kuliner`, `Pendidikan`, dll).
+4. Setelah artikel disimpan dan dipublikasikan, kategori baru tersebut secara otomatis terdaftar di dalam sistem.
+
+### 2. Penampilan Kategori di Beranda & Navigation Filter
+- Kategori baru yang digunakan oleh artikel berstatus *Dipublikasikan* akan secara otomatis dipindai oleh sistem dan muncul pada **Bilah Filter Kategori** di Beranda maupun Pustaka Artikel.
+- Pengunjung situs dapat langsung mengklik tombol kategori tersebut untuk menyaring artikel berdasarkan topik.
+
+### 3. Mengatur Kategori Default & Preset Situs
+1. Buka **Portal Admin** (`/admin`) -> Tab **Pengaturan Situs**.
+2. Pada kolom **Kategori Default**, tentukan nama kategori yang akan digunakan sebagai nilai bawaan saat membuat artikel baru.
+3. Klik **Simpan Pengaturan**.
+
+---
+
 ## 🛠️ Ringkasan Fitur Unggulan Engine
 
 1. **Multi-Model Homepage Layouts (10 Pilihan Model Display Beranda)**:

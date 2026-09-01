@@ -191,11 +191,11 @@ export default function AdminPortal({
 
   // Site Config Form State
   const [cfgActiveThemePreset, setCfgActiveThemePreset] = useState(siteConfig?.active_theme_preset || 'corp-blue');
-  const [cfgSiteName, setCfgSiteName] = useState(siteConfig?.site_name || 'Parenting.my.id');
+  const [cfgSiteName, setCfgSiteName] = useState(siteConfig?.site_name || 'Website Utama');
   const [cfgMobileAdminBtnLabel, setCfgMobileAdminBtnLabel] = useState(siteConfig?.mobile_admin_btn_label || 'Portal Admin & Editor');
   const [cfgMobileShowLoggedUsername, setCfgMobileShowLoggedUsername] = useState(siteConfig?.mobile_show_logged_username || false);
 
-  const [cfgSiteDomain, setCfgSiteDomain] = useState(siteConfig?.site_domain || 'parenting.my.id');
+  const [cfgSiteDomain, setCfgSiteDomain] = useState(siteConfig?.site_domain || 'domain.com');
   const [cfgDefaultThemeMode, setCfgDefaultThemeMode] = useState<'light'|'dark'|'auto'>(siteConfig?.default_theme_mode || 'auto');
   const [cfgFontSizeScale, setCfgFontSizeScale] = useState<'small'|'normal'|'large'|'xlarge'>(siteConfig?.font_size_scale || 'normal');
   const [cfgFontDensityScale, setCfgFontDensityScale] = useState<'compact'|'standard'|'spacious'>(siteConfig?.font_density_scale || 'standard');
@@ -251,7 +251,7 @@ export default function AdminPortal({
   const [cfgEnableSearchBar, setCfgEnableSearchBar] = useState(siteConfig?.enable_search_bar ?? true);
   const [cfgEnableThemeToggle, setCfgEnableThemeToggle] = useState(siteConfig?.enable_theme_toggle ?? true);
 
-  const [cfgSeoMetaTitle, setCfgSeoMetaTitle] = useState(siteConfig?.seo_meta_title || 'Parenting.my.id - Edukasi & Pengasuhan Anak');
+  const [cfgSeoMetaTitle, setCfgSeoMetaTitle] = useState(siteConfig?.seo_meta_title || 'Portal Berita & Edukasi Informasi Terpercaya');
   const [cfgSeoMetaDesc, setCfgSeoMetaDesc] = useState(siteConfig?.seo_meta_description || 'Portal informasi & panduan pengasuhan anak modern.');
   const [cfgSeoDefaultOgImage, setCfgSeoDefaultOgImage] = useState(siteConfig?.seo_default_og_image || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=1200&h=630');
 
@@ -271,8 +271,8 @@ export default function AdminPortal({
   const [cfgCategoriesWidgetLimit, setCfgCategoriesWidgetLimit] = useState(siteConfig?.categories_widget_limit || 8);
   const [cfgSidebarBannerCode, setCfgSidebarBannerCode] = useState(siteConfig?.sidebar_banner_code || '');
 
-  const [cfgFooterAboutText, setCfgFooterAboutText] = useState(siteConfig?.footer_about_text || 'Parenting.my.id menghadirkan bacaan berkualitas seputar dunia pengasuhan anak.');
-  const [cfgFooterCopyrightText, setCfgFooterCopyrightText] = useState(siteConfig?.footer_copyright_text || '© 2026 Parenting.my.id. Hak Cipta Dilindungi.');
+  const [cfgFooterAboutText, setCfgFooterAboutText] = useState(siteConfig?.footer_about_text || 'Menghadirkan artikel berkualitas, berita terkini, dan panduan edukatif terpercaya.');
+  const [cfgFooterCopyrightText, setCfgFooterCopyrightText] = useState(siteConfig?.footer_copyright_text || `© ${new Date().getFullYear()} Website Utama. Hak Cipta Dilindungi.`);
   const [cfgSocialFacebook, setCfgSocialFacebook] = useState(siteConfig?.social_facebook || 'https://facebook.com/parentingmyid');
   const [cfgSocialInstagram, setCfgSocialInstagram] = useState(siteConfig?.social_instagram || 'https://instagram.com/parentingmyid');
   const [cfgSocialTwitter, setCfgSocialTwitter] = useState(siteConfig?.social_twitter || 'https://x.com/parentingmyid');
@@ -307,7 +307,7 @@ export default function AdminPortal({
   const [cfgMetric3Unit, setCfgMetric3Unit] = useState<string>(siteConfig?.metric3_unit ?? 'ms');
 
   // Admin Login Text Config
-  const [cfgAdminLoginTitle, setCfgAdminLoginTitle] = useState(siteConfig?.admin_login_title || 'Portal Admin Parenting.my.id');
+  const [cfgAdminLoginTitle, setCfgAdminLoginTitle] = useState(siteConfig?.admin_login_title || 'Portal Admin Website');
   const [cfgAdminLoginSubtitle, setCfgAdminLoginSubtitle] = useState(siteConfig?.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1');
   const [cfgAdminLoginBtnText, setCfgAdminLoginBtnText] = useState(siteConfig?.admin_login_btn_text || 'Masuk Portal CMS');
 
@@ -316,10 +316,10 @@ export default function AdminPortal({
   const [selectedModelConfigTab, setSelectedModelConfigTab] = useState<HomepageDisplayMode>(siteConfig?.homepage_display_mode || 'default');
 
   // 1. Event Model States
-  const [cfgEventBadgeText, setCfgEventBadgeText] = useState(siteConfig?.event_badge_text || 'Summit Nasional Parenting 2026');
+  const [cfgEventBadgeText, setCfgEventBadgeText] = useState(siteConfig?.event_badge_text || 'Summit Nasional 2026');
   const [cfgEventDateLocation, setCfgEventDateLocation] = useState(siteConfig?.event_date_location || '16 - 18 Oktober 2026 • JCC Senayan, Jakarta');
-  const [cfgEventTitle, setCfgEventTitle] = useState(siteConfig?.event_title || 'Indonesia Parenting Summit 2026: Membangun Fondasi Emas Keluarga Tangguh');
-  const [cfgEventSubtitle, setCfgEventSubtitle] = useState(siteConfig?.event_subtitle || 'Konferensi & lokakarya parenting terbesar di Indonesia. Dapatkan wawasan ilmiah terdepan langsung dari para dokter spesialis anak.');
+  const [cfgEventTitle, setCfgEventTitle] = useState(siteConfig?.event_title || 'Indonesia National Summit 2026: Membangun Fondasi Emas Masa Depan');
+  const [cfgEventSubtitle, setCfgEventSubtitle] = useState(siteConfig?.event_subtitle || 'Konferensi & lokakarya terbesar di Indonesia. Dapatkan wawasan ilmiah terdepan langsung dari para pakar dan narasumber profesional.');
   const [cfgEventCtaText, setCfgEventCtaText] = useState(siteConfig?.event_cta_text || 'Daftar / Dapatkan Tiket');
   const [cfgEventWhatsapp, setCfgEventWhatsapp] = useState(siteConfig?.event_whatsapp || '6281234567890');
 
@@ -332,18 +332,18 @@ export default function AdminPortal({
   const [cfgCampaignDonorCount, setCfgCampaignDonorCount] = useState(siteConfig?.campaign_donor_count || '1.428');
 
   // 3. Microsite Model States
-  const [cfgMicrositeTitle, setCfgMicrositeTitle] = useState(siteConfig?.microsite_title || 'Parenting.my.id Official Hub');
-  const [cfgMicrositeBio, setCfgMicrositeBio] = useState(siteConfig?.microsite_bio || 'Pusat informasi, konsultasi dokter anak, panduan MPASI, dan komunitas orang tua cerdas di Indonesia.');
-  const [cfgMicrositeWaLabel, setCfgMicrositeWaLabel] = useState(siteConfig?.microsite_wa_label || 'Konsultasi Privat Parenting (WhatsApp)');
+  const [cfgMicrositeTitle, setCfgMicrositeTitle] = useState(siteConfig?.microsite_title || 'Official Hub Website');
+  const [cfgMicrositeBio, setCfgMicrositeBio] = useState(siteConfig?.microsite_bio || 'Pusat informasi, konsultasi privat, panduan terpadu, dan portal edukasi cerdas.');
+  const [cfgMicrositeWaLabel, setCfgMicrositeWaLabel] = useState(siteConfig?.microsite_wa_label || 'Konsultasi Privat (WhatsApp)');
   const [cfgMicrositeWaNumber, setCfgMicrositeWaNumber] = useState(siteConfig?.microsite_wa_number || '6281234567890');
   const [cfgMicrositeEbookUrl, setCfgMicrositeEbookUrl] = useState(siteConfig?.microsite_ebook_url || '#');
-  const [cfgMicrositeTelegramUrl, setCfgMicrositeTelegramUrl] = useState(siteConfig?.microsite_telegram_url || 'https://t.me/parentingmyid');
+  const [cfgMicrositeTelegramUrl, setCfgMicrositeTelegramUrl] = useState(siteConfig?.microsite_telegram_url || 'https://t.me/official');
   const [cfgMicrositePodcastUrl, setCfgMicrositePodcastUrl] = useState(siteConfig?.microsite_podcast_url || 'https://spotify.com');
   const [cfgMicrositeShopUrl, setCfgMicrositeShopUrl] = useState(siteConfig?.microsite_shop_url || '#');
 
   // 4. Portfolio Model States
   const [cfgPortfolioBadgeText, setCfgPortfolioBadgeText] = useState(siteConfig?.portfolio_badge_text || 'Showcase Portofolio & Rekam Jejak');
-  const [cfgPortfolioTitle, setCfgPortfolioTitle] = useState(siteConfig?.portfolio_title || 'Karya, Program Edukasi & Penelitian Parenting');
+  const [cfgPortfolioTitle, setCfgPortfolioTitle] = useState(siteConfig?.portfolio_title || 'Karya, Program Edukasi & Penelitian');
   const [cfgPortfolioSubtitle, setCfgPortfolioSubtitle] = useState(siteConfig?.portfolio_subtitle || 'Dedikasi nyata dalam merancang program edukasi keluarga, publikasi ilmiah terakreditasi, dan buku panduan pengasuhan.');
   const [cfgPortfolioStat1Val, setCfgPortfolioStat1Val] = useState(siteConfig?.portfolio_stat1_val || '50K+');
   const [cfgPortfolioStat1Lbl, setCfgPortfolioStat1Lbl] = useState(siteConfig?.portfolio_stat1_lbl || 'Keluarga Terbantu');
@@ -364,7 +364,7 @@ export default function AdminPortal({
   // 6. Corporate & B2B Model States
   const [cfgCorporateBadgeText, setCfgCorporateBadgeText] = useState(siteConfig?.corporate_badge_text || 'Solusi Korporasi & Employee Wellbeing');
   const [cfgCorporateTitle, setCfgCorporateTitle] = useState(siteConfig?.corporate_title || 'Meningkatkan Produktivitas Karyawan Melalui Dukungan Pengasuhan Terpercaya');
-  const [cfgCorporateSubtitle, setCfgCorporateSubtitle] = useState(siteConfig?.corporate_subtitle || 'Program kemitraan Employee Assistance Program (EAP), daycare kantor, dan webinar parenting eksklusif untuk korporasi.');
+  const [cfgCorporateSubtitle, setCfgCorporateSubtitle] = useState(siteConfig?.corporate_subtitle || 'Program kemitraan Employee Assistance Program (EAP), konsultasi organisasi, dan webinar eksklusif untuk korporasi.');
   const [cfgCorporateCtaProposal, setCfgCorporateCtaProposal] = useState(siteConfig?.corporate_cta_proposal || 'Unduh Proposal & Rate Card B2B');
   const [cfgCorporateCtaConsult, setCfgCorporateCtaConsult] = useState(siteConfig?.corporate_cta_consult || 'Jadwalkan Konsultasi Korporasi');
   const [cfgCorporateWhatsapp, setCfgCorporateWhatsapp] = useState(siteConfig?.corporate_whatsapp || '6281234567890');
@@ -386,14 +386,14 @@ export default function AdminPortal({
   const [cfgProductWhatsapp, setCfgProductWhatsapp] = useState(siteConfig?.product_whatsapp || '6281234567890');
 
   // 8. Classified Ads Model States
-  const [cfgClassifiedMastheadTitle, setCfgClassifiedMastheadTitle] = useState(siteConfig?.classified_masthead_title || 'WARNA-WARTO PARENTING');
+  const [cfgClassifiedMastheadTitle, setCfgClassifiedMastheadTitle] = useState(siteConfig?.classified_masthead_title || 'WARNA-WARTO BERITA');
   const [cfgClassifiedMastheadSubtitle, setCfgClassifiedMastheadSubtitle] = useState(siteConfig?.classified_masthead_subtitle || 'LEMBARAN IKLAN BARIS, PENGUMUMAN & WARTA KELUARGA');
   const [cfgClassifiedEdition, setCfgClassifiedEdition] = useState(siteConfig?.classified_edition || '1988/2026');
   const [cfgClassifiedPriceTag, setCfgClassifiedPriceTag] = useState(siteConfig?.classified_price_tag || 'HARGA ECERAN RP 500,-');
   const [cfgClassifiedPhone, setCfgClassifiedPhone] = useState(siteConfig?.classified_phone || '(021) 7654321');
 
   // 9. Knowledge Base Model States
-  const [cfgKbBadgeText, setCfgKbBadgeText] = useState(siteConfig?.kb_badge_text || 'Ensiklopedia & Pusat Bantuan Parenting');
+  const [cfgKbBadgeText, setCfgKbBadgeText] = useState(siteConfig?.kb_badge_text || 'Ensiklopedia & Pusat Bantuan');
   const [cfgKbTitle, setCfgKbTitle] = useState(siteConfig?.kb_title || 'Bagaimana Kami Bisa Membantu Pengasuhan Anda?');
   const [cfgKbSubtitle, setCfgKbSubtitle] = useState(siteConfig?.kb_subtitle || 'Cari jawaban terpercaya dari ribuan artikel, panduan medis, dan rekomendasi dokter spesialis anak.');
   const [cfgKbSearchPlaceholder, setCfgKbSearchPlaceholder] = useState(siteConfig?.kb_search_placeholder || 'Ketik topik (misal: jadwal MPASI, anak demam, speech delay, tantrum)...');
@@ -525,11 +525,11 @@ export default function AdminPortal({
       setCfgSocialInstagram(siteConfig.social_instagram || '');
       setCfgSocialTwitter(siteConfig.social_twitter || '');
       
-      setCfgAdminLoginTitle(siteConfig.admin_login_title || 'Portal Admin Parenting.my.id');
+      setCfgAdminLoginTitle(siteConfig.admin_login_title || (siteConfig?.site_name ? `Portal Admin ${siteConfig.site_name}` : 'Portal Admin Website'));
       setCfgAdminLoginSubtitle(siteConfig.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1');
       setCfgAdminLoginBtnText(siteConfig.admin_login_btn_text || 'Masuk Portal CMS');
 
-      setCfgSiteDomain(siteConfig.site_domain || 'parenting.my.id');
+      setCfgSiteDomain(siteConfig.site_domain || 'domain.com');
       setCfgHeaderBadgeText(siteConfig.header_badge_text || 'Cloudflare D1 Edge Engine');
       setCfgShowHeaderBadge(siteConfig.show_header_badge ?? siteConfig.show_edge_badge ?? true);
       setCfgMobileAdminBtnLabel(siteConfig.mobile_admin_btn_label || 'Portal Admin & Editor');
@@ -542,10 +542,10 @@ export default function AdminPortal({
       setCfgFooterBadge3(siteConfig.footer_badge_3 || '100% Gratis');
 
       // 10 Model Display Values Sync
-      setCfgEventBadgeText(siteConfig.event_badge_text || 'Summit Nasional Parenting 2026');
+      setCfgEventBadgeText(siteConfig.event_badge_text || 'Summit Nasional 2026');
       setCfgEventDateLocation(siteConfig.event_date_location || '16 - 18 Oktober 2026 • JCC Senayan, Jakarta');
-      setCfgEventTitle(siteConfig.event_title || 'Indonesia Parenting Summit 2026: Membangun Fondasi Emas Keluarga Tangguh');
-      setCfgEventSubtitle(siteConfig.event_subtitle || 'Konferensi & lokakarya parenting terbesar di Indonesia. Dapatkan wawasan ilmiah terdepan langsung dari para dokter spesialis anak.');
+      setCfgEventTitle(siteConfig.event_title || 'Indonesia National Summit 2026: Membangun Fondasi Emas Masa Depan');
+      setCfgEventSubtitle(siteConfig.event_subtitle || 'Konferensi & lokakarya terbesar di Indonesia. Dapatkan wawasan ilmiah terdepan langsung dari para pakar dan narasumber profesional.');
       setCfgEventCtaText(siteConfig.event_cta_text || 'Daftar / Dapatkan Tiket');
       setCfgEventWhatsapp(siteConfig.event_whatsapp || '6281234567890');
 
@@ -556,17 +556,17 @@ export default function AdminPortal({
       setCfgCampaignCurrentAmount(siteConfig.campaign_current_amount || '388500000');
       setCfgCampaignDonorCount(siteConfig.campaign_donor_count || '1.428');
 
-      setCfgMicrositeTitle(siteConfig.microsite_title || 'Parenting.my.id Official Hub');
-      setCfgMicrositeBio(siteConfig.microsite_bio || 'Pusat informasi, konsultasi dokter anak, panduan MPASI, dan komunitas orang tua cerdas di Indonesia.');
-      setCfgMicrositeWaLabel(siteConfig.microsite_wa_label || 'Konsultasi Privat Parenting (WhatsApp)');
+      setCfgMicrositeTitle(siteConfig.microsite_title || (siteConfig?.site_name ? `${siteConfig.site_name} Official Hub` : 'Official Hub Website'));
+      setCfgMicrositeBio(siteConfig.microsite_bio || 'Pusat informasi, konsultasi privat, panduan terpadu, dan portal edukasi cerdas.');
+      setCfgMicrositeWaLabel(siteConfig.microsite_wa_label || 'Konsultasi Privat (WhatsApp)');
       setCfgMicrositeWaNumber(siteConfig.microsite_wa_number || '6281234567890');
       setCfgMicrositeEbookUrl(siteConfig.microsite_ebook_url || '#');
-      setCfgMicrositeTelegramUrl(siteConfig.microsite_telegram_url || 'https://t.me/parentingmyid');
+      setCfgMicrositeTelegramUrl(siteConfig.microsite_telegram_url || 'https://t.me/official');
       setCfgMicrositePodcastUrl(siteConfig.microsite_podcast_url || 'https://spotify.com');
       setCfgMicrositeShopUrl(siteConfig.microsite_shop_url || '#');
 
       setCfgPortfolioBadgeText(siteConfig.portfolio_badge_text || 'Showcase Portofolio & Rekam Jejak');
-      setCfgPortfolioTitle(siteConfig.portfolio_title || 'Karya, Program Edukasi & Penelitian Parenting');
+      setCfgPortfolioTitle(siteConfig.portfolio_title || 'Karya, Program Edukasi & Penelitian');
       setCfgPortfolioSubtitle(siteConfig.portfolio_subtitle || 'Dedikasi nyata dalam merancang program edukasi keluarga, publikasi ilmiah terakreditasi, dan buku panduan pengasuhan.');
       setCfgPortfolioStat1Val(siteConfig.portfolio_stat1_val || '50K+');
       setCfgPortfolioStat1Lbl(siteConfig.portfolio_stat1_lbl || 'Keluarga Terbantu');
@@ -585,7 +585,7 @@ export default function AdminPortal({
 
       setCfgCorporateBadgeText(siteConfig.corporate_badge_text || 'Solusi Korporasi & Employee Wellbeing');
       setCfgCorporateTitle(siteConfig.corporate_title || 'Meningkatkan Produktivitas Karyawan Melalui Dukungan Pengasuhan Terpercaya');
-      setCfgCorporateSubtitle(siteConfig.corporate_subtitle || 'Program kemitraan Employee Assistance Program (EAP), daycare kantor, dan webinar parenting eksklusif untuk korporasi.');
+      setCfgCorporateSubtitle(siteConfig.corporate_subtitle || 'Program kemitraan Employee Assistance Program (EAP), konsultasi organisasi, dan webinar eksklusif untuk korporasi.');
       setCfgCorporateCtaProposal(siteConfig.corporate_cta_proposal || 'Unduh Proposal & Rate Card B2B');
       setCfgCorporateCtaConsult(siteConfig.corporate_cta_consult || 'Jadwalkan Konsultasi Korporasi');
       setCfgCorporateWhatsapp(siteConfig.corporate_whatsapp || '6281234567890');
@@ -596,7 +596,7 @@ export default function AdminPortal({
       setCfgCorporateStat3Val(siteConfig.corporate_stat3_val || '12.000+');
       setCfgCorporateStat3Lbl(siteConfig.corporate_stat3_lbl || 'Karyawan Terbantu');
 
-      setCfgProductBadgeText(siteConfig.product_badge_text || 'Edisi Spesial Panduan Pengasuhan Emas 2026');
+      setCfgProductBadgeText(siteConfig.product_badge_text || 'Edisi Spesial Panduan Emas 2026');
       setCfgProductTitle(siteConfig.product_title || 'Paket Komplit MPASI & Stimulasi Anak Anti-GTM');
       setCfgProductSubtitle(siteConfig.product_subtitle || 'Solusi tuntas mengatasi Gerakan Tutup Mulut, memastikan asupan zat besi tercukupi, dan menstimulasi kecerdasan motorik balita.');
       setCfgProductPrice(siteConfig.product_price || 'Rp 189.000');
@@ -605,13 +605,13 @@ export default function AdminPortal({
       setCfgProductCtaText(siteConfig.product_cta_text || 'Pesan Sekarang & Dapatkan Bonus');
       setCfgProductWhatsapp(siteConfig.product_whatsapp || '6281234567890');
 
-      setCfgClassifiedMastheadTitle(siteConfig.classified_masthead_title || 'WARNA-WARTO PARENTING');
+      setCfgClassifiedMastheadTitle(siteConfig.classified_masthead_title || 'WARNA-WARTO BERITA');
       setCfgClassifiedMastheadSubtitle(siteConfig.classified_masthead_subtitle || 'LEMBARAN IKLAN BARIS, PENGUMUMAN & WARTA KELUARGA');
       setCfgClassifiedEdition(siteConfig.classified_edition || '1988/2026');
       setCfgClassifiedPriceTag(siteConfig.classified_price_tag || 'HARGA ECERAN RP 500,-');
       setCfgClassifiedPhone(siteConfig.classified_phone || '(021) 7654321');
 
-      setCfgKbBadgeText(siteConfig.kb_badge_text || 'Ensiklopedia & Pusat Bantuan Parenting');
+      setCfgKbBadgeText(siteConfig.kb_badge_text || 'Ensiklopedia & Pusat Bantuan');
       setCfgKbTitle(siteConfig.kb_title || 'Bagaimana Kami Bisa Membantu Pengasuhan Anda?');
       setCfgKbSubtitle(siteConfig.kb_subtitle || 'Cari jawaban terpercaya dari ribuan artikel, panduan medis, dan rekomendasi dokter spesialis anak.');
       setCfgKbSearchPlaceholder(siteConfig.kb_search_placeholder || 'Ketik topik (misal: jadwal MPASI, anak demam, speech delay, tantrum)...');
@@ -1091,7 +1091,7 @@ export default function AdminPortal({
     }
   };
 
-  const logoutHardLink = typeof window !== 'undefined' ? `${window.location.origin}/admin?logout=true` : 'https://parenting.my.id/admin?logout=true';
+  const logoutHardLink = typeof window !== 'undefined' ? `${window.location.origin}/admin?logout=true` : '/admin?logout=true';
 
   const copyLogoutLink = () => {
     navigator.clipboard.writeText(logoutHardLink);
@@ -1109,9 +1109,9 @@ export default function AdminPortal({
     setEditorExcerpt(post.excerpt);
     setEditorImage(post.featuredImage);
     setEditorStatus(post.status);
-    setEditorMetaTitle(post.metaTitle || `${post.title} | Parenting.my.id`);
+    setEditorMetaTitle(post.metaTitle || `${post.title} | ${siteConfig?.site_name || 'Website'}`);
     setEditorMetaDesc(post.metaDescription || post.excerpt);
-    setEditorTags(post.tags || 'parenting, anak');
+    setEditorTags(post.tags || 'berita, edukasi');
     setEditorAuthorId(post.authorId || 1);
     setEditorCoAuthorIds(post.coAuthors ? post.coAuthors.map(c => c.id) : []);
     setActiveTab('editor');
@@ -1123,14 +1123,14 @@ export default function AdminPortal({
     setEditingPostId(null);
     setEditorTitle('');
     setEditorSlug('');
-    setEditorCategory('Pola Asuh');
-    setEditorMarkdown('## Judul Bagian Baru\n\nTulis isi konten artikel parenting Anda di sini...');
+    setEditorCategory('Edukasi & Panduan');
+    setEditorMarkdown('## Judul Bagian Baru\n\nTulis isi konten artikel Anda di sini...');
     setEditorExcerpt('');
     setEditorImage('https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=80');
     setEditorStatus('draft');
     setEditorMetaTitle('');
     setEditorMetaDesc('');
-    setEditorTags('parenting, anak, keluarga');
+    setEditorTags('berita, edukasi, informasi');
     setEditorAuthorId(currentUser?.id || 1);
     setEditorCoAuthorIds([]);
     setActiveTab('editor');
@@ -1260,7 +1260,7 @@ export default function AdminPortal({
       featuredImage: editorImage,
       status: status,
       rejectionReason: rejectionReason,
-      metaTitle: editorMetaTitle || `${editorTitle} | Parenting.my.id`,
+      metaTitle: editorMetaTitle || `${editorTitle} | ${siteConfig?.site_name || 'Website'}`,
       metaDescription: editorMetaDesc || editorExcerpt,
       tags: editorTags,
       authorId: editorAuthorId,
@@ -1279,7 +1279,7 @@ export default function AdminPortal({
     setWPassword('');
     setWRole('writer');
     setWAvatar('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400');
-    setWTitle('Pakar Parenting & Kesehatan Anak');
+    setWTitle('Penulis & Kontributor Konten');
     setWBio('Praktisi kesehatan dan penulis edukasi keluarga.');
     setWInstagram('');
     setWLinkedin('');
@@ -1393,7 +1393,7 @@ export default function AdminPortal({
               <ShieldCheck className="w-6 h-6" />
             </div>
             <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-              {siteConfig?.admin_login_title || 'Portal Admin Parenting.my.id'}
+              {siteConfig?.admin_login_title || 'Portal Admin Website'}
             </h2>
             <p className="text-xs text-slate-500">
               {siteConfig?.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1'}
@@ -1410,7 +1410,7 @@ export default function AdminPortal({
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
                 required
-                placeholder="admin@parenting.my.id"
+                placeholder="admin@domain.com"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
@@ -1483,7 +1483,7 @@ export default function AdminPortal({
           className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          <span>Tulis Artikel Parenting Baru</span>
+          <span>Tulis Artikel Baru</span>
         </button>
       </div>
 
@@ -1924,7 +1924,7 @@ export default function AdminPortal({
                             <ShieldCheck className="w-4 h-4 text-emerald-500 fill-emerald-100 dark:fill-emerald-950" />
                           </h4>
                           <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 block">
-                            {w.title || 'Penulis Artikel Parenting'}
+                            {w.title || 'Penulis Artikel'}
                           </span>
                         </div>
                       </div>
@@ -2061,7 +2061,7 @@ export default function AdminPortal({
                     value={wEmail}
                     onChange={(e) => setWEmail(e.target.value)}
                     required
-                    placeholder="ratna@parenting.my.id"
+                    placeholder="penulis@domain.com"
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
                   />
                 </div>
@@ -2106,7 +2106,7 @@ export default function AdminPortal({
                   type="text"
                   value={wTitle}
                   onChange={(e) => setWTitle(e.target.value)}
-                  placeholder="Misal: Spesialis Psikologi Anak & Praktisi Parenting"
+                  placeholder="Misal: Senior Content Creator & Practical Writer"
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
                 />
               </div>
@@ -2132,7 +2132,7 @@ export default function AdminPortal({
                   rows={3}
                   value={wBio}
                   onChange={(e) => setWBio(e.target.value)}
-                  placeholder="Deskripsikan keahlian dan pengalaman penulis di bidang parenting & kesehatan anak..."
+                  placeholder="Deskripsikan keahlian dan pengalaman penulis..."
                   className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs leading-relaxed"
                 />
               </div>
@@ -2545,7 +2545,7 @@ export default function AdminPortal({
                     value={cfgSiteDomain}
                     onChange={(e) => setCfgSiteDomain(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
-                    placeholder="parenting.my.id"
+                    placeholder="domain.com"
                   />
                 </div>
                 <div>
@@ -2708,7 +2708,7 @@ export default function AdminPortal({
                   {
                     id: 'default',
                     label: 'Default (Blog & Magz)',
-                    desc: 'Portal majalah edukasi parenting standar dengan hero banner, filter topik, auto-links & grid artikel.',
+                    desc: 'Portal majalah edukasi & berita standar dengan hero banner, filter topik, auto-links & grid artikel.',
                     badge: 'Standar',
                   },
                   {
@@ -2738,7 +2738,7 @@ export default function AdminPortal({
                   {
                     id: 'personal_branding',
                     label: 'Personal Branding',
-                    desc: 'Profil resmi dokter/pakar parenting dengan kredensial, form booking privat & karya tulis.',
+                    desc: 'Profil resmi pakar / personal branding dengan kredensial, form booking privat & karya tulis.',
                     badge: 'Profil Pakar',
                   },
                   {
@@ -5226,7 +5226,7 @@ export default function AdminPortal({
 
               <button
                 onClick={() => {
-                  const url = 'https://parenting.my.id/api/webhooks/cusdis';
+                  const url = typeof window !== 'undefined' ? `${window.location.origin}/api/webhooks/cusdis` : '/api/webhooks/cusdis';
                   navigator.clipboard.writeText(url);
                   setWebhookCopied(true);
                   setTimeout(() => setWebhookCopied(false), 2500);
@@ -5244,7 +5244,7 @@ export default function AdminPortal({
                 Webhook URL Produksi (Paste ke Cusdis Dashboard):
               </span>
               <div className="font-mono text-xs text-rose-300 font-bold break-all">
-                https://parenting.my.id/api/webhooks/cusdis
+                {typeof window !== 'undefined' ? `${window.location.origin}/api/webhooks/cusdis` : '/api/webhooks/cusdis'}
               </div>
             </div>
 

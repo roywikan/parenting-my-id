@@ -50,11 +50,12 @@ export default function App() {
     }, 600);
 
     // Check saved session
-    const savedUser = localStorage.getItem('parenting_user');
+    const savedUser = localStorage.getItem('cms_user') || localStorage.getItem('parenting_user');
     if (savedUser) {
       try {
         setCurrentUser(JSON.parse(savedUser));
       } catch (e) {
+        localStorage.removeItem('cms_user');
         localStorage.removeItem('parenting_user');
       }
     }
@@ -163,7 +164,7 @@ export default function App() {
         const data: any = await res.json();
         if (data.user) {
           setCurrentUser(data.user);
-          localStorage.setItem('parenting_user', JSON.stringify(data.user));
+          localStorage.setItem('cms_user', JSON.stringify(data.user));
           return true;
         }
       }
@@ -172,20 +173,20 @@ export default function App() {
     }
 
     // Client-side fallback (e.g. for static Cloudflare Pages / GitHub Pages)
-    if (email === 'admin@parenting.my.id' && pass === 'admin123') {
+    if ((email === 'admin@domain.com' || email === 'admin@parenting.my.id') && pass === 'admin123') {
       const adminUser = INITIAL_USERS[0];
       setCurrentUser(adminUser);
-      localStorage.setItem('parenting_user', JSON.stringify(adminUser));
+      localStorage.setItem('cms_user', JSON.stringify(adminUser));
       return true;
-    } else if (email === 'editor@parenting.my.id' && pass === 'editor123') {
+    } else if ((email === 'editor@domain.com' || email === 'editor@parenting.my.id') && pass === 'editor123') {
       const editorUser = INITIAL_USERS[1];
       setCurrentUser(editorUser);
-      localStorage.setItem('parenting_user', JSON.stringify(editorUser));
+      localStorage.setItem('cms_user', JSON.stringify(editorUser));
       return true;
-    } else if (email === 'penulis@parenting.my.id' && pass === 'writer123') {
+    } else if ((email === 'penulis@domain.com' || email === 'penulis@parenting.my.id') && pass === 'writer123') {
       const writerUser = INITIAL_USERS[2];
       setCurrentUser(writerUser);
-      localStorage.setItem('parenting_user', JSON.stringify(writerUser));
+      localStorage.setItem('cms_user', JSON.stringify(writerUser));
       return true;
     }
 
@@ -195,6 +196,7 @@ export default function App() {
   // Handle Logout
   const handleLogout = () => {
     setCurrentUser(null);
+    localStorage.removeItem('cms_user');
     localStorage.removeItem('parenting_user');
     setCurrentView('home');
   };
@@ -222,7 +224,7 @@ export default function App() {
         const result: any = await res.json();
         if (result.user) {
           setCurrentUser(result.user);
-          localStorage.setItem('parenting_user', JSON.stringify(result.user));
+          localStorage.setItem('cms_user', JSON.stringify(result.user));
           return { success: true, user: result.user };
         }
       }
