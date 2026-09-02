@@ -48,7 +48,7 @@ export default function DefaultHomeLayout({
             <div className="space-y-3 max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-rose-100 border border-white/20">
                 <Zap className="w-3.5 h-3.5 text-amber-300 fill-current" />
-                <span>Cloudflare D1 Edge Architecture • TTFB &lt; 20ms</span>
+                <span>{siteConfig?.tech_badge_hero || 'Cloudflare D1 Edge Architecture • TTFB < 20ms'}</span>
               </div>
               <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
                 {heroTitle}

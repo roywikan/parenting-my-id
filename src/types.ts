@@ -105,6 +105,11 @@ export interface SiteConfig {
 
   // Performance Metric Box (Customizable by Admin)
   show_performance_box?: boolean;
+  show_tech_badges?: boolean;
+  tech_badge_hero?: string;
+  tech_badge_pages?: string;
+  tech_badge_database?: string;
+  tech_badge_storage?: string;
   metric_1_show?: boolean;
   metric_2_show?: boolean;
   metric_3_show?: boolean;

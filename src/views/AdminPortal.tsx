@@ -236,6 +236,12 @@ export default function AdminPortal({
   const [cfgFooterBadge2, setCfgFooterBadge2] = useState(siteConfig?.footer_badge_2 || 'Diperbarui Rutin');
   const [cfgFooterBadge3, setCfgFooterBadge3] = useState(siteConfig?.footer_badge_3 || '100% Gratis');
 
+  // Tech Badges Config States
+  const [cfgTechBadgeHero, setCfgTechBadgeHero] = useState<string>(siteConfig?.tech_badge_hero || 'Cloudflare D1 Edge Architecture • TTFB < 20ms');
+  const [cfgTechBadgePages, setCfgTechBadgePages] = useState<string>(siteConfig?.tech_badge_pages || 'Cloudflare Pages Edge');
+  const [cfgTechBadgeDatabase, setCfgTechBadgeDatabase] = useState<string>(siteConfig?.tech_badge_database || 'Cloudflare D1 SQLite');
+  const [cfgTechBadgeStorage, setCfgTechBadgeStorage] = useState<string>(siteConfig?.tech_badge_storage || 'GitHub REST Storage');
+
   // AdSense Placement Config States
   const [cfgEnableAdsense, setCfgEnableAdsense] = useState<boolean>(siteConfig?.enable_adsense ?? true);
   const [cfgAdsenseClientId, setCfgAdsenseClientId] = useState<string>(siteConfig?.adsense_client_id || 'ca-pub-1234567890123456');
@@ -456,6 +462,10 @@ export default function AdminPortal({
       setCfgHomepageDisplayMode(siteConfig.homepage_display_mode || 'default');
       setCfgActiveThemePreset(siteConfig.active_theme_preset || DEFAULT_SITE_CONFIG.active_theme_preset || 'corp-blue');
       setCfgSiteName(siteConfig.site_name || DEFAULT_SITE_CONFIG.site_name);
+      setCfgTechBadgeHero(siteConfig.tech_badge_hero || 'Cloudflare D1 Edge Architecture • TTFB < 20ms');
+      setCfgTechBadgePages(siteConfig.tech_badge_pages || 'Cloudflare Pages Edge');
+      setCfgTechBadgeDatabase(siteConfig.tech_badge_database || 'Cloudflare D1 SQLite');
+      setCfgTechBadgeStorage(siteConfig.tech_badge_storage || 'GitHub REST Storage');
       setCfgSiteTagline(siteConfig.site_tagline || DEFAULT_SITE_CONFIG.site_tagline);
       setCfgSiteDescription(siteConfig.site_description || DEFAULT_SITE_CONFIG.site_description);
       setCfgSiteLogoUrl(siteConfig.site_logo_url || '');
@@ -944,6 +954,10 @@ export default function AdminPortal({
         hero_subtitle: cfgHeroSubtitle,
         hero_cta_text: cfgHeroCtaText,
         hero_cta_link: cfgHeroCtaLink,
+        tech_badge_hero: cfgTechBadgeHero,
+        tech_badge_pages: cfgTechBadgePages,
+        tech_badge_database: cfgTechBadgeDatabase,
+        tech_badge_storage: cfgTechBadgeStorage,
         show_performance_box: cfgShowPerformanceBox,
         metric_1_show: cfgMetric1Show,
         metric_2_show: cfgMetric2Show,
@@ -2438,6 +2452,75 @@ export default function AdminPortal({
             )}
 
             
+            {/* SECTION UTAMA ATAS: Teks Badge Arsitektur & Teknologi */}
+            <div className="p-5 rounded-2xl bg-rose-50/60 dark:bg-rose-950/30 border-2 border-rose-500/30 space-y-4">
+              <div className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-rose-500 animate-pulse" />
+                <div>
+                  <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                    Kustomisasi Teks Badge Arsitektur & Teknologi
+                  </h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Ubah 4 kalimat arsitektur Cloudflare D1, Pages Edge, dan GitHub Storage yang tampil di Hero & Footer di bawah ini secara bebas:
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
+                    1. Judul Hero Performance Box
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgTechBadgeHero}
+                    onChange={(e) => setCfgTechBadgeHero(e.target.value)}
+                    className="w-full px-3 py-2 text-xs font-medium border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 shadow-sm"
+                    placeholder="Contoh: Cloudflare D1 Edge Architecture • TTFB < 20ms"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
+                    2. Wording Server / Hosting (Pages)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgTechBadgePages}
+                    onChange={(e) => setCfgTechBadgePages(e.target.value)}
+                    className="w-full px-3 py-2 text-xs font-medium border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 shadow-sm"
+                    placeholder="Contoh: Cloudflare Pages Edge"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
+                    3. Wording Database (D1)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgTechBadgeDatabase}
+                    onChange={(e) => setCfgTechBadgeDatabase(e.target.value)}
+                    className="w-full px-3 py-2 text-xs font-medium border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 shadow-sm"
+                    placeholder="Contoh: Cloudflare D1 SQLite"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
+                    4. Wording Penyimpanan (Storage)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgTechBadgeStorage}
+                    onChange={(e) => setCfgTechBadgeStorage(e.target.value)}
+                    className="w-full px-3 py-2 text-xs font-medium border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 shadow-sm"
+                    placeholder="Contoh: GitHub REST Storage"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* SECTION 0: TEMA (TAMPILAN & PALET) */}
             <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-rose-500/10 border border-rose-500/30 flex items-center justify-between gap-4">
