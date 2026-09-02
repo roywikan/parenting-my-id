@@ -152,6 +152,15 @@ export default function AdminPortal({
     }
   }, [currentUser, activeTab]);
 
+  // Sync editorAuthorId when currentUser changes
+  useEffect(() => {
+    if (currentUser?.id) {
+      if (currentUser.role === 'writer' || !editorAuthorId) {
+        setEditorAuthorId(currentUser.id);
+      }
+    }
+  }, [currentUser]);
+
   // Editor State
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
   const [editorTitle, setEditorTitle] = useState('');
@@ -1155,6 +1164,10 @@ export default function AdminPortal({
 
     autoSaveTimerRef.current = setTimeout(async () => {
       setAutoSaveStatus('saving');
+      const currentAuthorId = (currentUser?.role === 'writer' && currentUser?.id)
+        ? currentUser.id
+        : (editorAuthorId || currentUser?.id || 1);
+
       const saved = await onSavePost({
         id: editingPostId || undefined,
         title: editorTitle,
@@ -1167,11 +1180,11 @@ export default function AdminPortal({
         metaTitle: editorMetaTitle,
         metaDescription: editorMetaDesc,
         tags: editorTags,
-        authorId: editorAuthorId,
+        authorId: currentAuthorId,
         coAuthorIds: editorCoAuthorIds,
       });
 
-      if (saved && !editingPostId) {
+      if (saved && saved.id && !editingPostId) {
         setEditingPostId(saved.id);
       }
       setAutoSaveStatus('saved');
@@ -1180,7 +1193,7 @@ export default function AdminPortal({
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
-  }, [editorTitle, editorMarkdown, editorExcerpt, editorCategory, editorImage, editorAuthorId, editorCoAuthorIds]);
+  }, [editorTitle, editorMarkdown, editorExcerpt, editorCategory, editorImage, editorAuthorId, editorCoAuthorIds, currentUser, editingPostId]);
 
   // Insert Markdown formatting toolbar
   const insertToolbar = (prefix: string, suffix: string = '') => {
@@ -1248,9 +1261,17 @@ export default function AdminPortal({
 
   // Save / Publish Post Form Submit
   const handlePublishSubmit = async (status: PostStatus, rejectionReason?: string) => {
-    if (!editorTitle || !editorMarkdown) return;
+    if (!editorTitle || !editorMarkdown) {
+      alert('Judul dan isi konten artikel wajib diisi!');
+      return;
+    }
 
-    await onSavePost({
+    setAutoSaveStatus('saving');
+    const currentAuthorId = (currentUser?.role === 'writer' && currentUser?.id)
+      ? currentUser.id
+      : (editorAuthorId || currentUser?.id || 1);
+
+    const saved = await onSavePost({
       id: editingPostId || undefined,
       title: editorTitle,
       slug: editorSlug || generateSlug(editorTitle),
@@ -1263,11 +1284,24 @@ export default function AdminPortal({
       metaTitle: editorMetaTitle || `${editorTitle} | ${siteConfig?.site_name || 'Website'}`,
       metaDescription: editorMetaDesc || editorExcerpt,
       tags: editorTags,
-      authorId: editorAuthorId,
+      authorId: currentAuthorId,
       coAuthorIds: editorCoAuthorIds,
     });
 
-    setActiveTab('posts');
+    if (saved && saved.id) {
+      setEditingPostId(saved.id);
+    }
+    setAutoSaveStatus('saved');
+
+    if (status === 'draft') {
+      setEditorStatus('draft');
+      alert('Draf artikel berhasil disimpan di Cloudflare D1!');
+    } else if (status === 'pending_approval') {
+      alert('Artikel berhasil dikirim untuk ditinjau oleh Tim Redaksi/Editor!');
+      setActiveTab('posts');
+    } else {
+      setActiveTab('posts');
+    }
   };
 
   // Writer Management CRUD Handlers
