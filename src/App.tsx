@@ -244,7 +244,16 @@ export default function App() {
       });
       if (res.ok) {
         const data: any = await res.json();
-        await fetchPosts();
+        if (data?.post) {
+          setPosts((prevPosts) => {
+            const exists = prevPosts.some((p) => p.id === data.post.id);
+            if (exists) {
+              return prevPosts.map((p) => (p.id === data.post.id ? data.post : p));
+            }
+            return [data.post, ...prevPosts];
+          });
+        }
+        await fetchPosts(false);
         return data.post;
       }
     } catch (err) {

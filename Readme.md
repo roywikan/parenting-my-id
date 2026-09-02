@@ -462,6 +462,9 @@ Sistem ini mendukung pengelolaan kategori artikel secara **dinamis dan fleksibel
 5. **Header Badge Customization (`show_header_badge`)**: Opsi toggle di Portal Admin (`/admin`) untuk menampilkan atau menyembunyikan elemen `<span>` badge "Cloudflare D1 Edge Engine" di samping logo header.
 6. **Autolinks Engine**: Otomatis mengubah kata kunci tertentu di seluruh artikel menjadi internal link aktif tanpa perlu mengedit artikel satu per satu.
 7. **Histori Revisi & Autosave**: Menyimpan draf artikel dan 3 histori revisi terakhir untuk perlindungan data tulisan penulis.
+8. **Portal Khusus Penulis (Distraction-Free Writer Portal)**:
+   - Menyederhanakan antarmuka bagi role `writer` dengan menyembunyikan kolom & widget yang tidak relevan (seperti statistik pembaca draf, kolom penulis redundant, tombol hapus, input SEO manual, dan URL slug manual).
+   - Menyediakan alur penulisan yang fokus dan otomatis tersimpan langsung ke draf lokal & cloud.
 
 ---
 

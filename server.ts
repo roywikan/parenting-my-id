@@ -468,8 +468,8 @@ app.post('/api/posts/:id/view', (req, res) => {
   res.json({ success: true, views: post.views });
 });
 
-// Helper to commit file directly to GitHub via REST API
-async function commitFileToGitHub(filePath: string, contentStr: string, commitMessage: string) {
+// Helper to commit file directly to GitHub via REST API (with retry on 409 conflict)
+async function commitFileToGitHub(filePath: string, contentStr: string, commitMessage: string, maxRetries = 3) {
   const githubToken = process.env.GITHUB_TOKEN;
   const owner = process.env.GITHUB_OWNER;
   const repo = process.env.GITHUB_REPO;
@@ -479,50 +479,62 @@ async function commitFileToGitHub(filePath: string, contentStr: string, commitMe
     return { success: false, reason: 'No GitHub credentials in env' };
   }
 
-  try {
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
-    const headers: Record<string, string> = {
-      'Authorization': `Bearer ${githubToken}`,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json',
-      'User-Agent': 'Parenting-Blog-Server',
-    };
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${githubToken}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+    'User-Agent': 'CMS-Blog-Server',
+  };
 
-    let sha: string | undefined;
-    const getRes = await fetch(`${apiUrl}?ref=${branch}`, { headers });
-    if (getRes.ok) {
-      const getJson: any = await getRes.json();
-      sha = getJson.sha;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      let sha: string | undefined;
+      const getRes = await fetch(`${apiUrl}?ref=${branch}`, { headers });
+      if (getRes.ok) {
+        const getJson: any = await getRes.json();
+        sha = getJson.sha;
+      }
+
+      const base64Content = Buffer.from(contentStr, 'utf-8').toString('base64');
+      const putBody: any = {
+        message: commitMessage,
+        content: base64Content,
+        branch,
+      };
+      if (sha) {
+        putBody.sha = sha;
+      }
+
+      const putRes = await fetch(apiUrl, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(putBody),
+      });
+
+      if (putRes.ok) {
+        console.log(`[GitHub Commit] Successfully committed ${filePath} to repo ${owner}/${repo}`);
+        return { success: true };
+      } else if (putRes.status === 409 && attempt < maxRetries) {
+        console.warn(`[GitHub Commit] 409 Conflict for ${filePath} on attempt ${attempt}. Retrying...`);
+        await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+        continue;
+      } else {
+        const errText = await putRes.text();
+        console.error(`[GitHub Commit] Failed to commit ${filePath}:`, errText);
+        return { success: false, error: errText };
+      }
+    } catch (err) {
+      if (attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+        continue;
+      }
+      console.error(`[GitHub Commit] Error committing ${filePath}:`, err);
+      return { success: false, error: String(err) };
     }
-
-    const base64Content = Buffer.from(contentStr, 'utf-8').toString('base64');
-    const putBody: any = {
-      message: commitMessage,
-      content: base64Content,
-      branch,
-    };
-    if (sha) {
-      putBody.sha = sha;
-    }
-
-    const putRes = await fetch(apiUrl, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(putBody),
-    });
-
-    if (putRes.ok) {
-      console.log(`[GitHub Commit] Successfully committed ${filePath} to repo ${owner}/${repo}`);
-      return { success: true };
-    } else {
-      const errText = await putRes.text();
-      console.error(`[GitHub Commit] Failed to commit ${filePath}:`, errText);
-      return { success: false, error: errText };
-    }
-  } catch (err) {
-    console.error(`[GitHub Commit] Error committing ${filePath}:`, err);
-    return { success: false, error: String(err) };
   }
+
+  return { success: false, error: 'Max retries exceeded' };
 }
 
 async function triggerStaticFilesGeneratorAndCommit(posts: any[]) {
@@ -531,9 +543,9 @@ async function triggerStaticFilesGeneratorAndCommit(posts: any[]) {
 
     if (process.env.GITHUB_TOKEN && process.env.GITHUB_OWNER && process.env.GITHUB_REPO) {
       console.log('[Auto-Commit] Committing updated feed.xml, llms.txt, and sitemap.xml to GitHub...');
-      commitFileToGitHub('public/feed.xml', feedContent, 'auto-update: sync feed.xml via CMS');
-      commitFileToGitHub('public/llms.txt', llmsContent, 'auto-update: sync llms.txt via CMS');
-      commitFileToGitHub('public/sitemap.xml', sitemapContent, 'auto-update: sync sitemap.xml via CMS');
+      await commitFileToGitHub('public/feed.xml', feedContent, 'auto-update: sync feed.xml via CMS');
+      await commitFileToGitHub('public/llms.txt', llmsContent, 'auto-update: sync llms.txt via CMS');
+      await commitFileToGitHub('public/sitemap.xml', sitemapContent, 'auto-update: sync sitemap.xml via CMS');
     }
   } catch (err) {
     console.error('Error triggering static files generator and GitHub commit:', err);

@@ -192,7 +192,7 @@ Jika anak sudah menunjukkan tanda-tanda kelelahan, istirahatlah dan pastikan keb
     featuredImage: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=700&q=65&fm=webp',
     category: 'Tumbuh Kembang',
     readTimeMinutes: 4,
-    authorId: 2,
+    authorId: 3,
     authorName: 'Ahmad Zulkarnain, S.Ked',
     authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=60&q=60&fm=webp',
     authorRole: 'writer',

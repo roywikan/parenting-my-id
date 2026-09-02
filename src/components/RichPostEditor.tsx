@@ -342,7 +342,7 @@ export default function RichPostEditor({
         <div className="hidden sm:flex items-center gap-2">
           {autoSaveStatus === 'saved' && (
             <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-950/60 border border-emerald-800/80 px-3 py-1 rounded-full">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Draf Tersimpan di Cloudflare D1
+              <CheckCircle2 className="w-3.5 h-3.5" /> {userRole === 'writer' ? 'Draf Tersimpan' : 'Draf Tersimpan di Cloudflare D1'}
             </span>
           )}
           {autoSaveStatus === 'saving' && (
@@ -519,19 +519,21 @@ export default function RichPostEditor({
             </div>
 
             {/* SLUG & CATEGORY */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  URL Slug
-                </label>
-                <input
-                  type="text"
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  placeholder="panduan-lengkap-strategi-terbaru"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                />
-              </div>
+            <div className={`grid grid-cols-1 ${userRole !== 'writer' ? 'sm:grid-cols-2' : ''} gap-4`}>
+              {userRole !== 'writer' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    URL Slug
+                  </label>
+                  <input
+                    type="text"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                    placeholder="panduan-lengkap-strategi-terbaru"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -849,31 +851,33 @@ export default function RichPostEditor({
         <div className="lg:col-span-4 space-y-4">
           
           {/* AI GEMINI ASSISTANT CARD */}
-          <div className="bg-gradient-to-br from-rose-500 to-pink-600 text-white rounded-3xl p-6 shadow-md space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300" />
-                AI Content Assistant
-              </span>
+          {userRole !== 'writer' && (
+            <div className="bg-gradient-to-br from-rose-500 to-pink-600 text-white rounded-3xl p-6 shadow-md space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300" />
+                  AI Content Assistant
+                </span>
+              </div>
+              <p className="text-xs text-rose-100 leading-relaxed">
+                Otomatis buatkan Meta Title, Meta Description, Ringkasan, & Tag SEO menggunakan Gemini AI.
+              </p>
+              <button
+                type="button"
+                onClick={onAiGenerateMeta}
+                disabled={isAiLoading || !title}
+                className="w-full py-2.5 rounded-xl bg-white text-rose-600 font-bold text-xs shadow-sm hover:bg-rose-50 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {isAiLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-rose-600" />}
+                <span>Generate SEO Meta dengan AI</span>
+              </button>
             </div>
-            <p className="text-xs text-rose-100 leading-relaxed">
-              Otomatis buatkan Meta Title, Meta Description, Ringkasan, & Tag SEO menggunakan Gemini AI.
-            </p>
-            <button
-              type="button"
-              onClick={onAiGenerateMeta}
-              disabled={isAiLoading || !title}
-              className="w-full py-2.5 rounded-xl bg-white text-rose-600 font-bold text-xs shadow-sm hover:bg-rose-50 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              {isAiLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-rose-600" />}
-              <span>Generate SEO Meta dengan AI</span>
-            </button>
-          </div>
+          )}
 
           {/* METADATA & EXCERPT CARD */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
             <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Meta SEO & Gambar Sampul
+              {userRole === 'writer' ? 'Ringkasan & Gambar Sampul' : 'Meta SEO & Gambar Sampul'}
             </h4>
 
             {/* FEATURED IMAGE */}
@@ -935,33 +939,36 @@ export default function RichPostEditor({
               />
             </div>
 
-            {/* META TITLE */}
-            <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                Meta Title SEO
-              </label>
-              <input
-                type="text"
-                value={metaTitle}
-                onChange={(e) => setMetaTitle(e.target.value)}
-                placeholder="Judul khusus untuk Google Search..."
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
-              />
-            </div>
+            {/* META TITLE & META DESC FOR NON-WRITER */}
+            {userRole !== 'writer' && (
+              <>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Meta Title SEO
+                  </label>
+                  <input
+                    type="text"
+                    value={metaTitle}
+                    onChange={(e) => setMetaTitle(e.target.value)}
+                    placeholder="Judul khusus untuk Google Search..."
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                  />
+                </div>
 
-            {/* META DESC */}
-            <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                Meta Description SEO
-              </label>
-              <textarea
-                rows={2}
-                value={metaDesc}
-                onChange={(e) => setMetaDesc(e.target.value)}
-                placeholder="Deskripsi pencarian Google..."
-                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
-              />
-            </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Meta Description SEO
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={metaDesc}
+                    onChange={(e) => setMetaDesc(e.target.value)}
+                    placeholder="Deskripsi pencarian Google..."
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                  />
+                </div>
+              </>
+            )}
 
             {/* TAGS */}
             <div>
@@ -980,26 +987,28 @@ export default function RichPostEditor({
           </div>
 
           {/* REAL-TIME AUTO IN-PAGE SEO AUDITOR WIDGET */}
-          <SeoAuditWidget
-            title={title}
-            metaTitle={metaTitle}
-            setMetaTitle={setMetaTitle}
-            metaDesc={metaDesc}
-            setMetaDesc={setMetaDesc}
-            markdown={markdown}
-            featuredImage={featuredImage}
-            tags={tags}
-            onAutoOptimizeMeta={() => {
-              if (title) {
-                setMetaTitle(`${title} | Parenting.my.id`);
-              }
-              const plainText = (excerpt || markdown || '').replace(/<[^>]+>/g, '').replace(/[#*`_~]/g, ' ').trim();
-              const truncated = plainText.length > 155 ? plainText.substring(0, 155) + '...' : plainText;
-              if (truncated) {
-                setMetaDesc(truncated);
-              }
-            }}
-          />
+          {userRole !== 'writer' && (
+            <SeoAuditWidget
+              title={title}
+              metaTitle={metaTitle}
+              setMetaTitle={setMetaTitle}
+              metaDesc={metaDesc}
+              setMetaDesc={setMetaDesc}
+              markdown={markdown}
+              featuredImage={featuredImage}
+              tags={tags}
+              onAutoOptimizeMeta={() => {
+                if (title) {
+                  setMetaTitle(`${title} | Parenting.my.id`);
+                }
+                const plainText = (excerpt || markdown || '').replace(/<[^>]+>/g, '').replace(/[#*`_~]/g, ' ').trim();
+                const truncated = plainText.length > 155 ? plainText.substring(0, 155) + '...' : plainText;
+                if (truncated) {
+                  setMetaDesc(truncated);
+                }
+              }}
+            />
+          )}
 
           {/* MULTI-AUTHOR & CREDENTIALS CARD */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
@@ -1014,27 +1023,34 @@ export default function RichPostEditor({
                 <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                   Penulis Utama (Primary Author)
                 </label>
-                <select
-                  value={authorId || ''}
-                  onChange={(e) => setAuthorId(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
-                >
-                  {writers.map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.name} {w.title ? `(${w.title})` : ''}
-                    </option>
-                  ))}
-                </select>
+                {userRole === 'writer' ? (
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+                    {writers.find(w => w.id === authorId)?.name || 'Penulis Aktif'}
+                  </div>
+                ) : (
+                  <select
+                    value={authorId || ''}
+                    onChange={(e) => setAuthorId(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                  >
+                    {writers.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.name} {w.title ? `(${w.title})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             )}
 
-            {/* CO-AUTHORS MULTI-SELECT */}
+            {/* CO-AUTHORS MULTI-SELECT IN COLLAPSIBLE ACCORDION */}
             {setCoAuthorIds && writers.length > 1 && (
-              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                  Co-Author / Kontributor Tambahan (Opsional)
-                </label>
-                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+              <details className="group pt-2 border-t border-slate-100 dark:border-slate-800">
+                <summary className="text-[11px] font-bold text-slate-600 dark:text-slate-400 cursor-pointer flex items-center justify-between hover:text-rose-600 transition-colors">
+                  <span>👥 Tambah Penulis Bersama / Co-Author</span>
+                  <span className="text-[10px] text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 mt-3">
                   {writers
                     .filter((w) => w.id !== authorId)
                     .map((w) => {
@@ -1073,7 +1089,7 @@ export default function RichPostEditor({
                       );
                     })}
                 </div>
-              </div>
+              </details>
             )}
           </div>
 
