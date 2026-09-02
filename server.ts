@@ -1,6 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'node:url';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
@@ -812,7 +813,124 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-// 4. GITHUB IMAGE UPLOAD PIPELINE
+// Helper function for GitHub Upload Fallback
+const performGitHubUpload = async (filename: string, base64Content: string) => {
+  const token = process.env.GITHUB_TOKEN;
+  const owner = process.env.GITHUB_OWNER || 'vswi';
+  const repo = process.env.GITHUB_REPO || 'parenting-my-id';
+  const branch = process.env.GITHUB_BRANCH || 'main';
+
+  if (!token) {
+    throw new Error('GITHUB_TOKEN tidak dikonfigurasi di server');
+  }
+
+  const cleanFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const timestamp = Date.now();
+  const filePath = `public/uploads/${timestamp}_${cleanFilename}`;
+  const base64Clean = base64Content.replace(/^data:image\/\w+;base64,/, '');
+
+  const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'Node-Fetch',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message: `Upload image ${cleanFilename} (Auto Storage)`,
+      content: base64Clean,
+      branch: branch,
+    }),
+  });
+
+  const ghData: any = await ghRes.json();
+  if (ghRes.ok && (ghData.content?.download_url || ghData.content?.html_url)) {
+    const rawUrl = ghData.content?.download_url || `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`;
+    return {
+      success: true,
+      url: rawUrl,
+      raw_url: rawUrl,
+      source: 'github',
+    };
+  } else {
+    throw new Error(ghData?.message || 'Gagal menyimpan file ke GitHub storage');
+  }
+};
+
+// 4. CLOUDINARY IMAGE UPLOAD PIPELINE (With Automatic GitHub Fallback)
+const handleCloudinaryUpload = async (req: any, res: any) => {
+  const { filename, base64Content } = req.body;
+  if (!filename || !base64Content) {
+    return res.status(400).json({ error: 'Filename dan Base64 content wajib diisi' });
+  }
+
+  try {
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'harga-promo-diskon';
+    const apiKey = process.env.CLOUDINARY_API_KEY || '945558876687176';
+    const apiSecret = process.env.CLOUDINARY_API_SECRET || '6TBtS1kzFgoNg_4SHmzmSImyPlE';
+    const folder = process.env.CLOUDINARY_FOLDER || 'parenting-my-id';
+
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const format = 'webp';
+    const transformation = 'c_limit,w_1024,q_auto';
+
+    // Build signature string (alphabetically sorted parameters)
+    const stringToSign = `folder=${folder}&format=${format}&timestamp=${timestamp}&transformation=${transformation}${apiSecret}`;
+    const signature = crypto.createHash('sha1').update(stringToSign).digest('hex');
+
+    const formData = new URLSearchParams();
+    const filePayload = base64Content.startsWith('data:') ? base64Content : `data:image/jpeg;base64,${base64Content}`;
+    formData.append('file', filePayload);
+    formData.append('api_key', apiKey);
+    formData.append('timestamp', timestamp);
+    formData.append('folder', folder);
+    formData.append('format', format);
+    formData.append('transformation', transformation);
+    formData.append('signature', signature);
+
+    const cRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString(),
+    });
+
+    const cData: any = await cRes.json();
+    if (cRes.ok && cData.secure_url) {
+      let webpUrl = cData.secure_url;
+      if (!webpUrl.toLowerCase().endsWith('.webp')) {
+        webpUrl = webpUrl.replace(/\.[a-z0-9]+$/i, '.webp');
+      }
+      return res.json({
+        success: true,
+        url: webpUrl,
+        raw_url: cData.secure_url,
+        format: 'webp',
+        width: cData.width,
+        height: cData.height,
+        source: 'cloudinary',
+        bytes: cData.bytes,
+      });
+    } else {
+      console.warn('Cloudinary upload error, using GitHub Storage fallback:', cData?.error?.message || cData);
+      const ghResult = await performGitHubUpload(filename, base64Content);
+      return res.json(ghResult);
+    }
+  } catch (err: any) {
+    console.warn('Cloudinary upload exception, using GitHub Storage fallback:', err.message);
+    try {
+      const ghResult = await performGitHubUpload(filename, base64Content);
+      return res.json(ghResult);
+    } catch (fallbackErr: any) {
+      return res.status(500).json({ error: fallbackErr.message || 'Gagal mengunggah gambar' });
+    }
+  }
+};
+
+app.post('/api/upload-cloudinary', handleCloudinaryUpload);
+app.post('/api/upload', handleCloudinaryUpload);
+
+// 4b. GITHUB IMAGE UPLOAD PIPELINE (LEGACY FALLBACK)
 app.post('/api/upload-github', async (req, res) => {
   const { filename, base64Content } = req.body;
   if (!filename || !base64Content) {

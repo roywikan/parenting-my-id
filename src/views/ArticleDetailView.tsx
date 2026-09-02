@@ -152,6 +152,10 @@ export default function ArticleDetailView({
 
     const preparedMd = preprocessMarkdownLineBreaks(post.contentMarkdown);
     let rawHtml = marked.parse(preparedMd, { async: false, gfm: true, breaks: true }) as string;
+
+    // Inject loading="lazy" and decoding="async" into <img> tags
+    rawHtml = rawHtml.replace(/<img\s+/gi, '<img loading="lazy" decoding="async" ');
+
     const items: { id: string; text: string; level: number }[] = [];
 
     // Inject id attributes into <h2> and <h3> tags for TOC scrolling, and build tocItems

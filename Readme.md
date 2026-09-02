@@ -214,6 +214,10 @@ ALTER TABLE posts ADD COLUMN rejection_reason TEXT;
    - **Build output directory**: `dist`
 6. Buka bagian **Environment variables (advanced)** dan tambahkan variabel rahasia berikut:
    - `SITE_URL`: `https://parenting.my.id`
+   - `CLOUDINARY_CLOUD_NAME`: `harga-promo-diskon` *(atau nama cloud Cloudinary Anda)*
+   - `CLOUDINARY_API_KEY`: `945558876687176` *(API Key Cloudinary)*
+   - `CLOUDINARY_API_SECRET`: `6TBtS1kzFgoNg_4SHmzmSImyPlE` *(API Secret Cloudinary - aman diset di Server-Side Secret)*
+   - `CLOUDINARY_FOLDER`: `parenting-my-id` *(Folder penyimpanan gambar)*
    - `GITHUB_TOKEN`: *(Kode token GitHub `ghp_...` dari Langkah 1B)*
    - `GITHUB_OWNER`: *(Username GitHub Anda)*
    - `GITHUB_REPO`: `parenting-my-id`
@@ -311,6 +315,59 @@ Untuk menjaga keamanan dan integritas sistem, akun dengan peran non-admin (`role
 - ✅ **Hak Akses Penulis (`role: 'writer'`)**:
   - Menulis, mengedit, dan mengelola artikel milik sendiri di **Rich WYSIWYG Editor**.
   - Mengubah profil pribadi (nama, bio, avatar, password) di Tab **Profil & Password Saya**.
+
+---
+
+### G. Cloudinary Image Upload & Optimasi WebP (Keamanan & Panduan Webmaster)
+
+Mekanisme unggah gambar artikel pada CMS memanfaatkan **Cloudinary REST API** server-side pipeline (`/api/upload-cloudinary` & `/api/upload`):
+
+#### 1. ⚡ Pemrosesan WebP Otomatis & Dimensi Tablet
+- Setiap gambar yang diunggah otomatis ditransmutasikan menjadi format **`.webp`** ultra-ringan.
+- Ukuran dimensi lebar gambar dibatasi secara fleksibel maksimal **1024px** (selebar layar tablet) melalui Cloudinary transformation `c_limit,w_1024,q_auto`, sehingga artikel dimuat sangat cepat di perangkat seluler dan desktop.
+- Ukuran file dibatasi maksimal **3 MB** pada validasi peramban sebelum diunggah.
+- **Automatic Fallback Pipeline**: Jika server Cloudinary mengalami kendala akses, sistem akan secara otomatis mengalihkan penyimpanan gambar ke GitHub Storage (`public/uploads/`) sehingga proses unggah artikel tidak pernah terganggu.
+
+#### 2. 🔑 Kebutuhan Teknis & Panduan Setting Cloudinary untuk Webmaster
+Untuk mengaktifkan fitur unggah gambar Cloudinary secara mulus, Webmaster wajib menyiapkan dan mengonfigurasi kredensial Cloudinary sebagai berikut:
+
+1. **Akses Dashboard Cloudinary**:
+   - Login ke akun [Cloudinary Console](https://console.cloudinary.com/).
+   - Buka **Dashboard** untuk mencatat **Cloud Name**, **API Key**, dan **API Secret**.
+2. **⚠️ Wajib Set Hak Akses Master Admin / Write Permission pada API Key**:
+   - API Key Cloudinary yang digunakan **wajib memiliki izin akses Write / Master Admin (`actions=["create"]`)**.
+   - **Penting**: Jika API Key diset *Read-Only* atau dibatasi, Cloudinary akan menolak permintaan unggah gambar dengan error `Request forbidden due to missing permissions (actions=["create"])`.
+   - **Cara Memeriksa/Mengatur**: Di Cloudinary Console -> Buka **Settings** -> **API Keys** -> Pastikan Key yang digunakan memiliki peranan/role **Master Admin** atau memiliki izin penuh untuk mengunggah asset.
+3. **Konfigurasi Folder Media**:
+   - Tentukan folder target pada variabel `CLOUDINARY_FOLDER` (contoh: `parenting-my-id`) agar seluruh asset gambar artikel tersimpan rapi di satu direktori media Cloudinary.
+
+#### 3. 🔒 Cara Menyimpan Credential Cloudinary Secara Aman di Cloudflare
+Keamanan kredensial adalah prioritas utama. **API Secret** tidak boleh diekspos di frontend peramban maupun repositori GitHub publik.
+
+**Langkah Menyimpan di Cloudflare Pages / Workers**:
+1. Buka [Cloudflare Dashboard](https://dash.cloudflare.com/) -> Masuk ke **Workers & Pages**.
+2. Pilih proyek Pages Anda (`parenting-my-id`).
+3. Masuk ke tab **Settings** -> **Environment variables**.
+4. Klik **Add variable** / **Edit variables** dan masukkan variabel berikut:
+   - `CLOUDINARY_CLOUD_NAME` = `harga-promo-diskon` *(atau nama cloud Anda)*
+   - `CLOUDINARY_API_KEY` = `945558876687176` *(API Key Anda)*
+   - `CLOUDINARY_API_SECRET` = `6TBtS1kzFgoNg_4SHmzmSImyPlE` 🔒 **(PILIH TYPE: Encrypted / Secret)**
+   - `CLOUDINARY_FOLDER` = `parenting-my-id`
+5. **Mengapa Cara Ini Sangat Aman?**:
+   - Variabel bertipe **Encrypted / Secret** akan dienkripsi oleh Cloudflare dan nilainya tersembunyi total dari dashboard maupun tim yang membaca repositori.
+   - Hanya fungsi server-side Cloudflare Pages Functions (`/functions/api/[[path]].ts`) yang dapat membaca kredensial ini secara internal saat memproses unggahan gambar. Client JS peramban pengunjung **tidak bisa mengintip** `CLOUDINARY_API_SECRET`.
+
+#### 4. 🛠️ Kemudahan Penggunaan & Preview di Rich Post Editor
+Saat membuat atau mengedit artikel di Portal Admin (`/admin`), penulis dapat menggunakan modal **Upload Foto / Sisipkan Gambar**:
+1. Pilih file gambar dari komputer (Max 3 MB).
+2. Gambar otomatis diunggah ke server Cloudinary, dikonversi ke WebP, dan disesuaikan dimensinya (max 1024px).
+3. **Popup Preview Instant**:
+   - Tampilan gambar seketika muncul di kotak preview lengkap dengan label status `webp ready`.
+   - **Tombol "Sisipkan Langsung ke Body Artikel"**: Memasukkan kode Markdown `![Alt Text](url)` langsung di posisi kursor tulisan.
+   - **Tombol "Salin Markdown"**: Menyalin kode sintaks markdown ke clipboard.
+   - **Tombol "Salin URL WebP"**: Menyalin URL langsung file WebP.
+   - **Tombol "Jadikan Gambar Sampul Artikel"**: Memasang foto sebagai Gambar Sampul / Featured Image artikel.
+4. **Lazy Loading Automatic**: Seluruh gambar artikel yang dimasukkan otomatis disisipi atribut `loading="lazy"` dan `decoding="async"` untuk kecepatan maksimal Googlebot & SEO Core Web Vitals.
 
 ---
 
