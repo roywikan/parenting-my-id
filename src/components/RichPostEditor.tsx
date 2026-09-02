@@ -788,7 +788,7 @@ export default function RichPostEditor({
                         Tautan Otomatis Aktif
                       </span>
                     </div>
-                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 max-h-[440px] overflow-y-auto prose prose-rose max-w-none dark:prose-invert prose-sm text-slate-800 dark:text-slate-200">
+                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 max-h-[440px] overflow-y-auto article-body max-w-none text-slate-800 dark:text-slate-200">
                       <div dangerouslySetInnerHTML={{ __html: parsedPreviewHtml || '<p class="text-slate-400 italic">Pratinjau artikel akan muncul di sini saat Anda mengetik...</p>' }} />
                     </div>
                   </div>
@@ -821,7 +821,7 @@ export default function RichPostEditor({
                   )}
 
                   <div
-                    className="prose prose-rose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 text-sm leading-relaxed"
+                    className="article-body max-w-none text-slate-800 dark:text-slate-200"
                     dangerouslySetInnerHTML={{ __html: parsedPreviewHtml }}
                   />
                 </div>
