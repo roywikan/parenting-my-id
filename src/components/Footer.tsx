@@ -78,13 +78,13 @@ export default function Footer({ siteConfig, onNavigate }: FooterProps) {
             {/* TECH STACK BADGES */}
             <div className="flex flex-wrap gap-2 pt-2">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-xs text-rose-300 font-medium">
-                <Zap className="w-3 h-3 text-amber-400" /> Cloudflare Pages Edge
+                <Zap className="w-3 h-3 text-amber-400" /> {siteConfig?.tech_badge_pages || 'Cloudflare Pages Edge'}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-xs text-sky-300 font-medium">
-                <Database className="w-3 h-3 text-sky-400" /> Cloudflare D1 SQLite
+                <Database className="w-3 h-3 text-sky-400" /> {siteConfig?.tech_badge_database || 'Cloudflare D1 SQLite'}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-xs text-purple-300 font-medium">
-                <GitBranch className="w-3 h-3 text-purple-400" /> GitHub REST Storage
+                <GitBranch className="w-3 h-3 text-purple-400" /> {siteConfig?.tech_badge_storage || 'GitHub REST Storage'}
               </span>
             </div>
           </div>

@@ -83,6 +83,11 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
 
   // Performance Metric Box Defaults
   show_performance_box: true,
+  show_tech_badges: true,
+  tech_badge_hero: 'Cloudflare D1 Edge Architecture • TTFB < 20ms',
+  tech_badge_pages: 'Cloudflare Pages Edge',
+  tech_badge_database: 'Cloudflare D1 SQLite',
+  tech_badge_storage: 'GitHub REST Storage',
   metric_1_show: true,
   metric_2_show: true,
   metric_3_show: true,

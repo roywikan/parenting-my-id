@@ -57,29 +57,42 @@ html {
   /* Headings Typography */
   .article-body h1,
   h1.readable-heading {
-    font-size: 1.625rem; /* 26px on mobile (24px - 28px range) */
+    font-size: 1.75rem; /* 28px on mobile */
     line-height: 1.25;
     font-weight: 800;
     margin-top: 1.75rem;
     margin-bottom: 0.875rem;
+    color: inherit;
   }
 
   .article-body h2,
   h2.readable-heading {
-    font-size: 1.3125rem; /* 21px on mobile (20px - 22px range) */
-    line-height: 1.25;
+    font-size: 1.45rem; /* 23px on mobile */
+    line-height: 1.3;
     font-weight: 700;
-    margin-top: 1.5rem;
+    margin-top: 1.75rem;
     margin-bottom: 0.75rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 2px solid var(--color-rose-200, rgba(225, 29, 72, 0.25));
+    color: inherit;
   }
 
   .article-body h3,
   h3.readable-heading {
-    font-size: 1.1875rem; /* 19px on mobile (18px - 20px range) */
-    line-height: 1.3;
+    font-size: 1.25rem; /* 20px on mobile */
+    line-height: 1.35;
     font-weight: 700;
-    margin-top: 1.25rem;
+    margin-top: 1.35rem;
     margin-bottom: 0.5rem;
+    color: inherit;
+  }
+
+  .article-body h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: inherit;
   }
 
   @media (min-width: 640px) {
@@ -91,15 +104,24 @@ html {
 
     .article-body h2,
     h2.readable-heading {
-      font-size: 1.625rem; /* 26px on desktop */
+      font-size: 1.65rem; /* 26px on desktop */
       line-height: 1.3;
     }
 
     .article-body h3,
     h3.readable-heading {
-      font-size: 1.3125rem; /* 21px on desktop */
+      font-size: 1.35rem; /* 21px on desktop */
       line-height: 1.35;
     }
+  }
+
+  .article-body strong {
+    font-weight: 700;
+  }
+
+  .article-body a {
+    color: var(--color-rose-600, #e11d48);
+    text-decoration: underline;
   }
 
   /* Lists & Blockquotes within article body */
