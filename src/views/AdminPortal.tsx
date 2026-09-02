@@ -1232,15 +1232,22 @@ export default function AdminPortal({
     setEditorMarkdown((prev) => `${prev}\n${prefix}Teks Ditambahkan${suffix}`);
   };
 
-  // GitHub REST API Image Upload Handler
+  // Cloudinary REST API Image Upload Handler (WebP Format, Tablet Max 1024px Width, Max 3MB)
   const handleImageUploadFile = async (file: File): Promise<string | null> => {
+    // 1. Client-side File Size Validation (Max 3MB limit)
+    const MAX_SIZE_BYTES = 3 * 1024 * 1024;
+    if (file.size > MAX_SIZE_BYTES) {
+      alert(`Ukuran file "${file.name}" (${(file.size / (1024 * 1024)).toFixed(2)} MB) melebihi batas 3 MB. Silakan pilih atau kompres gambar terlebih dahulu agar loading artikel tetap ringan.`);
+      return null;
+    }
+
     setUploadingImage(true);
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = async () => {
         const base64Content = reader.result as string;
         try {
-          const res = await fetch('/api/upload-github', {
+          const res = await fetch('/api/upload-cloudinary', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1252,11 +1259,15 @@ export default function AdminPortal({
           if (data.url) {
             setEditorImage((prev) => prev || data.url);
             resolve(data.url);
+          } else if (data.error) {
+            alert(`Gagal upload gambar ke Cloudinary: ${data.error}`);
+            resolve(null);
           } else {
             resolve(null);
           }
         } catch (err) {
-          console.error('Image upload failed', err);
+          console.error('Cloudinary image upload failed', err);
+          alert('Terjadi kesalahan koneksi saat mengunggah gambar ke server Cloudinary.');
           resolve(null);
         } finally {
           setUploadingImage(false);

@@ -7,7 +7,7 @@ import SeoAuditWidget from './SeoAuditWidget';
 import { 
   Bold, Italic, Strikethrough, Heading1, Heading2, Heading3, 
   List, ListOrdered, CheckSquare, Quote, Code, Table, Minus, 
-  Link as LinkIcon, Image as ImageIcon, Upload, Eye, Edit3, Columns, 
+  Link as LinkIcon, Link2, Image as ImageIcon, Upload, Eye, Edit3, Columns, 
   Undo, Redo, Sparkles, CheckCircle2, RefreshCw, X, Copy, Check, FileText,
   Users, History, RotateCcw, Award, ShieldCheck, Send, AlertTriangle, AlertCircle, ThumbsUp, XCircle
 } from 'lucide-react';
@@ -108,6 +108,7 @@ export default function RichPostEditor({
   const [imageTab, setImageTab] = useState<'upload' | 'unsplash' | 'url'>('upload');
   const [lastUploadedUrl, setLastUploadedUrl] = useState<string>('');
   const [unsplashSearch, setUnsplashSearch] = useState('');
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
   const UNSPLASH_PRESETS = [
     { label: 'Edukasi & Keluarga', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=65&fm=webp' },
@@ -246,17 +247,24 @@ export default function RichPostEditor({
     setImageAlt('');
   };
 
-  // Upload image file handler
+  // Upload image file handler (Cloudinary + WebP + Max 3MB)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Client-side File Size Validation (Max 3MB limit)
+    const MAX_SIZE_BYTES = 3 * 1024 * 1024;
+    if (file.size > MAX_SIZE_BYTES) {
+      alert(`Ukuran file "${file.name}" (${(file.size / (1024 * 1024)).toFixed(2)} MB) melebihi batas 3 MB. Silakan kompres gambar terlebih dahulu agar loading artikel tetap ringan.`);
+      return;
+    }
 
     const uploadedUrl = await onImageUpload(file);
     if (uploadedUrl) {
       setLastUploadedUrl(uploadedUrl);
       setImageUrl(uploadedUrl);
       const cleanAlt = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-      setImageAlt(cleanAlt);
+      setImageAlt(cleanAlt || 'Gambar Artikel');
     }
   };
 
@@ -266,11 +274,14 @@ export default function RichPostEditor({
     applyFormatting('', '', tableTemplate);
   };
 
-  // HTML Preview Renderer with Auto-Links
+  // HTML Preview Renderer with Auto-Links & Lazy Loaded Images
   const parsedPreviewHtml = useMemo(() => {
     if (!markdown) return '';
     const preparedMd = preprocessMarkdownLineBreaks(markdown);
     let rawHtml = marked.parse(preparedMd, { async: false, gfm: true, breaks: true }) as string;
+
+    // Inject loading="lazy" and decoding="async" into <img> tags
+    rawHtml = rawHtml.replace(/<img\s+/gi, '<img loading="lazy" decoding="async" ');
 
     // Inject id attributes into <h2> and <h3> tags for TOC
     rawHtml = rawHtml.replace(/<(h[23])>(.*?)<\/\1>/gi, (match, tag, content) => {
@@ -1274,19 +1285,32 @@ export default function RichPostEditor({
               </button>
             </div>
 
-            {/* TAB 1: UPLOAD FILE */}
+            {/* TAB 1: UPLOAD FILE CLOUDINARY */}
             {imageTab === 'upload' && (
               <div className="space-y-4 py-1">
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Upload file gambar lokal (PNG, JPG, WebP) ke repositori GitHub / server penyimpanan.
-                </p>
+                <div className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs space-y-1.5 text-slate-600 dark:text-slate-300">
+                  <p className="font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                    <span>☁️ Upload Gambar ke Server Cloudinary</span>
+                  </p>
+                  <ul className="list-disc list-inside space-y-1 text-[11px]">
+                    <li><b>Format Output:</b> Otomatis dikonversi ke format <b>WebP</b> ultra-ringan.</li>
+                    <li><b>Dimensi Maksimal:</b> Selebar layar tablet (<b>1024px</b>) agar ramah seluler.</li>
+                    <li><b>Batas Ukuran File:</b> Maksimal <b>3 MB</b> per gambar.</li>
+                    <li><b>Lazy Loading:</b> Otomatis diterapkan saat artikel dirender.</li>
+                  </ul>
+                  <div className="pt-1.5 text-[10px] text-slate-500 border-t border-slate-200 dark:border-slate-800 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span><b>Keamanan Terjamin:</b> API Secret disimpan aman di Server-Side (`/api/upload-cloudinary`), tidak pernah diekspos ke browser / GitHub.</span>
+                  </div>
+                </div>
+
                 <label className="cursor-pointer block border-2 border-dashed border-rose-300 dark:border-rose-900 rounded-2xl p-6 text-center hover:bg-rose-50/50 dark:hover:bg-rose-950/20 transition-colors">
                   <Upload className="w-8 h-8 text-rose-500 mx-auto mb-2 animate-bounce" />
                   <span className="text-xs font-bold text-rose-600 block">
-                    {uploadingImage ? 'Mengunggah Gambar ke Server...' : 'Pilih File Gambar dari Komputer'}
+                    {uploadingImage ? 'Mengunggah & Mengonversi ke WebP...' : 'Pilih File Gambar (PNG, JPG, WebP)'}
                   </span>
                   <span className="text-[10px] text-slate-400 block mt-1">
-                    Format PNG, JPG, WebP (Maksimal 5MB)
+                    Maksimal 3 MB • Otomatis Resizing & Optimasi WebP
                   </span>
                   <input
                     type="file"
@@ -1298,42 +1322,86 @@ export default function RichPostEditor({
                 </label>
 
                 {imageUrl && (
-                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl space-y-3">
+                  <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl space-y-3">
                     <div className="flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                      <span>✓ Gambar Berhasil Diunggah!</span>
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Gambar Berhasil Diunggah (.webp)</span>
+                      </span>
+                      <span className="text-[10px] bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100 px-2 py-0.5 rounded-full font-mono">
+                        webp ready
+                      </span>
                     </div>
-                    <img src={imageUrl} alt="Uploaded" className="w-full h-32 object-cover rounded-xl border border-emerald-200" />
+
+                    <div className="relative group overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-800 bg-black/5">
+                      <img
+                        src={imageUrl}
+                        alt="Uploaded WebP"
+                        className="w-full h-36 object-cover rounded-xl"
+                        loading="lazy"
+                      />
+                    </div>
+
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                        Deskripsi / Alt Text Gambar
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Deskripsi / Alt Text Gambar (SEO Friendly)
                       </label>
                       <input
                         type="text"
                         value={imageAlt}
                         onChange={(e) => setImageAlt(e.target.value)}
                         placeholder="Contoh: Ilustrasi pendukung artikel"
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs"
+                        className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs bg-white dark:bg-slate-900"
                       />
                     </div>
-                    <div className="flex items-center gap-2 pt-1">
+
+                    <div className="grid grid-cols-2 gap-2 pt-1">
                       <button
                         type="button"
                         onClick={() => handleInsertImage(imageUrl, imageAlt || 'Gambar Artikel')}
-                        className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                        className="col-span-2 py-2.5 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-xs"
                       >
-                        <ImageIcon className="w-3.5 h-3.5" />
-                        <span>Sisipkan ke Body</span>
+                        <ImageIcon className="w-4 h-4" />
+                        <span>Sisipkan Langsung ke Body Artikel</span>
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const markdownTag = `![${imageAlt || 'Gambar Artikel'}](${imageUrl})`;
+                          navigator.clipboard.writeText(markdownTag);
+                          setCopyFeedback('markdown');
+                          setTimeout(() => setCopyFeedback(null), 2500);
+                        }}
+                        className="py-2 px-3 bg-slate-800 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>{copyFeedback === 'markdown' ? '✓ Tersalin!' : 'Salin Markdown'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(imageUrl);
+                          setCopyFeedback('url');
+                          setTimeout(() => setCopyFeedback(null), 2500);
+                        }}
+                        className="py-2 px-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Link2 className="w-3.5 h-3.5" />
+                        <span>{copyFeedback === 'url' ? '✓ URL Tersalin!' : 'Salin URL WebP'}</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => {
                           setFeaturedImage(imageUrl);
                           setShowImageModal(false);
                         }}
-                        className="flex-1 py-2 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                        className="col-span-2 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 mt-1"
                       >
-                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Jadikan Sampul</span>
+                        <Sparkles className="w-4 h-4 text-amber-300" />
+                        <span>Jadikan Gambar Sampul Artikel (Featured Image)</span>
                       </button>
                     </div>
                   </div>
