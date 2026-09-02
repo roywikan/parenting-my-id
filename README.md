@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS users (
   password TEXT NOT NULL,
   name TEXT NOT NULL,
   title TEXT,
-  role TEXT DEFAULT 'writer',
+  role TEXT DEFAULT 'writer', -- Menerima: 'admin', 'editor', 'writer'
   avatar TEXT,
   bio TEXT,
   social_instagram TEXT,
@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS posts (
   author_id INTEGER,
   co_author_ids TEXT,
   revisions TEXT,
-  status TEXT DEFAULT 'draft',
+  status TEXT DEFAULT 'draft', -- Menerima: 'draft', 'pending_approval', 'published', 'rejected'
+  rejection_reason TEXT,
   meta_title TEXT,
   meta_description TEXT,
   tags TEXT,
@@ -114,7 +115,7 @@ CREATE TABLE IF NOT EXISTS site_config (
 
 ```
 
-atau yang sudah terisi:
+atau skema lengkap terisi awal (Default Seed):
 
 ```sql
 CREATE TABLE IF NOT EXISTS _cf_KV (
@@ -125,13 +126,13 @@ CREATE TABLE IF NOT EXISTS _cf_KV (
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
+  password_hash TEXT,
+  password TEXT NOT NULL,
   name TEXT NOT NULL,
-  role TEXT CHECK(role IN ('admin', 'writer')) NOT NULL DEFAULT 'writer',
+  role TEXT DEFAULT 'writer', -- 'admin', 'editor', 'writer'
   avatar TEXT DEFAULT 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
   bio TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  password TEXT,
   title TEXT,
   social_instagram TEXT,
   social_linkedin TEXT,
@@ -148,7 +149,8 @@ CREATE TABLE IF NOT EXISTS posts (
   category TEXT NOT NULL DEFAULT 'Pola Asuh',
   read_time_minutes INTEGER DEFAULT 5,
   author_id INTEGER NOT NULL,
-  status TEXT CHECK(status IN ('draft', 'published')) NOT NULL DEFAULT 'draft',
+  status TEXT DEFAULT 'draft', -- 'draft', 'pending_approval', 'published', 'rejected'
+  rejection_reason TEXT,
   meta_title TEXT,
   meta_description TEXT,
   tags TEXT DEFAULT 'parenting, anak, keluarga',
@@ -193,7 +195,13 @@ CREATE TABLE IF NOT EXISTS site_config (
 
 ```
 
-*(Catatan: Jika Anda meng-upgrade D1 dari versi terdahulu, jalankan `ALTER TABLE users ADD COLUMN title TEXT;` dsb jika ada kolom yang belum tersedia).*
+### ⚡ Skrip Migrasi SQL (Bila Meng-upgrade Database D1 Lama)
+Jika Anda meng-upgrade database Cloudflare D1 yang **sudah dibuat sebelumnya**, jalankan skrip perbaikan/tambahan kolom berikut di Console Cloudflare D1:
+
+```sql
+-- Tambah kolom catatan revisi pada tabel posts (jika belum ada)
+ALTER TABLE posts ADD COLUMN rejection_reason TEXT;
+```
 
 ### C. Deploy ke Cloudflare Pages / Workers
 1. Kembali ke Cloudflare Dashboard -> **Workers & Pages**.
@@ -206,6 +214,10 @@ CREATE TABLE IF NOT EXISTS site_config (
    - **Build output directory**: `dist`
 6. Buka bagian **Environment variables (advanced)** dan tambahkan variabel rahasia berikut:
    - `SITE_URL`: `https://parenting.my.id`
+   - `CLOUDINARY_CLOUD_NAME`: `harga-promo-diskon` *(atau nama cloud Cloudinary Anda)*
+   - `CLOUDINARY_API_KEY`: `945558876687176` *(API Key Cloudinary)*
+   - `CLOUDINARY_API_SECRET`: `6TBtS1kzFgoNg_4SHmzmSImyPlE` *(API Secret Cloudinary - aman diset di Server-Side Secret)*
+   - `CLOUDINARY_FOLDER`: `parenting-my-id` *(Folder penyimpanan gambar)*
    - `GITHUB_TOKEN`: *(Kode token GitHub `ghp_...` dari Langkah 1B)*
    - `GITHUB_OWNER`: *(Username GitHub Anda)*
    - `GITHUB_REPO`: `parenting-my-id`
@@ -288,6 +300,128 @@ Portal Admin menyediakan 4 opsi fleksibel untuk pengaturan kolom komentar artike
 4. **🚫 Nonaktifkan (`none`)**: Menutup kolom komentar secara menyeluruh di semua artikel.
 
 *Catatan Integrasi Webhook Cusdis:* Tersedia endpoint webhook `/api/webhooks/cusdis` yang secara otomatis menyinkronkan komentar baru dari Cusdis ke database Cloudflare D1 sebagai backup data.
+
+---
+
+### F. Hak Akses Berbasis Peran (Role-Based Access Control - RBAC)
+Untuk menjaga keamanan dan integritas sistem, akun dengan peran non-admin (`role: 'writer'`) secara ketat dibatasi dari fitur-fitur administratif sensitif:
+- 🚫 **Dilarang Akses (Hanya untuk Admin / `role: 'admin'`)**:
+  - **Kelola Tim & Penulis** (Tab Manajemen Penulis/Editor)
+  - **Auto-Linking Engine** (Tab Manajemen Auto-Link SEO)
+  - **SEO Inspector** (Tab Inspector Sitemap & Feed XML)
+  - **Cusdis Komentar & Webhook** (Tab Moderasi & Config Komentar)
+  - **Hard Link Admin Logout** (Box URL Logout Langsung di Tab Security)
+  - **Configs Situs** (Tab Pengaturan Terpusat Website)
+- ✅ **Hak Akses Penulis (`role: 'writer'`)**:
+  - Menulis, mengedit, dan mengelola artikel milik sendiri di **Rich WYSIWYG Editor**.
+  - Mengubah profil pribadi (nama, bio, avatar, password) di Tab **Profil & Password Saya**.
+
+---
+
+### G. Cloudinary Image Upload & Optimasi WebP (Keamanan & Panduan Webmaster)
+
+Mekanisme unggah gambar artikel pada CMS memanfaatkan **Cloudinary REST API** server-side pipeline (`/api/upload-cloudinary` & `/api/upload`):
+
+#### 1. ⚡ Pemrosesan WebP Otomatis & Dimensi Tablet
+- Setiap gambar yang diunggah otomatis ditransmutasikan menjadi format **`.webp`** ultra-ringan.
+- Ukuran dimensi lebar gambar dibatasi secara fleksibel maksimal **1024px** (selebar layar tablet) melalui Cloudinary transformation `c_limit,w_1024,q_auto`, sehingga artikel dimuat sangat cepat di perangkat seluler dan desktop.
+- Ukuran file dibatasi maksimal **3 MB** pada validasi peramban sebelum diunggah.
+- **Automatic Fallback Pipeline**: Jika server Cloudinary mengalami kendala akses, sistem akan secara otomatis mengalihkan penyimpanan gambar ke GitHub Storage (`public/uploads/`) sehingga proses unggah artikel tidak pernah terganggu.
+
+#### 2. 🔑 Kebutuhan Teknis & Panduan Setting Cloudinary untuk Webmaster
+Untuk mengaktifkan fitur unggah gambar Cloudinary secara mulus, Webmaster wajib menyiapkan dan mengonfigurasi kredensial Cloudinary sebagai berikut:
+
+1. **Akses Dashboard Cloudinary**:
+   - Login ke akun [Cloudinary Console](https://console.cloudinary.com/).
+   - Buka **Dashboard** untuk mencatat **Cloud Name**, **API Key**, dan **API Secret**.
+2. **⚠️ Wajib Set Hak Akses Master Admin / Write Permission pada API Key**:
+   - API Key Cloudinary yang digunakan **wajib memiliki izin akses Write / Master Admin (`actions=["create"]`)**.
+   - **Penting**: Jika API Key diset *Read-Only* atau dibatasi, Cloudinary akan menolak permintaan unggah gambar dengan error `Request forbidden due to missing permissions (actions=["create"])`.
+   - **Cara Memeriksa/Mengatur**: Di Cloudinary Console -> Buka **Settings** -> **API Keys** -> Pastikan Key yang digunakan memiliki peranan/role **Master Admin** atau memiliki izin penuh untuk mengunggah asset.
+3. **Konfigurasi Folder Media**:
+   - Tentukan folder target pada variabel `CLOUDINARY_FOLDER` (contoh: `parenting-my-id`) agar seluruh asset gambar artikel tersimpan rapi di satu direktori media Cloudinary.
+
+#### 3. 🔒 Cara Menyimpan Credential Cloudinary Secara Aman di Cloudflare
+Keamanan kredensial adalah prioritas utama. **API Secret** tidak boleh diekspos di frontend peramban maupun repositori GitHub publik.
+
+**Langkah Menyimpan di Cloudflare Pages / Workers**:
+1. Buka [Cloudflare Dashboard](https://dash.cloudflare.com/) -> Masuk ke **Workers & Pages**.
+2. Pilih proyek Pages Anda (`parenting-my-id`).
+3. Masuk ke tab **Settings** -> **Environment variables**.
+4. Klik **Add variable** / **Edit variables** dan masukkan variabel berikut:
+   - `CLOUDINARY_CLOUD_NAME` = `harga-promo-diskon` *(atau nama cloud Anda)*
+   - `CLOUDINARY_API_KEY` = `945558876687176` *(API Key Anda)*
+   - `CLOUDINARY_API_SECRET` = `6TBtS1kzFgoNg_4SHmzmSImyPlE` 🔒 **(PILIH TYPE: Encrypted / Secret)**
+   - `CLOUDINARY_FOLDER` = `parenting-my-id`
+5. **Mengapa Cara Ini Sangat Aman?**:
+   - Variabel bertipe **Encrypted / Secret** akan dienkripsi oleh Cloudflare dan nilainya tersembunyi total dari dashboard maupun tim yang membaca repositori.
+   - Hanya fungsi server-side Cloudflare Pages Functions (`/functions/api/[[path]].ts`) yang dapat membaca kredensial ini secara internal saat memproses unggahan gambar. Client JS peramban pengunjung **tidak bisa mengintip** `CLOUDINARY_API_SECRET`.
+
+#### 4. 🛠️ Kemudahan Penggunaan & Preview di Rich Post Editor
+Saat membuat atau mengedit artikel di Portal Admin (`/admin`), penulis dapat menggunakan modal **Upload Foto / Sisipkan Gambar**:
+1. Pilih file gambar dari komputer (Max 3 MB).
+2. Gambar otomatis diunggah ke server Cloudinary, dikonversi ke WebP, dan disesuaikan dimensinya (max 1024px).
+3. **Popup Preview Instant**:
+   - Tampilan gambar seketika muncul di kotak preview lengkap dengan label status `webp ready`.
+   - **Tombol "Sisipkan Langsung ke Body Artikel"**: Memasukkan kode Markdown `![Alt Text](url)` langsung di posisi kursor tulisan.
+   - **Tombol "Salin Markdown"**: Menyalin kode sintaks markdown ke clipboard.
+   - **Tombol "Salin URL WebP"**: Menyalin URL langsung file WebP.
+   - **Tombol "Jadikan Gambar Sampul Artikel"**: Memasang foto sebagai Gambar Sampul / Featured Image artikel.
+4. **Lazy Loading Automatic**: Seluruh gambar artikel yang dimasukkan otomatis disisipi atribut `loading="lazy"` dan `decoding="async"` untuk kecepatan maksimal Googlebot & SEO Core Web Vitals.
+
+---
+
+## 🎨 Panduan Kustomisasi 10 Model Display Frontpage / Home Layout
+
+Sistem **parenting.my.id** menyediakan **10 Pilihan Model Tampilan Beranda (Frontpage Display Modes)** yang dapat diganti secara instan tanpa perlu mengubah atau mengedit file kode program. Seluruh teks judul, narasi, badge, metrik statistik, hingga nomor WhatsApp kontak dapat diubah secara interaktif melalui **Portal Admin (`/admin`)**.
+
+### A. Cara Mengganti Model Display Beranda
+1. Buka dan masuk ke **Portal Admin** pada URL `/admin`.
+2. Klik tab **Config Situs** pada sidebar/menu admin.
+3. Gulir ke bagian **Pilih Model Display Frontpage (Layout Beranda)**.
+4. Pilih salah satu dari 10 model display yang tersedia (Default Blog, Event, Campaign, Microsite, Portfolio, Personal Branding Dokter, Corporate B2B, Product Landing Page, Vintage Newspaper Classifieds, atau Knowledge Base).
+5. Pada bagian **Pengaturan Wording & Variable Wajah Beranda**, klik tab model yang sesuai untuk mengisi teks dan nomor WhatsApp khusus.
+6. Klik tombol **Simpan Konfigurasi Situs** di bagian bawah. Perubahan akan langsung aktif secara otomatis di seluruh peramban pengunjung.
+
+---
+
+### B. Pemetaan Variabel Wording & WhatsApp Tiap Model di Portal Admin
+
+| No | Nama Model Display | Tab di Portal Admin (`/admin`) | Variabel `siteConfig` yang Dipetakan | Fungsi & Kustomisasi Wording |
+|---|---|---|---|---|
+| **1** | **Default Blog & Majalah** | `1. Default Majalah` | `hero_badge_text`, `hero_title`, `hero_subtitle`, `hero_cta_text`, `hero_cta_link`, `show_hero_section`, `show_performance_box`, `metric_1_show`, `metric_2_show`, `metric_3_show`, `metric{i}_label`, `metric{i}_anim_type`, `metric{i}_start_val`, `metric{i}_end_val`, `metric{i}_duration`, `metric{i}_unit` | Mengatur badge promo header, judul utama majalah parenting, sub-judul deskripsi, tautan tombol CTA hero, serta 3 indikator metrik performa situs lengkap dengan checkbox visibilitas individu (`metric_1_show`, `metric_2_show`, `metric_3_show`), animasi angka halus (*count up* / *count down* / *fixed*), durasi (ms), dan kustomisasi satuan unit (+, %, ms, dt, view). |
+| **2** | **Event, Konferensi & Seminar** | `2. Event & Summit` | `event_badge_text`, `event_date_location`, `event_title`, `event_subtitle`, `event_cta_text`, `event_whatsapp` | Mengatur nama kegiatan/summit, tanggal & lokasi acara, judul utama event, deskripsi lokakarya, teks tombol pendaftaran, dan **Nomor WhatsApp Panitia Tiket** (misal: `6281234567890`). |
+| **3** | **Campaign, Petisi & Aksi Sosial** | `3. Aksi Sosial Campaign` | `campaign_badge_text`, `campaign_title`, `campaign_subtitle`, `campaign_target_amount`, `campaign_current_amount`, `campaign_donor_count` | Mengatur badge gerakan sosial (misal: *Bebas Stunting*), judul advokasi, deskripsi aksi, target donasi (dalam Rupiah), jumlah dana terkumpul saat ini, dan total donatur/pendukung. |
+| **4** | **Microsite / Bio Links** | `4. Microsite Bio Link` | `microsite_title`, `microsite_bio`, `microsite_wa_label`, `microsite_wa_number`, `microsite_ebook_url`, `microsite_telegram_url`, `microsite_podcast_url`, `microsite_shop_url` | Mengatur nama portal/hub, biografi singkat, label & **Nomor WhatsApp Konsultasi Privat**, serta URL tautan cepat untuk E-Book Gratis, Komunitas Telegram, Spotify Podcast, dan Toko Online. |
+| **5** | **Portofolio Karya & Riset** | `5. Portofolio & Riset` | `portfolio_badge_text`, `portfolio_title`, `portfolio_subtitle`, `portfolio_stat1_val`, `portfolio_stat1_lbl`, `portfolio_stat2_val`, `portfolio_stat2_lbl`, `portfolio_stat3_val`, `portfolio_stat3_lbl` | Mengatur badge showcase karya, judul portofolio riset, narasi latar belakang, serta 3 metrik statistik dampak (misal: *Keluarga Terbantu*, *Workshop*, *Riset Terpublikasi*). |
+| **6** | **Personal Branding Dokter / Pakar** | `6. Profil Personal Branding` | `doctor_name`, `doctor_title`, `doctor_badge_text`, `doctor_bio`, `doctor_avatar_url`, `doctor_experience_years`, `doctor_booking_whatsapp` | Mengatur nama lengkap & gelar dokter/psikolog, spesialisasi medis, badge profil, biografi naratif, URL foto profil, tahun pengalaman, dan **Nomor WhatsApp Booking Konsultasi Privat**. |
+| **7** | **Corporate & B2B Profile** | `7. Solusi Corporate B2B` | `corporate_badge_text`, `corporate_title`, `corporate_subtitle`, `corporate_cta_proposal`, `corporate_cta_consult`, `corporate_whatsapp`, `corporate_stat1_*`, `corporate_stat2_*`, `corporate_stat3_*` | Mengatur badge solusi bisnis korporasi, judul program *Employee Wellbeing*, sub-judul EAP/daycare kantor, teks tombol proposal B2B, teks tombol jadwal konsultasi, **Nomor WhatsApp Kemitraan B2B**, dan metrik statistik mitra. |
+| **8** | **Product Landing Page** | `8. Penjualan Produk Landing Page` | `product_badge_text`, `product_title`, `product_subtitle`, `product_price`, `product_original_price`, `product_discount_tag`, `product_cta_text`, `product_whatsapp` | Mengatur badge promo produk, nama paket produk MPASI/buku, deskripsi manfaat, harga promo (Rp), harga coret (Rp), tag persentase diskon (misal: *HEMAT 37%*), teks tombol order, dan **Nomor WhatsApp Pemesanan Direct**. |
+| **9** | **Iklan Baris Koran Jaman Dulu** | `9. Wording Iklan Baris Koran` | `classified_masthead_title`, `classified_masthead_subtitle`, `classified_edition`, `classified_price_tag`, `classified_phone` | Mengatur judul kepala koran (*Masthead*), sub-judul lembaran iklan baris, nomor edisi & tahun nostalgia, label harga eceran klasik, dan nomor telepon redaksi/iklan baris. |
+| **10** | **Knowledge Base & Ensiklopedia** | `10. Wording Knowledge Base` | `kb_badge_text`, `kb_title`, `kb_subtitle`, `kb_search_placeholder` | Mengatur badge ensiklopedia parenting, judul utama pusat bantuan pengasuhan, sub-judul panduan cari, dan teks *placeholder* di dalam kolom pencarian topik. |
+
+---
+
+## 🔒 Fitur Keamanan Eksklusif (Security First Architecture)
+
+Sistem telah dilengkapi dengan 3 lapisan proteksi keamanan aktif untuk menjamin stabilitas area Portal Admin (`/admin`):
+1. **Proteksi Anti Brute Force**: Pembatasan batas percobaan login (rate limiting) pada endpoint otentikasi admin `/api/login` untuk mencegah serangan kamus atau peretasan kata sandi secara masal.
+2. **Proteksi Anti XSS (Cross-Site Scripting)**: Seluruh input teks, deskripsi, komentar, dan konten markdown dibersihkan secara otomatis (*sanitized*) sebelum disimpan ke database D1 atau dirender ke DOM peramban.
+3. **Proteksi Anti Leech & Hotlinking**: Endpoint gambar dan file pendukung menggunakan validasi referer dan header keaslian untuk mencegah pencurian bandwidth CDN oleh situs pihak ketiga.
+
+---
+
+## 🤖 Optimasi SEO Googlebot & Aksesibilitas Mesin Pencari
+
+Seluruh halaman dan endpoint render statis/dinamis telah diuji dan digaransi **100% ramah SEO (SEO-Friendly)** dan dapat di-crawl oleh Googlebot tanpa error:
+- **Homepage (`/`)**: Mendukung SSR / static rendering dengan tag meta OpenGraph lengkap dan structured data JSON-LD.
+- **Kategori (`/category/[slug]`)**: Render HTML bersih tanpa dependensi JavaScript yang menghambat crawler.
+- **Tag (`/tags/[tag]`)**: Indeks kata kunci terstruktur untuk pengelompokan topik artikel.
+- **Detail Artikel (`/baca/[slug]`)**: Menghasilkan skema `BlogPosting` dan `BreadcrumbList` otomatis.
+- **File XML & Teks Mesin**: `/sitemap.xml`, `/feed.xml`, `/robots.txt`, `/llms.txt`, dan `/llms-full.txt` dirender secara real-time dari database D1.
+
+---
+
 ## ✍️ LANGKAH 4: Panduan Penulis — Mengisi Artikel & Gambar dari Unsplash.com
 
 Penulis artikel memiliki akses ke **Editor WYSIWYG Rich Editor** lengkap dengan AI Assistant, SEO Auditor, dan Pengelola Gambar.
@@ -340,6 +474,27 @@ Untuk memasukkan gambar di tengah-tengah teks tulisan artikel:
 
 ---
 
+## 🏷️ Petunjuk Cara Membuat & Mengelola Kategori Artikel Baru
+
+Sistem ini mendukung pengelolaan kategori artikel secara **dinamis dan fleksibel**:
+
+### 1. Membuat Kategori Baru Saat Penulisan Artikel (Form Editor)
+1. Masuk ke **Portal Admin** (`/admin`) dan buka menu **Tulis Artikel Baru** atau **Edit Artikel**.
+2. Cari bidang input **Kategori Artikel**.
+3. Pilih salah satu kategori yang sudah ada dari daftar saran (*datalist*), atau **langsung ketikkan nama kategori baru** yang Anda inginkan (misalnya: `Teknologi`, `Gaya Hidup`, `Finansial`, `Kuliner`, `Pendidikan`, dll).
+4. Setelah artikel disimpan dan dipublikasikan, kategori baru tersebut secara otomatis terdaftar di dalam sistem.
+
+### 2. Penampilan Kategori di Beranda & Navigation Filter
+- Kategori baru yang digunakan oleh artikel berstatus *Dipublikasikan* akan secara otomatis dipindai oleh sistem dan muncul pada **Bilah Filter Kategori** di Beranda maupun Pustaka Artikel.
+- Pengunjung situs dapat langsung mengklik tombol kategori tersebut untuk menyaring artikel berdasarkan topik.
+
+### 3. Mengatur Kategori Default & Preset Situs
+1. Buka **Portal Admin** (`/admin`) -> Tab **Pengaturan Situs**.
+2. Pada kolom **Kategori Default**, tentukan nama kategori yang akan digunakan sebagai nilai bawaan saat membuat artikel baru.
+3. Klik **Simpan Pengaturan**.
+
+---
+
 ## 🛠️ Ringkasan Fitur Unggulan Engine
 
 1. **Multi-Model Homepage Layouts (10 Pilihan Model Display Beranda)**:
@@ -364,6 +519,9 @@ Untuk memasukkan gambar di tengah-tengah teks tulisan artikel:
 5. **Header Badge Customization (`show_header_badge`)**: Opsi toggle di Portal Admin (`/admin`) untuk menampilkan atau menyembunyikan elemen `<span>` badge "Cloudflare D1 Edge Engine" di samping logo header.
 6. **Autolinks Engine**: Otomatis mengubah kata kunci tertentu di seluruh artikel menjadi internal link aktif tanpa perlu mengedit artikel satu per satu.
 7. **Histori Revisi & Autosave**: Menyimpan draf artikel dan 3 histori revisi terakhir untuk perlindungan data tulisan penulis.
+8. **Portal Khusus Penulis (Distraction-Free Writer Portal)**:
+   - Menyederhanakan antarmuka bagi role `writer` dengan menyembunyikan kolom & widget yang tidak relevan (seperti statistik pembaca draf, kolom penulis redundant, tombol hapus, input SEO manual, dan URL slug manual).
+   - Menyediakan alur penulisan yang fokus dan otomatis tersimpan langsung ke draf lokal & cloud.
 
 ---
 
@@ -396,4 +554,3 @@ Sistem ini dikonfigurasi secara khusus untuk mencapai skor **95-100** pada **Goo
    - **Ukuran & Spasi Paragraf**: Teks isi artikel berukuran 17px (`1.0625rem`) di mobile dengan *line-height* renggang `1.6` (27px) dan jarak paragraf 18px (`1.125rem`).
    - **Skalabilitas Judul**: H1 (26px), H2 (21px), H3 (19px) di layar sentuh dengan ketebalan 700-800 dan *line-height* rapat `1.25 - 1.3`.
    - **Batas Lebar Baca**: Panjang baris dibatasi maksimal `68ch` dengan *horizontal padding* minimum 16px untuk kenyamanan mata saat membaca durasi panjang.
-
