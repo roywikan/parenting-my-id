@@ -127,10 +127,42 @@ CREATE TABLE IF NOT EXISTS comments (
 ```
 
 ### ⚡ Skrip Migrasi SQL (Bila Meng-upgrade Database D1 Lama)
-Jika Anda meng-upgrade database Cloudflare D1 yang **sudah dibuat sebelumnya**, jalankan skrip perbaikan/tambahan kolom berikut di Console Cloudflare D1:
+Jika Anda meng-upgrade database Cloudflare D1 yang **sudah dibuat sebelumnya** dan mengalami kendala constraint `CHECK constraint failed: status IN ('draft', 'published')`, jalankan skrip perbaikan berikut di Console Cloudflare D1 untuk memperbarui struktur tabel `posts`:
 
 ```sql
+-- 1. Tambahkan kolom rejection_reason jika belum ada
 ALTER TABLE posts ADD COLUMN rejection_reason TEXT;
+
+-- 2. Jika tabel D1 Anda memiliki pembatasan CHECK constraint kaku pada status ('draft', 'published'), jalankan skrip migrasi berikut di D1 Console:
+ALTER TABLE posts RENAME TO posts_old;
+
+CREATE TABLE posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  content_markdown TEXT NOT NULL,
+  excerpt TEXT,
+  featured_image TEXT,
+  category TEXT,
+  read_time_minutes INTEGER DEFAULT 5,
+  author_id INTEGER,
+  co_author_ids TEXT,
+  revisions TEXT,
+  status TEXT DEFAULT 'draft',
+  rejection_reason TEXT,
+  meta_title TEXT,
+  meta_description TEXT,
+  tags TEXT,
+  views INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO posts (id, title, slug, content_markdown, excerpt, featured_image, category, read_time_minutes, author_id, co_author_ids, status, rejection_reason, meta_title, meta_description, tags, views, created_at, updated_at)
+SELECT id, title, slug, content_markdown, excerpt, featured_image, category, read_time_minutes, author_id, co_author_ids, status, rejection_reason, meta_title, meta_description, tags, views, created_at, updated_at
+FROM posts_old;
+
+DROP TABLE posts_old;
 ```
 
 ### C. Deploy ke Cloudflare Pages / Workers

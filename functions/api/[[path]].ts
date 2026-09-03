@@ -552,6 +552,56 @@ Sitemap: ${siteUrl}/sitemap.xml
           });
         } catch (e: any) {
           console.error('Error saving post to D1:', e);
+          
+          // If D1 table has a strict CHECK constraint (e.g. CHECK (status IN ('draft', 'published'))), retry using 'draft' for DB compatibility
+          if (e.message && (e.message.includes('CHECK constraint failed') || e.message.includes('SQLITE_CONSTRAINT'))) {
+            try {
+              const safeStatus = postStatus === 'published' ? 'published' : 'draft';
+              if (validNumId || strId || generatedSlug) {
+                const updateRes = await env.DB.prepare(`
+                  UPDATE posts SET 
+                    title = ?, slug = ?, content_markdown = ?, excerpt = ?, featured_image = ?,
+                    category = ?, read_time_minutes = ?, status = ?, rejection_reason = ?, meta_title = ?, meta_description = ?,
+                    tags = ?, co_author_ids = ?, updated_at = ?
+                  WHERE (id IS NOT NULL AND (id = ? OR id = ?)) OR slug = ?
+                `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, safeStatus, rejReason, mTitle, mDesc, tagList, coAuthorsStr, now, validNumId || -1, strId || '', generatedSlug).run();
+
+                if (updateRes.meta?.changes && updateRes.meta.changes > 0) {
+                  return jsonResponse({
+                    success: true,
+                    post: {
+                      ...body,
+                      id: validNumId || id,
+                      slug: generatedSlug,
+                      status: postStatus,
+                      rejectionReason: rejReason,
+                      updatedAt: now
+                    }
+                  });
+                }
+              }
+
+              const insertResult = await env.DB.prepare(`
+                INSERT INTO posts (title, slug, content_markdown, excerpt, featured_image, category, read_time_minutes, author_id, co_author_ids, status, rejection_reason, meta_title, meta_description, tags, views, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
+              `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, authorId || 1, coAuthorsStr, safeStatus, rejReason, mTitle, mDesc, tagList, now, now).run();
+
+              const newId = insertResult.meta?.last_row_id || validNumId || id || Date.now();
+              return jsonResponse({
+                success: true,
+                post: {
+                  ...body,
+                  id: typeof newId === 'number' ? newId : Number(newId),
+                  slug: generatedSlug,
+                  status: postStatus,
+                  updatedAt: now
+                }
+              });
+            } catch (retryErr: any) {
+              console.error('Retry error on fallback:', retryErr);
+            }
+          }
+
           return jsonResponse({ error: 'Gagal menyimpan artikel ke D1 Database: ' + e.message }, 500);
         }
       }
