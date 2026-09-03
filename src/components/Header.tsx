@@ -86,7 +86,7 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
     }
   };
 
-  const logoutTooltip = `Keluar / Logout (Hard Link: /admin-${siteConfig?.admin_url_suffix || '9999'}?logout=true)`;
+  const logoutTooltip = `Keluar / Logout (Hard Link: /admin-${String(siteConfig?.admin_url_suffix || '9999')}?logout=true)`;
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-rose-100 dark:border-slate-800">

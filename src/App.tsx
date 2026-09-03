@@ -319,23 +319,16 @@ export default function App() {
   // Parse route from URL on mount and popstate
   useEffect(() => {
     const syncRouteFromUrl = () => {
-      const adminSuffix = siteConfig?.admin_url_suffix || '9999';
+      const adminSuffix = String(siteConfig?.admin_url_suffix || '9999');
       const adminPath = `/admin-${adminSuffix}`;
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('logout') === 'true') {
-        handleLogout();
-        window.history.replaceState({}, '', adminPath);
-        setCurrentView('admin');
-        return;
-      }
-
       const path = window.location.pathname;
-      if (
-        path === adminPath ||
-        path === '/admin' ||
-        path.startsWith('/admin-') ||
-        ['/redaksi-login', '/portal-redaksi', '/kelola-parenting', '/dashboard-redaksi'].includes(path)
-      ) {
+      const urlParams = new URLSearchParams(window.location.search);
+
+      if (path === adminPath) {
+        if (urlParams.get('logout') === 'true') {
+          handleLogout();
+          window.history.replaceState({}, '', adminPath);
+        }
         setCurrentView('admin');
       } else if (['/privacy', '/privacy-policy', '/kebijakan-privasi'].includes(path)) {
         setCurrentView('privacy');
@@ -404,7 +397,7 @@ export default function App() {
         window.history.pushState({}, '', `/kategori/${catSlug}`);
       }
     } else if (view === 'admin') {
-      const adminSuffix = siteConfig?.admin_url_suffix || '9999';
+      const adminSuffix = String(siteConfig?.admin_url_suffix || '9999');
       setCurrentView('admin');
       window.history.pushState({}, '', `/admin-${adminSuffix}`);
     } else if (['privacy', 'about', 'contact', 'disclaimer', 'terms'].includes(view)) {

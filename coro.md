@@ -358,10 +358,23 @@ Sistem **parenting.my.id** menyediakan **10 Pilihan Model Tampilan Beranda (Fron
 
 ## 🔒 LANGKAH 7: Fitur Keamanan Eksklusif (Security First Architecture)
 
-Sistem telah dilengkapi dengan 3 lapisan proteksi keamanan aktif untuk menjamin stabilitas area Portal Admin (`/admin`):
+Sistem telah dilengkapi dengan 4 lapisan proteksi keamanan aktif untuk menjamin stabilitas area Portal Admin (`/admin`):
 1. **Proteksi Anti Brute Force**: Pembatasan batas percobaan login (*rate limiting*) pada endpoint otentikasi admin `/api/login` untuk mencegah serangan kamus atau peretasan kata sandi secara masal.
 2. **Proteksi Anti XSS (Cross-Site Scripting)**: Seluruh input teks, deskripsi, komentar, dan konten markdown dibersihkan secara otomatis (*sanitized*) sebelum disimpan ke database D1 atau dirender ke DOM peramban.
 3. **Proteksi Anti Leech & Hotlinking**: Endpoint gambar dan file pendukung menggunakan validasi referer dan header keaslian untuk mencegah pencurian bandwidth CDN oleh situs pihak ketiga.
+4. **Proteksi Secret Admin Path Suffix & Zero-Leak Decoy (`admin_url_suffix`)**:
+   - Path publik `/admin` **secara otomatis dikunci sebagai Umpan / Decoy** dan mengembalikan respons **HTTP 404 Not Found**.
+   - Sistem **TIDAK PERNAH melakukan redirect dari `/admin` ke path rahasia**, untuk memastikan peretas (*attacker*) dan *bot scanner* tidak mendapatkan petunjuk apa pun mengenai keberadaan URL login admin.
+   - Suffix bawaan sistem saat awal instalasi adalah **`9999`** (sehingga URL login rahasia awal adalah `/admin-9999`).
+   - 🚨 **INSTRUKSI WAJIB PENGATURAN SUFFIX RAHASIA & PROSEDUR RAHASIA:**
+     1. **Kerahasiaan Jalur (Mouth-to-Mouth):** URL login rahasia `/admin-[suffix]` **TIDAK BOLEH** dipublikasikan di web, dokumen publik, atau file `robots.txt`. Informasi URL ini hanya boleh disebarkan secara manual (dari mulut ke mulut / grup internal konfidensial) kepada Admin, Editor, dan Penulis (*Writer*).
+     2. **Mengubah Suffix Default `9999`:** Demi keamanan dari serangan *automated bot scanners*, Anda **WAJIB SEGERA MENGUBAH** suffix bawaan `9999` ini dengan kombinasi rahasia pilihan Anda sendiri (contoh: `6969`, `kuda`, `p4ss`, `x777`).
+     3. **Langkah Mengubah Suffix URL Admin:**
+        - Buka Portal Admin aktif Anda (`https://parenting.my.id/admin-9999`).
+        - Buka tab **Config Situs** ➔ Gulir ke bawah hingga bagian **Teks Halaman Login Admin**.
+        - Pada form **🔒 Suffix Rahasia URL Admin (admin_url_suffix)**, ubah nilai `9999` menjadi kode rahasia baru Anda (1–10 karakter alfanumerik).
+        - Klik **Simpan Seluruh Konfigurasi Situs**.
+        - URL portal admin Anda secara otomatis berpindah ke `https://parenting.my.id/admin-[suffix_baru_anda]`. Akses ke `/admin` tetap mengembalikan 404 tanpa mengalihkan ke URL baru tersebut.
 
 ---
 

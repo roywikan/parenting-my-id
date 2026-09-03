@@ -381,7 +381,7 @@ export default function AdminPortal({
   const [cfgAdminLoginTitle, setCfgAdminLoginTitle] = useState(siteConfig?.admin_login_title || 'Portal Admin Website');
   const [cfgAdminLoginSubtitle, setCfgAdminLoginSubtitle] = useState(siteConfig?.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1');
   const [cfgAdminLoginBtnText, setCfgAdminLoginBtnText] = useState(siteConfig?.admin_login_btn_text || 'Masuk Portal CMS');
-  const [cfgAdminUrlSuffix, setCfgAdminUrlSuffix] = useState(siteConfig?.admin_url_suffix || '9999');
+  const [cfgAdminUrlSuffix, setCfgAdminUrlSuffix] = useState<string>(String(siteConfig?.admin_url_suffix || '9999'));
 
   // Homepage Display Mode & Sub-tab
   const [cfgHomepageDisplayMode, setCfgHomepageDisplayMode] = useState<HomepageDisplayMode>(siteConfig?.homepage_display_mode || 'default');
@@ -621,6 +621,7 @@ export default function AdminPortal({
       setCfgAdminLoginTitle(siteConfig.admin_login_title || (siteConfig?.site_name ? `Portal Admin ${siteConfig.site_name}` : 'Portal Admin Website'));
       setCfgAdminLoginSubtitle(siteConfig.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1');
       setCfgAdminLoginBtnText(siteConfig.admin_login_btn_text || 'Masuk Portal CMS');
+      setCfgAdminUrlSuffix(String(siteConfig.admin_url_suffix || '9999'));
 
       setCfgSiteDomain(siteConfig.site_domain || 'domain.com');
       setCfgHeaderBadgeText(siteConfig.header_badge_text || 'Cloudflare D1 Edge Engine');
@@ -803,7 +804,7 @@ export default function AdminPortal({
         admin_login_title: cfgAdminLoginTitle,
         admin_login_subtitle: cfgAdminLoginSubtitle,
         admin_login_btn_text: cfgAdminLoginBtnText,
-        admin_url_suffix: (cfgAdminUrlSuffix || '9999').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 10),
+        admin_url_suffix: String(cfgAdminUrlSuffix || '9999').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 10),
 
         enable_adsense: cfgEnableAdsense,
         adsense_client_id: cfgAdsenseClientId,
@@ -1100,7 +1101,7 @@ export default function AdminPortal({
         admin_login_title: cfgAdminLoginTitle,
         admin_login_subtitle: cfgAdminLoginSubtitle,
         admin_login_btn_text: cfgAdminLoginBtnText,
-        admin_url_suffix: (cfgAdminUrlSuffix || '9999').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 10),
+        admin_url_suffix: String(cfgAdminUrlSuffix || '9999').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 10),
 
         // 10 Model Display Values
         event_badge_text: cfgEventBadgeText,
@@ -1224,7 +1225,7 @@ export default function AdminPortal({
     }
   };
 
-  const logoutHardLink = typeof window !== 'undefined' ? `${window.location.origin}/admin-${cfgAdminUrlSuffix || '9999'}?logout=true` : `/admin-${cfgAdminUrlSuffix || '9999'}?logout=true`;
+  const logoutHardLink = typeof window !== 'undefined' ? `${window.location.origin}/admin-${String(cfgAdminUrlSuffix || '9999')}?logout=true` : `/admin-${String(cfgAdminUrlSuffix || '9999')}?logout=true`;
 
   const copyLogoutLink = () => {
     navigator.clipboard.writeText(logoutHardLink);
@@ -5421,7 +5422,7 @@ export default function AdminPortal({
                       🔒 Suffix Rahasia URL Admin (admin_url_suffix)
                     </label>
                     <span className="text-[11px] font-mono font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2.5 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
-                      URL Aktif: /admin-{cfgAdminUrlSuffix || '9999'}
+                      URL Aktif: /admin-{String(cfgAdminUrlSuffix || '9999')}
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -5435,7 +5436,7 @@ export default function AdminPortal({
                       type="text"
                       maxLength={10}
                       value={cfgAdminUrlSuffix}
-                      onChange={(e) => setCfgAdminUrlSuffix(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
+                      onChange={(e) => setCfgAdminUrlSuffix(String(e.target.value).replace(/[^a-zA-Z0-9_-]/g, ''))}
                       placeholder="9999"
                       className="w-32 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold font-mono text-rose-600 dark:text-rose-400 focus:ring-2 focus:ring-rose-500"
                     />
