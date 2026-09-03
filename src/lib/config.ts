@@ -49,6 +49,9 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   social_twitter: 'https://x.com/parentingmyid',
   footer_menu_links: [
     { label: 'Kebijakan Privasi', url: '/privacy' },
+    { label: 'Tentang Kami', url: '/about' },
+    { label: 'Hubungi Kami', url: '/contact' },
+    { label: 'Disclaimer', url: '/disclaimer' },
     { label: 'Syarat & Ketentuan', url: '/terms' },
     { label: 'Sitemap XML', url: '/sitemap.xml' },
     { label: 'RSS Feed', url: '/feed.xml' }

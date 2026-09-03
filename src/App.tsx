@@ -12,9 +12,10 @@ import CustomScriptsInjector from './components/CustomScriptsInjector';
 
 const ArticleDetailView = lazy(() => import('./views/ArticleDetailView'));
 const AdminPortal = lazy(() => import('./views/AdminPortal'));
+const StaticPageView = lazy(() => import('./views/StaticPageView'));
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'home' | 'article' | 'admin'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'article' | 'admin' | 'privacy' | 'about' | 'contact' | 'disclaimer' | 'terms'>('home');
   const [activeSlug, setActiveSlug] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
 
@@ -329,6 +330,16 @@ export default function App() {
       const path = window.location.pathname;
       if (path === '/admin') {
         setCurrentView('admin');
+      } else if (['/privacy', '/privacy-policy', '/kebijakan-privasi'].includes(path)) {
+        setCurrentView('privacy');
+      } else if (['/about', '/about-us', '/tentang-kami'].includes(path)) {
+        setCurrentView('about');
+      } else if (['/contact', '/contact-us', '/kontak', '/hubungi-kami'].includes(path)) {
+        setCurrentView('contact');
+      } else if (['/disclaimer', '/penafian'].includes(path)) {
+        setCurrentView('disclaimer');
+      } else if (['/terms', '/terms-of-service', '/syarat-ketentuan'].includes(path)) {
+        setCurrentView('terms');
       } else if (path.startsWith('/baca/')) {
         const slug = path.replace('/baca/', '');
         if (slug) {
@@ -388,6 +399,9 @@ export default function App() {
     } else if (view === 'admin') {
       setCurrentView('admin');
       window.history.pushState({}, '', '/admin');
+    } else if (['privacy', 'about', 'contact', 'disclaimer', 'terms'].includes(view)) {
+      setCurrentView(view as any);
+      window.history.pushState({}, '', `/${view}`);
     } else {
       setCurrentView('home');
       setSelectedCategory('Semua');
@@ -529,6 +543,21 @@ export default function App() {
               onSelectPost={(slug) => handleNavigate('article', slug)}
               onSelectCategory={(category) => handleNavigate('category', category)}
               siteConfig={effectiveConfig}
+            />
+          </Suspense>
+        )}
+
+        {['privacy', 'about', 'contact', 'disclaimer', 'terms'].includes(currentView) && (
+          <Suspense fallback={
+            <div className="py-20 text-center space-y-3">
+              <div className="w-10 h-10 border-4 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-sm text-slate-500 font-bold">Memuat Halaman Legalitas & Informasi...</p>
+            </div>
+          }>
+            <StaticPageView
+              initialPage={currentView as any}
+              siteConfig={effectiveConfig}
+              onNavigate={(v, p) => handleNavigate(v, p)}
             />
           </Suspense>
         )}

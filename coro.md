@@ -6,6 +6,27 @@ Penulis dan Admin dapat mengelola artikel, gambar, SEO meta, serta konfigurasi s
 
 ---
 
+## 📋 Fitur Utama & Kepatuhan Google AdSense Publisher
+
+1. **Halaman Legalitas Wajib Google AdSense (Complete Legal Compliance):**
+   - **`/privacy` (Kebijakan Privasi):** Penjelasan Cookie, Google DoubleClick DART Cookie, Opsi Opt-out periklanan terarah, vendor periklanan pihak ketiga, dan log files.
+   - **`/about` (Tentang Kami):** Profil situs, 4 pilar utama edukasi redaksi, standar E-E-A-T, dan transparansi pengelola.
+   - **`/contact` (Hubungi Kami):** Formulir kontak interaktif, email resmi redaksi (`redaksi@parenting.my.id`), lokasi, dan jaminan waktu respon 1x24 jam.
+   - **`/disclaimer` (Penafian):** Batasan tanggung jawab informasi medis/pengasuhan, tautan eksternal, dan akurasi materi.
+   - **`/terms` (Syarat & Ketentuan):** Perlindungan hak cipta DMCA, aturan larangan plagiarisme/copy-paste, dan batasan usia.
+
+2. **Infrastruktur Periklanan High-CTR AdSense:**
+   - Header Top Banner Slot
+   - In-Feed & Inside Article Ad Slots
+   - Floating Sticky Footer Ad Banner with Toggle & Close
+   - Custom Scripts Injector untuk Kode Auto Ads Google AdSense
+
+3. **Infrastruktur Synchronized Dynamic Generators (`llms.txt`, `sitemap.xml`, `feed.xml`):**
+   - **Real-Time Database Fetch:** Seluruh artikel yang terbit di Cloudflare D1 langsung terrefleksi secara otomatis pada endpoint `/llms.txt`, `/sitemap.xml`, dan `/feed.xml`.
+   - **GitHub Auto-Sync:** Ketika artikel terbit, diperbarui, atau dihapus dari Panel Admin (`/admin`), file statis di repositori GitHub di-update secara otomatis via GitHub REST API.
+
+---
+
 ## 📋 Prasyarat (100% Gratis)
 1. Akun **GitHub** ([github.com](https://github.com))
 2. Akun **Cloudflare** ([cloudflare.com](https://cloudflare.com))
@@ -13,6 +34,7 @@ Penulis dan Admin dapat mengelola artikel, gambar, SEO meta, serta konfigurasi s
 4. Domain **parenting.my.id** (atau domain pribadi Anda) yang DNS-nya diarahkan ke Cloudflare.
 
 ---
+
 
 ## 🍴 LANGKAH 1: Cloning / Fork Repo GitHub & Token Akses
 

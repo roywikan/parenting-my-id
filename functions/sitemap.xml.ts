@@ -43,13 +43,32 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     )
     .join('');
 
+  const staticPages = [
+    { url: `${siteUrl}/privacy`, priority: '0.5' },
+    { url: `${siteUrl}/about`, priority: '0.6' },
+    { url: `${siteUrl}/contact`, priority: '0.6' },
+    { url: `${siteUrl}/disclaimer`, priority: '0.5' },
+    { url: `${siteUrl}/terms`, priority: '0.5' },
+  ];
+
+  const staticUrls = staticPages
+    .map(
+      (p) => `
+  <url>
+    <loc>${p.url}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>${p.priority}</priority>
+  </url>`
+    )
+    .join('');
+
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>${siteUrl}/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-  </url>${urls}
+  </url>${staticUrls}${urls}
 </urlset>`;
 
   return new Response(xml, {

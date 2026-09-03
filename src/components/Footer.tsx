@@ -31,6 +31,26 @@ export default function Footer({ siteConfig, onNavigate }: FooterProps) {
       e.preventDefault();
       onNavigate('home');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (['/privacy', '/privacy-policy', '/kebijakan-privasi'].includes(url)) {
+      e.preventDefault();
+      onNavigate('privacy');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (['/about', '/about-us', '/tentang-kami'].includes(url)) {
+      e.preventDefault();
+      onNavigate('about');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (['/contact', '/contact-us', '/kontak', '/hubungi-kami'].includes(url)) {
+      e.preventDefault();
+      onNavigate('contact');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (['/disclaimer', '/penafian'].includes(url)) {
+      e.preventDefault();
+      onNavigate('disclaimer');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (['/terms', '/terms-of-service', '/syarat-ketentuan'].includes(url)) {
+      e.preventDefault();
+      onNavigate('terms');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (url.startsWith('/kategori/')) {
       e.preventDefault();
       const slug = url.replace('/kategori/', '');
@@ -121,6 +141,7 @@ export default function Footer({ siteConfig, onNavigate }: FooterProps) {
                 <li key={idx}>
                   <a
                     href={item.url}
+                    onClick={(e) => handleLinkClick(item.url, e)}
                     target={item.url.startsWith('http') || item.url.endsWith('.xml') ? '_blank' : '_self'}
                     rel="noreferrer"
                     className="text-slate-300 hover:text-rose-300 transition-colors font-medium inline-flex items-center gap-1"
