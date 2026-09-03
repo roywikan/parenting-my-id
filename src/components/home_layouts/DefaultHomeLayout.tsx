@@ -15,6 +15,9 @@ interface LayoutProps {
   setSearchQuery: (q: string) => void;
   filteredPosts: Post[];
   categories: string[];
+  isKeywordMatchFallback?: boolean;
+  isLatestFallback?: boolean;
+  fallbackPosts?: Post[];
 }
 
 export default function DefaultHomeLayout({
@@ -28,6 +31,9 @@ export default function DefaultHomeLayout({
   setSearchQuery,
   filteredPosts,
   categories,
+  isKeywordMatchFallback = false,
+  isLatestFallback = false,
+  fallbackPosts = [],
 }: LayoutProps) {
   const showHero = siteConfig?.show_hero_section ?? true;
   const heroTitle = siteConfig?.hero_title || 'Panduan Pengasuhan Anak Terpercaya';
@@ -224,17 +230,46 @@ export default function DefaultHomeLayout({
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-rose-500" />
             <span>
-              {searchQuery
+              {isLatestFallback
+                ? `Artikel Terkini Pilihan`
+                : isKeywordMatchFallback
+                ? `Artikel Terkait ("${selectedCategory}")`
+                : searchQuery
                 ? `Hasil Pencarian ("${searchQuery}")`
                 : selectedCategory === 'Semua'
                 ? 'Daftar Artikel Terbaru'
                 : `Kategori: ${selectedCategory}`}
             </span>
           </h2>
-          <span className="text-xs text-slate-700 dark:text-slate-300 font-bold">
-            {regularPosts.length} Artikel ditemukan
+          <span className="text-xs text-slate-700 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+            {regularPosts.length} Artikel {isLatestFallback ? 'Terkini' : 'ditemukan'}
           </span>
         </div>
+
+        {/* INFORMATIVE NOTICE BANNER FOR UNMAPPED ROUTE / FALLBACK */}
+        {isLatestFallback && (
+          <div className="p-4.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3.5 shadow-2xs">
+            <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-900 dark:text-amber-200 space-y-1">
+              <p className="font-bold text-sm">Topik atau halaman yang Anda cari tidak ditemukan</p>
+              <p className="text-amber-800 dark:text-amber-300 leading-relaxed">
+                Halaman <code className="bg-amber-100 dark:bg-amber-900/60 px-1.5 py-0.5 rounded font-mono font-bold text-amber-900 dark:text-amber-200">{selectedCategory}</code> tidak tersedia. Berikut 4 artikel pilihan terbaru untuk Anda agar tetap mendapatkan informasi pengasuhan anak yang bermanfaat:
+              </p>
+            </div>
+          </div>
+        )}
+
+        {isKeywordMatchFallback && (
+          <div className="p-4.5 rounded-2xl bg-rose-50/90 dark:bg-slate-800/80 border border-rose-200 dark:border-slate-700 flex items-start gap-3.5 shadow-2xs">
+            <Sparkles className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-slate-700 dark:text-slate-300 space-y-1">
+              <p className="font-bold text-sm text-slate-900 dark:text-white">Artikel Terkait Berdasarkan Kata Kunci</p>
+              <p className="leading-relaxed">
+                Kategori spesifik untuk <code className="bg-rose-100 dark:bg-slate-700 px-1.5 py-0.5 rounded font-mono font-bold text-rose-700 dark:text-rose-300">{selectedCategory}</code> tidak ditemukan, namun berikut 4 artikel rekomendasi hasil pencocokan kata kunci untuk Anda:
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ARTICLES LIST CARDS */}
         {regularPosts.length > 0 ? (
@@ -303,14 +338,53 @@ export default function DefaultHomeLayout({
             ))}
           </div>
         ) : (
-          <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3">
-            <BookOpen className="w-10 h-10 text-slate-400 mx-auto" />
-            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-              Tidak ada artikel yang ditemukan
-            </h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Coba gunakan kata kunci pencarian lain atau pilih kategori yang berbeda.
-            </p>
+          <div className="space-y-8">
+            <div className="p-8 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-2xs">
+              <BookOpen className="w-10 h-10 text-slate-400 mx-auto" />
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
+                Tidak ada artikel yang sesuai kata kunci pencarian
+              </h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Coba gunakan kata kunci lain atau lihat 4 artikel terbaru pilihan di bawah ini.
+              </p>
+            </div>
+
+            {/* FALLBACK 4 LATEST ARTICLES INSTEAD OF EMPTY PAGE */}
+            {fallbackPosts.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-rose-500" />
+                  <span>Rekomendasi 4 Artikel Terbaru Untuk Anda</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {fallbackPosts.slice(0, 4).map((post) => (
+                    <article
+                      key={post.id}
+                      onClick={() => onSelectPost(post.slug)}
+                      className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-md transition-all flex flex-col justify-between"
+                    >
+                      <div className="space-y-3">
+                        <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                          <img
+                            src={optimizeUnsplashUrl(post.featuredImage, 300, 50)}
+                            alt={post.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        <div className="p-4 space-y-2">
+                          <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+                            {post.category}
+                          </span>
+                          <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-rose-600 transition-colors">
+                            {post.title}
+                          </h4>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </section>
