@@ -6,6 +6,7 @@
     "/rss.xml",
     "/sitemap.xml",
     "/llms.txt",
+    "/llms-full.txt",
     "/robots.txt"
   ],
   "exclude": [

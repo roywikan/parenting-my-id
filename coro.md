@@ -350,7 +350,7 @@ Seluruh halaman dan endpoint render statis/dinamis telah diuji dan digaransi **1
 - **Kategori (`/category/[slug]`)**: Render HTML bersih tanpa dependensi JavaScript yang menghambat crawler.
 - **Tag (`/tags/[tag]`)**: Indeks kata kunci terstruktur untuk pengelompokan topik artikel.
 - **Detail Artikel (`/baca/[slug]`)**: Menghasilkan skema `BlogPosting` dan `BreadcrumbList` otomatis.
-- **File XML & Teks Mesin**: `/sitemap.xml`, `/feed.xml`, `/robots.txt`, `/llms.txt`, dan `/llms-full.txt` dirender secara real-time dari database D1.
+- **File XML & Teks Mesin (Otomatis Terupdate dalam Satu Gerakan)**: `/sitemap.xml`, `/feed.xml`, `/robots.txt`, `/llms.txt`, dan `/llms-full.txt` dirender secara real-time dari database D1. Saat artikel terbit, diperbarui, atau dihapus, file fisik di `public/llms.txt`, `public/llms-full.txt`, `public/sitemap.xml`, dan `public/feed.xml` secara otomatis dikomit langsung ke repositori GitHub via `syncStaticFilesToGitHub`.
 
 ---
 

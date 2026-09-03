@@ -149,8 +149,8 @@ export default function DefaultHomeLayout({
                 </p>
               </div>
 
-              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 min-h-[58px] shrink-0">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-3">
                   <img
                     src={getOptimizedAvatarUrl(featuredPost.authorAvatar, 60, 60)}
                     alt={featuredPost.authorName}
@@ -159,15 +159,15 @@ export default function DefaultHomeLayout({
                     decoding="async"
                     className="w-9 h-9 rounded-full object-cover border border-rose-300 shrink-0"
                   />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">
                       {featuredPost.authorName}
                     </div>
-                    <div className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold truncate">Tim Pakar Parenting</div>
+                    <div className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold">Tim Pakar Parenting</div>
                   </div>
                 </div>
 
-                <span className="inline-flex items-center gap-1 text-xs font-black text-rose-800 dark:text-rose-300 group-hover:translate-x-1 transition-transform shrink-0 whitespace-nowrap">
+                <span className="inline-flex items-center gap-1 text-xs font-black text-rose-800 dark:text-rose-300 group-hover:translate-x-1 transition-transform shrink-0 whitespace-nowrap self-start sm:self-auto pt-1 sm:pt-0">
                   Baca Selengkapnya
                   <ArrowRight className="w-4 h-4 shrink-0" />
                 </span>
@@ -274,7 +274,7 @@ export default function DefaultHomeLayout({
                 </div>
 
                 <div className="p-5 pt-0 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800/60 mt-4 pt-3">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
                     <img
                       src={getOptimizedAvatarUrl(post.authorAvatar, 40, 40)}
                       alt={post.authorName}
@@ -282,7 +282,7 @@ export default function DefaultHomeLayout({
                       height={24}
                       className="w-6 h-6 rounded-full object-cover border border-rose-200 shrink-0"
                     />
-                    <span className="text-xs text-slate-700 dark:text-slate-300 font-medium truncate">
+                    <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
                       {post.authorName}
                     </span>
                   </div>

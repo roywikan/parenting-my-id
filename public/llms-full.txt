@@ -9,7 +9,7 @@ Dokumen ini memuat kumpulan artikel lengkap dalam format Markdown untuk Large La
 * **URL:** https://parenting.my.id/baca/panduan-lengkap-pola-asuh-demokratis-anak-masa-kini
 * **Penulis:** Dr. Ratna Sari, M.Psi
 * **Kategori:** Pola Asuh
-* **Terakhir Diperbarui:** 2026-08-28T17:07:21.537Z
+* **Terakhir Diperbarui:** 2026-08-31T04:13:45.136Z
 * **Ringkasan:** Pola asuh demokratis menggabungkan kasih sayang, aturan yang konsisten, dan komunikasi terbuka. Simak strategi praktis penerapannya di rumah.
 
 ## Mengapa Pola Asuh Demokratis Sangat Penting?
@@ -58,7 +58,7 @@ Untuk kelompok usia **balita**, penerapan komunikasi terbuka sangat efektif jika
 * **URL:** https://parenting.my.id/baca/5-aktivitas-sensory-play-seru-untuk-melatih-motorik-balita
 * **Penulis:** Ahmad Zulkarnain, S.Ked
 * **Kategori:** Tumbuh Kembang
-* **Terakhir Diperbarui:** 2026-08-29T17:07:21.537Z
+* **Terakhir Diperbarui:** 2026-09-01T04:13:45.136Z
 * **Ringkasan:** Temukan 5 ide permainan sensory play mudah dan hemat bahan untuk mengasah indera serta ketangkasan motorik balita di rumah.
 
 ## Pentingnya Sensory Play untuk Perkembangan Balita
@@ -100,7 +100,7 @@ Jika anak sudah menunjukkan tanda-tanda kelelahan, istirahatlah dan pastikan keb
 * **URL:** https://parenting.my.id/baca/mengenal-bahaya-stunting-dan-cara-pencegahannya-sejak-1000-hpk
 * **Penulis:** Dr. Ratna Sari, M.Psi
 * **Kategori:** Kesehatan & Gizi
-* **Terakhir Diperbarui:** 2026-08-30T17:07:21.537Z
+* **Terakhir Diperbarui:** 2026-09-02T04:13:45.136Z
 * **Ringkasan:** Stunting berpengaruh besar pada kecerdasan anak. Pelajari langkah pencegahan stunting melalui pemberian ASI eksklusif dan MPASI tinggi protein.
 
 ## Masalah Stunting di Indonesia: Apa yang Perlu Orang Tua Ketahui?

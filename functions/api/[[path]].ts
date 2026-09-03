@@ -35,44 +35,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const siteUrl = 'https://parenting.my.id';
 
   try {
-    // 0a. DYNAMIC LLMS.TXT
-    if (path === '/llms.txt' && method === 'GET') {
-      try {
-        let postsList: any[] = [];
-        if (env.DB) {
-          const { results } = await env.DB.prepare(
-            "SELECT title, slug, excerpt FROM posts WHERE status = 'published' ORDER BY created_at DESC"
-          ).all();
-          postsList = results || [];
-        }
-
-        const articleLinks = postsList.map(
-          (post: any) => `* [${post.title}](${siteUrl}/baca/${post.slug}): ${post.excerpt || ''}`
-        ).join('\n');
-
-        const content = `# Parenting.my.id
-
-> Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.
-
-## Artikel Terkait & Panduan Utama
-
-${articleLinks || '* [Panduan Parenting Utama](' + siteUrl + '): Edukasi pola asuh anak dan kesehatan.'}
-`.trim();
-
-        return new Response(content, {
-          headers: {
-            'Content-Type': 'text/plain; charset=utf-8',
-            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            'Access-Control-Allow-Origin': '*',
-          },
-        });
-      } catch (err: any) {
-        return new Response('Error generating llms.txt: ' + err.message, { status: 500 });
-      }
-    }
-
     // 0b. DYNAMIC SITEMAP.XML
     if (path === '/sitemap.xml' && method === 'GET') {
       try {
@@ -505,6 +467,7 @@ Sitemap: ${siteUrl}/sitemap.xml
             `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, postStatus, rejReason, mTitle, mDesc, tagList, coAuthorsStr, now, validNumId || -1, strId || '', generatedSlug).run();
 
             if (updateRes.meta?.changes && updateRes.meta.changes > 0) {
+              syncStaticFilesToGitHub(env, context.waitUntil ? context.waitUntil.bind(context) : undefined);
               return jsonResponse({
                 success: true,
                 post: {
@@ -526,6 +489,8 @@ Sitemap: ${siteUrl}/sitemap.xml
           `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, authorId || 1, coAuthorsStr, postStatus, rejReason, mTitle, mDesc, tagList, now, now).run();
 
           const newId = insertResult.meta?.last_row_id || validNumId || id || Date.now();
+
+          syncStaticFilesToGitHub(env, context.waitUntil ? context.waitUntil.bind(context) : undefined);
 
           return jsonResponse({
             success: true,
@@ -567,6 +532,7 @@ Sitemap: ${siteUrl}/sitemap.xml
                 `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, safeStatus, rejReason, mTitle, mDesc, tagList, coAuthorsStr, now, validNumId || -1, strId || '', generatedSlug).run();
 
                 if (updateRes.meta?.changes && updateRes.meta.changes > 0) {
+                  syncStaticFilesToGitHub(env, context.waitUntil ? context.waitUntil.bind(context) : undefined);
                   return jsonResponse({
                     success: true,
                     post: {
@@ -587,6 +553,7 @@ Sitemap: ${siteUrl}/sitemap.xml
               `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, authorId || 1, coAuthorsStr, safeStatus, rejReason, mTitle, mDesc, tagList, now, now).run();
 
               const newId = insertResult.meta?.last_row_id || validNumId || id || Date.now();
+              syncStaticFilesToGitHub(env, context.waitUntil ? context.waitUntil.bind(context) : undefined);
               return jsonResponse({
                 success: true,
                 post: {
@@ -606,6 +573,7 @@ Sitemap: ${siteUrl}/sitemap.xml
         }
       }
 
+      syncStaticFilesToGitHub(env, context.waitUntil ? context.waitUntil.bind(context) : undefined);
       return jsonResponse({ success: true, post: { ...body, id: validNumId || id || Date.now(), slug: generatedSlug, status: postStatus } });
     }
 
@@ -616,6 +584,7 @@ Sitemap: ${siteUrl}/sitemap.xml
       if (env.DB && id) {
         try {
           await env.DB.prepare('DELETE FROM posts WHERE id = ?').bind(id).run();
+          syncStaticFilesToGitHub(env, context.waitUntil ? context.waitUntil.bind(context) : undefined);
         } catch (e) {
           console.error('Error deleting post from D1:', e);
         }
@@ -1391,3 +1360,156 @@ Sitemap: ${siteUrl}/sitemap.xml
     return jsonResponse({ error: err.message || 'Internal Server Error' }, 500);
   }
 };
+
+async function syncStaticFilesToGitHub(env: Env, waitUntil?: (promise: Promise<any>) => void) {
+  const token = env.GITHUB_TOKEN;
+  if (!token || !env.DB) return;
+
+  const doSync = async () => {
+    try {
+      const owner = env.GITHUB_OWNER || 'roywikan';
+      const repo = env.GITHUB_REPO || 'parenting-my-id';
+      const branch = env.GITHUB_BRANCH || 'main';
+      const siteUrl = 'https://parenting.my.id';
+
+      const { results } = await env.DB.prepare(
+        `SELECT p.title, p.slug, p.excerpt, p.content_markdown as contentMarkdown, p.category, p.updated_at as updatedAt, p.created_at as createdAt, u.name as authorName 
+         FROM posts p 
+         LEFT JOIN users u ON p.author_id = u.id 
+         WHERE p.status = 'published' 
+         ORDER BY p.created_at DESC`
+      ).all();
+
+      const postsList = results || [];
+
+      // 1. generate feed.xml
+      const items = postsList.map(
+        (post: any) => `
+    <item>
+      <title><![CDATA[${post.title}]]></title>
+      <link>${siteUrl}/baca/${post.slug}</link>
+      <guid>${siteUrl}/baca/${post.slug}</guid>
+      <description><![CDATA[${post.excerpt || ''}]]></description>
+      <pubDate>${new Date(post.created_at || Date.now()).toUTCString()}</pubDate>
+    </item>`
+      ).join('');
+
+      const feedXml = `<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Parenting.my.id - Edukasi &amp; Pola Asuh Anak Modern</title>
+    <link>${siteUrl}</link>
+    <description>Portal artikel parenting, gizi anak, stimulasi balita, dan pencegahan stunting di Indonesia.</description>
+    <language>id-id</language>
+    ${items}
+  </channel>
+</rss>`.trim();
+
+      // 2. generate sitemap.xml
+      const urls = postsList.map(
+        (post: any) => `<url><loc>${siteUrl}/baca/${post.slug}</loc><lastmod>${new Date(post.updatedAt || post.createdAt || Date.now()).toISOString().split('T')[0]}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`
+      ).join('');
+      const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${siteUrl}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>${urls}</urlset>`.trim();
+
+      // 3. generate llms.txt
+      const articleLinks = postsList
+        .map((p: any) => `* [${p.title}](${siteUrl}/baca/${p.slug}): ${p.excerpt || ''}`)
+        .join('\n');
+
+      const llmsTxt = `# Parenting.my.id
+
+> Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.
+
+## Artikel Terkait & Panduan Utama
+
+${articleLinks || '* [Panduan Parenting Utama](' + siteUrl + '): Edukasi pola asuh anak dan kesehatan.'}
+
+## Sumber Daya Tambahan
+
+* [Konten Lengkap LLMs](${siteUrl}/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
+* [Sitemap XML](${siteUrl}/sitemap.xml): Peta situs terstruktur untuk crawler.
+* [RSS Feed](${siteUrl}/feed.xml): Umpan sindikasi artikel terbaru.
+`.trim();
+
+      // 4. generate llms-full.txt
+      const fullArticles = postsList.map((p: any) => {
+        const url = `${siteUrl}/baca/${p.slug}`;
+        const author = p.authorName || 'Tim Redaksi Parenting.my.id';
+        const category = p.category || 'Parenting';
+        const date = p.updatedAt || p.createdAt || new Date().toISOString();
+        return `---
+
+# ${p.title}
+
+* **URL:** ${url}
+* **Penulis:** ${author}
+* **Kategori:** ${category}
+* **Terakhir Diperbarui:** ${date}
+* **Ringkasan:** ${p.excerpt || ''}
+
+${p.contentMarkdown || ''}
+`;
+      }).join('\n\n');
+
+      const llmsFullTxt = `# Arsip Lengkap Artikel Parenting.my.id (LLMs Full Text)
+
+Dokumen ini memuat kumpulan artikel lengkap dalam format Markdown for Large Language Models (LLMs).
+
+${fullArticles}
+`.trim();
+
+      // Commit files to GitHub sequentially
+      const filesToCommit = [
+        { path: 'public/feed.xml', content: feedXml, msg: 'auto-update: sync feed.xml via CMS D1' },
+        { path: 'public/sitemap.xml', content: sitemapXml, msg: 'auto-update: sync sitemap.xml via CMS D1' },
+        { path: 'public/llms.txt', content: llmsTxt, msg: 'auto-update: sync llms.txt via CMS D1' },
+        { path: 'public/llms-full.txt', content: llmsFullTxt, msg: 'auto-update: sync llms-full.txt via CMS D1' },
+      ];
+
+      for (const f of filesToCommit) {
+        try {
+          const ghUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${f.path}`;
+          let sha = '';
+          const getRes = await fetch(ghUrl, {
+            headers: {
+              'Authorization': `token ${token}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'User-Agent': 'CloudflarePages-ParentingApp',
+            }
+          });
+          if (getRes.ok) {
+            const getData: any = await getRes.json();
+            sha = getData.sha;
+          }
+
+          const contentBase64 = btoa(unescape(encodeURIComponent(f.content)));
+          await fetch(ghUrl, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `token ${token}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'User-Agent': 'CloudflarePages-ParentingApp',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: f.msg,
+              content: contentBase64,
+              branch,
+              ...(sha ? { sha } : {})
+            })
+          });
+        } catch (fErr) {
+          console.error(`Error committing ${f.path} to GitHub:`, fErr);
+        }
+      }
+    } catch (err) {
+      console.error('Error in syncStaticFilesToGitHub:', err);
+    }
+  };
+
+  if (waitUntil) {
+    waitUntil(doSync());
+  } else {
+    await doSync();
+  }
+}
