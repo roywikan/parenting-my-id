@@ -1181,7 +1181,8 @@ export default function RichPostEditor({
                   {writers
                     .filter((w) => w.id !== authorId)
                     .map((w) => {
-                      const isChecked = coAuthorIds.includes(w.id);
+                      const safeList = Array.isArray(coAuthorIds) ? coAuthorIds : [];
+                      const isChecked = safeList.includes(w.id);
                       return (
                         <label
                           key={w.id}
@@ -1196,9 +1197,9 @@ export default function RichPostEditor({
                             checked={isChecked}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setCoAuthorIds([...coAuthorIds, w.id]);
+                                setCoAuthorIds([...safeList, w.id]);
                               } else {
-                                setCoAuthorIds(coAuthorIds.filter((id) => id !== w.id));
+                                setCoAuthorIds(safeList.filter((id) => id !== w.id));
                               }
                             }}
                             className="rounded border-slate-300 text-rose-600 focus:ring-rose-500"

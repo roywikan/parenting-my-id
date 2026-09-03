@@ -328,7 +328,7 @@ export default function App() {
       }
 
       const path = window.location.pathname;
-      if (path === '/admin') {
+      if (['/admin', '/redaksi-login', '/portal-redaksi', '/kelola-parenting', '/dashboard-redaksi'].includes(path)) {
         setCurrentView('admin');
       } else if (['/privacy', '/privacy-policy', '/kebijakan-privasi'].includes(path)) {
         setCurrentView('privacy');

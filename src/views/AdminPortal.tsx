@@ -185,6 +185,25 @@ export default function AdminPortal({
   const [editorMode, setEditorMode] = useState<'visual' | 'markdown'>('markdown');
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  // Helper to safely parse co-authors array from array, string, or object
+  const parseCoAuthorIds = (p: any): number[] => {
+    if (!p) return [];
+    const raw = p.coAuthorIds ?? p.co_writers;
+    if (Array.isArray(raw)) return raw.map(Number);
+    if (typeof raw === 'string' && raw.trim()) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed.map(Number);
+      } catch {
+        return raw.split(',').map((v) => Number(v.trim())).filter((n) => !isNaN(n));
+      }
+    }
+    if (Array.isArray(p.coAuthors)) {
+      return p.coAuthors.map((ca: any) => Number(ca.id));
+    }
+    return [];
+  };
+
   // Compute role-filtered user posts
   const userRole = currentUser?.role || 'writer';
   const userPosts = posts.filter((post) => {
@@ -192,9 +211,8 @@ export default function AdminPortal({
       const isAuthor =
         Number(post.authorId) === Number(currentUser?.id) ||
         (currentUser?.name && post.authorName?.toLowerCase() === currentUser.name.toLowerCase());
-      const isCoAuthor = (post.coAuthorIds || post.co_writers || []).some(
-        (id) => Number(id) === Number(currentUser?.id)
-      );
+      const coIds = parseCoAuthorIds(post);
+      const isCoAuthor = coIds.some((id) => Number(id) === Number(currentUser?.id));
       return isAuthor || isCoAuthor;
     }
     return true;
@@ -1225,7 +1243,7 @@ export default function AdminPortal({
     setEditorMetaDesc(post.metaDescription || post.excerpt);
     setEditorTags(post.tags || 'berita, edukasi');
     setEditorAuthorId(post.authorId || 1);
-    setEditorCoAuthorIds(post.coAuthors ? post.coAuthors.map(c => c.id) : []);
+    setEditorCoAuthorIds(parseCoAuthorIds(post));
     setActiveTab('editor');
     setAutoSaveStatus('saved');
   };
@@ -2073,7 +2091,7 @@ export default function AdminPortal({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {writers.map((w) => {
               const authorPostsCount = posts.filter(
-                (p) => p.authorId === w.id || (p.coAuthors && p.coAuthors.some((ca) => ca.id === w.id))
+                (p) => p.authorId === w.id || parseCoAuthorIds(p).includes(w.id)
               ).length;
 
               return (
