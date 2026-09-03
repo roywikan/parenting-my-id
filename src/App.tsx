@@ -235,29 +235,36 @@ export default function App() {
   };
 
   // Handle Save Post (Create / Update / Draft)
-  const handleSavePost = async (postData: Partial<Post>): Promise<Post | void> => {
+  const handleSavePost = async (postData: Partial<Post>): Promise<Post> => {
     try {
       const res = await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(postData),
       });
-      if (res.ok) {
-        const data: any = await res.json();
-        if (data?.post) {
-          setPosts((prevPosts) => {
-            const exists = prevPosts.some((p) => p.id === data.post.id);
-            if (exists) {
-              return prevPosts.map((p) => (p.id === data.post.id ? data.post : p));
-            }
-            return [data.post, ...prevPosts];
-          });
-        }
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.error || `Server HTTP Error ${res.status}: Gagal menyimpan artikel.`);
+      }
+
+      if (data?.post) {
+        setPosts((prevPosts) => {
+          const exists = prevPosts.some((p) => String(p.id) === String(data.post.id));
+          if (exists) {
+            return prevPosts.map((p) => (String(p.id) === String(data.post.id) ? data.post : p));
+          }
+          return [data.post, ...prevPosts];
+        });
         await fetchPosts(false);
         return data.post;
+      } else {
+        throw new Error(data.error || 'Server tidak mengembalikan respons data artikel yang valid.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving post:', err);
+      throw err;
     }
   };
 

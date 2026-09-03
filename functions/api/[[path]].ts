@@ -281,7 +281,7 @@ Sitemap: ${siteUrl}/sitemap.xml
     // 2. POST /api/posts
     if (path === '/api/posts' && method === 'POST') {
       const body = await request.json() as any;
-      const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, status, metaTitle, metaDescription, tags } = body;
+      const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, status, rejectionReason, metaTitle, metaDescription, tags } = body;
 
       if (!title || !contentMarkdown) {
         return jsonResponse({ error: 'Judul dan konten markdown wajib diisi.' }, 400);
@@ -293,6 +293,7 @@ Sitemap: ${siteUrl}/sitemap.xml
       const cat = category || 'Pola Asuh';
       const readMin = readTimeMinutes || Math.max(1, Math.ceil(contentMarkdown.split(' ').length / 200));
       const postStatus = status || 'draft';
+      const rejReason = rejectionReason || null;
       const mTitle = metaTitle || `${title} | Parenting.my.id`;
       const mDesc = metaDescription || postExcerpt;
       const tagList = tags || 'parenting, anak';
@@ -301,45 +302,59 @@ Sitemap: ${siteUrl}/sitemap.xml
       if (env.DB) {
         try {
           if (id) {
-            await env.DB.prepare(`
+            const updateRes = await env.DB.prepare(`
               UPDATE posts SET 
                 title = ?, slug = ?, content_markdown = ?, excerpt = ?, featured_image = ?,
-                category = ?, read_time_minutes = ?, status = ?, meta_title = ?, meta_description = ?,
+                category = ?, read_time_minutes = ?, status = ?, rejection_reason = ?, meta_title = ?, meta_description = ?,
                 tags = ?, updated_at = ?
               WHERE id = ?
-            `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, postStatus, mTitle, mDesc, tagList, now, id).run();
+            `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, postStatus, rejReason, mTitle, mDesc, tagList, now, id).run();
 
-            return jsonResponse({ success: true, post: { ...body, id, slug: generatedSlug, updatedAt: now } });
-          } else {
-            const insertResult = await env.DB.prepare(`
-              INSERT INTO posts (title, slug, content_markdown, excerpt, featured_image, category, read_time_minutes, author_id, status, meta_title, meta_description, tags, views, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
-            `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, authorId || 1, postStatus, mTitle, mDesc, tagList, now, now).run();
-
-            const newId = insertResult.meta?.last_row_id || Date.now();
-
-            return jsonResponse({
-              success: true,
-              post: {
-                id: newId,
-                title,
-                slug: generatedSlug,
-                contentMarkdown,
-                excerpt: postExcerpt,
-                featuredImage: image,
-                category: cat,
-                readTimeMinutes: readMin,
-                authorId: authorId || 1,
-                status: postStatus,
-                metaTitle: mTitle,
-                metaDescription: mDesc,
-                tags: tagList,
-                views: 0,
-                createdAt: now,
-                updatedAt: now
-              }
-            });
+            if (updateRes.meta?.changes && updateRes.meta.changes > 0) {
+              return jsonResponse({
+                success: true,
+                post: {
+                  ...body,
+                  id: typeof id === 'number' ? id : Number(id),
+                  slug: generatedSlug,
+                  status: postStatus,
+                  rejectionReason: rejReason,
+                  updatedAt: now
+                }
+              });
+            }
           }
+
+          // Fallback to INSERT if new post or ID not found in D1
+          const insertResult = await env.DB.prepare(`
+            INSERT INTO posts (title, slug, content_markdown, excerpt, featured_image, category, read_time_minutes, author_id, status, rejection_reason, meta_title, meta_description, tags, views, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
+          `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, authorId || 1, postStatus, rejReason, mTitle, mDesc, tagList, now, now).run();
+
+          const newId = insertResult.meta?.last_row_id || id || Date.now();
+
+          return jsonResponse({
+            success: true,
+            post: {
+              id: typeof newId === 'number' ? newId : Number(newId),
+              title,
+              slug: generatedSlug,
+              contentMarkdown,
+              excerpt: postExcerpt,
+              featuredImage: image,
+              category: cat,
+              readTimeMinutes: readMin,
+              authorId: authorId || 1,
+              status: postStatus,
+              rejectionReason: rejReason,
+              metaTitle: mTitle,
+              metaDescription: mDesc,
+              tags: tagList,
+              views: 0,
+              createdAt: now,
+              updatedAt: now
+            }
+          });
         } catch (e: any) {
           console.error('Error saving post to D1:', e);
           return jsonResponse({ error: 'Gagal menyimpan artikel ke D1 Database: ' + e.message }, 500);

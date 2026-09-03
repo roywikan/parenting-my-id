@@ -92,7 +92,19 @@ export default function RichPostEditor({
   const [rejectNote, setRejectNote] = useState('');
 
   // Editor view modes: 'write' | 'split' | 'preview'
-  const [viewMode, setViewMode] = useState<'write' | 'split' | 'preview'>('split');
+  const [viewMode, setViewMode] = useState<'write' | 'split' | 'preview'>('write');
+
+  // Automatically switch view mode off 'split' on small screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768 && viewMode === 'split') {
+        setViewMode('write');
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [viewMode]);
   
   // Textarea Ref
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -311,26 +323,39 @@ export default function RichPostEditor({
       {/* ------------------------------------------------------------- */}
       {/* EDITOR CONTROL BAR & STATUS */}
       {/* ------------------------------------------------------------- */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900 text-white p-4 rounded-3xl shadow-md border border-slate-800">
+      <div className={`sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl md:rounded-3xl shadow-xs border transition-colors ${
+        userRole === 'writer'
+          ? 'bg-[#FAF9F6] dark:bg-slate-900 text-slate-800 dark:text-slate-100 border-[#E5E3DC] dark:border-slate-800'
+          : 'bg-slate-900 text-white border-slate-800 shadow-md'
+      }`}>
         
         {/* VIEW MODE TOGGLE */}
-        <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-2xl border border-slate-700">
+        <div className={`flex items-center gap-1 p-1 rounded-2xl border ${
+          userRole === 'writer'
+            ? 'bg-slate-100/80 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+            : 'bg-slate-800 border-slate-700'
+        }`}>
           <button
             type="button"
             onClick={() => setViewMode('write')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              viewMode === 'write' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-700'
+              viewMode === 'write'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : userRole === 'writer' ? 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700' : 'text-slate-300 hover:text-white hover:bg-slate-700'
             }`}
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>Tulis</span>
           </button>
 
+          {/* HIDDEN ON MOBILE (SCREEN < MD) TO AVOID UNSUITABLE SPLIT SCREEN */}
           <button
             type="button"
             onClick={() => setViewMode('split')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              viewMode === 'split' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-700'
+            className={`hidden md:flex px-3 py-1.5 rounded-xl text-xs font-bold transition-all items-center gap-1.5 ${
+              viewMode === 'split'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : userRole === 'writer' ? 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700' : 'text-slate-300 hover:text-white hover:bg-slate-700'
             }`}
           >
             <Columns className="w-3.5 h-3.5" />
@@ -341,7 +366,9 @@ export default function RichPostEditor({
             type="button"
             onClick={() => setViewMode('preview')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-              viewMode === 'preview' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-700'
+              viewMode === 'preview'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : userRole === 'writer' ? 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700' : 'text-slate-300 hover:text-white hover:bg-slate-700'
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
@@ -352,40 +379,40 @@ export default function RichPostEditor({
         {/* AUTO-SAVE STATUS INDICATOR */}
         <div className="hidden sm:flex items-center gap-2">
           {autoSaveStatus === 'saved' && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-950/60 border border-emerald-800/80 px-3 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 px-3 py-1 rounded-full">
               <CheckCircle2 className="w-3.5 h-3.5" /> {userRole === 'writer' ? 'Draf Tersimpan' : 'Draf Tersimpan di Cloudflare D1'}
             </span>
           )}
           {autoSaveStatus === 'saving' && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-amber-300 font-semibold bg-amber-950/60 border border-amber-800/80 px-3 py-1 rounded-full animate-pulse">
+            <span className="inline-flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-300 font-semibold bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 px-3 py-1 rounded-full animate-pulse">
               <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Menyimpan draf...
             </span>
           )}
           {autoSaveStatus === 'dirty' && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 px-3 py-1">
+            <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 px-3 py-1">
               Perubahan belum disimpan...
             </span>
           )}
         </div>
 
         {/* SAVE & PUBLISH ROLE-BASED ACTION BUTTONS */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Simpan Draf (All roles) */}
+        <div className="flex items-center gap-2">
+          {/* Simpan Draf (Soft Slate/Gray) */}
           <button
             type="button"
             onClick={() => onPublishSubmit('draft')}
-            className="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700 transition-colors border border-slate-700 flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200 text-xs font-bold transition-colors border border-slate-300/80 dark:border-slate-600 flex items-center gap-1.5 shrink-0"
           >
-            <FileText className="w-3.5 h-3.5 text-slate-400" />
+            <FileText className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
             <span>Simpan Draf</span>
           </button>
 
-          {/* Writer Specific Action */}
+          {/* Writer Specific Action (Emerald Green) */}
           {userRole === 'writer' && (
             <button
               type="button"
               onClick={() => onPublishSubmit('pending_approval')}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs font-bold hover:from-amber-500 hover:to-orange-500 shadow-md transition-all flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 shrink-0"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Kirim untuk Ditinjau 🚀</span>
@@ -398,7 +425,7 @@ export default function RichPostEditor({
               <button
                 type="button"
                 onClick={() => setShowRejectModal(true)}
-                className="px-3.5 py-2 rounded-xl bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 text-xs font-bold transition-colors border border-rose-800/60 flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 text-xs font-bold transition-colors border border-rose-800/60 flex items-center gap-1.5 shrink-0"
               >
                 <XCircle className="w-3.5 h-3.5" />
                 <span>Tolak / Minta Revisi</span>
@@ -406,7 +433,7 @@ export default function RichPostEditor({
               <button
                 type="button"
                 onClick={() => onPublishSubmit('published')}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold hover:from-emerald-500 hover:to-teal-500 shadow-md transition-all flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold hover:from-emerald-500 hover:to-teal-500 shadow-md transition-all flex items-center gap-1.5 shrink-0"
               >
                 <ThumbsUp className="w-3.5 h-3.5" />
                 <span>Setujui & Terbitkan ✅</span>
@@ -418,13 +445,13 @@ export default function RichPostEditor({
 
       {/* REJECTION / WORKFLOW NOTIFICATION BANNER */}
       {currentStatus === 'rejected' && (
-        <div className="bg-rose-950/60 border-2 border-rose-800/80 rounded-2xl p-4 flex items-start gap-3 text-rose-200 shadow-sm animate-fade-in">
-          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+        <div className="bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 rounded-2xl p-4 flex items-start gap-3 text-rose-800 dark:text-rose-200 shadow-xs animate-fade-in">
+          <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-rose-300">
+            <h4 className="text-xs font-extrabold uppercase tracking-wider text-rose-800 dark:text-rose-300">
               Artikel Perlu Revisi / Ditolak oleh Editor
             </h4>
-            <p className="text-xs text-rose-200 leading-relaxed">
+            <p className="text-xs text-rose-700 dark:text-rose-200 leading-relaxed">
               {rejectionReason || 'Silakan tinjau kembali tata bahasa, sumber referensi, atau kelengkapan isi artikel ini sebelum mengajukan ulang.'}
             </p>
           </div>
@@ -432,17 +459,17 @@ export default function RichPostEditor({
       )}
 
       {currentStatus === 'pending_approval' && (
-        <div className="bg-amber-950/40 border border-amber-800/60 rounded-2xl p-4 flex items-center justify-between text-amber-200 shadow-sm">
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-4 flex items-center justify-between text-amber-900 dark:text-amber-200 shadow-xs">
           <div className="flex items-center gap-3">
-            <Send className="w-5 h-5 text-amber-400 shrink-0 animate-pulse" />
+            <Send className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 animate-pulse" />
             <div>
-              <h4 className="text-xs font-bold text-amber-300">Menunggu Ditinjau oleh Editor</h4>
-              <p className="text-[11px] text-amber-200/80">
+              <h4 className="text-xs font-bold text-amber-900 dark:text-amber-300">Menunggu Ditinjau oleh Editor</h4>
+              <p className="text-[11px] text-amber-700 dark:text-amber-200/80">
                 Artikel ini sudah dikirim dan saat ini berada di antrean moderasi Redaksi.
               </p>
             </div>
           </div>
-          <span className="text-[10px] font-extrabold uppercase bg-amber-900/60 text-amber-300 border border-amber-700/80 px-2.5 py-1 rounded-full">
+          <span className="text-[10px] font-extrabold uppercase bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/80 px-2.5 py-1 rounded-full">
             Pending Approval
           </span>
         </div>
@@ -513,7 +540,11 @@ export default function RichPostEditor({
         
         {/* EDITOR AREA (8 COLS) */}
         <div className="lg:col-span-8 space-y-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-5 shadow-sm">
+          <div className={`rounded-3xl p-5 sm:p-7 border transition-colors ${
+            userRole === 'writer'
+              ? 'bg-[#FAF9F6] dark:bg-slate-900 border-[#E5E3DC] dark:border-slate-800 shadow-xs text-[#2D3748] dark:text-slate-100'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm'
+          } space-y-5`}>
             
             {/* TITLE FIELD */}
             <div>
@@ -525,7 +556,11 @@ export default function RichPostEditor({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Contoh: Panduan Lengkap & Strategi Terbaru..."
-                className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-lg font-extrabold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all placeholder:font-normal placeholder:text-slate-400"
+                className={`w-full px-4 py-3.5 rounded-2xl border text-lg font-extrabold transition-all placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                  userRole === 'writer'
+                    ? 'bg-[#FAF9F6] dark:bg-slate-900 border-[#E2E0D8] dark:border-slate-800 text-[#2D3748] dark:text-white focus:ring-emerald-500/50'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-rose-500'
+                }`}
               />
             </div>
 
@@ -556,7 +591,11 @@ export default function RichPostEditor({
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   placeholder="Ketik atau pilih kategori (cth: Berita, Edukasi...)"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-bold focus:outline-none focus:ring-2 ${
+                    userRole === 'writer'
+                      ? 'bg-[#FAF9F6] dark:bg-slate-800 border-[#E2E0D8] dark:border-slate-700 text-[#2D3748] dark:text-slate-100 focus:ring-emerald-500/50'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus:ring-rose-500'
+                  }`}
                 />
                 <datalist id="category-suggestions">
                   <option value="Berita & Opini" />
@@ -573,11 +612,80 @@ export default function RichPostEditor({
             {/* ------------------------------------------------------------- */}
             {/* PROFESSIONAL WYSIWYG MARKDOWN TOOLBAR */}
             {/* ------------------------------------------------------------- */}
-            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-2 space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-1 border-b border-slate-200 dark:border-slate-700 pb-2">
+            
+            {/* MOBILE FLOATING / TOUCH-FRIENDLY TOOLBAR (< MD) */}
+            <div className="md:hidden border border-[#E2E0D8] dark:border-slate-800 rounded-2xl bg-[#F4F2EB] dark:bg-slate-800/80 p-1.5 flex items-center justify-between gap-1 overflow-x-auto shadow-xs">
+              <button
+                type="button"
+                onClick={() => applyFormatting('**', '**', 'teks tebal')}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold shadow-xs active:bg-slate-200 shrink-0"
+                title="Cetak Tebal / Bold"
+              >
+                <Bold className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => applyFormatting('*', '*', 'teks miring')}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold shadow-xs active:bg-slate-200 shrink-0"
+                title="Cetak Miring / Italic"
+              >
+                <Italic className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => applyFormatting('## ', '', 'Subjudul Bagian')}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-extrabold text-sm shadow-xs active:bg-slate-200 shrink-0"
+                title="Subjudul H2"
+              >
+                <Heading2 className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => applyFormatting('- ', '', 'Poin item')}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold shadow-xs active:bg-slate-200 shrink-0"
+                title="Daftar Poin"
+              >
+                <List className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowImageModal(true)}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-bold shadow-xs active:bg-emerald-200 shrink-0"
+                title="Sisipkan Gambar"
+              >
+                <ImageIcon className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (textareaRef.current) {
+                    const start = textareaRef.current.selectionStart;
+                    const end = textareaRef.current.selectionEnd;
+                    setLinkText(textareaRef.current.value.substring(start, end));
+                  }
+                  setShowLinkModal(true);
+                }}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 font-bold shadow-xs active:bg-rose-200 shrink-0"
+                title="Sisipkan Tautan"
+              >
+                <LinkIcon className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={handleUndo}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold shadow-xs active:bg-slate-200 shrink-0"
+                title="Undo"
+              >
+                <Undo className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* DESKTOP FULL TOOLBAR (>= MD) */}
+            <div className="hidden md:block border border-[#E2E0D8] dark:border-slate-800 rounded-2xl bg-[#F4F2EB] dark:bg-slate-800/60 p-2 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-1 border-b border-[#E2E0D8] dark:border-slate-700 pb-2">
                 
                 {/* TEXT FORMATTING GROUP */}
-                <div className="flex items-center gap-0.5 pr-2 border-r border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-0.5 pr-2 border-r border-[#E2E0D8] dark:border-slate-700">
                   <button
                     type="button"
                     onClick={() => applyFormatting('**', '**', 'teks tebal')}
@@ -605,7 +713,7 @@ export default function RichPostEditor({
                 </div>
 
                 {/* HEADINGS GROUP */}
-                <div className="flex items-center gap-0.5 px-2 border-r border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-0.5 px-2 border-r border-[#E2E0D8] dark:border-slate-700">
                   <button
                     type="button"
                     onClick={() => applyFormatting('# ', '', 'Judul Utama (H1)')}
@@ -633,7 +741,7 @@ export default function RichPostEditor({
                 </div>
 
                 {/* LISTS GROUP */}
-                <div className="flex items-center gap-0.5 px-2 border-r border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-0.5 px-2 border-r border-[#E2E0D8] dark:border-slate-700">
                   <button
                     type="button"
                     onClick={() => applyFormatting('- ', '', 'Poin item')}
@@ -661,7 +769,7 @@ export default function RichPostEditor({
                 </div>
 
                 {/* BLOCKS & STRUCTURE GROUP */}
-                <div className="flex items-center gap-0.5 px-2 border-r border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-0.5 px-2 border-r border-[#E2E0D8] dark:border-slate-700">
                   <button
                     type="button"
                     onClick={() => applyFormatting('> ', '', 'Kutipan mutiara atau inspirasi')}
@@ -727,7 +835,7 @@ export default function RichPostEditor({
                 </div>
 
                 {/* HISTORY UNDO/REDO & CLEAR */}
-                <div className="flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-2">
+                <div className="flex items-center gap-1 border-l border-[#E2E0D8] dark:border-slate-700 pl-2">
                   <button
                     type="button"
                     onClick={handleUndo}
@@ -770,7 +878,11 @@ export default function RichPostEditor({
                     value={markdown}
                     onChange={(e) => updateMarkdownWithHistory(e.target.value)}
                     placeholder="Tulis artikel lengkap dengan format markdown di sini..."
-                    className="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-800 font-mono text-sm leading-relaxed text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className={`w-full p-4 sm:p-6 rounded-2xl border font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 ${
+                      userRole === 'writer'
+                        ? 'bg-[#FAF9F6] dark:bg-slate-900/90 border-[#E2E0D8] dark:border-slate-800 text-[#2D3748] dark:text-slate-100 focus:ring-emerald-500/50'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-rose-500'
+                    }`}
                   />
                 </div>
               )}
@@ -788,7 +900,11 @@ export default function RichPostEditor({
                       value={markdown}
                       onChange={(e) => updateMarkdownWithHistory(e.target.value)}
                       placeholder="Tulis konten artikel di sini..."
-                      className="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-800 font-mono text-xs leading-relaxed text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className={`w-full p-4 rounded-2xl border font-mono text-xs leading-relaxed focus:outline-none focus:ring-2 ${
+                        userRole === 'writer'
+                          ? 'bg-[#FAF9F6] dark:bg-slate-900/90 border-[#E2E0D8] dark:border-slate-800 text-[#2D3748] dark:text-slate-100 focus:ring-emerald-500/50'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:ring-rose-500'
+                      }`}
                     />
                   </div>
 
@@ -1164,6 +1280,72 @@ export default function RichPostEditor({
 
         </div>
 
+      </div>
+
+      {/* BOTTOM ACTION BAR FOR CONVENIENT SAVING / PUBLISHING */}
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+            Status Artikel:
+          </span>
+          <span className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold uppercase ${
+            currentStatus === 'published' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
+            currentStatus === 'pending_approval' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
+            currentStatus === 'rejected' ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' :
+            'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+          }`}>
+            {currentStatus === 'published' ? 'Terbit ✅' :
+             currentStatus === 'pending_approval' ? 'Menunggu Ditinjau ⏳' :
+             currentStatus === 'rejected' ? 'Perlu Revisi ❌' : 'Draf 📝'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Simpan Draf */}
+          <button
+            type="button"
+            onClick={() => onPublishSubmit('draft')}
+            className="px-4 py-2.5 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 text-xs font-bold transition-all flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4 text-slate-500" />
+            <span>Simpan Draf</span>
+          </button>
+
+          {/* Writer Specific Action */}
+          {userRole === 'writer' && (
+            <button
+              type="button"
+              onClick={() => onPublishSubmit('pending_approval')}
+              className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2"
+            >
+              <Send className="w-4 h-4" />
+              <span>Kirim untuk Ditinjau 🚀</span>
+            </button>
+          )}
+
+          {/* Editor & Admin Actions */}
+          {(userRole === 'editor' || userRole === 'admin') && (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowRejectModal(true)}
+                className="px-4 py-2.5 rounded-2xl bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 text-xs font-bold border border-rose-800/60 flex items-center gap-2"
+              >
+                <XCircle className="w-4 h-4" />
+                <span>Tolak / Minta Revisi</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onPublishSubmit('published')}
+                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg transition-all flex items-center gap-2"
+              >
+                <ThumbsUp className="w-4 h-4" />
+                <span>Setujui & Terbitkan ✅</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* ------------------------------------------------------------- */}

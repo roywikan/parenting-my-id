@@ -1200,26 +1200,31 @@ export default function AdminPortal({
         ? currentUser.id
         : (editorAuthorId || currentUser?.id || 1);
 
-      const saved = await onSavePost({
-        id: editingPostId || undefined,
-        title: editorTitle,
-        slug: editorSlug || generateSlug(editorTitle),
-        category: editorCategory,
-        contentMarkdown: editorMarkdown,
-        excerpt: editorExcerpt || editorMarkdown.slice(0, 150) + '...',
-        featuredImage: editorImage,
-        status: 'draft', // Auto-save keeps it as draft until explicitly published
-        metaTitle: editorMetaTitle,
-        metaDescription: editorMetaDesc,
-        tags: editorTags,
-        authorId: currentAuthorId,
-        coAuthorIds: editorCoAuthorIds,
-      });
+      try {
+        const saved = await onSavePost({
+          id: editingPostId || undefined,
+          title: editorTitle,
+          slug: editorSlug || generateSlug(editorTitle),
+          category: editorCategory,
+          contentMarkdown: editorMarkdown,
+          excerpt: editorExcerpt || editorMarkdown.slice(0, 150) + '...',
+          featuredImage: editorImage,
+          status: 'draft', // Auto-save keeps it as draft until explicitly published
+          metaTitle: editorMetaTitle,
+          metaDescription: editorMetaDesc,
+          tags: editorTags,
+          authorId: currentAuthorId,
+          coAuthorIds: editorCoAuthorIds,
+        });
 
-      if (saved && saved.id && !editingPostId) {
-        setEditingPostId(saved.id);
+        if (saved && saved.id && !editingPostId) {
+          setEditingPostId(saved.id);
+        }
+        setAutoSaveStatus('saved');
+      } catch (err) {
+        console.warn('Auto-save draft warning:', err);
+        setAutoSaveStatus('dirty');
       }
-      setAutoSaveStatus('saved');
     }, 3000); // Save automatically 3s after typing pause
 
     return () => {
@@ -1304,8 +1309,8 @@ export default function AdminPortal({
 
   // Save / Publish Post Form Submit
   const handlePublishSubmit = async (status: PostStatus, rejectionReason?: string) => {
-    if (!editorTitle || !editorMarkdown) {
-      alert('Judul dan isi konten artikel wajib diisi!');
+    if (!editorTitle.trim() || !editorMarkdown.trim()) {
+      alert('⚠️ Gagal Menyimpan: Judul dan isi konten artikel wajib diisi!');
       return;
     }
 
@@ -1314,36 +1319,48 @@ export default function AdminPortal({
       ? currentUser.id
       : (editorAuthorId || currentUser?.id || 1);
 
-    const saved = await onSavePost({
-      id: editingPostId || undefined,
-      title: editorTitle,
-      slug: editorSlug || generateSlug(editorTitle),
-      category: editorCategory,
-      contentMarkdown: editorMarkdown,
-      excerpt: editorExcerpt || editorMarkdown.slice(0, 150) + '...',
-      featuredImage: editorImage,
-      status: status,
-      rejectionReason: rejectionReason,
-      metaTitle: editorMetaTitle || `${editorTitle} | ${siteConfig?.site_name || 'Website'}`,
-      metaDescription: editorMetaDesc || editorExcerpt,
-      tags: editorTags,
-      authorId: currentAuthorId,
-      coAuthorIds: editorCoAuthorIds,
-    });
+    try {
+      const saved = await onSavePost({
+        id: editingPostId || undefined,
+        title: editorTitle,
+        slug: editorSlug || generateSlug(editorTitle),
+        category: editorCategory,
+        contentMarkdown: editorMarkdown,
+        excerpt: editorExcerpt || editorMarkdown.slice(0, 150) + '...',
+        featuredImage: editorImage,
+        status: status,
+        rejectionReason: rejectionReason,
+        metaTitle: editorMetaTitle || `${editorTitle} | ${siteConfig?.site_name || 'Website'}`,
+        metaDescription: editorMetaDesc || editorExcerpt,
+        tags: editorTags,
+        authorId: currentAuthorId,
+        coAuthorIds: editorCoAuthorIds,
+      });
 
-    if (saved && saved.id) {
-      setEditingPostId(saved.id);
-    }
-    setAutoSaveStatus('saved');
+      if (saved && saved.id) {
+        setEditingPostId(saved.id);
+        setEditorStatus(saved.status || status);
+      }
+      setAutoSaveStatus('saved');
 
-    if (status === 'draft') {
-      setEditorStatus('draft');
-      alert('Draf artikel berhasil disimpan di Cloudflare D1!');
-    } else if (status === 'pending_approval') {
-      alert('Artikel berhasil dikirim untuk ditinjau oleh Tim Redaksi/Editor!');
-      setActiveTab('posts');
-    } else {
-      setActiveTab('posts');
+      if (status === 'draft') {
+        setEditorStatus('draft');
+        alert('✅ Draf artikel berhasil disimpan!');
+      } else if (status === 'pending_approval') {
+        alert('🚀 Artikel berhasil dikirim untuk ditinjau oleh Tim Redaksi/Editor!');
+        setActiveTab('posts');
+      } else if (status === 'published') {
+        alert('🎉 Artikel BERHASIL disetujui dan DITERBITKAN secara resmi ke website!');
+        setActiveTab('posts');
+      } else if (status === 'rejected') {
+        alert(' Catatan revisi telah disimpan dan status artikel dikembalikan ke Penulis.');
+        setActiveTab('posts');
+      } else {
+        setActiveTab('posts');
+      }
+    } catch (err: any) {
+      setAutoSaveStatus('dirty');
+      alert(`❌ Gagal ${status === 'published' ? 'menerbitkan' : 'menyimpan'} artikel!\n\nAlasan/Penyebab Gagal: ${err.message || 'Terjadi kesalahan pada jaringan atau server.'}`);
     }
   };
 
@@ -1889,7 +1906,7 @@ export default function AdminPortal({
                                 </button>
                               )}
 
-                              {userRole !== 'writer' && (currentUser.role === 'admin' || post.authorId === currentUser.id) && (
+                              {userRole !== 'writer' && (currentUser?.role === 'admin' || currentUser?.role === 'editor' || post.authorId === currentUser?.id) && (
                                 <button
                                   onClick={() => onDeletePost(post.id)}
                                   className="px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold transition-all"

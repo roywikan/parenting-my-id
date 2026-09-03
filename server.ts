@@ -638,7 +638,7 @@ app.post('/api/posts', (req, res) => {
 
   if (id) {
     // Update existing post
-    const index = mockPosts.findIndex((p) => p.id === Number(id));
+    const index = mockPosts.findIndex((p) => String(p.id) === String(id));
     if (index !== -1) {
       const existingPost = mockPosts[index];
 
