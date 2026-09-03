@@ -177,6 +177,15 @@ export default function DefaultHomeLayout({
         </section>
       )}
 
+      {/* CUSTOM BANNER: BOTTOM OF FIRST HALF PAGE */}
+      {siteConfig?.ad_banner_first_half_code && (
+        <AdSlot
+          code={siteConfig.ad_banner_first_half_code}
+          enableAdsense={siteConfig.ad_banner_first_half_enable ?? true}
+          slotLabel="BOTTOM OF FIRST HALF PAGE"
+        />
+      )}
+
       {/* SEARCH BAR & CATEGORIES */}
       <div className="space-y-4 pt-2">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">

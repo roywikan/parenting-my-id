@@ -128,6 +128,69 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   adsense_sidebar: '',
   adsense_sticky_footer: '',
 
+  // Custom JS/CSS Snippets (Head & Body)
+  custom_snippet_head_enable: false,
+  custom_snippet_head_code: `<!-- Sample Google Analytics (gtag.js) & Custom CSS Snippet -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-SAMPLE12345"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-SAMPLE12345');
+</script>
+<style>
+  /* Sample Custom CSS Snippet */
+  .custom-accent-border { border-left: 4px solid #e11d48; padding-left: 12px; }
+</style>`,
+  custom_snippet_body_enable: false,
+  custom_snippet_body_code: `<!-- Sample Custom JS Snippet Sebelum Penutup Tag </body> -->
+<script>
+  console.log('✅ Custom Body Script Active - Parenting.my.id');
+</script>`,
+
+  // Custom HTML Meta Tag Snippet
+  custom_meta_tags_enable: false,
+  custom_meta_tags_code: `<!-- Sample Google Search Console Ownership Verification -->
+<meta name="google-site-verification" content="GSC-SAMPLE-DUMMY-VERIFICATION-TOKEN-987654321" />
+<meta name="yandex-verification" content="yandex-sample-verification-code-1234" />`,
+
+  // Custom Responsive Banner Ads Snippets
+  ad_banner_first_half_enable: false,
+  ad_banner_first_half_code: `<div style="background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); border: 1px solid #fecdd3; border-radius: 16px; padding: 16px; text-align: center; max-width: 728px; margin: 20px auto; font-family: sans-serif;">
+  <span style="background: #e11d48; color: #fff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 9999px; text-transform: uppercase;">PROMO PARENTING</span>
+  <h4 style="margin: 8px 0 4px; font-size: 16px; font-weight: 800; color: #881337;">Diskon 50% Buku Panduan MPASI & Tumbuh Kembang 2026</h4>
+  <p style="margin: 0 0 12px; font-size: 12px; color: #9f1239;">Dapatkan paket komplit gizi balita & stimulasi otak anak sekarang juga!</p>
+  <a href="#" style="display: inline-block; background: #e11d48; color: white; font-weight: bold; font-size: 12px; padding: 8px 18px; border-radius: 9999px; text-decoration: none;">Lihat Promo Sekarang &rarr;</a>
+</div>`,
+  ad_banner_sticky_footer_enable: false,
+  ad_banner_sticky_footer_code: `<div id="sticky-bottom-banner" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999; background: #881337; color: white; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); font-family: sans-serif;">
+  <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 250px;">
+    <span style="font-size: 20px;">👶</span>
+    <div>
+      <strong style="font-size: 13px; display: block;">Konsultasi Dokter Anak & Gizi Balita Gratis</strong>
+      <span style="font-size: 11px; opacity: 0.9;">Gabung komunitas WhatsApp 15.000+ Orang Tua Hebat</span>
+    </div>
+  </div>
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <a href="#" style="background: #ffffff; color: #881337; font-weight: 800; font-size: 11px; padding: 6px 14px; border-radius: 20px; text-decoration: none;">Gabung WA &rarr;</a>
+    <button onclick="document.getElementById('sticky-bottom-banner').style.display='none'" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-weight: bold;">✕</button>
+  </div>
+</div>`,
+  ad_banner_article_start_enable: false,
+  ad_banner_article_start_code: `<div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 12px 16px; margin: 16px 0; border-radius: 0 12px 12px 0; font-family: sans-serif; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+  <div style="font-size: 12px; color: #1e40af; font-weight: 600;">
+    📢 <strong>Sponsor Info:</strong> Dapatkan suplemen nutrisi balita dengan cashback hingga 30%!
+  </div>
+  <a href="#" style="font-size: 11px; font-weight: 800; color: #2563eb; text-decoration: underline;">Klaim Promo &rarr;</a>
+</div>`,
+  ad_banner_article_end_enable: false,
+  ad_banner_article_end_code: `<div style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 20px; text-align: center; margin: 24px 0; font-family: sans-serif;">
+  <p style="font-size: 11px; color: #64748b; font-weight: 700; margin: 0 0 6px; text-transform: uppercase;">REKOMENDASI EDITOR</p>
+  <h4 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0 0 8px;">Ingin Anak Tumbuh Cerdas & Bebas Stunting?</h4>
+  <p style="font-size: 12px; color: #475569; margin: 0 0 12px;">Unduh e-Book Gratis "100 resep MPASI Kaya Protein Hewani" edisi terbaru.</p>
+  <a href="#" style="background: #2563eb; color: white; font-weight: 700; font-size: 12px; padding: 8px 16px; border-radius: 8px; text-decoration: none; display: inline-block;">Unduh e-Book Gratis &rarr;</a>
+</div>`,
+
   // --- CUSTOMIZABLE FRONTPAGE WORDING & DATA (10 Models) ---
   // Model 1: Default Blog & Magz
   default_hero_badge: 'Portal Nomor 1',

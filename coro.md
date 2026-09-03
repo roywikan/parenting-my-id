@@ -383,10 +383,74 @@ Penulis artikel memiliki akses ke **Editor WYSIWYG Rich Editor** lengkap dengan 
 
 ---
 
-## ⚡ LANGKAH 11: Optimasi Performa & PageSpeed Insights
+## 💡 LANGKAH 12: Panduan Admin (Do, Don'ts & Tips) Pengisian Custom JS/CSS Snippets, Meta Tags & Banner Iklan
 
-Sistem ini dikonfigurasi secara khusus untuk mencapai skor **95-100** pada **Google PageSpeed Insights / Lighthouse**:
-1. **Zero CLS (Target 0.000)**: Aspect-ratio locking pada container hero, skeleton rendering presisi, font-display: swap.
-2. **Largest Contentful Paint (LCP < 1.2s)**: Preloading header SSR `<link rel="preload" as="image">`, non-blocking CSS, penyesuaian dimensi WebP.
-3. **GPU Accelerated Animations**: Menghindari layout reflows pada thread utama mobile.
-4. **WCAG AA Accessibility**: Kontras warna rasio tinggi & hierarki heading teratur (H1 ➔ H2 ➔ H3).
+Portal Admin (`/admin` ➔ Tab **Config Situs**) dilengkapi dengan 3 kelompok fitur penyisipan kode kustom yang fleksibel. Agar situs tetap aman, cepat (PageSpeed score tinggi), dan bebas dari error tampilan, ikuti panduan **Do's**, **Don'ts**, dan **Tips Teknis** berikut:
+
+---
+
+### A. Custom JS / CSS Snippet Inserter (Head & Body)
+
+Penyisipan script JavaScript pelacak (Google Analytics `gtag.js`, Facebook Pixel, Google Tag Manager) serta kode CSS kustom tambahan.
+
+- **✅ DO'S (Sangat Direkomendasikan)**:
+  1. **Sertakan Tag Pembungkus HTML Lengkap**: Selalu bungkus kode JavaScript dengan `<script>...</script>` dan kode CSS dengan `<style>...</style>`.
+  2. **Gunakan Atribut Async / Defer**: Untuk script pelacak seperti Google Analytics, selalu sertakan atribut `async` atau `defer` agar peramban tidak menunda pemuatan visual halaman (*non-blocking*).
+  3. **Manfaatkan Toggle Switch**: Gunakan toggle switch **Aktif/Nonaktif** untuk mematikan atau menguji script tanpa harus menghapus kode yang telah diketik.
+  4. **Gunakan Tombol "Muat Sample Dummy JS/CSS"**: Klik tombol sampel untuk melihat contoh sintaksis yang valid dan siap pakai.
+
+- **🚫 DON'TS (Larangan & Hal yang Harus Dihindari)**:
+  1. **Jangan Masukkan Teks Polos Tanpa Tag**: Memasukkan kode JavaScript atau CSS langsung tanpa tag `<script>` atau `<style>` akan menyebabkan teks tersebut bocor dan muncul sebagai tulisan mentah di halaman web.
+  2. **Jangan Meng-copy Script dari Sumber Tak Terpercaya**: Hindari menyisipkan script JavaScript acak dari domain tidak dikenal untuk mencegah serangan *Cross-Site Scripting* (XSS) atau kebocoran data.
+  3. **Jangan Menyisipkan Script Synchronous Heavy**: Hindari script yang melakukan loop panjang atau manipulasi DOM berlebihan yang dapat menurunkan skor LCP dan INP pada Google PageSpeed.
+
+- **💡 TIPS TEKNIS**:
+  Sistem AI Studio menyuntikkan (*inject*) node `<script>` dan `<style>` secara dinamis ke `document.head` (Head Snippet) dan sebelum penutup `document.body` (Body Snippet). Saat toggle dinonaktifkan, seluruh elemen yang disuntikkan akan dibersihkan (*cleanup*) secara instan dari memori DOM.
+
+---
+
+### B. Custom HTML Meta Tag Snippet
+
+Penyisipan tag meta HTML khusus untuk verifikasi kepemilikan domain (seperti Google Search Console, Yandex Webmaster, Bing Webmaster, Pinterest verification).
+
+- **✅ DO'S (Sangat Direkomendasikan)**:
+  1. **Gunakan Tag Meta Standar HTML5**: Contoh yang benar: `<meta name="google-site-verification" content="TOKEN_KODE_VERIFIKASI" />`.
+  2. **Multi Meta Tag**: Anda dapat memasukkan beberapa tag meta sekaligus (misal Google Search Console + Yandex) dalam satu kotak textarea dengan memisahkan tiap tag di baris baru.
+  3. **Gunakan Tombol "Muat Sample Dummy Meta Tag"**: Memudahkan verifikasi format meta tag yang benar.
+
+- **🚫 DON'TS (Larangan & Hal yang Harus Dihindari)**:
+  1. **Jangan Masukkan Tag Non-Meta**: Tempatkan tag `<script>` atau `<style>` di kolom Head/Body Snippet, bukan di kolom Meta Tag ini.
+  2. **Jangan Mengubah Atribut Verification Token**: Pastikan nilai `content="..."` persis sesuai dengan yang diberikan oleh konsol Google/Yandex agar verifikasi tidak gagal.
+
+- **💡 TIPS TEKNIS**:
+  Setiap tag meta yang diaktifkan akan disuntikkan secara otomatis ke dalam `<head>` dengan penanda atribut `data-custom-meta-tag="true"`.
+
+---
+
+### C. Custom Responsive Banner Iklan (HTML/JS/CSS/JPG/PNG/GIF)
+
+Pengelolaan banner promosi mandiri, banner afiliasi, sponsor, atau iklan gambar pada 4 posisi strategis:
+- **Posisi A**: *Bottom of First Half Page* (Bawah Paruh Pertama Halaman Utama)
+- **Posisi B**: *Bottom of the Screen / Fixed Sticky Footer* (Melayang di Bawah Layar)
+- **Posisi C**: *Start of Each Article/Post* (Awal Setiap Artikel)
+- **Posisi D**: *End of Each Article/Post* (Akhir Setiap Artikel)
+
+- **✅ DO'S (Sangat Direkomendasikan)**:
+  1. **Gunakan Inline CSS Responsif**: Selalu gunakan atribut CSS responsif seperti `max-width: 100%; height: auto;` atau kelas Tailwind (`w-full max-w-full h-auto`) agar banner menyesuaikan ukuran layar HP dan Desktop secara sempurna.
+  2. **Bungkus Gambar dengan Link Afiliasi**: Format standar banner gambar yang benar:
+     ```html
+     <a href="https://tautan-afiliasi-anda.com" target="_blank" rel="noopener noreferrer">
+       <img src="https://domain-anda.com/banner.webp" alt="Promo Buku MPASI" style="width:100%; max-width:728px; height:auto; border-radius:12px;" loading="lazy" />
+     </a>
+     ```
+  3. **Gunakan Tombol "Muat Sample Dummy Banner Iklan"**: Klik tombol sampel untuk memuat template banner HTML/CSS modern dengan warna gradien, badge promo, dan tombol CTA yang indah & responsif.
+  4. **Atur Toggle Independen**: Setiap dari 4 posisi banner memiliki switch *Aktif/Nonaktif* terpisah yang memudahkan promosi berkala.
+
+- **🚫 DON'TS (Larangan & Hal yang Harus Dihindari)**:
+  1. **Jangan Gunakan Fixed Pixel Width Besar**: Hindari menentukan lebar tetap seperti `width: 1200px;` tanpa `max-width: 100%` karena akan membuat tampilan di layar HP terpotong secara horisontal (*horizontal scrollbar overflow*).
+  2. **Jangan Gunakan Gambar Berukuran Sangat Besar**: Hindari mengunggah file JPG/PNG berukuran di atas 1 MB tanpa kompresi. Gunakan format WebP atau kompresi gambar agar loading artikel tetap kilat.
+  3. **Jangan Membiarkan Script Iklan Merusak Layout**: Hindari script iklan yang memicu pergeseran tata letak (*Cumulative Layout Shift / CLS*).
+
+- **💡 TIPS TEKNIS**:
+  Jika toggle posisi banner dalam keadaan **Nonaktif** atau kolom textarea kosong, slot iklan akan menyusut (*collapse*) secara otomatis. Tidak akan ada kotak kosong, border bermasalah, atau teks developer yang tersisa di halaman publik, sehingga estetika website tetap 100% rapi dan profesional.
+

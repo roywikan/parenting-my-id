@@ -252,6 +252,26 @@ export default function AdminPortal({
   const [cfgAdsenseSidebar, setCfgAdsenseSidebar] = useState<string>(siteConfig?.adsense_sidebar || '');
   const [cfgAdsenseStickyFooter, setCfgAdsenseStickyFooter] = useState<string>(siteConfig?.adsense_sticky_footer || '');
 
+  // Custom JS/CSS Snippets Config States
+  const [cfgCustomSnippetHeadEnable, setCfgCustomSnippetHeadEnable] = useState<boolean>(siteConfig?.custom_snippet_head_enable ?? false);
+  const [cfgCustomSnippetHeadCode, setCfgCustomSnippetHeadCode] = useState<string>(siteConfig?.custom_snippet_head_code || DEFAULT_SITE_CONFIG.custom_snippet_head_code || '');
+  const [cfgCustomSnippetBodyEnable, setCfgCustomSnippetBodyEnable] = useState<boolean>(siteConfig?.custom_snippet_body_enable ?? false);
+  const [cfgCustomSnippetBodyCode, setCfgCustomSnippetBodyCode] = useState<string>(siteConfig?.custom_snippet_body_code || DEFAULT_SITE_CONFIG.custom_snippet_body_code || '');
+
+  // Custom HTML Meta Tag Config States
+  const [cfgCustomMetaTagsEnable, setCfgCustomMetaTagsEnable] = useState<boolean>(siteConfig?.custom_meta_tags_enable ?? false);
+  const [cfgCustomMetaTagsCode, setCfgCustomMetaTagsCode] = useState<string>(siteConfig?.custom_meta_tags_code || DEFAULT_SITE_CONFIG.custom_meta_tags_code || '');
+
+  // Custom Responsive Banner Ads Config States
+  const [cfgAdBannerFirstHalfEnable, setCfgAdBannerFirstHalfEnable] = useState<boolean>(siteConfig?.ad_banner_first_half_enable ?? false);
+  const [cfgAdBannerFirstHalfCode, setCfgAdBannerFirstHalfCode] = useState<string>(siteConfig?.ad_banner_first_half_code || DEFAULT_SITE_CONFIG.ad_banner_first_half_code || '');
+  const [cfgAdBannerStickyFooterEnable, setCfgAdBannerStickyFooterEnable] = useState<boolean>(siteConfig?.ad_banner_sticky_footer_enable ?? false);
+  const [cfgAdBannerStickyFooterCode, setCfgAdBannerStickyFooterCode] = useState<string>(siteConfig?.ad_banner_sticky_footer_code || DEFAULT_SITE_CONFIG.ad_banner_sticky_footer_code || '');
+  const [cfgAdBannerArticleStartEnable, setCfgAdBannerArticleStartEnable] = useState<boolean>(siteConfig?.ad_banner_article_start_enable ?? false);
+  const [cfgAdBannerArticleStartCode, setCfgAdBannerArticleStartCode] = useState<string>(siteConfig?.ad_banner_article_start_code || DEFAULT_SITE_CONFIG.ad_banner_article_start_code || '');
+  const [cfgAdBannerArticleEndEnable, setCfgAdBannerArticleEndEnable] = useState<boolean>(siteConfig?.ad_banner_article_end_enable ?? false);
+  const [cfgAdBannerArticleEndCode, setCfgAdBannerArticleEndCode] = useState<string>(siteConfig?.ad_banner_article_end_code || DEFAULT_SITE_CONFIG.ad_banner_article_end_code || '');
+
   const [cfgSiteTagline, setCfgSiteTagline] = useState(siteConfig?.site_tagline || 'Edukasi & Pengasuhan Anak Modern');
   const [cfgSiteDescription, setCfgSiteDescription] = useState(siteConfig?.site_description || 'Portal informasi dan panduan pengasuhan anak modern.');
   const [cfgSiteLogoUrl, setCfgSiteLogoUrl] = useState(siteConfig?.site_logo_url || '');
@@ -556,6 +576,23 @@ export default function AdminPortal({
       setCfgCategoriesWidgetLimit(siteConfig.categories_widget_limit || 8);
       setCfgSidebarBannerCode(siteConfig.sidebar_banner_code || '');
 
+      setCfgCustomSnippetHeadEnable(siteConfig.custom_snippet_head_enable ?? false);
+      setCfgCustomSnippetHeadCode(siteConfig.custom_snippet_head_code || DEFAULT_SITE_CONFIG.custom_snippet_head_code || '');
+      setCfgCustomSnippetBodyEnable(siteConfig.custom_snippet_body_enable ?? false);
+      setCfgCustomSnippetBodyCode(siteConfig.custom_snippet_body_code || DEFAULT_SITE_CONFIG.custom_snippet_body_code || '');
+
+      setCfgCustomMetaTagsEnable(siteConfig.custom_meta_tags_enable ?? false);
+      setCfgCustomMetaTagsCode(siteConfig.custom_meta_tags_code || DEFAULT_SITE_CONFIG.custom_meta_tags_code || '');
+
+      setCfgAdBannerFirstHalfEnable(siteConfig.ad_banner_first_half_enable ?? false);
+      setCfgAdBannerFirstHalfCode(siteConfig.ad_banner_first_half_code || DEFAULT_SITE_CONFIG.ad_banner_first_half_code || '');
+      setCfgAdBannerStickyFooterEnable(siteConfig.ad_banner_sticky_footer_enable ?? false);
+      setCfgAdBannerStickyFooterCode(siteConfig.ad_banner_sticky_footer_code || DEFAULT_SITE_CONFIG.ad_banner_sticky_footer_code || '');
+      setCfgAdBannerArticleStartEnable(siteConfig.ad_banner_article_start_enable ?? false);
+      setCfgAdBannerArticleStartCode(siteConfig.ad_banner_article_start_code || DEFAULT_SITE_CONFIG.ad_banner_article_start_code || '');
+      setCfgAdBannerArticleEndEnable(siteConfig.ad_banner_article_end_enable ?? false);
+      setCfgAdBannerArticleEndCode(siteConfig.ad_banner_article_end_code || DEFAULT_SITE_CONFIG.ad_banner_article_end_code || '');
+
       setCfgFooterAboutText(siteConfig.footer_about_text || DEFAULT_SITE_CONFIG.footer_about_text);
       setCfgFooterCopyrightText(siteConfig.footer_copyright_text || DEFAULT_SITE_CONFIG.footer_copyright_text);
       setCfgSocialFacebook(siteConfig.social_facebook || '');
@@ -757,6 +794,23 @@ export default function AdminPortal({
         adsense_sidebar: cfgAdsenseSidebar,
         adsense_sticky_footer: cfgAdsenseStickyFooter,
 
+        custom_snippet_head_enable: cfgCustomSnippetHeadEnable,
+        custom_snippet_head_code: cfgCustomSnippetHeadCode,
+        custom_snippet_body_enable: cfgCustomSnippetBodyEnable,
+        custom_snippet_body_code: cfgCustomSnippetBodyCode,
+
+        custom_meta_tags_enable: cfgCustomMetaTagsEnable,
+        custom_meta_tags_code: cfgCustomMetaTagsCode,
+
+        ad_banner_first_half_enable: cfgAdBannerFirstHalfEnable,
+        ad_banner_first_half_code: cfgAdBannerFirstHalfCode,
+        ad_banner_sticky_footer_enable: cfgAdBannerStickyFooterEnable,
+        ad_banner_sticky_footer_code: cfgAdBannerStickyFooterCode,
+        ad_banner_article_start_enable: cfgAdBannerArticleStartEnable,
+        ad_banner_article_start_code: cfgAdBannerArticleStartCode,
+        ad_banner_article_end_enable: cfgAdBannerArticleEndEnable,
+        ad_banner_article_end_code: cfgAdBannerArticleEndCode,
+
         // 10 Model Display Values
         event_badge_text: cfgEventBadgeText,
         event_date_location: cfgEventDateLocation,
@@ -934,6 +988,23 @@ export default function AdminPortal({
         adsense_article_bottom: cfgAdsenseArticleBottom,
         adsense_sidebar: cfgAdsenseSidebar,
         adsense_sticky_footer: cfgAdsenseStickyFooter,
+
+        custom_snippet_head_enable: cfgCustomSnippetHeadEnable,
+        custom_snippet_head_code: cfgCustomSnippetHeadCode,
+        custom_snippet_body_enable: cfgCustomSnippetBodyEnable,
+        custom_snippet_body_code: cfgCustomSnippetBodyCode,
+
+        custom_meta_tags_enable: cfgCustomMetaTagsEnable,
+        custom_meta_tags_code: cfgCustomMetaTagsCode,
+
+        ad_banner_first_half_enable: cfgAdBannerFirstHalfEnable,
+        ad_banner_first_half_code: cfgAdBannerFirstHalfCode,
+        ad_banner_sticky_footer_enable: cfgAdBannerStickyFooterEnable,
+        ad_banner_sticky_footer_code: cfgAdBannerStickyFooterCode,
+        ad_banner_article_start_enable: cfgAdBannerArticleStartEnable,
+        ad_banner_article_start_code: cfgAdBannerArticleStartCode,
+        ad_banner_article_end_enable: cfgAdBannerArticleEndEnable,
+        ad_banner_article_end_code: cfgAdBannerArticleEndCode,
 
         site_tagline: cfgSiteTagline,
         site_description: cfgSiteDescription,
@@ -4986,6 +5057,291 @@ export default function AdminPortal({
                     rows={3}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
                     placeholder="<ins class='adsbygoogle' ...></ins>"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 8: CUSTOM JS / CSS SNIPPETS (HEAD & BODY) */}
+            <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Code className="w-4 h-4 text-rose-500" />
+                  <span>8. Custom JS & CSS Snippet Inserter (Head & Body)</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCfgCustomSnippetHeadCode(DEFAULT_SITE_CONFIG.custom_snippet_head_code || '');
+                    setCfgCustomSnippetBodyCode(DEFAULT_SITE_CONFIG.custom_snippet_body_code || '');
+                    setCfgCustomSnippetHeadEnable(true);
+                    setCfgCustomSnippetBodyEnable(true);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 font-bold text-[11px] border border-rose-500/30 flex items-center gap-1.5 transition-all"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+                  <span>Muat Sample Dummy JS/CSS</span>
+                </button>
+              </div>
+
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Sisipkan kode JavaScript kustom (seperti Google Analytics gtag.js, Facebook Pixel, tracking script) atau CSS kustom ke bagian <code>&lt;head&gt;</code> atau sebelum penutup <code>&lt;/body&gt;</code>. Dilengkapi dengan toggle switch tayang/sembunyi.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* HEAD SNIPPET */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                      <Code className="w-3.5 h-3.5 text-rose-500" />
+                      <span>A. Head Snippet (Sebelum &lt;/head&gt;)</span>
+                    </label>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cfgCustomSnippetHeadEnable}
+                        onChange={(e) => setCfgCustomSnippetHeadEnable(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                      <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        {cfgCustomSnippetHeadEnable ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </label>
+                  </div>
+                  <textarea
+                    value={cfgCustomSnippetHeadCode}
+                    onChange={(e) => setCfgCustomSnippetHeadCode(e.target.value)}
+                    rows={6}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                    placeholder="<!-- Masukkan script Google Analytics / Tag Manager / Custom <style> di sini -->"
+                  />
+                </div>
+
+                {/* BODY SNIPPET */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                      <Code className="w-3.5 h-3.5 text-rose-500" />
+                      <span>B. Body Snippet (Sebelum penutup &lt;/body&gt;)</span>
+                    </label>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cfgCustomSnippetBodyEnable}
+                        onChange={(e) => setCfgCustomSnippetBodyEnable(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                      <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        {cfgCustomSnippetBodyEnable ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </label>
+                  </div>
+                  <textarea
+                    value={cfgCustomSnippetBodyCode}
+                    onChange={(e) => setCfgCustomSnippetBodyCode(e.target.value)}
+                    rows={6}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                    placeholder="<!-- Masukkan script JS kustom sebelum penutup </body> di sini -->"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 9: CUSTOM HTML META TAG SNIPPET */}
+            <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Globe className="w-4 h-4 text-blue-500" />
+                  <span>9. Custom HTML Meta Tag Snippet</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCfgCustomMetaTagsCode(DEFAULT_SITE_CONFIG.custom_meta_tags_code || '');
+                    setCfgCustomMetaTagsEnable(true);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-bold text-[11px] border border-blue-500/30 flex items-center gap-1.5 transition-all"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                  <span>Muat Sample Dummy Meta Tag</span>
+                </button>
+              </div>
+
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Tempatkan kode meta tag khusus seperti verifikasi kepemilikan Google Search Console, Yandex Webmaster, Bing Webmaster, atau Pinterest verification.
+              </p>
+
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Meta Tag HTML Verification Snippet</span>
+                  </label>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cfgCustomMetaTagsEnable}
+                      onChange={(e) => setCfgCustomMetaTagsEnable(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                    <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                      {cfgCustomMetaTagsEnable ? 'Aktif' : 'Nonaktif'}
+                    </span>
+                  </label>
+                </div>
+                <textarea
+                  value={cfgCustomMetaTagsCode}
+                  onChange={(e) => setCfgCustomMetaTagsCode(e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                  placeholder='<meta name="google-site-verification" content="TOKEN_VERIFIKASI_ANDA" />'
+                />
+              </div>
+            </div>
+
+            {/* SECTION 10: CUSTOM RESPONSIVE BANNER ADS SNIPPETS */}
+            <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <LayoutGrid className="w-4 h-4 text-emerald-500" />
+                  <span>10. Custom Responsive Banner Iklan (HTML/JS/CSS/Image)</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCfgAdBannerFirstHalfCode(DEFAULT_SITE_CONFIG.ad_banner_first_half_code || '');
+                    setCfgAdBannerStickyFooterCode(DEFAULT_SITE_CONFIG.ad_banner_sticky_footer_code || '');
+                    setCfgAdBannerArticleStartCode(DEFAULT_SITE_CONFIG.ad_banner_article_start_code || '');
+                    setCfgAdBannerArticleEndCode(DEFAULT_SITE_CONFIG.ad_banner_article_end_code || '');
+                    setCfgAdBannerFirstHalfEnable(true);
+                    setCfgAdBannerStickyFooterEnable(true);
+                    setCfgAdBannerArticleStartEnable(true);
+                    setCfgAdBannerArticleEndEnable(true);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] border border-emerald-500/30 flex items-center gap-1.5 transition-all"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Muat Sample Dummy Banner Iklan</span>
+                </button>
+              </div>
+
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Kelola banner iklan kustom (banner afiliasi, sponsor, iklan produk/layanan sendiri) dalam format HTML, JS, CSS, JPG, PNG, atau GIF pada 4 posisi opsional di seluruh situs dengan opsi toggle tayang/sembunyi independen.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* A. BOTTOM OF FIRST HALF PAGE */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      A. Bottom of First Half Page (Bawah Paruh Pertama Halaman Utama)
+                    </label>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cfgAdBannerFirstHalfEnable}
+                        onChange={(e) => setCfgAdBannerFirstHalfEnable(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                      <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        {cfgAdBannerFirstHalfEnable ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </label>
+                  </div>
+                  <textarea
+                    value={cfgAdBannerFirstHalfCode}
+                    onChange={(e) => setCfgAdBannerFirstHalfCode(e.target.value)}
+                    rows={4}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                    placeholder="<!-- Sisipkan snippet iklan HTML/CSS/JS banner afiliasi di sini -->"
+                  />
+                </div>
+
+                {/* B. BOTTOM OF THE SCREEN (FIXED) */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      B. Bottom of the Screen / Sticky Footer (Melayang di Bawah Layar)
+                    </label>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cfgAdBannerStickyFooterEnable}
+                        onChange={(e) => setCfgAdBannerStickyFooterEnable(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                      <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        {cfgAdBannerStickyFooterEnable ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </label>
+                  </div>
+                  <textarea
+                    value={cfgAdBannerStickyFooterCode}
+                    onChange={(e) => setCfgAdBannerStickyFooterCode(e.target.value)}
+                    rows={4}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                    placeholder="<!-- Sisipkan snippet iklan melayang (sticky bottom banner) di sini -->"
+                  />
+                </div>
+
+                {/* C. START OF EACH ARTICLE/POST */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      C. Start of Each Article/Post (Awal Setiap Artikel)
+                    </label>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cfgAdBannerArticleStartEnable}
+                        onChange={(e) => setCfgAdBannerArticleStartEnable(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                      <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        {cfgAdBannerArticleStartEnable ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </label>
+                  </div>
+                  <textarea
+                    value={cfgAdBannerArticleStartCode}
+                    onChange={(e) => setCfgAdBannerArticleStartCode(e.target.value)}
+                    rows={4}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                    placeholder="<!-- Sisipkan snippet iklan awal artikel di sini -->"
+                  />
+                </div>
+
+                {/* D. END OF EACH ARTICLE/POST */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      D. End of Each Article/Post (Akhir Setiap Artikel)
+                    </label>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cfgAdBannerArticleEndEnable}
+                        onChange={(e) => setCfgAdBannerArticleEndEnable(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                      <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        {cfgAdBannerArticleEndEnable ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </label>
+                  </div>
+                  <textarea
+                    value={cfgAdBannerArticleEndCode}
+                    onChange={(e) => setCfgAdBannerArticleEndCode(e.target.value)}
+                    rows={4}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 font-mono text-[11px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                    placeholder="<!-- Sisipkan snippet iklan akhir artikel di sini -->"
                   />
                 </div>
               </div>

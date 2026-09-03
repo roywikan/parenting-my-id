@@ -151,6 +151,26 @@ export interface SiteConfig {
   adsense_sidebar?: string;
   adsense_sticky_footer?: string;
 
+  // Custom JS/CSS Snippets (Head & Body)
+  custom_snippet_head_enable?: boolean;
+  custom_snippet_head_code?: string;
+  custom_snippet_body_enable?: boolean;
+  custom_snippet_body_code?: string;
+
+  // Custom HTML Meta Tag Snippet
+  custom_meta_tags_enable?: boolean;
+  custom_meta_tags_code?: string;
+
+  // Custom Responsive Banner Ads Snippets
+  ad_banner_first_half_enable?: boolean;
+  ad_banner_first_half_code?: string;
+  ad_banner_sticky_footer_enable?: boolean;
+  ad_banner_sticky_footer_code?: string;
+  ad_banner_article_start_enable?: boolean;
+  ad_banner_article_start_code?: string;
+  ad_banner_article_end_enable?: boolean;
+  ad_banner_article_end_code?: string;
+
   // --- CUSTOMIZABLE FRONTPAGE WORDING & DATA (10 Models) ---
   // Model 1: Default Blog & Magz
   default_hero_badge?: string;

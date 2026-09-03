@@ -429,6 +429,15 @@ export default function ArticleDetailView({
         slotLabel="IN-ARTICLE TOP (HIGH CTR)"
       />
 
+      {/* CUSTOM BANNER: START OF EACH ARTICLE/POST */}
+      {siteConfig?.ad_banner_article_start_code && (
+        <AdSlot
+          code={siteConfig.ad_banner_article_start_code}
+          enableAdsense={siteConfig.ad_banner_article_start_enable ?? true}
+          slotLabel="AWAL ARTIKEL (START OF POST)"
+        />
+      )}
+
       {/* TABLE OF CONTENTS (IF HEADINGS EXIST) */}
       <AutoTableOfContents items={tocItems} />
 
@@ -445,6 +454,15 @@ export default function ArticleDetailView({
         className="article-body prose prose-rose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 space-y-4"
         dangerouslySetInnerHTML={{ __html: parsedHtml }}
       />
+
+      {/* CUSTOM BANNER: END OF EACH ARTICLE/POST */}
+      {siteConfig?.ad_banner_article_end_code && (
+        <AdSlot
+          code={siteConfig.ad_banner_article_end_code}
+          enableAdsense={siteConfig.ad_banner_article_end_enable ?? true}
+          slotLabel="AKHIR ARTIKEL (END OF POST)"
+        />
+      )}
 
       {/* STRATEGIC AD PLACEMENT: IN-ARTICLE BOTTOM */}
       <AdSlot

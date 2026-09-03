@@ -8,6 +8,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import HomeView from './views/HomeView';
 import AdSlot from './components/AdSlot';
+import CustomScriptsInjector from './components/CustomScriptsInjector';
 
 const ArticleDetailView = lazy(() => import('./views/ArticleDetailView'));
 const AdminPortal = lazy(() => import('./views/AdminPortal'));
@@ -560,8 +561,19 @@ export default function App() {
 
       <Footer siteConfig={effectiveConfig} onNavigate={(view, param) => handleNavigate(view, param)} />
 
-      {/* STICKY FOOTER AD BANNER */}
-      {effectiveConfig?.enable_adsense !== false && effectiveConfig?.adsense_sticky_footer && (
+      {/* CUSTOM JS/CSS & META INJECTOR */}
+      <CustomScriptsInjector siteConfig={effectiveConfig} />
+
+      {/* STICKY FOOTER AD BANNER (CUSTOM BANNER & ADSENSE) */}
+      {effectiveConfig?.ad_banner_sticky_footer_enable !== false && effectiveConfig?.ad_banner_sticky_footer_code && (
+        <AdSlot
+          code={effectiveConfig.ad_banner_sticky_footer_code}
+          enableAdsense={effectiveConfig.ad_banner_sticky_footer_enable ?? true}
+          slotLabel="FIXED STICKY FOOTER BANNER"
+        />
+      )}
+
+      {effectiveConfig?.enable_adsense !== false && effectiveConfig?.adsense_sticky_footer && !effectiveConfig?.ad_banner_sticky_footer_code && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-800 shadow-2xl p-2 flex items-center justify-center">
           <div className="relative max-w-4xl w-full flex items-center justify-center">
             <AdSlot
