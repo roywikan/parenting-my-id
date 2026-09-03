@@ -454,3 +454,133 @@ Pengelolaan banner promosi mandiri, banner afiliasi, sponsor, atau iklan gambar 
 - **💡 TIPS TEKNIS**:
   Jika toggle posisi banner dalam keadaan **Nonaktif** atau kolom textarea kosong, slot iklan akan menyusut (*collapse*) secara otomatis. Tidak akan ada kotak kosong, border bermasalah, atau teks developer yang tersisa di halaman publik, sehingga estetika website tetap 100% rapi dan profesional.
 
+---
+
+## ✍️ LANGKAH 13: Panduan Penulis (Writer's Guide), Gambar Unsplash & Otomatisasi AI
+
+> **Status Relevansi:** 🟢 **100% Relevan dengan Codebase Saat Ini**.
+> **Kapan Relevan?** Digunakan oleh Penulis (*Writer*) dan Editor setiap kali membuat, mengedit, atau mempublikasikan artikel melalui **Post Editor** di `/admin`.
+
+---
+
+### A. Cara Mendapatkan URL Gambar Unsplash Gratis & Cepat (Optimized WebP)
+
+Unsplash menyediakan jutaan foto berkualitas tinggi secara bebas royalti. Untuk mendapatkan URL gambar yang cepat dimuat dan ramah SEO:
+
+1. **Buka Unsplash:** Kunjungi [unsplash.com](https://unsplash.com) dan cari foto menggunakan kata kunci bahasa Inggris (contoh: *toddler playing*, *mother baby*, *healthy kids food*).
+2. **Salin Alamat Gambar (*Copy Image Address*):** Klik kanan pada gambar -> Pilih **Copy Image Address** / **Salin Alamat Gambar**.
+3. **Format URL Unsplash yang Direkomendasikan:**
+   - Standar Gratis: `https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=80`
+   - Unsplash Plus / Premium (Free to use): `https://plus.unsplash.com/premium_photo-1733513144502-fe838554b0ca?auto=format&fit=crop&w=1200&q=80`
+
+💡 **Parameter URL Unsplash untuk SEO & Speed:**
+- **`w=1200`**: Membatasi lebar gambar maksimal 1200px (ukuran ideal *Featured Image* & Google Discover).
+- **`auto=format`**: Otomatis mengonversi gambar ke format **WebP / AVIF** yang super ringan.
+- **`q=80`**: Mengatur kompresi kualitas gambar di tingkat 80% (seimbang antara ketajaman & kecepatan pemuatan).
+
+---
+
+### B. Petunjuk Pengisian Post Editor untuk Penulis
+
+Setiap elemen pada Post Editor memiliki peran vital dalam tingkat keterbacaan (*readability*) dan SEO di Google:
+
+#### 1. Kolom Utama Konten
+- **Judul Artikel:** Tulis judul yang menarik dan solutif (ideal: 50–70 karakter). *Contoh:* "5 Cara Mengatasi Tantrum Balita Tanpa Harus Marah-Marah".
+- **URL Slug:** Terisi otomatis dari judul (`/baca/url-slug-anda`). Menggunakan huruf kecil dan tanda hubung `-`.
+- **Kategori Artikel:** Pilih kategori utama (Pola Asuh, Tumbuh Kembang, Kesehatan & Gizi, Psikologi Ibu) atau ketikkan kategori baru.
+- **Editor Konten (Markdown & WYSIWYG):**
+  - **Subjudul Utama (`H2` / `##`):** Untuk membagi bab utama.
+  - **Subjudul Kecil (`H3` / `###`):** Untuk poin-poin turunan.
+  - **Cetak Tebal (`Bold`):** Untuk menekankan istilah penting (misal: **ASI Eksklusif**, **Motorik Halus**).
+  - **Kutipan (`Blockquote` / `>`):** Untuk nasihat medis, saran psikolog, atau kutipan penting.
+- **Split View:** Manfaatkan mode bagi layar untuk melihat pratinjau hasil artikel secara *real-time* di sebelah kanan.
+
+#### 2. Sidebar Metadata & SEO (Kanan)
+- **Gambar Sampul (*Featured Image*):** Tempelkan URL Unsplash yang dioptimalkan atau unggah dari komputer ke repositori media.
+- **Ringkasan (*Excerpt*):** Uraian singkat 1–2 kalimat (100–150 karakter) yang muncul di kartu artikel halaman depan.
+- **Meta Title SEO:** Judul khusus yang dibaca Googlebot (50–60 karakter agar tidak terpotong `...`).
+- **Meta Description SEO:** Kalimat ajakan (*Call to Action*) yang muncul di bawah judul pada pencarian Google (120–155 karakter).
+- **Tags / Kata Kunci:** Masukkan kata kunci terkait dipisahkan koma (contoh: `pola asuh, balita, tantrum anak, psikologi`).
+
+---
+
+### C. Fitur Otomatisasi & Asisten AI untuk Penulis
+
+Penulis dapat menghemat waktu dengan bantuan otomatisasi sistem:
+1. ✨ **Parenting AI Assistant:** Cukup isi Judul & Konten Artikel, lalu klik **"Generate SEO Meta dengan AI"**. Gemini AI akan mengisi 4 kolom sekaligus: Meta Title, Meta Description, Excerpt, dan Tags SEO.
+2. 💾 **Auto-Save Cloudflare D1:** Draf artikel tersimpan secara otomatis setiap kali ada perubahan teks sehingga aman dari koneksi terputus.
+3. 🔗 **Auto-Links Engine:** Teks artikel yang memuat kata kunci seperti "stunting", "pola asuh", "sensory play" otomatis diubah menjadi *internal link* ke artikel terkait.
+4. ⏱️ **Estimasi Waktu Baca:** Durasi baca dihitung secara *real-time* (misal: "5 menit baca").
+5. 📊 **Schema.org & Meta Tags:** Serverless edge secara otomatis memproduksi kode terstruktur `BlogPosting` & `BreadcrumbList` bersertifikat Google Rich Results.
+
+---
+
+## 🧩 LANGKAH 14: Panduan Lokasi File & Cara Edit (Header, Footer, & Homepage)
+
+> **Status Relevansi:** 🟢 **Relevan dengan Catatan Kondisi (GUI vs Source Code)**.
+> **Kapan Relevan?** 
+> - **Kondisi A (Pengaturan GUI Admin - Tanpa Koding):** Jika Anda ingin merubah logo, tagline, kalimat footer, menu navigasi, atau mengganti model layout homepage (tersedia 10 model layout), lakukan melalui **Portal Admin (`/admin` ➔ Tab Config Situs)** tanpa perlu menyentuh file kode.
+> - **Kondisi B (Developer Code Level - Editing via GitHub):** Jika Developer ingin menambah komponen UI baru, mengalihkan struktur HTML, atau melakukan kustomisasi kode mendalam, gunakan file source code berikut:
+
+### 1. 🎯 Header & Navigasi
+- **File Kode:** `src/components/Header.tsx` (dan `src/components/Navbar.tsx`)
+- **Fungsi:** Bagian paling atas website (Logo, tagline, pencarian, mode gelap/terang, dan menu navigasi utama).
+
+### 2. 🦶 Footer (Kaki Halaman)
+- **File Kode:** `src/components/Footer.tsx`
+- **Fungsi:** Bagian paling bawah website (Hak cipta, deskripsi blog, navigasi footer, tautan media sosial, Kebijakan Privasi & Syarat Ketentuan).
+
+### 3. 🏠 Homepage (Halaman Utama)
+- **File Kode:** `src/views/HomeView.tsx` dan `src/components/home_layouts/*`
+- **Fungsi:** Mengatur tata letak beranda, Hero Section, Grid Artikel, dan Sidebar.
+
+💡 **Cara Edit Manual via GitHub (Developer Mode):**
+1. Buka repositori di GitHub (`roywikan/parenting-my-id`).
+2. Masuk ke folder `src/components/` atau `src/views/`.
+3. Klik ikon **Pensil** (*Edit this file*) -> Ubah teks atau komponen -> Klik **Commit changes...** (Cloudflare Pages akan melakukan *auto-deploy*).
+
+---
+
+## 🌐 LANGKAH 15: Panduan Pengelolaan Meta Tags Global, Favicon, & Default OG Image
+
+> **Status Relevansi:** 🟢 **Relevan dengan Catatan Arsitektur 3-Layer (Static HTML ➔ React Client ➔ Serverless SSR)**.
+> **Kapan Relevan?**
+> - **Kondisi Admin Live (Relevansi Utama):** Pengaturan Meta Title, Description, dan Default OG Image dapat langsung diubah secara dinamis dari **Portal Admin (`/admin` ➔ Config Situs)** tanpa *deploy* ulang.
+> - **Kondisi Static Fallback (Relevansi Developer):** Jika database D1 belum terhubung atau dalam kondisi *fallback* pertama kali, 3 lokasi file berikut menjadi garda pertahanan terakhir:
+
+### 3 Lokasi File Metadata Global & Default OG Image:
+
+1. 📄 **`index.html` (Entry Point HTML Statis Utama)**
+   - **Lokasi:** `/index.html`
+   - **Elemen:**
+     - Favicon: `<link rel="icon" type="image/svg+xml" href="..." />`
+     - Title Utama: `<title>...</title>`
+     - Meta Description: `<meta name="description" content="..." />`
+     - Default OG & Twitter Image: `<meta property="og:image" content="..." />`
+
+2. ⚛️ **`src/components/SEOHelper.tsx` (Metadata Fallback Sisi Client / React)**
+   - **Lokasi:** `src/components/SEOHelper.tsx`
+   - **Fungsi:** Menyimpan nilai cadangan (*fallback*) metadata saat halaman dimuat di browser pengunjung jika data API belum siap:
+   ```typescript
+   export const DEFAULT_SEO = {
+     title: 'Parenting.my.id - Edukasi & Pengasuhan Anak Modern',
+     description: 'Portal informasi dan panduan pengasuhan anak modern, nutrisi balita, serta kesehatan keluarga Indonesia.',
+     imageUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1200&h=630', // <-- Default OG Image
+     url: 'https://parenting.my.id',
+   };
+   ```
+
+3. ⚡ **`functions/baca/[slug].ts` (Cloudflare Workers Serverless / SSR Edge)**
+   - **Lokasi:** `functions/baca/[slug].ts`
+   - **Fungsi:** Menyediakan gambar pratinjau OG Image saat tautan artikel dibagikan ke WhatsApp, Facebook, atau Twitter jika artikel tersebut tidak memiliki *featured image*:
+   ```typescript
+   const defaultOgImage = 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1200&h=630';
+   ```
+
+---
+
+💡 **Rekomendasi Format & Ukuran Asset:**
+- **Favicon:** Gunakan file SVG atau PNG (ukuran **32x32px** atau **128x128px**) di folder `public/`, lalu atur rutenya di `index.html`.
+- **Default OG Image:** Gunakan gambar berasio **16:9** (ukuran standar **1200x630px**) format WebP, JPG, atau PNG agar tampil presisi dan menarik saat dibagikan di WhatsApp, Telegram, dan media sosial.
+
+

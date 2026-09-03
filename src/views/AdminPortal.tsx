@@ -1638,8 +1638,12 @@ export default function AdminPortal({
               }`}>
                 {currentUser.role}
               </span>
+              <span className="relative flex h-2 w-2" title="Database D1 Connected">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
             </div>
-            <p className="text-xs text-slate-500">{currentUser.email}{currentUser.role !== 'writer' ? ' • Cloudflare D1 Connected' : ''}</p>
+            <p className="text-xs text-slate-500">{currentUser.email}</p>
           </div>
         </div>
 
@@ -1663,7 +1667,7 @@ export default function AdminPortal({
           }`}
         >
           <FileText className="w-4 h-4" />
-          <span>{currentUser?.role === 'writer' ? 'Artikel Saya' : currentUser?.role === 'editor' ? 'Moderasi Artikel Redaksi' : 'Kelola Artikel'} ({userRole === 'writer' ? userPosts.length : posts.length})</span>
+          <span>{currentUser?.role === 'writer' ? 'Artikel Saya' : 'Edit Artikel'} ({userRole === 'writer' ? userPosts.length : posts.length})</span>
         </button>
 
         <button
@@ -1675,7 +1679,7 @@ export default function AdminPortal({
           }`}
         >
           <Edit3 className="w-4 h-4" />
-          <span>Editor Draf Artikel</span>
+          <span>Draft Artikel</span>
         </button>
 
         {currentUser?.role === 'admin' && (
@@ -1816,7 +1820,7 @@ export default function AdminPortal({
               <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                    {userRole === 'writer' ? 'Daftar Artikel Draf & Status Pengajuan' : 'Daftar Artikel Website (Cloudflare D1)'}
+                    {userRole === 'writer' ? 'Daftar Artikel Draf & Status Pengajuan' : 'Daftar Artikel'}
                   </h3>
                   <span className="text-xs text-slate-500">
                     Menampilkan {filteredPosts.length} dari total {userPosts.length} artikel
