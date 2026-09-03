@@ -63,12 +63,13 @@ export default function App() {
     return () => clearTimeout(deferTimer);
   }, []);
 
-// Manage Dark Mode
+// Manage Dark Mode (Admin site config strictly authoritative)
   useEffect(() => {
     if (!effectiveConfig) return;
     const mode = effectiveConfig.default_theme_mode || 'auto';
+    const allowToggle = effectiveConfig.enable_theme_toggle ?? true;
     const root = document.documentElement;
-    const override = localStorage.getItem('theme_override');
+    const override = allowToggle ? localStorage.getItem('theme_override') : null;
     
     if (override === 'dark') {
       root.classList.add('dark');
@@ -78,15 +79,15 @@ export default function App() {
       root.classList.add('dark');
     } else if (mode === 'light') {
       root.classList.remove('dark');
-    } else {
-      // Auto
+    } else if (mode === 'auto') {
+      // Device preference is ONLY checked if Admin explicitly sets default_theme_mode to 'auto'
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
         root.classList.add('dark');
       } else {
         root.classList.remove('dark');
       }
     }
-  }, [effectiveConfig?.default_theme_mode]);
+  }, [effectiveConfig?.default_theme_mode, effectiveConfig?.enable_theme_toggle]);
 
   useEffect(() => {
     if (effectiveConfig?.active_theme_preset) {
