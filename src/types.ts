@@ -85,10 +85,12 @@ export interface SiteConfig {
   admin_login_title?: string;
   admin_login_subtitle?: string;
   admin_login_btn_text?: string;
+  admin_url_suffix?: string;
   mobile_admin_btn_label?: string;
   mobile_show_logged_username?: boolean;
   active_theme_preset?: string;
   site_domain?: string;
+  site_url?: string;
   default_theme_mode?: 'light' | 'dark' | 'auto';
   font_density_scale?: 'compact' | 'standard' | 'spacious';
   font_size_scale?: 'small' | 'normal' | 'large' | 'xlarge';

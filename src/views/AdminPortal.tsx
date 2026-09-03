@@ -7,7 +7,7 @@ import {
   Upload, Eye, Sparkles, CheckCircle2, RefreshCw, Bold, Italic, Heading2, 
   Heading3, List, ListOrdered, Quote, Image as ImageIcon, Code, UserCheck, 
   ExternalLink, Search, Zap, AlertCircle, Settings, Key, Copy, Check, 
-  LogOut, Globe, Palette, Layout, MessageSquare, Droplet, Users, Award, History, RotateCcw, X, Menu
+  LogOut, Globe, Palette, Layout, MessageSquare, Droplet, Users, Award, History, RotateCcw, X, Menu, LayoutGrid
 } from 'lucide-react';
 import { generateSlug } from '../lib/autolink';
 import RichPostEditor from '../components/RichPostEditor';
@@ -377,10 +377,11 @@ export default function AdminPortal({
   const [cfgMetric3Duration, setCfgMetric3Duration] = useState<number>(siteConfig?.metric3_duration ?? 2000);
   const [cfgMetric3Unit, setCfgMetric3Unit] = useState<string>(siteConfig?.metric3_unit ?? 'ms');
 
-  // Admin Login Text Config
+  // Admin Login Text & Suffix Config
   const [cfgAdminLoginTitle, setCfgAdminLoginTitle] = useState(siteConfig?.admin_login_title || 'Portal Admin Website');
   const [cfgAdminLoginSubtitle, setCfgAdminLoginSubtitle] = useState(siteConfig?.admin_login_subtitle || 'Sistem Otentikasi Cloudflare D1');
   const [cfgAdminLoginBtnText, setCfgAdminLoginBtnText] = useState(siteConfig?.admin_login_btn_text || 'Masuk Portal CMS');
+  const [cfgAdminUrlSuffix, setCfgAdminUrlSuffix] = useState(siteConfig?.admin_url_suffix || '9999');
 
   // Homepage Display Mode & Sub-tab
   const [cfgHomepageDisplayMode, setCfgHomepageDisplayMode] = useState<HomepageDisplayMode>(siteConfig?.homepage_display_mode || 'default');
@@ -802,6 +803,7 @@ export default function AdminPortal({
         admin_login_title: cfgAdminLoginTitle,
         admin_login_subtitle: cfgAdminLoginSubtitle,
         admin_login_btn_text: cfgAdminLoginBtnText,
+        admin_url_suffix: (cfgAdminUrlSuffix || '9999').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 10),
 
         enable_adsense: cfgEnableAdsense,
         adsense_client_id: cfgAdsenseClientId,
@@ -1098,6 +1100,7 @@ export default function AdminPortal({
         admin_login_title: cfgAdminLoginTitle,
         admin_login_subtitle: cfgAdminLoginSubtitle,
         admin_login_btn_text: cfgAdminLoginBtnText,
+        admin_url_suffix: (cfgAdminUrlSuffix || '9999').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 10),
 
         // 10 Model Display Values
         event_badge_text: cfgEventBadgeText,
@@ -1221,7 +1224,7 @@ export default function AdminPortal({
     }
   };
 
-  const logoutHardLink = typeof window !== 'undefined' ? `${window.location.origin}/admin?logout=true` : '/admin?logout=true';
+  const logoutHardLink = typeof window !== 'undefined' ? `${window.location.origin}/admin-${cfgAdminUrlSuffix || '9999'}?logout=true` : `/admin-${cfgAdminUrlSuffix || '9999'}?logout=true`;
 
   const copyLogoutLink = () => {
     navigator.clipboard.writeText(logoutHardLink);
@@ -5410,6 +5413,33 @@ export default function AdminPortal({
                     placeholder="Masuk Portal CMS"
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
                   />
+                </div>
+
+                <div className="md:col-span-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      🔒 Suffix Rahasia URL Admin (admin_url_suffix)
+                    </label>
+                    <span className="text-[11px] font-mono font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2.5 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
+                      URL Aktif: /admin-{cfgAdminUrlSuffix || '9999'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Sistem proteksi dari brute force/bot. Tentukan suffix 4 karakter alfanumerik (contoh: <code className="text-rose-500">9999</code>, <code className="text-rose-500">6969</code>, <code className="text-rose-500">kuda</code>). Default: <code className="text-rose-500">9999</code>.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold font-mono text-slate-500 dark:text-slate-400 px-3 py-2 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                      https://parenting.my.id/admin-
+                    </span>
+                    <input
+                      type="text"
+                      maxLength={10}
+                      value={cfgAdminUrlSuffix}
+                      onChange={(e) => setCfgAdminUrlSuffix(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
+                      placeholder="9999"
+                      className="w-32 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold font-mono text-rose-600 dark:text-rose-400 focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

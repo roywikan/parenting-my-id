@@ -59,7 +59,7 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
     } else if (url === '/kesehatan-gizi') {
       if (e) e.preventDefault();
       onNavigate('category', 'Kesehatan & Gizi');
-    } else if (url === '/admin') {
+    } else if (url === '/admin' || url.startsWith('/admin')) {
       if (e) e.preventDefault();
       onNavigate('admin');
     }
@@ -85,6 +85,8 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
       default: return <Heart className="w-5 h-5 fill-current" />;
     }
   };
+
+  const logoutTooltip = `Keluar / Logout (Hard Link: /admin-${siteConfig?.admin_url_suffix || '9999'}?logout=true)`;
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-rose-100 dark:border-slate-800">
@@ -187,7 +189,7 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
                 <button
                   onClick={onLogout}
                   className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white dark:bg-rose-950/50 transition-colors"
-                  title="Keluar / Logout (Hard Link: /admin?logout=true)"
+                  title={logoutTooltip}
                 >
                   Keluar
                 </button>

@@ -66,6 +66,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   admin_login_title: 'Portal Admin Parenting.my.id',
   admin_login_subtitle: 'Sistem Otentikasi Cloudflare D1',
   admin_login_btn_text: 'Masuk Portal CMS',
+  admin_url_suffix: '9999',
   mobile_admin_btn_label: 'Portal Admin & Editor',
   mobile_show_logged_username: false,
   active_theme_preset: 'corp-blue',
