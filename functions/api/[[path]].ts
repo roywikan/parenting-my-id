@@ -20,6 +20,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         ...extraHeaders,
       },
     });
@@ -260,15 +263,16 @@ Sitemap: ${siteUrl}/sitemap.xml
             SELECT 
               p.id, p.title, p.slug, p.content_markdown as contentMarkdown, p.excerpt, 
               p.featured_image as featuredImage, p.category, p.read_time_minutes as readTimeMinutes, 
-              p.author_id as authorId, p.status, p.meta_title as metaTitle, 
-              p.meta_description as metaDescription, p.tags, p.views, p.created_at as createdAt, p.updated_at as updatedAt,
+              p.author_id as authorId, p.co_author_ids as coAuthorIds, p.status, p.rejection_reason as rejectionReason, 
+              p.meta_title as metaTitle, p.meta_description as metaDescription, p.tags, p.views, 
+              p.created_at as createdAt, p.updated_at as updatedAt,
               u.name as authorName, u.avatar as authorAvatar, u.role as authorRole
             FROM posts p
             LEFT JOIN users u ON p.author_id = u.id
             ORDER BY p.id DESC
           `).all();
 
-          if (results && results.length > 0) {
+          if (results) {
             return jsonResponse(results);
           }
         } catch (e) {
@@ -281,7 +285,7 @@ Sitemap: ${siteUrl}/sitemap.xml
     // 2. POST /api/posts
     if (path === '/api/posts' && method === 'POST') {
       const body = await request.json() as any;
-      const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, status, rejectionReason, metaTitle, metaDescription, tags } = body;
+      const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, status, rejectionReason, metaTitle, metaDescription, tags } = body;
 
       if (!title || !contentMarkdown) {
         return jsonResponse({ error: 'Judul dan konten markdown wajib diisi.' }, 400);
@@ -297,25 +301,30 @@ Sitemap: ${siteUrl}/sitemap.xml
       const mTitle = metaTitle || `${title} | Parenting.my.id`;
       const mDesc = metaDescription || postExcerpt;
       const tagList = tags || 'parenting, anak';
+      const coAuthorsStr = Array.isArray(coAuthorIds) ? JSON.stringify(coAuthorIds) : null;
       const now = new Date().toISOString();
+
+      const numId = id ? Number(id) : null;
+      const validNumId = numId && !isNaN(numId) ? numId : null;
+      const strId = id ? String(id) : null;
 
       if (env.DB) {
         try {
-          if (id) {
+          if (validNumId || strId || generatedSlug) {
             const updateRes = await env.DB.prepare(`
               UPDATE posts SET 
                 title = ?, slug = ?, content_markdown = ?, excerpt = ?, featured_image = ?,
                 category = ?, read_time_minutes = ?, status = ?, rejection_reason = ?, meta_title = ?, meta_description = ?,
-                tags = ?, updated_at = ?
-              WHERE id = ?
-            `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, postStatus, rejReason, mTitle, mDesc, tagList, now, id).run();
+                tags = ?, co_author_ids = ?, updated_at = ?
+              WHERE (id IS NOT NULL AND (id = ? OR id = ?)) OR slug = ?
+            `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, postStatus, rejReason, mTitle, mDesc, tagList, coAuthorsStr, now, validNumId || -1, strId || '', generatedSlug).run();
 
             if (updateRes.meta?.changes && updateRes.meta.changes > 0) {
               return jsonResponse({
                 success: true,
                 post: {
                   ...body,
-                  id: typeof id === 'number' ? id : Number(id),
+                  id: validNumId || id,
                   slug: generatedSlug,
                   status: postStatus,
                   rejectionReason: rejReason,
@@ -325,13 +334,13 @@ Sitemap: ${siteUrl}/sitemap.xml
             }
           }
 
-          // Fallback to INSERT if new post or ID not found in D1
+          // Fallback to INSERT if new post or ID/Slug not found in D1
           const insertResult = await env.DB.prepare(`
-            INSERT INTO posts (title, slug, content_markdown, excerpt, featured_image, category, read_time_minutes, author_id, status, rejection_reason, meta_title, meta_description, tags, views, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
-          `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, authorId || 1, postStatus, rejReason, mTitle, mDesc, tagList, now, now).run();
+            INSERT INTO posts (title, slug, content_markdown, excerpt, featured_image, category, read_time_minutes, author_id, co_author_ids, status, rejection_reason, meta_title, meta_description, tags, views, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
+          `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, authorId || 1, coAuthorsStr, postStatus, rejReason, mTitle, mDesc, tagList, now, now).run();
 
-          const newId = insertResult.meta?.last_row_id || id || Date.now();
+          const newId = insertResult.meta?.last_row_id || validNumId || id || Date.now();
 
           return jsonResponse({
             success: true,
@@ -345,6 +354,7 @@ Sitemap: ${siteUrl}/sitemap.xml
               category: cat,
               readTimeMinutes: readMin,
               authorId: authorId || 1,
+              coAuthorIds: coAuthorIds || [],
               status: postStatus,
               rejectionReason: rejReason,
               metaTitle: mTitle,
@@ -361,7 +371,7 @@ Sitemap: ${siteUrl}/sitemap.xml
         }
       }
 
-      return jsonResponse({ success: true, post: { ...body, id: id || Date.now(), slug: generatedSlug } });
+      return jsonResponse({ success: true, post: { ...body, id: validNumId || id || Date.now(), slug: generatedSlug, status: postStatus } });
     }
 
     // 3. DELETE /api/posts/:id

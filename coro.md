@@ -165,6 +165,15 @@ ALTER TABLE posts ADD COLUMN rejection_reason TEXT;
 5. Masuk ke tab **Custom domains** -> Klik **Set up a custom domain**.
 6. Ketik `parenting.my.id` dan klik **Continue**. Cloudflare akan memverifikasi DNS dan mengaktifkan sertifikat SSL HTTPS.
 
+### E. Penanganan Cache Cloudflare & Penerbitan Artikel ("Setujui & Terbitkan")
+Apabila terjadi kondisi di mana notifikasi penerbitan berhasil muncul namun status artikel belum langsung ter-update di publik, hal ini umumnya disebabkan oleh dua faktor pada lingkungan Cloudflare:
+1. **Cloudflare Edge Cache / Browser HTTP Cache**:
+   - Fungsi API backend Cloudflare Pages Function `/api/posts` telah dilengkapi dengan header pencegah cache ketat: `Cache-Control: no-cache, no-store, must-revalidate, max-age=0`.
+   - Permintaan data artikel di peramban secara otomatis menambahkan parameter *cache buster* timestamp (`/api/posts?_t=TIMESTAMP`) untuk memaksa Cloudflare selalu mengambil data artikel paling segar (*fresh state*) dari D1 Database.
+2. **Pencocokan ID & Slug pada Database D1**:
+   - Query `UPDATE` di Cloudflare D1 sekarang melakukan perbandingan fleksibel pada ID (tipe *integer* maupun *string*) serta kecocokan `slug` artikel (`WHERE (id = ? OR id = ?) OR slug = ?`).
+   - Apabila artikel belum ada di D1 (misalnya draf lama sebelum D1 aktif), sistem secara otomatis melakukan `INSERT INTO posts` dengan status `published`, sehingga editan tidak pernah hilang.
+
 ---
 
 ## 🎨 LANGKAH 3: Logika Tampilan & Tema (Dark/Light Mode)

@@ -120,11 +120,16 @@ export default function App() {
       setIsPostsLoading(true);
     }
     try {
-      const res = await fetch('/api/posts');
+      const res = await fetch('/api/posts?_t=' + Date.now(), {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       const contentType = res.headers.get('content-type');
       if (res.ok && contentType && contentType.includes('application/json')) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setPosts(data);
         }
       }
@@ -252,9 +257,9 @@ export default function App() {
 
       if (data?.post) {
         setPosts((prevPosts) => {
-          const exists = prevPosts.some((p) => String(p.id) === String(data.post.id));
+          const exists = prevPosts.some((p) => String(p.id) === String(data.post.id) || p.slug === data.post.slug);
           if (exists) {
-            return prevPosts.map((p) => (String(p.id) === String(data.post.id) ? data.post : p));
+            return prevPosts.map((p) => ((String(p.id) === String(data.post.id) || p.slug === data.post.slug) ? { ...p, ...data.post } : p));
           }
           return [data.post, ...prevPosts];
         });
