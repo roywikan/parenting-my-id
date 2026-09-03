@@ -247,9 +247,9 @@ export default function ClassifiedAdsHomeLayout({ posts, onSelectPost, siteConfi
                 {post.excerpt}
               </p>
 
-              <div className="pt-2 flex items-center justify-between font-sans text-xs font-bold text-rose-800 dark:text-rose-300">
-                <span>Oleh: {post.authorName}</span>
-                <span className="group-hover:translate-x-1 transition-transform">Baca Warta →</span>
+              <div className="pt-2 flex flex-wrap items-center justify-between gap-2 font-sans text-xs font-bold text-rose-800 dark:text-rose-300">
+                <span className="truncate min-w-0 flex-1">Oleh: {post.authorName}</span>
+                <span className="group-hover:translate-x-1 transition-transform shrink-0 whitespace-nowrap">Baca Warta →</span>
               </div>
             </article>
           ))}
