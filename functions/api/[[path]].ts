@@ -255,6 +255,191 @@ Sitemap: ${siteUrl}/sitemap.xml
       });
     }
 
+    // 0e. GET /api/users
+    if (path === '/api/users' && method === 'GET') {
+      const defaultUsers = [
+        {
+          id: 1,
+          email: 'admin@parenting.my.id',
+          name: 'Dr. Ratna Sari, M.Psi',
+          role: 'admin',
+          avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=75&fm=webp',
+          title: 'Psikolog Anak & Pakar Parenting',
+          bio: 'Psikolog anak dan praktisi parenting terkemuka di Indonesia.',
+          socialInstagram: 'https://instagram.com',
+          socialLinkedin: 'https://linkedin.com',
+          socialWebsite: 'https://parenting.my.id'
+        },
+        {
+          id: 2,
+          email: 'penulis@parenting.my.id',
+          name: 'Ahmad Zulkarnain, S.Ked',
+          role: 'writer',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=75&fm=webp',
+          title: 'Edukator Kesehatan Anak & Balita',
+          bio: 'Edukator kesehatan anak dan spesialis gizi tumbuh kembang balita.',
+          socialInstagram: 'https://instagram.com',
+          socialLinkedin: '',
+          socialWebsite: ''
+        }
+      ];
+
+      if (env.DB) {
+        try {
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS users (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              email TEXT UNIQUE,
+              password TEXT,
+              name TEXT,
+              role TEXT,
+              avatar TEXT,
+              bio TEXT,
+              title TEXT,
+              social_instagram TEXT,
+              social_linkedin TEXT,
+              social_website TEXT,
+              created_at TEXT
+            )
+          `).run();
+
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN title TEXT").run(); } catch {}
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN social_instagram TEXT").run(); } catch {}
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN social_linkedin TEXT").run(); } catch {}
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN social_website TEXT").run(); } catch {}
+
+          const { results } = await env.DB.prepare(`
+            SELECT 
+              id, email, name, role, avatar, bio, title,
+              social_instagram as socialInstagram,
+              social_linkedin as socialLinkedin,
+              social_website as socialWebsite,
+              created_at as createdAt
+            FROM users
+            ORDER BY id ASC
+          `).all();
+
+          if (results && results.length > 0) {
+            return jsonResponse(results);
+          }
+        } catch (e) {
+          console.error('Error fetching users from D1:', e);
+        }
+      }
+      return jsonResponse(defaultUsers);
+    }
+
+    // 0f. POST /api/users
+    if (path === '/api/users' && method === 'POST') {
+      const body = await request.json() as any;
+      const { id, name, email, password, role, avatar, title, bio, socials } = body;
+
+      if (!name || !email) {
+        return jsonResponse({ error: 'Nama dan Email wajib diisi.' }, 400);
+      }
+
+      const instagram = socials?.instagram || body.socialInstagram || '';
+      const linkedin = socials?.linkedin || body.socialLinkedin || '';
+      const website = socials?.website || body.socialWebsite || '';
+      const userRole = role || 'writer';
+      const userAvatar = avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80';
+      const userTitle = title || 'Edukator Parenting';
+      const userBio = bio || 'Penulis dan kontributor artikel.';
+      const now = new Date().toISOString();
+
+      if (env.DB) {
+        try {
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS users (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              email TEXT UNIQUE,
+              password TEXT,
+              name TEXT,
+              role TEXT,
+              avatar TEXT,
+              bio TEXT,
+              title TEXT,
+              social_instagram TEXT,
+              social_linkedin TEXT,
+              social_website TEXT,
+              created_at TEXT
+            )
+          `).run();
+
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN title TEXT").run(); } catch {}
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN social_instagram TEXT").run(); } catch {}
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN social_linkedin TEXT").run(); } catch {}
+          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN social_website TEXT").run(); } catch {}
+
+          if (id) {
+            const existing = await env.DB.prepare('SELECT id FROM users WHERE id = ?').bind(id).first();
+            if (existing) {
+              if (password && String(password).trim().length > 0) {
+                await env.DB.prepare(`
+                  UPDATE users SET name = ?, email = ?, password = ?, role = ?, avatar = ?, title = ?, bio = ?, social_instagram = ?, social_linkedin = ?, social_website = ?
+                  WHERE id = ?
+                `).bind(name, email, String(password), userRole, userAvatar, userTitle, userBio, instagram, linkedin, website, id).run();
+              } else {
+                await env.DB.prepare(`
+                  UPDATE users SET name = ?, email = ?, role = ?, avatar = ?, title = ?, bio = ?, social_instagram = ?, social_linkedin = ?, social_website = ?
+                  WHERE id = ?
+                `).bind(name, email, userRole, userAvatar, userTitle, userBio, instagram, linkedin, website, id).run();
+              }
+
+              return jsonResponse({
+                success: true,
+                user: { id: Number(id), name, email, role: userRole, avatar: userAvatar, title: userTitle, bio: userBio, socialInstagram: instagram, socialLinkedin: linkedin, socialWebsite: website }
+              });
+            }
+          }
+
+          const insertRes = await env.DB.prepare(`
+            INSERT INTO users (name, email, password, role, avatar, title, bio, social_instagram, social_linkedin, social_website, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(name, email, password || 'writer123', userRole, userAvatar, userTitle, userBio, instagram, linkedin, website, now).run();
+
+          const newId = insertRes.meta?.last_row_id || Date.now();
+
+          return jsonResponse({
+            success: true,
+            user: { id: newId, name, email, role: userRole, avatar: userAvatar, title: userTitle, bio: userBio, socialInstagram: instagram, socialLinkedin: linkedin, socialWebsite: website, createdAt: now }
+          });
+        } catch (e: any) {
+          console.error('Error saving user to D1:', e);
+          return jsonResponse({ error: 'Gagal menyimpan user ke D1: ' + e.message }, 500);
+        }
+      }
+
+      return jsonResponse({
+        success: true,
+        user: { id: id || Date.now(), name, email, role: userRole, avatar: userAvatar, title: userTitle, bio: userBio, socialInstagram: instagram, socialLinkedin: linkedin, socialWebsite: website }
+      });
+    }
+
+    // 0g. DELETE /api/users
+    if ((path === '/api/users' || path.startsWith('/api/users/')) && method === 'DELETE') {
+      const urlObj = new URL(request.url);
+      let userIdParam = urlObj.searchParams.get('id');
+      if (!userIdParam && path.startsWith('/api/users/')) {
+        userIdParam = path.split('/')[3];
+      }
+
+      const numId = userIdParam ? Number(userIdParam) : null;
+      if (numId === 1) {
+        return jsonResponse({ error: 'Admin Utama tidak dapat dihapus.' }, 400);
+      }
+
+      if (env.DB && numId) {
+        try {
+          await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(numId).run();
+        } catch (e: any) {
+          console.error('Error deleting user from D1:', e);
+        }
+      }
+
+      return jsonResponse({ success: true, message: 'Penulis / User berhasil dihapus.' });
+    }
+
     // 1. GET /api/posts
     if (path === '/api/posts' && method === 'GET') {
       if (env.DB) {
