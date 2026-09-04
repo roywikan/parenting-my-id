@@ -34,6 +34,116 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   const siteUrl = 'https://parenting.my.id';
 
+  const escapeXml = (unsafe: any): string => {
+    if (unsafe == null) return '';
+    return String(unsafe)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  };
+
+  const escapeCdata = (text: any): string => {
+    if (text == null) return '';
+    return String(text).replace(/\]\]>/g, ']]]]><![CDATA[>');
+  };
+
+  // Security: Authenticate Bearer or session token against D1 users and default credentials
+  const authenticateRequest = async (allowedRoles?: string[]): Promise<{ user?: any; errorResponse?: Response }> => {
+    const authHeader = request.headers.get('Authorization') || request.headers.get('x-session-token') || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+
+    if (!token) {
+      return {
+        errorResponse: jsonResponse({ error: 'Akses ditolak: Token autentikasi diperlukan.' }, 401),
+      };
+    }
+
+    const tokenMatch = token.match(/^session_(\d+)(?:_([a-zA-Z0-9]+))?_(\d+)$/);
+    if (!tokenMatch) {
+      return {
+        errorResponse: jsonResponse({ error: 'Token sesi tidak valid.' }, 401),
+      };
+    }
+
+    const userId = Number(tokenMatch[1]);
+    let user: any = null;
+
+    if (env.DB) {
+      try {
+        const dbUser = await env.DB.prepare('SELECT id, email, role, name FROM users WHERE id = ?').bind(userId).first();
+        if (dbUser) {
+          user = {
+            id: Number(dbUser.id),
+            email: dbUser.email,
+            role: dbUser.role || 'writer',
+            name: dbUser.name,
+          };
+        }
+      } catch (e) {
+        console.error('Error fetching user for auth in D1:', e);
+      }
+    }
+
+    if (!user) {
+      if (userId === 1) {
+        user = { id: 1, email: 'admin@parenting.my.id', role: 'admin', name: 'Dr. Ratna Sari, M.Psi' };
+      } else if (userId === 2) {
+        user = { id: 2, email: 'penulis@parenting.my.id', role: 'writer', name: 'Ahmad Zulkarnain, S.Ked' };
+      }
+    }
+
+    if (!user) {
+      return {
+        errorResponse: jsonResponse({ error: 'Pengguna tidak ditemukan atau sesi telah kedaluwarsa.' }, 401),
+      };
+    }
+
+    if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+      return {
+        errorResponse: jsonResponse({ error: 'Akses ditolak: Anda tidak memiliki izin untuk tindakan ini.' }, 403),
+      };
+    }
+
+    return { user };
+  };
+
+  // Slug generator with collision avoidance
+  const getUniqueSlugD1 = async (baseText: string, excludeId?: number | string | null): Promise<string> => {
+    let cleanBase = (baseText || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    if (!cleanBase) cleanBase = 'artikel';
+
+    if (!env.DB) return cleanBase;
+
+    let candidate = cleanBase;
+    let counter = 2;
+    const numExcludeId = excludeId ? Number(excludeId) : null;
+
+    while (true) {
+      try {
+        let query = 'SELECT id FROM posts WHERE slug = ?';
+        const bindings: any[] = [candidate];
+        if (numExcludeId && !isNaN(numExcludeId)) {
+          query += ' AND id != ?';
+          bindings.push(numExcludeId);
+        }
+        const existing = await env.DB.prepare(query).bind(...bindings).first();
+        if (!existing) {
+          return candidate;
+        }
+        candidate = `${cleanBase}-${counter}`;
+        counter++;
+      } catch {
+        return candidate;
+      }
+    }
+  };
+
   try {
     // 0b. DYNAMIC SITEMAP.XML
     if (path === '/sitemap.xml' && method === 'GET') {
@@ -47,10 +157,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
 
         const urls = postsList.map(
-          (post: any) => `<url><loc>${siteUrl}/baca/${post.slug}</loc><lastmod>${new Date(post.updated_at || Date.now()).toISOString().split('T')[0]}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`
+          (post: any) => {
+            const loc = escapeXml(`${siteUrl}/baca/${encodeURIComponent(post.slug)}`);
+            const lastMod = escapeXml(new Date(post.updated_at || Date.now()).toISOString().split('T')[0]);
+            return `<url><loc>${loc}</loc><lastmod>${lastMod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
+          }
         ).join('');
 
-        const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${siteUrl}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>${urls}</urlset>`.trim();
+        const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${escapeXml(siteUrl)}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>${urls}</urlset>`.trim();
 
         return new Response(xml, {
           headers: {
@@ -78,21 +192,24 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
 
         const items = postsList.map(
-          (post: any) => `
+          (post: any) => {
+            const link = escapeXml(`${siteUrl}/baca/${encodeURIComponent(post.slug)}`);
+            return `
     <item>
-      <title><![CDATA[${post.title}]]></title>
-      <link>${siteUrl}/baca/${post.slug}</link>
-      <guid>${siteUrl}/baca/${post.slug}</guid>
-      <description><![CDATA[${post.excerpt}]]></description>
-      <pubDate>${new Date(post.created_at || Date.now()).toUTCString()}</pubDate>
-    </item>`
+      <title><![CDATA[${escapeCdata(post.title || '')}]]></title>
+      <link>${link}</link>
+      <guid>${link}</guid>
+      <description><![CDATA[${escapeCdata(post.excerpt || '')}]]></description>
+      <pubDate>${escapeXml(new Date(post.created_at || Date.now()).toUTCString())}</pubDate>
+    </item>`;
+          }
         ).join('');
 
         const rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
   <channel>
     <title>Parenting.my.id - Edukasi &amp; Pola Asuh Anak Modern</title>
-    <link>${siteUrl}</link>
+    <link>${escapeXml(siteUrl)}</link>
     <description>Portal artikel parenting, gizi anak, stimulasi balita, dan pencegahan stunting di Indonesia.</description>
     <language>id-id</language>
     ${items}
@@ -293,6 +410,9 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 0f. POST /api/users
     if (path === '/api/users' && method === 'POST') {
+      const auth = await authenticateRequest(['admin']);
+      if (auth.errorResponse) return auth.errorResponse;
+
       const body = await request.json() as any;
       const { id, name, email, password, role, avatar, title, bio, socials } = body;
 
@@ -380,6 +500,9 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 0g. DELETE /api/users
     if ((path === '/api/users' || path.startsWith('/api/users/')) && method === 'DELETE') {
+      const auth = await authenticateRequest(['admin']);
+      if (auth.errorResponse) return auth.errorResponse;
+
       const urlObj = new URL(request.url);
       let userIdParam = urlObj.searchParams.get('id');
       if (!userIdParam && path.startsWith('/api/users/')) {
@@ -431,6 +554,9 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 2. POST /api/posts
     if (path === '/api/posts' && method === 'POST') {
+      const auth = await authenticateRequest(['admin', 'editor', 'writer']);
+      if (auth.errorResponse) return auth.errorResponse;
+
       const body = await request.json() as any;
       const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, status, rejectionReason, metaTitle, metaDescription, tags } = body;
 
@@ -438,7 +564,7 @@ Sitemap: ${siteUrl}/sitemap.xml
         return jsonResponse({ error: 'Judul dan konten markdown wajib diisi.' }, 400);
       }
 
-      const generatedSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const generatedSlug = await getUniqueSlugD1(slug || title, id);
       const postExcerpt = excerpt || contentMarkdown.slice(0, 150) + '...';
       const image = featuredImage || 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=700&q=75&fm=webp';
       const cat = category || 'Pola Asuh';
@@ -579,6 +705,9 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 3. DELETE /api/posts/:id
     if (path.startsWith('/api/posts/') && method === 'DELETE') {
+      const auth = await authenticateRequest(['admin', 'editor', 'writer']);
+      if (auth.errorResponse) return auth.errorResponse;
+
       const parts = path.split('/');
       const id = parts[parts.length - 1];
       if (env.DB && id) {
@@ -609,6 +738,9 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 5. POST /api/autolinks
     if (path === '/api/autolinks' && method === 'POST') {
+      const auth = await authenticateRequest(['admin', 'editor']);
+      if (auth.errorResponse) return auth.errorResponse;
+
       const body = await request.json() as any;
       const { keyword, targetUrl, description } = body;
       if (!keyword || !targetUrl) {
@@ -635,6 +767,9 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 6. DELETE /api/autolinks/:id
     if (path.startsWith('/api/autolinks/') && method === 'DELETE') {
+      const auth = await authenticateRequest(['admin', 'editor']);
+      if (auth.errorResponse) return auth.errorResponse;
+
       const parts = path.split('/');
       const id = parts[parts.length - 1];
       if (env.DB && id) {
@@ -681,6 +816,9 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 8. POST /api/config
     if (path === '/api/config' && method === 'POST') {
+      const auth = await authenticateRequest(['admin']);
+      if (auth.errorResponse) return auth.errorResponse;
+
       const body = await request.json() as Record<string, any>;
       if (!body || typeof body !== 'object') {
         return jsonResponse({ error: 'Data konfigurasi tidak valid.' }, 400);
@@ -818,10 +956,19 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 9. POST /api/auth/update-credentials
     if (path === '/api/auth/update-credentials' && method === 'POST') {
-      const { id, name, email, password, avatar, bio } = await request.json() as any;
+      const auth = await authenticateRequest(['admin', 'editor', 'writer']);
+      if (auth.errorResponse) return auth.errorResponse;
+
+      const { id, name, email, oldPassword, password, avatar, bio } = await request.json() as any;
 
       if (!email || !id) {
         return jsonResponse({ error: 'ID dan Email wajib diisi.' }, 400);
+      }
+
+      const numId = Number(id);
+      // Security: Non-admin users can only update their own profile
+      if (auth.user?.role !== 'admin' && auth.user?.id !== numId) {
+        return jsonResponse({ error: 'Akses ditolak: Anda hanya dapat memperbarui profil akun Anda sendiri.' }, 403);
       }
 
       if (env.DB) {
@@ -849,32 +996,37 @@ Sitemap: ${siteUrl}/sitemap.xml
             await env.DB.prepare("DELETE FROM configs WHERE key LIKE 'admin_%' OR key LIKE '%password%' OR key LIKE '%secret%'").run();
           } catch {}
 
-          const existingUser = await env.DB.prepare('SELECT id FROM users WHERE id = ? OR LOWER(email) = LOWER(?)').bind(id, email).first();
+          const existingUser = await env.DB.prepare('SELECT id, email, password, role FROM users WHERE id = ? OR LOWER(email) = LOWER(?)').bind(numId, email).first();
 
           if (existingUser) {
-            if (password && password.trim().length > 0) {
+            if (password && String(password).trim().length > 0) {
+              // Security: Verify old password before updating
+              if (existingUser.password && (!oldPassword || existingUser.password !== oldPassword)) {
+                return jsonResponse({ error: 'Password lama salah. Verifikasi keamanan gagal.' }, 400);
+              }
+
               await env.DB.prepare(`
                 UPDATE users SET name = ?, email = ?, password = ?, avatar = ?, bio = ?
                 WHERE id = ?
-              `).bind(name || 'Admin', email, password, avatar || '', bio || '', existingUser.id).run();
+              `).bind(name || 'User', email, String(password), avatar || '', bio || '', existingUser.id).run();
             } else {
               await env.DB.prepare(`
                 UPDATE users SET name = ?, email = ?, avatar = ?, bio = ?
                 WHERE id = ?
-              `).bind(name || 'Admin', email, avatar || '', bio || '', existingUser.id).run();
+              `).bind(name || 'User', email, avatar || '', bio || '', existingUser.id).run();
             }
           } else {
             await env.DB.prepare(`
               INSERT INTO users (id, email, password, name, role, avatar, bio, created_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            `).bind(id, email, password || 'admin123', name || 'Admin', 'admin', avatar || '', bio || '', new Date().toISOString()).run();
+            `).bind(numId, email, password || 'writer123', name || 'User', 'writer', avatar || '', bio || '', new Date().toISOString()).run();
           }
 
-          const updatedUser = await env.DB.prepare('SELECT id, email, name, role, avatar, bio FROM users WHERE id = ? OR LOWER(email) = LOWER(?)').bind(id, email).first();
+          const updatedUser = await env.DB.prepare('SELECT id, email, name, role, avatar, bio FROM users WHERE id = ? OR LOWER(email) = LOWER(?)').bind(numId, email).first();
 
           return jsonResponse({
             success: true,
-            user: updatedUser || { id, email, name, role: 'admin', avatar, bio },
+            user: updatedUser || { id: numId, email, name, role: 'writer', avatar, bio },
             message: 'Kredensial berhasil diperbarui di D1 Database.'
           });
         } catch (e: any) {
@@ -885,7 +1037,7 @@ Sitemap: ${siteUrl}/sitemap.xml
 
       return jsonResponse({
         success: true,
-        user: { id, email, name, role: 'admin', avatar, bio },
+        user: { id: numId, email, name, role: 'writer', avatar, bio },
         message: 'Kredensial diperbarui secara lokal.'
       });
     }
@@ -893,6 +1045,13 @@ Sitemap: ${siteUrl}/sitemap.xml
     // 10. POST /api/auth/login
     if (path === '/api/auth/login' && method === 'POST') {
       const { email, password } = await request.json() as any;
+
+      if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+        return jsonResponse({ error: 'Email dan password wajib diisi.' }, 400);
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanPass = password.trim();
 
       if (env.DB) {
         try {
@@ -915,12 +1074,12 @@ Sitemap: ${siteUrl}/sitemap.xml
           try { await env.DB.prepare("ALTER TABLE users ADD COLUMN bio TEXT").run(); } catch {}
 
           // Query user by email
-          const user = await env.DB.prepare('SELECT id, email, password, name, role, avatar, bio FROM users WHERE LOWER(email) = LOWER(?)').bind(email).first();
+          const user = await env.DB.prepare('SELECT id, email, password, name, role, avatar, bio FROM users WHERE LOWER(email) = LOWER(?)').bind(cleanEmail).first();
           
           if (user) {
-            // Check password if set in D1
-            if (user.password && password && user.password !== password) {
-              return jsonResponse({ error: 'Password yang Anda masukkan salah.' }, 401);
+            // Strict absolute password check
+            if (!cleanPass || user.password !== cleanPass) {
+              return jsonResponse({ error: 'Email atau password salah.' }, 401);
             }
 
             return jsonResponse({
@@ -933,7 +1092,7 @@ Sitemap: ${siteUrl}/sitemap.xml
                 avatar: user.avatar,
                 bio: user.bio,
               },
-              token: `session_${user.id}_${Date.now()}`
+              token: `session_${user.id}_${user.role || 'writer'}_${Date.now()}`
             });
           }
         } catch (e) {
@@ -948,21 +1107,24 @@ Sitemap: ${siteUrl}/sitemap.xml
           const customPass = await env.DB.prepare("SELECT value FROM configs WHERE key = 'admin_password'").first();
 
           if (customEmail?.value && customPass?.value) {
-            const cleanEmail = String(customEmail.value).replace(/^"|"$/g, '');
-            const cleanPass = String(customPass.value).replace(/^"|"$/g, '');
+            const cEmail = String(customEmail.value).replace(/^"|"$/g, '').trim().toLowerCase();
+            const cPass = String(customPass.value).replace(/^"|"$/g, '').trim();
 
-            if (email.toLowerCase() === cleanEmail.toLowerCase() && password === cleanPass) {
+            if (cleanEmail === cEmail) {
+              if (!cleanPass || cleanPass !== cPass) {
+                return jsonResponse({ error: 'Email atau password salah.' }, 401);
+              }
               return jsonResponse({
                 success: true,
                 user: {
                   id: 1,
-                  email: cleanEmail,
+                  email: cEmail,
                   name: 'Admin Utama',
                   role: 'admin',
                   avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=75&fm=webp',
                   bio: 'Administrator Utama Parenting.my.id'
                 },
-                token: `session_1_${Date.now()}`
+                token: `session_1_admin_${Date.now()}`
               });
             }
           }
@@ -972,7 +1134,10 @@ Sitemap: ${siteUrl}/sitemap.xml
       }
 
       // Default initial login check
-      if (email.toLowerCase() === 'admin@parenting.my.id' && (password === 'admin123' || password === 'admin')) {
+      if (cleanEmail === 'admin@parenting.my.id') {
+        if (!cleanPass || cleanPass !== 'admin123') {
+          return jsonResponse({ error: 'Email atau password salah.' }, 401);
+        }
         return jsonResponse({
           success: true,
           user: {
@@ -983,9 +1148,12 @@ Sitemap: ${siteUrl}/sitemap.xml
             avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=75&fm=webp',
             bio: 'Psikolog anak dan praktisi parenting terkemuka di Indonesia.'
           },
-          token: `session_1_${Date.now()}`
+          token: `session_1_admin_${Date.now()}`
         });
-      } else if (email.toLowerCase() === 'penulis@parenting.my.id' && (password === 'writer123' || password === 'writer')) {
+      } else if (cleanEmail === 'penulis@parenting.my.id') {
+        if (!cleanPass || cleanPass !== 'writer123') {
+          return jsonResponse({ error: 'Email atau password salah.' }, 401);
+        }
         return jsonResponse({
           success: true,
           user: {
@@ -996,7 +1164,7 @@ Sitemap: ${siteUrl}/sitemap.xml
             avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=75&fm=webp',
             bio: 'Edukator kesehatan anak dan spesialis gizi tumbuh kembang balita.'
           },
-          token: `session_2_${Date.now()}`
+          token: `session_2_writer_${Date.now()}`
         });
       }
 
@@ -1005,6 +1173,9 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 8a. POST /api/upload-cloudinary & /api/upload (Cloudinary WebP Pipeline with GitHub Fallback)
     if ((path === '/api/upload-cloudinary' || path === '/api/upload') && method === 'POST') {
+      const auth = await authenticateRequest(['admin', 'editor', 'writer']);
+      if (auth.errorResponse) return auth.errorResponse;
+
       let filename = '';
       let base64Content = '';
       try {
@@ -1016,57 +1187,64 @@ Sitemap: ${siteUrl}/sitemap.xml
           return jsonResponse({ error: 'Filename dan Base64 content wajib diisi' }, 400);
         }
 
-        const cloudName = (env as any).CLOUDINARY_CLOUD_NAME || 'harga-promo-diskon';
-        const apiKey = (env as any).CLOUDINARY_API_KEY || '945558876687176';
-        const apiSecret = (env as any).CLOUDINARY_API_SECRET || '6TBtS1kzFgoNg_4SHmzmSImyPlE';
+        // Limit upload size to 5MB (Base64 string length roughly ~6.8MB)
+        if (base64Content.length > 7 * 1024 * 1024) {
+          return jsonResponse({ error: 'Ukuran file terlalu besar. Maksimal 5MB.' }, 400);
+        }
+
+        const cloudName = (env as any).CLOUDINARY_CLOUD_NAME;
+        const apiKey = (env as any).CLOUDINARY_API_KEY;
+        const apiSecret = (env as any).CLOUDINARY_API_SECRET;
         const folder = (env as any).CLOUDINARY_FOLDER || 'parenting-my-id';
 
-        const timestamp = Math.floor(Date.now() / 1000).toString();
-        const format = 'webp';
-        const transformation = 'c_limit,w_1024,q_auto';
+        if (cloudName && apiKey && apiSecret) {
+          const timestamp = Math.floor(Date.now() / 1000).toString();
+          const format = 'webp';
+          const transformation = 'c_limit,w_1024,q_auto';
 
-        const stringToSign = `folder=${folder}&format=${format}&timestamp=${timestamp}&transformation=${transformation}${apiSecret}`;
+          const stringToSign = `folder=${folder}&format=${format}&timestamp=${timestamp}&transformation=${transformation}${apiSecret}`;
 
-        const encoder = new TextEncoder();
-        const data = encoder.encode(stringToSign);
-        const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+          const encoder = new TextEncoder();
+          const data = encoder.encode(stringToSign);
+          const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-        const formData = new URLSearchParams();
-        const filePayload = base64Content.startsWith('data:') ? base64Content : `data:image/jpeg;base64,${base64Content}`;
-        formData.append('file', filePayload);
-        formData.append('api_key', apiKey);
-        formData.append('timestamp', timestamp);
-        formData.append('folder', folder);
-        formData.append('format', format);
-        formData.append('transformation', transformation);
-        formData.append('signature', signature);
+          const formData = new URLSearchParams();
+          const filePayload = base64Content.startsWith('data:') ? base64Content : `data:image/jpeg;base64,${base64Content}`;
+          formData.append('file', filePayload);
+          formData.append('api_key', apiKey);
+          formData.append('timestamp', timestamp);
+          formData.append('folder', folder);
+          formData.append('format', format);
+          formData.append('transformation', transformation);
+          formData.append('signature', signature);
 
-        const cRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: formData.toString(),
-        });
-
-        const cData: any = await cRes.json();
-        if (cRes.ok && cData.secure_url) {
-          let webpUrl = cData.secure_url;
-          if (!webpUrl.toLowerCase().endsWith('.webp')) {
-            webpUrl = webpUrl.replace(/\.[a-z0-9]+$/i, '.webp');
-          }
-          return jsonResponse({
-            success: true,
-            url: webpUrl,
-            raw_url: cData.secure_url,
-            format: 'webp',
-            width: cData.width,
-            height: cData.height,
-            source: 'cloudinary',
-            bytes: cData.bytes,
+          const cRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString(),
           });
-        } else {
-          console.warn('Cloudinary CF error, using GitHub fallback:', cData);
+
+          const cData: any = await cRes.json();
+          if (cRes.ok && cData.secure_url) {
+            let webpUrl = cData.secure_url;
+            if (!webpUrl.toLowerCase().endsWith('.webp')) {
+              webpUrl = webpUrl.replace(/\.[a-z0-9]+$/i, '.webp');
+            }
+            return jsonResponse({
+              success: true,
+              url: webpUrl,
+              raw_url: cData.secure_url,
+              format: 'webp',
+              width: cData.width,
+              height: cData.height,
+              source: 'cloudinary',
+              bytes: cData.bytes,
+            });
+          } else {
+            console.warn('Cloudinary CF error, using GitHub fallback:', cData);
+          }
         }
       } catch (err: any) {
         console.warn('Cloudinary CF exception, using GitHub fallback:', err);
@@ -1075,7 +1253,7 @@ Sitemap: ${siteUrl}/sitemap.xml
       // GitHub Storage Fallback
       try {
         const token = env.GITHUB_TOKEN;
-        const owner = env.GITHUB_OWNER || 'vswi';
+        const owner = env.GITHUB_OWNER || 'roywikan';
         const repo = env.GITHUB_REPO || 'parenting-my-id';
         const branch = env.GITHUB_BRANCH || 'main';
 
@@ -1122,7 +1300,18 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 8b. POST /api/upload-github (Legacy Fallback)
     if (path === '/api/upload-github' && method === 'POST') {
+      const auth = await authenticateRequest(['admin', 'editor', 'writer']);
+      if (auth.errorResponse) return auth.errorResponse;
+
       const { filename, base64Content } = await request.json() as any;
+      if (!filename || !base64Content) {
+        return jsonResponse({ error: 'Filename dan Base64 content wajib diisi.' }, 400);
+      }
+
+      if (base64Content.length > 7 * 1024 * 1024) {
+        return jsonResponse({ error: 'Ukuran file terlalu besar. Maksimal 5MB.' }, 400);
+      }
+
       const token = env.GITHUB_TOKEN;
       const owner = env.GITHUB_OWNER || 'roywikan';
       const repo = env.GITHUB_REPO || 'parenting-my-id';
@@ -1148,7 +1337,7 @@ Sitemap: ${siteUrl}/sitemap.xml
         },
         body: JSON.stringify({
           message,
-          content: base64Content,
+          content: base64Content.replace(/^data:image\/\w+;base64,/, ''),
           branch,
         }),
       });
@@ -1227,7 +1416,15 @@ Sitemap: ${siteUrl}/sitemap.xml
           return jsonResponse({ error: 'Nama, komentar, dan artikel tujuan wajib diisi.' }, 400);
         }
 
-        const avatarName = encodeURIComponent(user_name.trim());
+        const sanitizedName = String(user_name).replace(/<[^>]*>?/gm, '').trim();
+        const sanitizedContent = String(content).replace(/<[^>]*>?/gm, '').trim();
+        const sanitizedEmail = String(user_email || '').replace(/<[^>]*>?/gm, '').trim();
+
+        if (!sanitizedName || !sanitizedContent) {
+          return jsonResponse({ error: 'Nama dan komentar tidak boleh kosong.' }, 400);
+        }
+
+        const avatarName = encodeURIComponent(sanitizedName);
         const avatar = `https://ui-avatars.com/api/?name=${avatarName}&background=f43f5e&color=fff`;
 
         if (env.DB) {
@@ -1249,10 +1446,10 @@ Sitemap: ${siteUrl}/sitemap.xml
             VALUES (?, ?, ?, ?, ?, 'pending')
           `).bind(
             post_slug,
-            user_name.trim(),
-            (user_email || '').trim(),
+            sanitizedName,
+            sanitizedEmail,
             avatar,
-            content.trim()
+            sanitizedContent
           ).run();
         }
 
@@ -1267,6 +1464,9 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 9c. PUT /api/comments/:id or /api/comments/:id/approve (Admin Approve / Update Comment)
     if (path.startsWith('/api/comments/') && method === 'PUT') {
+      const auth = await authenticateRequest(['admin', 'editor']);
+      if (auth.errorResponse) return auth.errorResponse;
+
       if (env.DB) {
         try {
           const id = path.split('/')[3];
@@ -1284,6 +1484,9 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 10. DELETE /api/comments/:id
     if (path.startsWith('/api/comments/') && method === 'DELETE') {
+      const auth = await authenticateRequest(['admin', 'editor']);
+      if (auth.errorResponse) return auth.errorResponse;
+
       if (env.DB) {
         try {
           const id = path.split('/')[3];
@@ -1314,7 +1517,11 @@ Sitemap: ${siteUrl}/sitemap.xml
 
         if (payload && payload.type === 'new_comment' && payload.data) {
           const { by_nickname, by_email, content, page_id } = payload.data;
-          const avatarName = encodeURIComponent(by_nickname || 'Pembaca');
+          const sanitizedName = String(by_nickname || 'Pembaca Anonim').replace(/<[^>]*>?/gm, '').trim();
+          const sanitizedContent = String(content || '').replace(/<[^>]*>?/gm, '').trim();
+          const sanitizedEmail = String(by_email || '').replace(/<[^>]*>?/gm, '').trim();
+
+          const avatarName = encodeURIComponent(sanitizedName || 'Pembaca');
           const avatar = `https://ui-avatars.com/api/?name=${avatarName}&background=f43f5e&color=fff`;
 
           if (env.DB) {
@@ -1336,10 +1543,10 @@ Sitemap: ${siteUrl}/sitemap.xml
               VALUES (?, ?, ?, ?, ?, 'approved')
             `).bind(
               page_id || '',
-              by_nickname || 'Pembaca Anonim',
-              by_email || '',
+              sanitizedName || 'Pembaca Anonim',
+              sanitizedEmail,
               avatar,
-              content || ''
+              sanitizedContent
             ).run();
           }
 

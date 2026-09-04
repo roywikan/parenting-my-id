@@ -198,11 +198,11 @@ DROP TABLE posts_old;
    - **Build output directory**: `dist`
 6. Buka bagian **Environment variables (advanced)** dan tambahkan variabel rahasia berikut:
    - `SITE_URL`: `https://parenting.my.id`
-   - `CLOUDINARY_CLOUD_NAME`: `harga-promo-diskon` *(atau nama cloud Cloudinary Anda)*
-   - `CLOUDINARY_API_KEY`: `945558876687176` *(API Key Cloudinary Master Admin)*
-   - `CLOUDINARY_API_SECRET`: `6TBtS1kzFgoNg_4SHmzmSImyPlE` 🔒 *(Pilih tipe Secret / Encrypted)*
-   - `CLOUDINARY_FOLDER`: `parenting-my-id` *(Folder penyimpanan gambar)*
-   - `GITHUB_TOKEN`: *(Kode token GitHub `ghp_...` dari Langkah 1B)*
+   - `CLOUDINARY_CLOUD_NAME`: *(Nama cloud akun Cloudinary Anda)*
+   - `CLOUDINARY_API_KEY`: *(API Key Cloudinary Master Admin Anda)*
+   - `CLOUDINARY_API_SECRET`: *(API Secret Cloudinary Anda)* 🔒 *(Pilih tipe Secret / Encrypted)*
+   - `CLOUDINARY_FOLDER`: `parenting-my-id` *(Folder penyimpanan aset gambar)*
+   - `GITHUB_TOKEN`: *(Kode Personal Access Token GitHub `ghp_...` dari Langkah 1B)*
    - `GITHUB_OWNER`: *(Username GitHub Anda)*
    - `GITHUB_REPO`: `parenting-my-id`
    - `GITHUB_BRANCH`: `main`
@@ -245,46 +245,101 @@ Sistem menentukan tema tampilan situs berdasarkan aturan baku terpusat:
 
 ---
 
-## 🔑 LANGKAH 4: Panduan Integrasi & Keamanan Cloudinary untuk Webmaster
+## 🔑 LANGKAH 4: Panduan Integrasi, Rotasi Kredensial, & Keamanan Cloudinary untuk Webmaster
 
-Mekanisme unggah gambar artikel pada CMS memanfaatkan **Cloudinary REST API** server-side pipeline (`/api/upload-cloudinary` & `/api/upload`):
+Mekanisme unggah gambar artikel pada Blog Engine `parenting.my.id` memanfaatkan **Cloudinary REST API** yang diproses secara eksklusif melalui server-side pipeline (`/api/upload-cloudinary` & `/api/upload`). Arsitektur ini menjamin keamanan tingkat tinggi karena **kredensial rahasia (API Secret) tidak pernah dikirim ke peramban pengunjung**.
 
-### 1. Kebutuhan Teknis & Izin Master Admin pada API Key Cloudinary
-Untuk mengaktifkan fitur unggah foto, preview popup, dan generasi sintaks Markdown body artikel secara mulus, Webmaster wajib memastikan pengaturan berikut:
+---
 
-1. **Akses Dashboard Cloudinary**:
+### 1. Prinsip Keamanan & Prosedur Setting yang Baik dan Benar
+
+Keamanan kredensial adalah prioritas mutlak (*Security-by-Design*). Seluruh API Key dan API Secret Cloudinary **WAJIB** dikelola melalui variabel lingkungan (*environment variables*) terenkripsi dan **TIDAK BOLEH** ditulis langsung (*hardcoded*) di dalam kode JavaScript, file template, maupun file repositori publik.
+
+Berikut adalah prosedur lengkap konfigurasi Cloudinary pada 3 sisi utama:
+
+#### A. Di Sisi Cloudinary Console (Hak Akses Master Admin & Rotasi Kredensial)
+1. **Masuk ke Cloudinary Console**:
    - Login ke akun [Cloudinary Console](https://console.cloudinary.com/).
-   - Catat **Cloud Name**, **API Key**, dan **API Secret**.
-2. **⚠️ KEBUTUHAN WAJIB: API Key Berperan Master Admin (Write Access)**:
-   - API Key Cloudinary yang digunakan **WAJIB MEMILIKI AKSES PERAN MASTER ADMIN / HAK AKSES WRITE (`actions=["create"]`)**.
-   - **Catatan Penting**: Apabila API Key yang dimasukkan diset *Read-Only* atau dibatasi, server Cloudinary akan menolak proses unggah gambar dengan pesan kesalahan `Request forbidden due to missing permissions (actions=["create"])`.
-   - **Cara Memeriksa / Mengatur di Cloudinary**:
-     Buka **Cloudinary Console** ➔ **Settings** (Ikon Roda Gigi) ➔ **API Keys** ➔ Pastikan API Key yang digunakan memiliki peranan/role **Master Admin** atau hak akses penuh untuk mengunggah & mengelola aset media.
-3. **Penyimpanan Folder Media**:
-   - Tentukan folder target pada variabel `CLOUDINARY_FOLDER` (contoh: `parenting-my-id`) agar seluruh aset foto artikel tersimpan rapi di direktori terdedikasi.
+2. **Periksa Hak Akses Master Admin (Write Access)**:
+   - Klik menu **Settings** (ikon roda gigi) di pojok kiri bawah ➔ pilih tab **Access Keys** / **API Keys**.
+   - API Key yang digunakan **WAJIB MEMILIKI AKSES PERAN MASTER ADMIN / HAK AKSES WRITE (`actions=["create"]`)**.
+   - *Peringatan*: Apabila API Key diset *Read-Only*, Cloudinary akan menolak unggahan dengan pesan: `Request forbidden due to missing permissions (actions=["create"])`.
+3. **Prosedur Rotasi & Pencabutan Secret (Jika Kredensial Pernah Terekspos)**:
+   - Jika API Secret sebelumnya pernah tercatat di repositori publik atau commit git, segera lakukan *credential rotation*:
+     1. Pada baris API Key di halaman **Access Keys**, klik tombol **Generate New Key** atau opsi **Roll Secret**.
+     2. Simpan nilai **API Secret baru** dengan aman di *password manager* Anda.
+     3. Pasang API Secret baru tersebut pada Cloudflare dan GitHub (lihat langkah B dan C di bawah).
+     4. Setelah secret baru terpasang dan deployment aktif, klik **Revoke/Delete** pada secret lama di Cloudinary Console agar permintaan tidak sah langsung diblokir secara permanen.
+4. **Catat 3 Parameter Kunci**:
+   - **Cloud Name** (misal: nama cloud Anda)
+   - **API Key** (angka numerik API key)
+   - **API Secret** (string rahasia hasil generasi terbaru)
 
-### 2. Langkah-Langkah Menyimpan Kredensial Cloudinary Secara Aman di Cloudflare (Secrets)
-Keamanan kredensial adalah prioritas utama (Security First). **API Secret Cloudinary** tidak boleh terekspos di kode frontend peramban maupun repositori GitHub publik.
+---
 
-**Petunjuk Langkah demi Langkah Menyimpan di Cloudflare Pages / Workers**:
-1. Masuk ke [Cloudflare Dashboard](https://dash.cloudflare.com/) ➔ **Workers & Pages**.
-2. Pilih nama proyek Pages Anda (contoh: `parenting-my-id`).
-3. Klik tab **Settings** ➔ pilih menu **Environment variables**.
-4. Klik **Add variable** / **Edit variables** dan masukkan variabel rahasia berikut:
-   - `CLOUDINARY_CLOUD_NAME` = `harga-promo-diskon` *(nama cloud Anda)*
-   - `CLOUDINARY_API_KEY` = `945558876687176` *(API Key Master Admin Anda)*
-   - `CLOUDINARY_API_SECRET` = `6TBtS1kzFgoNg_4SHmzmSImyPlE` 🔒 **(PILIH TIPE: Encrypted / Secret)**
-   - `CLOUDINARY_FOLDER` = `parenting-my-id`
-5. Klik **Save**.
-6. **Alasan Keamanan**:
-   - Variabel bertipe **Encrypted / Secret** dienkripsi secara ketat di infrastruktur Cloudflare dan nilainya tersembunyi total dari siapapun yang mengakses dashboard.
-   - Hanya fungsi server-side Cloudflare Pages Functions (`/functions/api/[[path]].ts`) yang dapat membaca kredensial ini secara internal saat memproses unggahan gambar. Client JS peramban pengunjung **tidak dapat mengintip** `CLOUDINARY_API_SECRET`.
+#### B. Di Sisi GitHub (Menyimpan Secrets & Menghindari Kebocoran Kode)
+1. **Buka Repositori GitHub**:
+   - Masuk ke repositori proyek `parenting-my-id` di GitHub.
+2. **Tambahkan Repository Secrets**:
+   - Buka menu **Settings** ➔ klik **Secrets and variables** di bilah sisi kiri ➔ pilih **Actions**.
+   - Di bagian **Repository secrets**, klik tombol hijau **New repository secret** dan tambahkan:
+     - `CLOUDINARY_CLOUD_NAME` = *(Nama cloud Cloudinary Anda)*
+     - `CLOUDINARY_API_KEY` = *(API Key Master Admin Anda)*
+     - `CLOUDINARY_API_SECRET` = *(API Secret baru Anda)*
+     - `CLOUDINARY_FOLDER` = `parenting-my-id`
+3. **Audit Pencegahan Kebocoran (Anti-Leak Check)**:
+   - Pastikan file `.gitignore` di root proyek memuat baris:
+     ```gitignore
+     .env
+     .env.local
+     *.local
+     ```
+   - Jangan pernah meng-commit file `.env` yang berisikan secret asli ke GitHub. Gunakan file `.env.example` sebagai referensi tanpa nilai rahasia.
+
+---
+
+#### C. Di Sisi Cloudflare Pages / Workers (Environment Variables Enkripsi)
+1. **Buka Cloudflare Dashboard**:
+   - Masuk ke [Cloudflare Dashboard](https://dash.cloudflare.com/) ➔ pilih menu **Workers & Pages**.
+2. **Pilih Proyek Pages**:
+   - Klik nama proyek aplikasi Anda (contoh: `parenting-my-id`).
+3. **Buka Pengaturan Variabel**:
+   - Masuk ke tab **Settings** ➔ pilih menu **Environment variables**.
+4. **Tambahkan Variabel Terenkripsi**:
+   - Klik tombol **Add variable** / **Edit variables**.
+   - Konfigurasikan variabel untuk kedua target lingkungan (**Production** dan **Preview**):
+     - `CLOUDINARY_CLOUD_NAME`: Nilai Cloud Name Anda.
+     - `CLOUDINARY_API_KEY`: Nilai API Key Master Admin Anda.
+     - `CLOUDINARY_API_SECRET`: Nilai API Secret Anda.  
+       *(⚠️ **KRUSIAL**: Wajib centang opsi **Encrypt** / **Secret** agar nilai ini terenkripsi di Cloudflare KMS dan tidak dapat dibaca oleh siapapun di dashboard).*
+     - `CLOUDINARY_FOLDER`: `parenting-my-id` *(Folder penyimpanan aset gambar di Cloudinary)*.
+5. **Simpan Perubahan**:
+   - Klik **Save** untuk menyimpan konfigurasi.
+6. **Deploy Ulang (Trigger Re-deploy)**:
+   - Masuk ke tab **Deployments** pada proyek Pages Anda.
+   - Pada deployment aktif terakhir, klik ikon menu tiga titik `...` ➔ pilih **Retry deployment** (atau lakukan commit baru) agar runtime Cloudflare Pages Functions membaca variabel lingkungan terenkripsi yang baru disimpan.
+
+---
+
+### 2. Arsitektur Keamanan Unggah Server-Side & Middleware
+Pipeline pengunggahan gambar dibangun dengan standar keamanan berlapis:
+1. **Otentikasi & Autorisasi Ketat**:
+   - Seluruh endpoint unggah media (`POST /api/upload-cloudinary`, `POST /api/upload`, `POST /api/upload-github`) dilindungi oleh **Auth Middleware**.
+   - Hanya pengguna dengan sesi aktif ber-role `admin`, `editor`, atau `writer` yang diizinkan mengirimkan berkas media.
+2. **Penandatanganan Permintaan Aman (Server-to-Server)**:
+   - Signature Cloudinary dihitung di sisi server runtime menggunakan SHA-1 (`crypto.subtle.digest('SHA-1', ...)` / `crypto.createHash('sha1')`).
+   - Browser client tidak pernah mengetahui rumus maupun secret penandatanganan.
+3. **Pembatasan Ukuran Berkas & Anti-DoS**:
+   - Validasi sisi client: Berkas gambar dibatasi maksimal **3 MB** sebelum dienkode.
+   - Validasi sisi server: Payload Base64 divalidasi dengan batas ketat maksimal **5 MB** guna mencegah lonjakan memori dan serangan *Denial-of-Service* (DoS).
+
+---
 
 ### 3. Pemrosesan WebP Otomatis & Dimensi Tablet
-- Setiap foto yang diunggah dikonversi secara otomatis menjadi format **`.webp`** ultra-ringan.
-- Lebar gambar dibatasi maksimal **1024px** (selebar layar tablet) melalui transformasi Cloudinary `c_limit,w_1024,q_auto`.
-- Ukuran file dibatasi maksimal **3 MB** pada validasi peramban sebelum diunggah.
-- **Automatic Fallback Pipeline**: Jika server Cloudinary mengalami kendala jaringan, sistem secara otomatis mengalihkan penyimpanan foto ke GitHub Storage (`public/uploads/`).
+- **Konversi Otomatis**: Setiap gambar yang berhasil diunggah langsung dioptimalkan ke format modern **`.webp`** dengan parameter kompresi cerdas Cloudinary (`q_auto,f_webp`).
+- **Dimensi Tablet**: Resolusi lebar gambar dibatasi maksimal **1024px** (`c_limit,w_1024`), menjaga kecepatan muat halaman artikel tetap di bawah 1 detik di koneksi seluler 4G/3G.
+- **Failover Storage Otomatis (High Availability)**:
+  Jika layanan Cloudinary mengalami gangguan teknis atau kuota habis, sistem secara otomatis mengalihkan penyimpanan gambar ke repositori GitHub Storage (`public/uploads/`) melalui GitHub REST API, sehingga editor dan penulis tidak akan pernah terhenti saat mempublikasikan artikel.
 
 ---
 

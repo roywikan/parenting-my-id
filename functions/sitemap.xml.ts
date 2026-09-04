@@ -3,6 +3,16 @@ interface Env {
   SITE_URL?: string;
 }
 
+function escapeXml(unsafe: any): string {
+  if (unsafe == null) return '';
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 const INITIAL_SLUGS = [
   { slug: 'panduan-lengkap-pola-asuh-demokratis-anak-masa-kini', updatedAt: '2026-08-08' },
   { slug: '5-aktivitas-sensory-play-seru-untuk-melatih-motorik-balita', updatedAt: '2026-08-09' },
@@ -35,8 +45,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     .map(
       (p) => `
   <url>
-    <loc>${siteUrl}/baca/${p.slug}</loc>
-    <lastmod>${p.updatedAt}</lastmod>
+    <loc>${escapeXml(`${siteUrl}/baca/${encodeURIComponent(p.slug)}`)}</loc>
+    <lastmod>${escapeXml(p.updatedAt)}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`
@@ -55,9 +65,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     .map(
       (p) => `
   <url>
-    <loc>${p.url}</loc>
+    <loc>${escapeXml(p.url)}</loc>
     <changefreq>monthly</changefreq>
-    <priority>${p.priority}</priority>
+    <priority>${escapeXml(p.priority)}</priority>
   </url>`
     )
     .join('');
@@ -65,7 +75,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>${siteUrl}/</loc>
+    <loc>${escapeXml(siteUrl)}/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>${staticUrls}${urls}

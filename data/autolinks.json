@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "keyword": "pola asuh",
+    "targetUrl": "/baca/panduan-lengkap-pola-asuh-demokratis-anak-masa-kini",
+    "description": "Panduan utama strategi pola asuh positif.",
+    "clickCount": 42
+  },
+  {
+    "id": 2,
+    "keyword": "balita",
+    "targetUrl": "/baca/5-aktivitas-sensory-play-seru-untuk-melatih-motorik-balita",
+    "description": "Edukasi dan rekomendasi aktivitas balita.",
+    "clickCount": 29
+  },
+  {
+    "id": 3,
+    "keyword": "stunting",
+    "targetUrl": "/baca/mengenal-bahaya-stunting-dan-cara-pencegahannya-sejak-1000-hpk",
+    "description": "Pencegahan stunting dan nutrisi emas anak.",
+    "clickCount": 61
+  },
+  {
+    "id": 4,
+    "keyword": "asi eksklusif",
+    "targetUrl": "/baca/mengenal-bahaya-stunting-dan-cara-pencegahannya-sejak-1000-hpk",
+    "description": "Pentingnya gizi dan ASI eksklusif.",
+    "clickCount": 18
+  },
+  {
+    "id": 5,
+    "keyword": "sensory play",
+    "targetUrl": "/baca/5-aktivitas-sensory-play-seru-untuk-melatih-motorik-balita",
+    "description": "Aktivitas stimulasi sensori anak usia dini.",
+    "clickCount": 35
+  },
+  {
+    "id": 6,
+    "keyword": "gizi anak",
+    "targetUrl": "/baca/mengenal-bahaya-stunting-dan-cara-pencegahannya-sejak-1000-hpk",
+    "description": "Nutrisi seimbang untuk tumbuh kembang optimal.",
+    "clickCount": 50
+  }
+]

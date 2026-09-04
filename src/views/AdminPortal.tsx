@@ -13,6 +13,7 @@ import { generateSlug } from '../lib/autolink';
 import RichPostEditor from '../components/RichPostEditor';
 import NavigationBuilder, { PRESET_NAV_ITEMS } from '../components/NavigationBuilder';
 import { sanitizeAndOptimizeImageUrl } from '../lib/imageUtils';
+import { getAuthHeaders } from '../lib/auth';
 
 interface AdminPortalProps {
   currentUser: User | null;
@@ -75,7 +76,10 @@ export default function AdminPortal({
     try {
       const res = await fetch(`/api/comments/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({ status: 'approved' }),
       });
       if (res.ok) {
@@ -91,7 +95,12 @@ export default function AdminPortal({
   const handleDeleteComment = async (id: number) => {
     if (!confirm('Apakah Anda yakin ingin menghapus komentar ini dari database?')) return;
     try {
-      const res = await fetch(`/api/comments/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/comments/${id}`, {
+        method: 'DELETE',
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
       if (res.ok) {
         setComments((prev) => prev.filter((c) => c.id !== id));
       }
@@ -1347,7 +1356,10 @@ export default function AdminPortal({
         try {
           const res = await fetch('/api/upload-cloudinary', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeaders(),
+            },
             body: JSON.stringify({
               filename: file.name,
               base64Content,
@@ -1382,7 +1394,10 @@ export default function AdminPortal({
     try {
       const res = await fetch('/api/ai/generate-meta', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           title: editorTitle,
           content: editorMarkdown,
@@ -1503,7 +1518,10 @@ export default function AdminPortal({
     try {
       const res = await fetch('/api/users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           id: editingWriterId || undefined,
           name: wName,
@@ -1542,6 +1560,9 @@ export default function AdminPortal({
     try {
       const res = await fetch(`/api/users?id=${id}`, {
         method: 'DELETE',
+        headers: {
+          ...getAuthHeaders(),
+        },
       });
       if (res.ok) {
         fetchWriters();

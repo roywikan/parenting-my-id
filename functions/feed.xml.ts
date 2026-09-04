@@ -3,6 +3,21 @@ interface Env {
   SITE_URL?: string;
 }
 
+function escapeXml(unsafe: any): string {
+  if (unsafe == null) return '';
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function escapeCdata(text: any): string {
+  if (text == null) return '';
+  return String(text).replace(/\]\]>/g, ']]]]><![CDATA[>');
+}
+
 const INITIAL_POSTS = [
   {
     title: 'Panduan Lengkap Pola Asuh Demokratis untuk Mendidik Anak Tangguh Masa Kini',
@@ -50,14 +65,17 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   const items = posts
     .map(
-      (p) => `
+      (p) => {
+        const link = escapeXml(`${siteUrl}/baca/${encodeURIComponent(p.slug)}`);
+        return `
     <item>
-      <title><![CDATA[${p.title}]]></title>
-      <link>${siteUrl}/baca/${p.slug}</link>
-      <guid>${siteUrl}/baca/${p.slug}</guid>
-      <description><![CDATA[${p.excerpt}]]></description>
-      <pubDate>${new Date(p.createdAt).toUTCString()}</pubDate>
-    </item>`
+      <title><![CDATA[${escapeCdata(p.title)}]]></title>
+      <link>${link}</link>
+      <guid>${link}</guid>
+      <description><![CDATA[${escapeCdata(p.excerpt)}]]></description>
+      <pubDate>${escapeXml(new Date(p.createdAt).toUTCString())}</pubDate>
+    </item>`;
+      }
     )
     .join('');
 
@@ -65,7 +83,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 <rss version="2.0">
   <channel>
     <title>Parenting.my.id - Edukasi &amp; Pola Asuh Anak</title>
-    <link>${siteUrl}</link>
+    <link>${escapeXml(siteUrl)}</link>
     <description>Portal berita &amp; informasi parenting terpercaya di Indonesia.</description>
     <language>id-id</language>
     ${items}

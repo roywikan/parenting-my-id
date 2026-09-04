@@ -1,4 +1,5 @@
 import { SiteConfig } from '../types';
+import { getAuthHeaders } from './auth';
 
 export const DEFAULT_SITE_CONFIG: SiteConfig = {
   site_name: 'Parenting.my.id',
@@ -343,7 +344,10 @@ export async function saveSiteConfig(config: SiteConfig): Promise<boolean> {
   try {
     const res = await fetch('/api/config', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify(config),
     });
     return res.ok;

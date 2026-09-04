@@ -9,7 +9,7 @@ Dokumen ini memuat kumpulan artikel lengkap dalam format Markdown untuk Large La
 * **URL:** https://parenting.my.id/baca/panduan-lengkap-pola-asuh-demokratis-anak-masa-kini
 * **Penulis:** Dr. Ratna Sari, M.Psi
 * **Kategori:** Pola Asuh
-* **Terakhir Diperbarui:** 2026-08-31T04:13:45.136Z
+* **Terakhir Diperbarui:** 2026-09-01T04:39:21.210Z
 * **Ringkasan:** Pola asuh demokratis menggabungkan kasih sayang, aturan yang konsisten, dan komunikasi terbuka. Simak strategi praktis penerapannya di rumah.
 
 ## Mengapa Pola Asuh Demokratis Sangat Penting?
@@ -21,17 +21,15 @@ Pola asuh demokratis (*authoritative parenting*) hadir sebagai jalan tengah yang
 ---
 
 ### Ciri-Ciri Utama Pola Asuh Demokratis:
-
 1. **Mendengarkan Pendapat Anak:** Orang tua bersedia mendengarkan keluh kesah dan sudut pandang si kecil tanpa langsung menghakimi.
 2. **Aturan yang Jelas dan Beralasan:** Ketika membuat aturan, orang tua menjelaskan *mengapa* aturan tersebut penting.
 3. **Pemberian Apresiasi & Konsekuensi Logis:** Menghargai usaha anak serta menerapkan konsekuensi yang mendidik, bukan hukuman fisik.
 
 ---
 
-## Manfaat Utama bagi Tumbuh Kembang Anak
+### Manfaat Utama bagi Tumbuh Kembang Anak
 
 Penelitian psikologi anak menunjukkan bahwa anak yang dibesarkan dengan **pola asuh** demokratis cenderung:
-
 - Memiliki tingkat kecerdasan emosional (EQ) dan percaya diri yang tinggi.
 - Lebih mandiri dalam memecahkan masalah sehari-hari.
 - Terhindar dari perilaku terisolasi atau kecemasan berlebih di sekolah.
@@ -40,12 +38,9 @@ Untuk kelompok usia **balita**, penerapan komunikasi terbuka sangat efektif jika
 
 ---
 
-> *"Anak-anak tidak membutuhkan orang tua yang sempurna, melainkan orang tua yang hadir, mau mendengarkan, dan konsisten memandu langkah mereka."* — **Dr. Ratna Sari**
+> *"Anak-anak tidak membutuhkan orang tua yang sempurna, melainkan orang tua yang hadir, mau mendengarkan, dan konsisten memandu langkah mereka."* - Dr. Ratna Sari
 
----
-
-## Langkah Praktis Memulai Hari Ini
-
+### Langkah Praktis Memulai Hari Ini
 - **Jadwalkan Waktu Bicara 15 Menit:** Luangkan waktu khusus tanpa *gadget* untuk mengobrol dengan anak sebelum tidur.
 - **Libatkan dalam Keputusan Kecil:** Biarkan si kecil memilih baju atau menu bekal sekolahnya sendiri.
 - **Validasi Emosi:** Saat anak menangis atau marah, katakan *"Ibu tahu kamu kecewa, mari kita tenang dulu lalu cari solusinya bersama."*
@@ -58,7 +53,7 @@ Untuk kelompok usia **balita**, penerapan komunikasi terbuka sangat efektif jika
 * **URL:** https://parenting.my.id/baca/5-aktivitas-sensory-play-seru-untuk-melatih-motorik-balita
 * **Penulis:** Ahmad Zulkarnain, S.Ked
 * **Kategori:** Tumbuh Kembang
-* **Terakhir Diperbarui:** 2026-09-01T04:13:45.136Z
+* **Terakhir Diperbarui:** 2026-09-02T04:39:21.210Z
 * **Ringkasan:** Temukan 5 ide permainan sensory play mudah dan hemat bahan untuk mengasah indera serta ketangkasan motorik balita di rumah.
 
 ## Pentingnya Sensory Play untuk Perkembangan Balita
@@ -100,7 +95,7 @@ Jika anak sudah menunjukkan tanda-tanda kelelahan, istirahatlah dan pastikan keb
 * **URL:** https://parenting.my.id/baca/mengenal-bahaya-stunting-dan-cara-pencegahannya-sejak-1000-hpk
 * **Penulis:** Dr. Ratna Sari, M.Psi
 * **Kategori:** Kesehatan & Gizi
-* **Terakhir Diperbarui:** 2026-09-02T04:13:45.136Z
+* **Terakhir Diperbarui:** 2026-09-03T04:39:21.210Z
 * **Ringkasan:** Stunting berpengaruh besar pada kecerdasan anak. Pelajari langkah pencegahan stunting melalui pemberian ASI eksklusif dan MPASI tinggi protein.
 
 ## Masalah Stunting di Indonesia: Apa yang Perlu Orang Tua Ketahui?
