@@ -1,0 +1,51 @@
+[
+  {
+    "id": 1,
+    "email": "admin@parenting.my.id",
+    "password": "admin123",
+    "name": "Dr. Ratna Sari, M.Psi",
+    "title": "Spesialis Psikologi Anak & Praktisi Parenting",
+    "role": "admin",
+    "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=60&q=60&fm=webp",
+    "bio": "Psikolog anak & praktisi parenting terkemuka di Indonesia dengan pengalaman klinis 12+ tahun dalam pendampingan tumbuh kembang emosi anak.",
+    "socialInstagram": "https://instagram.com/ratnasari.mpsi",
+    "socialLinkedin": "https://linkedin.com/in/ratnasari-mpsi",
+    "socialWebsite": "https://parenting.my.id"
+  },
+  {
+    "id": 2,
+    "email": "editor@parenting.my.id",
+    "password": "editor123",
+    "name": "Maya Putri, S.Psi",
+    "title": "Editor Senior & Moderasi Konten Parenting",
+    "role": "editor",
+    "avatar": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=60&q=60&fm=webp",
+    "bio": "Editor konten kesehatan dan pengasuhan anak dengan sertifikasi jurnalistik edukasi keluarga.",
+    "socialInstagram": "https://instagram.com/mayaputri.editor",
+    "socialLinkedin": "https://linkedin.com/in/maya-putri-editor"
+  },
+  {
+    "id": 3,
+    "email": "penulis@parenting.my.id",
+    "password": "writer123",
+    "name": "Ahmad Zulkarnain, S.Ked",
+    "title": "Edukator Kesehatan Anak & Spesialis Gizi Balita",
+    "role": "writer",
+    "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=60&q=60&fm=webp",
+    "bio": "Pemerhati gizi anak, fasilitator pencegahan stunting nasional, serta edukator kesehatan balita.",
+    "socialInstagram": "https://instagram.com/ahmad.zk",
+    "socialLinkedin": "https://linkedin.com/in/ahmad-zulkarnain"
+  },
+  {
+    "id": 4,
+    "email": "siti.aminah@parenting.my.id",
+    "password": "writer123",
+    "name": "Siti Aminah, S.Gz",
+    "title": "Ahli Gizi Ibu & Anak (Certified Nutritionist)",
+    "role": "writer",
+    "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=60&q=60&fm=webp",
+    "bio": "Praktisi MPASI sehat, penyusun panduan gizi 1000 HPK, dan konselor laktasi bersertifikasi.",
+    "socialInstagram": "https://instagram.com/sitiaminah.sgz",
+    "socialWebsite": "https://parenting.my.id"
+  }
+]

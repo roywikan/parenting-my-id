@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "post_slug": "5-aktivitas-sensory-play-seru-untuk-melatih-motorik-balita",
+    "user_name": "Ibu Rahma",
+    "user_email": "rahma@example.com",
+    "user_avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80",
+    "content": "Artikel yang sangat bermanfaat! Saya sudah mencoba ide sensory play dengan beras berwarna di rumah, si kecil sangat antusias.",
+    "status": "approved",
+    "created_at": "2026-09-03T23:39:21.210Z"
+  },
+  {
+    "id": 2,
+    "post_slug": "mengenal-bahaya-stunting-dan-cara-pencegahannya-sejak-1000-hpk",
+    "user_name": "Budi Santoso",
+    "user_email": "budi.s@example.com",
+    "user_avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80",
+    "content": "Penjelasan mengenai 1000 HPK dan ASI eksklusif sangat jelas dan berbasis ilmiah. Terima kasih tim Parenting.my.id!",
+    "status": "approved",
+    "created_at": "2026-09-03T16:39:21.210Z"
+  }
+]

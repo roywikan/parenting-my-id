@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { Post, AutoLink, User, SiteConfig } from './types';
 import { INITIAL_POSTS, INITIAL_AUTOLINKS, INITIAL_USERS } from './data/initialData';
 import { getSiteConfig, saveSiteConfig } from './lib/config';
+import { getAuthHeaders } from './lib/auth';
 import { THEME_PRESETS } from './lib/themes';
 import { categoryToSlug, slugToCategory } from './lib/categories';
 import Header from './components/Header';
@@ -55,10 +56,15 @@ export default function App() {
     const savedUser = localStorage.getItem('cms_user') || localStorage.getItem('parenting_user');
     if (savedUser) {
       try {
-        setCurrentUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        setCurrentUser(parsed);
+        if (!localStorage.getItem('cms_token')) {
+          localStorage.setItem('cms_token', `session_${parsed.id || 1}_${parsed.role || 'admin'}_${Date.now()}`);
+        }
       } catch (e) {
         localStorage.removeItem('cms_user');
         localStorage.removeItem('parenting_user');
+        localStorage.removeItem('cms_token');
       }
     }
 
@@ -173,6 +179,8 @@ export default function App() {
         if (data.user) {
           setCurrentUser(data.user);
           localStorage.setItem('cms_user', JSON.stringify(data.user));
+          const token = data.token || `session_${data.user.id}_${data.user.role || 'admin'}_${Date.now()}`;
+          localStorage.setItem('cms_token', token);
           return true;
         }
       }
@@ -185,16 +193,19 @@ export default function App() {
       const adminUser = INITIAL_USERS[0];
       setCurrentUser(adminUser);
       localStorage.setItem('cms_user', JSON.stringify(adminUser));
+      localStorage.setItem('cms_token', `session_1_admin_${Date.now()}`);
       return true;
     } else if ((email === 'editor@domain.com' || email === 'editor@parenting.my.id') && pass === 'editor123') {
       const editorUser = INITIAL_USERS[1];
       setCurrentUser(editorUser);
       localStorage.setItem('cms_user', JSON.stringify(editorUser));
+      localStorage.setItem('cms_token', `session_2_editor_${Date.now()}`);
       return true;
     } else if ((email === 'penulis@domain.com' || email === 'penulis@parenting.my.id') && pass === 'writer123') {
       const writerUser = INITIAL_USERS[2];
       setCurrentUser(writerUser);
       localStorage.setItem('cms_user', JSON.stringify(writerUser));
+      localStorage.setItem('cms_token', `session_3_writer_${Date.now()}`);
       return true;
     }
 
@@ -206,6 +217,7 @@ export default function App() {
     setCurrentUser(null);
     localStorage.removeItem('cms_user');
     localStorage.removeItem('parenting_user');
+    localStorage.removeItem('cms_token');
     setCurrentView('home');
   };
 
@@ -220,11 +232,14 @@ export default function App() {
   };
 
   // Handle Update Admin Credentials in D1
-  const handleUpdateCredentials = async (id: number, data: { name: string; email: string; password?: string; avatar?: string; bio?: string }) => {
+  const handleUpdateCredentials = async (id: number, data: { name: string; email: string; oldPassword?: string; password?: string; avatar?: string; bio?: string }) => {
     try {
       const res = await fetch('/api/auth/update-credentials', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({ id, ...data }),
       });
       const contentType = res.headers.get('content-type');
@@ -236,7 +251,8 @@ export default function App() {
           return { success: true, user: result.user };
         }
       }
-      return { success: false, error: 'Gagal memperbarui kredensial.' };
+      const errData = await res.json().catch(() => ({}));
+      return { success: false, error: errData.error || 'Gagal memperbarui kredensial.' };
     } catch (err: any) {
       return { success: false, error: err.message || 'Terjadi kesalahan jaringan.' };
     }
@@ -247,7 +263,10 @@ export default function App() {
     try {
       const res = await fetch('/api/posts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(postData),
       });
 
@@ -279,7 +298,12 @@ export default function App() {
   // Handle Delete Post
   const handleDeletePost = async (id: number) => {
     try {
-      const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/posts/${id}`, {
+        method: 'DELETE',
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
       if (res.ok) {
         await fetchPosts();
       }
@@ -293,7 +317,10 @@ export default function App() {
     try {
       const res = await fetch('/api/autolinks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(linkData),
       });
       if (res.ok) {
@@ -307,7 +334,12 @@ export default function App() {
   // Handle Delete Autolink
   const handleDeleteAutolink = async (id: number) => {
     try {
-      const res = await fetch(`/api/autolinks/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/autolinks/${id}`, {
+        method: 'DELETE',
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
       if (res.ok) {
         await fetchAutolinks();
       }

@@ -59,6 +59,21 @@ export function loadPostsFromInitialData() {
   ];
 }
 
+export function escapeXml(unsafe) {
+  if (unsafe == null) return '';
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+export function escapeCdata(text) {
+  if (text == null) return '';
+  return String(text).replace(/\]\]>/g, ']]]]><![CDATA[>');
+}
+
 /**
  * Generate feed.xml (RSS 2.0) string
  * CRITICAL: Tag <?xml version="1.0" encoding="UTF-8"?> MUST be at index 0 (character 0).
@@ -69,13 +84,14 @@ export function generateFeedXml(posts) {
   const items = publishedPosts
     .map((p) => {
       const pubDate = p.createdAt ? new Date(p.createdAt).toUTCString() : (p.updatedAt ? new Date(p.updatedAt).toUTCString() : new Date().toUTCString());
-      const link = `${SITE_URL}/baca/${p.slug}`;
-      const desc = p.excerpt || '';
+      const link = `${SITE_URL}/baca/${encodeURIComponent(p.slug)}`;
+      const titleClean = escapeCdata(p.title || '');
+      const descClean = escapeCdata(p.excerpt || '');
       return `    <item>
-      <title><![CDATA[${p.title}]]></title>
+      <title><![CDATA[${titleClean}]]></title>
       <link>${link}</link>
       <guid>${link}</guid>
-      <description><![CDATA[${desc}]]></description>
+      <description><![CDATA[${descClean}]]></description>
       <pubDate>${pubDate}</pubDate>
     </item>`;
     })
@@ -208,7 +224,8 @@ export function generateSitemapXml(posts) {
   const urls = publishedPosts
     .map((p) => {
       const lastMod = p.updatedAt ? p.updatedAt.split('T')[0] : new Date().toISOString().split('T')[0];
-      return `<url><loc>${SITE_URL}/baca/${p.slug}</loc><lastmod>${lastMod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
+      const safeLoc = escapeXml(`${SITE_URL}/baca/${encodeURIComponent(p.slug)}`);
+      return `<url><loc>${safeLoc}</loc><lastmod>${lastMod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
     })
     .join('');
 

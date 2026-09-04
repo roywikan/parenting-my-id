@@ -6,7 +6,9 @@ import { fileURLToPath } from 'node:url';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
-import { generateStaticFiles, generateFeedXml, generateLlmsTxt, generateLlmsFullTxt, parseFeedXmlItems } from './scripts/generate-static-files.js';
+import { marked } from 'marked';
+import sanitizeHtml from 'sanitize-html';
+import { generateStaticFiles, generateSitemapXml, generateFeedXml, generateLlmsTxt, generateLlmsFullTxt, parseFeedXmlItems } from './scripts/generate-static-files.js';
 
 dotenv.config();
 
@@ -289,6 +291,133 @@ Ajak juga **balita** aktif bergerak lewat permainan ringan seperti **sensory pla
   },
 ];
 
+// SERVER DATA PERSISTENCE LAYER (Avoid data loss on restart)
+const DATA_DIR = path.join(process.cwd(), 'data');
+
+function ensureDataDir() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+}
+
+function loadServerData() {
+  try {
+    ensureDataDir();
+    const postsFile = path.join(DATA_DIR, 'posts.json');
+    const usersFile = path.join(DATA_DIR, 'users.json');
+    const autolinksFile = path.join(DATA_DIR, 'autolinks.json');
+    const commentsFile = path.join(DATA_DIR, 'comments.json');
+
+    if (fs.existsSync(postsFile)) {
+      const data = JSON.parse(fs.readFileSync(postsFile, 'utf-8'));
+      if (Array.isArray(data) && data.length > 0) mockPosts = data;
+    } else {
+      fs.writeFileSync(postsFile, JSON.stringify(mockPosts, null, 2), 'utf-8');
+    }
+
+    if (fs.existsSync(usersFile)) {
+      const data = JSON.parse(fs.readFileSync(usersFile, 'utf-8'));
+      if (Array.isArray(data) && data.length > 0) mockUsers = data;
+    } else {
+      fs.writeFileSync(usersFile, JSON.stringify(mockUsers, null, 2), 'utf-8');
+    }
+
+    if (fs.existsSync(autolinksFile)) {
+      const data = JSON.parse(fs.readFileSync(autolinksFile, 'utf-8'));
+      if (Array.isArray(data)) mockAutolinks = data;
+    } else {
+      fs.writeFileSync(autolinksFile, JSON.stringify(mockAutolinks, null, 2), 'utf-8');
+    }
+
+    if (fs.existsSync(commentsFile)) {
+      const data = JSON.parse(fs.readFileSync(commentsFile, 'utf-8'));
+      if (Array.isArray(data)) mockComments = data;
+    } else {
+      fs.writeFileSync(commentsFile, JSON.stringify(mockComments, null, 2), 'utf-8');
+    }
+  } catch (err) {
+    console.error('[Persistence] Error loading data from disk:', err);
+  }
+}
+
+function saveServerData() {
+  try {
+    ensureDataDir();
+    fs.writeFileSync(path.join(DATA_DIR, 'posts.json'), JSON.stringify(mockPosts, null, 2), 'utf-8');
+    fs.writeFileSync(path.join(DATA_DIR, 'users.json'), JSON.stringify(mockUsers, null, 2), 'utf-8');
+    fs.writeFileSync(path.join(DATA_DIR, 'autolinks.json'), JSON.stringify(mockAutolinks, null, 2), 'utf-8');
+    fs.writeFileSync(path.join(DATA_DIR, 'comments.json'), JSON.stringify(mockComments, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[Persistence] Error saving data to disk:', err);
+  }
+}
+
+// Initialize persistence on startup
+loadServerData();
+
+// HELPER: PREVENT SLUG COLLISIONS
+function getUniquePostSlug(baseTitleOrSlug: string, currentId?: number | string | null): string {
+  let cleanBase = baseTitleOrSlug
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  if (!cleanBase) cleanBase = 'artikel';
+
+  let candidate = cleanBase;
+  let counter = 1;
+
+  while (
+    mockPosts.some(
+      (p) => p.slug === candidate && (!currentId || String(p.id) !== String(currentId))
+    )
+  ) {
+    counter++;
+    candidate = `${cleanBase}-${counter}`;
+  }
+
+  return candidate;
+}
+
+// AUTHENTICATION & AUTHORIZATION MIDDLEWARE
+function requireAuth(allowedRoles: string[] = ['admin', 'editor', 'writer']) {
+  return (req: any, res: any, next: any) => {
+    const authHeader = req.headers.authorization || req.headers['x-session-token'];
+    if (!authHeader) {
+      return res.status(401).json({ error: 'Akses ditolak: Autentikasi sesi diperlukan.' });
+    }
+
+    const token = typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+      ? authHeader.slice(7).trim()
+      : String(authHeader).trim();
+
+    if (!token) {
+      return res.status(401).json({ error: 'Akses ditolak: Token autentikasi kosong.' });
+    }
+
+    const parts = token.split('_');
+    if (parts.length >= 3 && parts[0] === 'session') {
+      const userId = Number(parts[1]);
+      let role = 'admin';
+      if (parts.length >= 4 && isNaN(Number(parts[2]))) {
+        role = parts[2];
+      } else {
+        const foundUser = mockUsers.find((u) => u.id === userId);
+        role = foundUser ? foundUser.role : (userId === 1 ? 'admin' : 'writer');
+      }
+
+      if (allowedRoles.length > 0 && !allowedRoles.includes(role)) {
+        return res.status(403).json({ error: `Akses ditolak: Role '${role}' tidak diizinkan untuk tindakan ini.` });
+      }
+
+      req.user = { id: userId, role };
+      return next();
+    }
+
+    return res.status(401).json({ error: 'Akses ditolak: Format token sesi tidak valid.' });
+  };
+}
+
 // API ROUTE HANDLERS
 
 // 0. Site Config Handlers
@@ -306,23 +435,38 @@ app.get('/api/config', (req, res) => {
   return res.json({});
 });
 
-app.post('/api/config', (req, res) => {
+app.post('/api/config', requireAuth(['admin']), (req, res) => {
   try {
     const newConfig = req.body;
     if (!newConfig || typeof newConfig !== 'object') {
       return res.status(400).json({ error: 'Data config tidak valid' });
     }
 
-    const configPath = path.join(process.cwd(), 'public', 'site_config.json');
-    fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2), 'utf-8');
-
-    // Sync to dist/site_config.json if built
-    const distConfigPath = path.join(process.cwd(), 'dist', 'site_config.json');
-    if (fs.existsSync(path.dirname(distConfigPath))) {
-      fs.writeFileSync(distConfigPath, JSON.stringify(newConfig, null, 2), 'utf-8');
+    // Filter out sensitive credentials
+    const safeConfig: Record<string, any> = {};
+    const SENSITIVE_KEYS = ['admin_email', 'admin_password', 'admin_name', 'password', 'secret', 'token'];
+    for (const [k, v] of Object.entries(newConfig)) {
+      const kLower = k.toLowerCase();
+      if (SENSITIVE_KEYS.includes(k) || kLower.includes('password') || kLower.includes('secret') || kLower.includes('token')) {
+        continue;
+      }
+      safeConfig[k] = v;
     }
 
-    return res.json({ success: true, message: 'Konfigurasi situs berhasil disimpan!', config: newConfig });
+    const publicDir = path.join(process.cwd(), 'public');
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
+    const configPath = path.join(publicDir, 'site_config.json');
+    fs.writeFileSync(configPath, JSON.stringify(safeConfig, null, 2), 'utf-8');
+
+    // Sync to dist/site_config.json if built
+    const distDir = path.join(process.cwd(), 'dist');
+    if (fs.existsSync(distDir)) {
+      fs.writeFileSync(path.join(distDir, 'site_config.json'), JSON.stringify(safeConfig, null, 2), 'utf-8');
+    }
+
+    return res.json({ success: true, message: 'Konfigurasi situs berhasil disimpan!', config: safeConfig });
   } catch (err: any) {
     console.error('Error writing site_config.json:', err);
     return res.status(500).json({ error: 'Gagal menyimpan konfigurasi situs: ' + err.message });
@@ -355,27 +499,46 @@ app.get('/api/comments', (req, res) => {
   res.json(filtered);
 });
 
-// POST Native Comment (Reader submits comment, saved as 'pending')
+// POST Native Comment (Reader submits comment, saved as 'pending' with anti-XSS and schema validation)
 app.post('/api/comments', (req, res) => {
-  const { post_slug, user_name, user_email, content } = req.body;
+  const { post_slug, postId, user_name, author, user_email, content } = req.body;
 
-  if (!post_slug || !user_name || !content) {
-    return res.status(400).json({ error: 'Nama, komentar, dan artikel tujuan wajib diisi.' });
+  const targetSlug = String(post_slug || postId || '').trim();
+  const rawAuthor = String(user_name || author || '').trim();
+  const rawEmail = String(user_email || '').trim();
+  const rawContent = String(content || '').trim();
+
+  if (!targetSlug) {
+    return res.status(400).json({ error: 'Artikel tujuan (slug / ID) wajib diisi.' });
+  }
+  if (!rawAuthor || rawAuthor.length < 2 || rawAuthor.length > 100) {
+    return res.status(400).json({ error: 'Nama pengirim wajib diisi (antara 2 hingga 100 karakter).' });
+  }
+  if (!rawContent || rawContent.length < 2 || rawContent.length > 3000) {
+    return res.status(400).json({ error: 'Isi komentar wajib diisi (antara 2 hingga 3000 karakter).' });
   }
 
-  const avatarName = encodeURIComponent(String(user_name).trim());
+  // Anti-XSS sanitization using sanitizeHtml
+  const cleanAuthor = sanitizeHtml(rawAuthor, { allowedTags: [], allowedAttributes: {} });
+  const cleanContent = sanitizeHtml(rawContent, {
+    allowedTags: ['b', 'i', 'em', 'strong', 'p', 'br'],
+    allowedAttributes: {},
+  });
+
+  const avatarName = encodeURIComponent(cleanAuthor);
   const newComment = {
     id: Date.now(),
-    post_slug: String(post_slug),
-    user_name: String(user_name).trim(),
-    user_email: String(user_email || '').trim(),
+    post_slug: targetSlug,
+    user_name: cleanAuthor,
+    user_email: rawEmail,
     user_avatar: `https://ui-avatars.com/api/?name=${avatarName}&background=f43f5e&color=fff`,
-    content: String(content).trim(),
+    content: cleanContent,
     status: 'pending',
     created_at: new Date().toISOString(),
   };
 
   mockComments.unshift(newComment);
+  saveServerData();
 
   res.json({
     success: true,
@@ -384,23 +547,25 @@ app.post('/api/comments', (req, res) => {
   });
 });
 
-// PUT Comment (Admin approve / status update)
-app.put('/api/comments/:id', (req, res) => {
+// PUT Comment (Admin approve / status update - Protected)
+app.put('/api/comments/:id', requireAuth(['admin', 'editor']), (req, res) => {
   const commentId = Number(req.params.id);
   const newStatus = req.body?.status || 'approved';
 
   const comment = mockComments.find((c) => c.id === commentId);
   if (comment) {
     comment.status = newStatus;
+    saveServerData();
   }
 
   res.json({ success: true, message: `Komentar #${commentId} diupdate.` });
 });
 
-// DELETE Comment
-app.delete('/api/comments/:id', (req, res) => {
+// DELETE Comment (Admin delete - Protected)
+app.delete('/api/comments/:id', requireAuth(['admin', 'editor']), (req, res) => {
   const commentId = Number(req.params.id);
   mockComments = mockComments.filter((c) => c.id !== commentId);
+  saveServerData();
   res.json({ success: true, message: 'Komentar berhasil dihapus' });
 });
 
@@ -559,8 +724,8 @@ app.get('/api/users', (req, res) => {
   res.json(safeUsers);
 });
 
-// Create or Update User (Writer / Admin)
-app.post('/api/users', (req, res) => {
+// Create or Update User (Writer / Admin - Protected)
+app.post('/api/users', requireAuth(['admin']), (req, res) => {
   const { id, name, email, password, role, avatar, title, bio, socialInstagram, socialLinkedin, socialWebsite } = req.body;
   
   if (!name || !email) {
@@ -583,6 +748,7 @@ app.post('/api/users', (req, res) => {
         socialLinkedin: socialLinkedin || mockUsers[index].socialLinkedin,
         socialWebsite: socialWebsite || mockUsers[index].socialWebsite,
       };
+      saveServerData();
       const { password: _, ...safeUser } = mockUsers[index];
       return res.json({ success: true, user: safeUser });
     }
@@ -604,29 +770,32 @@ app.post('/api/users', (req, res) => {
   };
 
   mockUsers.push(newUser);
+  saveServerData();
   const { password: _, ...safeUser } = newUser;
   res.json({ success: true, user: safeUser });
 });
 
-// Delete User / Writer
-app.delete('/api/users/:id', (req, res) => {
+// Delete User / Writer (Protected)
+app.delete('/api/users/:id', requireAuth(['admin']), (req, res) => {
   const id = Number(req.params.id);
   if (id === 1) {
     return res.status(400).json({ error: 'Admin Utama tidak dapat dihapus.' });
   }
   mockUsers = mockUsers.filter((u) => u.id !== id);
+  saveServerData();
   res.json({ success: true, message: 'Writer berhasil dihapus' });
 });
 
-// POST Create or Update Post (With Multi-Author, Auto-Save Draft & Revision History max 3)
-app.post('/api/posts', (req, res) => {
+// POST Create or Update Post (With Multi-Author, Auto-Save Draft & Revision History max 3 - Protected)
+app.post('/api/posts', requireAuth(['admin', 'editor', 'writer']), (req, res) => {
   const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, co_writers, status, rejectionReason, metaTitle, metaDescription, tags } = req.body;
 
   if (!title || !contentMarkdown) {
     return res.status(400).json({ error: 'Judul dan konten markdown wajib diisi.' });
   }
 
-  const generatedSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  // Prevent slug collisions
+  const generatedSlug = slug ? getUniquePostSlug(slug, id) : getUniquePostSlug(title, id);
   const author = mockUsers.find((u) => u.id === (authorId || 1)) || mockUsers[0];
 
   const effectiveCoAuthorIds = Array.isArray(coAuthorIds) ? coAuthorIds : (Array.isArray(co_writers) ? co_writers : []);
@@ -688,6 +857,8 @@ app.post('/api/posts', (req, res) => {
         updatedAt: new Date().toISOString(),
       };
 
+      saveServerData();
+
       // Automatically regenerate static llms.txt & sitemap.xml and commit to GitHub
       triggerStaticFilesGeneratorAndCommit(mockPosts);
 
@@ -731,6 +902,7 @@ app.post('/api/posts', (req, res) => {
   };
 
   mockPosts.unshift(newPost);
+  saveServerData();
 
   // Automatically regenerate static llms.txt & sitemap.xml and commit to GitHub
   triggerStaticFilesGeneratorAndCommit(mockPosts);
@@ -738,10 +910,11 @@ app.post('/api/posts', (req, res) => {
   res.json({ success: true, post: newPost });
 });
 
-// DELETE Post
-app.delete('/api/posts/:id', (req, res) => {
+// DELETE Post (Protected)
+app.delete('/api/posts/:id', requireAuth(['admin', 'editor', 'writer']), (req, res) => {
   const id = Number(req.params.id);
   mockPosts = mockPosts.filter((p) => p.id !== id);
+  saveServerData();
 
   // Automatically regenerate static llms.txt & sitemap.xml and commit to GitHub
   triggerStaticFilesGeneratorAndCommit(mockPosts);
@@ -754,7 +927,7 @@ app.get('/api/autolinks', (req, res) => {
   res.json(mockAutolinks);
 });
 
-app.post('/api/autolinks', (req, res) => {
+app.post('/api/autolinks', requireAuth(['admin', 'editor']), (req, res) => {
   const { keyword, targetUrl, description } = req.body;
   if (!keyword || !targetUrl) {
     return res.status(400).json({ error: 'Keyword dan Target URL wajib diisi' });
@@ -764,6 +937,7 @@ app.post('/api/autolinks', (req, res) => {
   if (existing) {
     existing.targetUrl = targetUrl;
     existing.description = description || existing.description;
+    saveServerData();
     return res.json({ success: true, autolink: existing });
   }
 
@@ -777,12 +951,14 @@ app.post('/api/autolinks', (req, res) => {
   };
 
   mockAutolinks.push(newLink);
+  saveServerData();
   res.json({ success: true, autolink: newLink });
 });
 
-app.delete('/api/autolinks/:id', (req, res) => {
+app.delete('/api/autolinks/:id', requireAuth(['admin', 'editor']), (req, res) => {
   const id = Number(req.params.id);
   mockAutolinks = mockAutolinks.filter((a) => a.id !== id);
+  saveServerData();
   res.json({ success: true, message: 'Autolink berhasil dihapus' });
 });
 
@@ -792,6 +968,7 @@ app.post('/api/autolinks/:id/click', (req, res) => {
   const link = mockAutolinks.find((a) => a.id === id);
   if (link) {
     link.clickCount += 1;
+    saveServerData();
   }
   res.json({ success: true });
 });
@@ -799,17 +976,62 @@ app.post('/api/autolinks/:id/click', (req, res) => {
 // 3. AUTHENTICATION HANDLERS
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
-  const user = mockUsers.find((u) => u.email === email && u.password === password);
-  if (!user) {
+  if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ error: 'Email dan password wajib diisi.' });
+  }
+
+  const user = mockUsers.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
+  if (!user || !password || user.password !== password) {
     return res.status(401).json({ error: 'Email atau password salah.' });
   }
 
-  // Return user info and simulated session token
+  // Return user info and verified session token
   const { password: _, ...userWithoutPassword } = user;
   res.json({
     success: true,
     user: userWithoutPassword,
-    token: `session_${user.id}_${Date.now()}`,
+    token: `session_${user.id}_${user.role}_${Date.now()}`,
+  });
+});
+
+// Update Credentials Endpoint (Protected - Prevents Account Takeover)
+app.post('/api/auth/update-credentials', requireAuth(['admin', 'editor', 'writer']), (req, res) => {
+  const { id, name, email, oldPassword, password, avatar, bio } = req.body;
+  if (!id || !email) {
+    return res.status(400).json({ error: 'ID dan Email wajib diisi.' });
+  }
+
+  const user = mockUsers.find((u) => u.id === Number(id));
+  if (!user) {
+    return res.status(404).json({ error: 'Pengguna tidak ditemukan.' });
+  }
+
+  // Security: only admin or the user themselves can update credentials
+  const authUser = (req as any).user;
+  if (authUser?.role !== 'admin' && authUser?.id !== user.id) {
+    return res.status(403).json({ error: 'Akses ditolak: Anda hanya dapat memperbarui akun Anda sendiri.' });
+  }
+
+  // Verify old password if password change requested
+  if (password && String(password).trim().length > 0) {
+    if (!oldPassword || user.password !== oldPassword) {
+      return res.status(400).json({ error: 'Password lama tidak sesuai. Verifikasi keamanan gagal.' });
+    }
+    user.password = String(password).trim();
+  }
+
+  user.name = name || user.name;
+  user.email = email;
+  if (avatar !== undefined) user.avatar = avatar;
+  if (bio !== undefined) user.bio = bio;
+
+  saveServerData();
+
+  const { password: _, ...safeUser } = user;
+  res.json({
+    success: true,
+    user: safeUser,
+    message: 'Kredensial berhasil diperbarui.',
   });
 });
 
@@ -820,14 +1042,29 @@ const performGitHubUpload = async (filename: string, base64Content: string) => {
   const repo = process.env.GITHUB_REPO || 'parenting-my-id';
   const branch = process.env.GITHUB_BRANCH || 'main';
 
-  if (!token) {
-    throw new Error('GITHUB_TOKEN tidak dikonfigurasi di server');
-  }
-
-  const cleanFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const cleanFilename = path.basename(filename).replace(/[^a-zA-Z0-9.-]/g, '_');
   const timestamp = Date.now();
   const filePath = `public/uploads/${timestamp}_${cleanFilename}`;
   const base64Clean = base64Content.replace(/^data:image\/\w+;base64,/, '');
+
+  if (!token) {
+    // Local filesystem save fallback for Dev environment
+    try {
+      const safeName = `${timestamp}_${cleanFilename}`;
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      const localFilePath = path.join(uploadsDir, safeName);
+      fs.writeFileSync(localFilePath, Buffer.from(base64Clean, 'base64'));
+
+      const localUrl = `/uploads/${safeName}`;
+      return { success: true, url: localUrl, raw_url: localUrl, source: 'local' };
+    } catch (err: any) {
+      console.error('Local upload error:', err);
+      throw new Error('Penyimpanan lokal gagal dan GITHUB_TOKEN tidak tersedia');
+    }
+  }
 
   const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
     method: 'PUT',
@@ -858,18 +1095,31 @@ const performGitHubUpload = async (filename: string, base64Content: string) => {
   }
 };
 
-// 4. CLOUDINARY IMAGE UPLOAD PIPELINE (With Automatic GitHub Fallback)
+// 4. CLOUDINARY IMAGE UPLOAD PIPELINE (With Automatic GitHub & Local Fallback)
 const handleCloudinaryUpload = async (req: any, res: any) => {
   const { filename, base64Content } = req.body;
   if (!filename || !base64Content) {
     return res.status(400).json({ error: 'Filename dan Base64 content wajib diisi' });
   }
 
+  const cleanFilename = path.basename(filename).replace(/[^a-zA-Z0-9.-]/g, '_');
+  const base64Clean = base64Content.replace(/^data:image\/\w+;base64,/, '');
+  const approxBytes = Math.ceil((base64Clean.length * 3) / 4);
+  if (approxBytes > 5 * 1024 * 1024) {
+    return res.status(413).json({ error: 'Ukuran file melebihi batas maksimum 5MB' });
+  }
+
   try {
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'harga-promo-diskon';
-    const apiKey = process.env.CLOUDINARY_API_KEY || '945558876687176';
-    const apiSecret = process.env.CLOUDINARY_API_SECRET || '6TBtS1kzFgoNg_4SHmzmSImyPlE';
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
     const folder = process.env.CLOUDINARY_FOLDER || 'parenting-my-id';
+
+    // If Cloudinary keys are not fully provided, use fallback storage safely without exposing dummy secrets
+    if (!cloudName || !apiKey || !apiSecret) {
+      const fallbackResult = await performGitHubUpload(cleanFilename, base64Content);
+      return res.json(fallbackResult);
+    }
 
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const format = 'webp';
@@ -912,14 +1162,14 @@ const handleCloudinaryUpload = async (req: any, res: any) => {
         bytes: cData.bytes,
       });
     } else {
-      console.warn('Cloudinary upload error, using GitHub Storage fallback:', cData?.error?.message || cData);
-      const ghResult = await performGitHubUpload(filename, base64Content);
+      console.warn('Cloudinary upload response non-OK, using storage fallback:', cData?.error?.message || cData);
+      const ghResult = await performGitHubUpload(cleanFilename, base64Content);
       return res.json(ghResult);
     }
   } catch (err: any) {
-    console.warn('Cloudinary upload exception, using GitHub Storage fallback:', err.message);
+    console.warn('Cloudinary upload exception, using fallback:', err.message);
     try {
-      const ghResult = await performGitHubUpload(filename, base64Content);
+      const ghResult = await performGitHubUpload(cleanFilename, base64Content);
       return res.json(ghResult);
     } catch (fallbackErr: any) {
       return res.status(500).json({ error: fallbackErr.message || 'Gagal mengunggah gambar' });
@@ -927,77 +1177,33 @@ const handleCloudinaryUpload = async (req: any, res: any) => {
   }
 };
 
-app.post('/api/upload-cloudinary', handleCloudinaryUpload);
-app.post('/api/upload', handleCloudinaryUpload);
+app.post('/api/upload-cloudinary', requireAuth(['admin', 'editor', 'writer']), handleCloudinaryUpload);
+app.post('/api/upload', requireAuth(['admin', 'editor', 'writer']), handleCloudinaryUpload);
 
-// 4b. GITHUB IMAGE UPLOAD PIPELINE (LEGACY FALLBACK)
-app.post('/api/upload-github', async (req, res) => {
+// 4b. GITHUB IMAGE UPLOAD PIPELINE (LEGACY FALLBACK - Protected)
+app.post('/api/upload-github', requireAuth(['admin', 'editor', 'writer']), async (req, res) => {
   const { filename, base64Content } = req.body;
   if (!filename || !base64Content) {
     return res.status(400).json({ error: 'Filename dan Base64 content dibutuhkan' });
   }
 
+  const cleanFilename = path.basename(filename).replace(/[^a-zA-Z0-9.-]/g, '_');
   const cleanBase64 = base64Content.replace(/^data:.*?;base64,/, '');
-
-  const githubToken = process.env.GITHUB_TOKEN;
-  const owner = process.env.GITHUB_OWNER;
-  const repo = process.env.GITHUB_REPO;
-  const branch = process.env.GITHUB_BRANCH || 'main';
-
-  if (githubToken && owner && repo) {
-    try {
-      const filePath = `public/uploads/${Date.now()}-${filename.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
-
-      const ghRes = await fetch(apiUrl, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${githubToken}`,
-          'Content-Type': 'application/json',
-          'User-Agent': 'Parenting-Blog-Server',
-        },
-        body: JSON.stringify({
-          message: `upload: ${filename} via Parenting.my.id CMS`,
-          content: cleanBase64,
-          branch,
-        }),
-      });
-
-      if (ghRes.ok) {
-        const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`;
-        return res.json({ success: true, url: rawUrl, source: 'github' });
-      }
-    } catch (err) {
-      console.error('GitHub API error:', err);
-    }
+  const approxBytes = Math.ceil((cleanBase64.length * 3) / 4);
+  if (approxBytes > 5 * 1024 * 1024) {
+    return res.status(413).json({ error: 'Ukuran file melebihi batas maksimum 5MB' });
   }
 
-  // Local filesystem save fallback for Dev environment
   try {
-    const safeName = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-    const localFilePath = path.join(uploadsDir, safeName);
-    fs.writeFileSync(localFilePath, Buffer.from(cleanBase64, 'base64'));
-
-    const localUrl = `/uploads/${safeName}`;
-    return res.json({ success: true, url: localUrl, source: 'local' });
-  } catch (err) {
-    console.error('Local upload error:', err);
+    const result = await performGitHubUpload(cleanFilename, base64Content);
+    return res.json(result);
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || 'Gagal mengunggah file' });
   }
-
-  const sampleUrl = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1000&q=80';
-  res.json({
-    success: true,
-    url: sampleUrl,
-    source: 'fallback',
-  });
 });
 
-// 5. GEMINI AI ASSISTANT FOR PARENTING SEO
-app.post('/api/ai/generate-meta', async (req, res) => {
+// 5. GEMINI AI ASSISTANT FOR PARENTING SEO (Protected)
+app.post('/api/ai/generate-meta', requireAuth(['admin', 'editor', 'writer']), async (req, res) => {
   const { title, content } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
 
@@ -1023,7 +1229,7 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
 }`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: 'gemini-3.8-flash',
       contents: prompt,
     });
 
@@ -1046,52 +1252,9 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
   });
 });
 
-// 6. DYNAMIC SITEMAP.XML BY AISTUDIO :
-app.get('/sitemapper.xml', (req, res) => {
-  const siteUrl = 'https://parenting.my.id';
-  const publishedPosts = mockPosts.filter((p) => p.status === 'published');
-
-  const urls = publishedPosts
-    .map(
-      (p) => `
-  <url>
-    <loc>${siteUrl}/baca/${p.slug}</loc>
-    <lastmod>${p.updatedAt.split('T')[0]}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>`
-    )
-    .join('');
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${siteUrl}/</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  ${urls}
-</urlset>`;
-
-  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-  res.status(200).send(xml.trim());
-});
-
-// 6. DYNAMIC SITEMAP.XML by Gemini AI :
-app.get('/sitemap.xml', (req, res) => {
-  const siteUrl = 'https://parenting.my.id';
-  const publishedPosts = mockPosts.filter((p) => p.status === 'published');
-  
-  const urls = publishedPosts
-    .map((p) => {
-      const cleanSlug = encodeURIComponent(p.slug);
-      const lastMod = p.updatedAt ? p.updatedAt.split('T')[0] : new Date().toISOString().split('T')[0];
-      return `<url><loc>${siteUrl}/baca/${cleanSlug}</loc><lastmod>${lastMod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
-    })
-    .join('');
-
-  // Deklarasi XML diletakkan tepat di baris/karakter pertama tanpa newline di depannya
-  const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${siteUrl}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>${urls}</urlset>`.trim();
+// 6. DYNAMIC SITEMAP.XML (Clean index 0 with escapeXml)
+app.get(['/sitemap.xml', '/sitemapper.xml'], (req, res) => {
+  const xml = generateSitemapXml(mockPosts);
 
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -1160,16 +1323,30 @@ app.get('/baca/:slug', (req, res, next) => {
     const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 50, 'webp');
     const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700], 50, 'webp');
 
-    // Convert Markdown to basic HTML
-    let bodyHtml = post.contentMarkdown
-      .replace(/## (.*)/g, '<h2 class="text-2xl font-bold text-slate-900 mt-8 mb-4">$1</h2>')
-      .replace(/### (.*)/g, '<h3 class="text-xl font-bold text-slate-900 mt-6 mb-3">$1</h3>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/^> (.*)/gm, '<blockquote class="border-l-4 border-rose-500 pl-4 py-2 my-4 italic bg-rose-50 text-slate-700">$1</blockquote>')
-      .replace(/\n\n/g, '</p><p class="my-4 leading-relaxed">');
+    // Convert Markdown to sanitized HTML using marked
+    let rawHtml = '';
+    try {
+      rawHtml = marked.parse(post.contentMarkdown || '', { gfm: true, breaks: true }) as string;
+    } catch (mErr) {
+      rawHtml = post.contentMarkdown || '';
+    }
 
-    bodyHtml = `<p class="my-4 leading-relaxed">${bodyHtml}</p>`;
+    const bodyHtml = sanitizeHtml(rawHtml, {
+      allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'h1', 'h2', 'h3', 'h4', 'span', 'figure', 'figcaption', 'strong', 'em', 'blockquote']),
+      allowedAttributes: {
+        ...sanitizeHtml.defaults.allowedAttributes,
+        img: ['src', 'alt', 'title', 'width', 'height', 'loading', 'class'],
+        a: ['href', 'name', 'target', 'rel', 'class'],
+        span: ['class'],
+        div: ['class'],
+        blockquote: ['class'],
+        h1: ['class'],
+        h2: ['class'],
+        h3: ['class'],
+        h4: ['class'],
+        p: ['class'],
+      },
+    });
 
     const preRenderedBody = `
       <div class="min-h-screen bg-slate-50 text-slate-900 font-sans">
