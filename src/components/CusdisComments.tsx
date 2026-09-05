@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MessageSquare, Sparkles, Send, CheckCircle2, ShieldAlert, Globe, User, Mail, MessageCircle, RefreshCw } from 'lucide-react';
 import { getOptimizedAvatarUrl } from '../lib/imageUtils';
+import TurnstileWidget from './TurnstileWidget';
 
 export type CommentEngineMode = 'both' | 'native' | 'cusdis' | 'none';
 
@@ -55,6 +56,7 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   // Native Approved Comments State
   const [nativeComments, setNativeComments] = useState<any[]>([]);
@@ -94,6 +96,10 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
       setSubmitError('Nama dan isi komentar wajib diisi.');
       return;
     }
+    if (!turnstileToken) {
+      setSubmitError('Harap selesaikan verifikasi keamanan Turnstile sebelum mengirim komentar.');
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitError('');
@@ -108,6 +114,7 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
           user_name: name.trim(),
           user_email: email.trim(),
           content: content.trim(),
+          turnstileToken,
         }),
       });
 
@@ -336,6 +343,11 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-rose-500 outline-none transition-colors resize-none"
                 />
               </div>
+
+              <TurnstileWidget
+                onVerify={(token) => setTurnstileToken(token)}
+                onExpire={() => setTurnstileToken('')}
+              />
 
               <div className="flex items-center justify-between pt-1">
                 <p className="text-[11px] text-slate-400">

@@ -303,11 +303,27 @@ function ensureDataDir() {
 function loadServerData() {
   try {
     ensureDataDir();
+    const storeFile = path.join(DATA_DIR, 'store.json');
     const postsFile = path.join(DATA_DIR, 'posts.json');
     const usersFile = path.join(DATA_DIR, 'users.json');
     const autolinksFile = path.join(DATA_DIR, 'autolinks.json');
     const commentsFile = path.join(DATA_DIR, 'comments.json');
 
+    // 1. Fallback to unified store.json if individual files don't exist
+    if (fs.existsSync(storeFile) && (!fs.existsSync(postsFile) || !fs.existsSync(usersFile))) {
+      try {
+        const storeData = JSON.parse(fs.readFileSync(storeFile, 'utf-8'));
+        if (storeData.posts && Array.isArray(storeData.posts)) mockPosts = storeData.posts;
+        if (storeData.users && Array.isArray(storeData.users)) mockUsers = storeData.users;
+        if (storeData.autolinks && Array.isArray(storeData.autolinks)) mockAutolinks = storeData.autolinks;
+        if (storeData.comments && Array.isArray(storeData.comments)) mockComments = storeData.comments;
+        console.log('[Persistence] Successfully loaded unified state from fallback store.json');
+      } catch (e) {
+        console.error('[Persistence] Error loading unified fallback store.json, trying individual files...', e);
+      }
+    }
+
+    // 2. Standard load from individual files
     if (fs.existsSync(postsFile)) {
       const data = JSON.parse(fs.readFileSync(postsFile, 'utf-8'));
       if (Array.isArray(data) && data.length > 0) mockPosts = data;
@@ -335,6 +351,12 @@ function loadServerData() {
     } else {
       fs.writeFileSync(commentsFile, JSON.stringify(mockComments, null, 2), 'utf-8');
     }
+
+    // 3. Ensure unified store.json is updated/created
+    if (!fs.existsSync(storeFile)) {
+      const storeObj = { posts: mockPosts, users: mockUsers, autolinks: mockAutolinks, comments: mockComments };
+      fs.writeFileSync(storeFile, JSON.stringify(storeObj, null, 2), 'utf-8');
+    }
   } catch (err) {
     console.error('[Persistence] Error loading data from disk:', err);
   }
@@ -343,10 +365,15 @@ function loadServerData() {
 function saveServerData() {
   try {
     ensureDataDir();
+    // Save to individual files for legacy / backup purposes
     fs.writeFileSync(path.join(DATA_DIR, 'posts.json'), JSON.stringify(mockPosts, null, 2), 'utf-8');
     fs.writeFileSync(path.join(DATA_DIR, 'users.json'), JSON.stringify(mockUsers, null, 2), 'utf-8');
     fs.writeFileSync(path.join(DATA_DIR, 'autolinks.json'), JSON.stringify(mockAutolinks, null, 2), 'utf-8');
     fs.writeFileSync(path.join(DATA_DIR, 'comments.json'), JSON.stringify(mockComments, null, 2), 'utf-8');
+
+    // Save fallback unified state to store.json
+    const storeObj = { posts: mockPosts, users: mockUsers, autolinks: mockAutolinks, comments: mockComments };
+    fs.writeFileSync(path.join(DATA_DIR, 'store.json'), JSON.stringify(storeObj, null, 2), 'utf-8');
   } catch (err) {
     console.error('[Persistence] Error saving data to disk:', err);
   }
@@ -460,11 +487,12 @@ app.post('/api/config', requireAuth(['admin']), (req, res) => {
     const configPath = path.join(publicDir, 'site_config.json');
     fs.writeFileSync(configPath, JSON.stringify(safeConfig, null, 2), 'utf-8');
 
-    // Sync to dist/site_config.json if built
+    // Sync to dist/site_config.json with robust check and auto-creation
     const distDir = path.join(process.cwd(), 'dist');
-    if (fs.existsSync(distDir)) {
-      fs.writeFileSync(path.join(distDir, 'site_config.json'), JSON.stringify(safeConfig, null, 2), 'utf-8');
+    if (!fs.existsSync(distDir)) {
+      fs.mkdirSync(distDir, { recursive: true });
     }
+    fs.writeFileSync(path.join(distDir, 'site_config.json'), JSON.stringify(safeConfig, null, 2), 'utf-8');
 
     return res.json({ success: true, message: 'Konfigurasi situs berhasil disimpan!', config: safeConfig });
   } catch (err: any) {
@@ -500,26 +528,33 @@ app.get('/api/comments', (req, res) => {
 });
 
 // POST Native Comment (Reader submits comment, saved as 'pending' with anti-XSS and schema validation)
-app.post('/api/comments', (req, res) => {
+app.post('/api/comments', async (req, res) => {
   if (!req.body) {
     return res.status(400).json({ error: 'Data skema komentar tidak valid.' });
   }
 
-  const { post_slug, postId, user_name, author, user_email, content } = req.body;
+  const { post_slug, postId, user_name, author, user_email, content, turnstileToken } = req.body;
 
-  if (
-    post_slug === undefined || post_slug === null ||
-    content === undefined || content === null ||
-    (user_name === undefined && author === undefined) ||
-    (user_name === null && author === null)
-  ) {
-    return res.status(400).json({ error: 'Properti wajib (postId/post_slug, content, author/user_name) tidak boleh bernilai null atau undefined.' });
+  const isValidTurnstile = await verifyTurnstileToken(turnstileToken);
+  if (!isValidTurnstile) {
+    return res.status(400).json({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi.' });
   }
 
-  const targetSlug = String(post_slug || postId || '').trim();
-  const rawAuthor = String(user_name || author || '').trim();
+  const effectivePostId = postId !== undefined ? postId : post_slug;
+  const effectiveAuthor = author !== undefined ? author : user_name;
+
+  if (
+    effectivePostId === undefined || effectivePostId === null ||
+    content === undefined || content === null ||
+    effectiveAuthor === undefined || effectiveAuthor === null
+  ) {
+    return res.status(400).json({ error: 'Skema tidak valid: Properti wajib (postId, content, author) tidak boleh bernilai null atau undefined.' });
+  }
+
+  const targetSlug = String(effectivePostId).trim();
+  const rawAuthor = String(effectiveAuthor).trim();
   const rawEmail = String(user_email || '').trim();
-  const rawContent = String(content || '').trim();
+  const rawContent = String(content).trim();
 
   if (!targetSlug) {
     return res.status(400).json({ error: 'Artikel tujuan (slug / ID) wajib diisi.' });
@@ -986,11 +1021,39 @@ app.post('/api/autolinks/:id/click', (req, res) => {
   res.json({ success: true });
 });
 
+// Helper to verify Cloudflare Turnstile Captcha
+const verifyTurnstileToken = async (token?: string): Promise<boolean> => {
+  const secretKey = process.env.TURNSTILE_SECRET_KEY || '1x00000000000000000000000000000000UNIFIED';
+  if (!token) return false;
+
+  try {
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `secret=${encodeURIComponent(secretKey)}&response=${encodeURIComponent(token)}`,
+    });
+    if (res.ok) {
+      const data = await res.json() as any;
+      return !!data.success;
+    }
+  } catch (err) {
+    console.error('Turnstile verification error:', err);
+  }
+
+  // Fallback to true if we are in testing environment/using unified pass key
+  return secretKey === '1x00000000000000000000000000000000UNIFIED';
+};
+
 // 3. AUTHENTICATION HANDLERS
-app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password, turnstileToken } = req.body;
   if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
     return res.status(400).json({ error: 'Email dan password wajib diisi.' });
+  }
+
+  const isValidTurnstile = await verifyTurnstileToken(turnstileToken);
+  if (!isValidTurnstile) {
+    return res.status(400).json({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi.' });
   }
 
   const user = mockUsers.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
@@ -1175,14 +1238,16 @@ const handleCloudinaryUpload = async (req: any, res: any) => {
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
     const folder = process.env.CLOUDINARY_FOLDER || 'parenting-my-id';
 
-    // If Cloudinary keys are not fully provided, return safe error
+    // If Cloudinary keys are not fully provided, trigger GitHub/Local storage fallback
     if (!cloudName || !apiKey || !apiSecret) {
-      return res.status(400).json({ error: 'Konfigurasi Cloudinary tidak lengkap. Unggah gambar dinonaktifkan.' });
+      console.warn('Cloudinary credentials not configured, falling back to GitHub/Local storage pipeline...');
+      const fallbackResult = await performGitHubUpload(cleanFilename, base64Content);
+      return res.json(fallbackResult);
     }
 
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const format = 'webp';
-    const transformation = 'c_limit,w_1024,q_auto';
+    const transformation = 'c_limit,w_1024,q_auto,f_webp'; // Enable WebP auto-optimization
 
     // Build signature string (alphabetically sorted parameters)
     const stringToSign = `folder=${folder}&format=${format}&timestamp=${timestamp}&transformation=${transformation}${apiSecret}`;
@@ -1221,12 +1286,18 @@ const handleCloudinaryUpload = async (req: any, res: any) => {
         bytes: cData.bytes,
       });
     } else {
-      console.warn('Cloudinary upload response non-OK:', cData?.error?.message || cData);
-      return res.status(400).json({ error: cData?.error?.message || 'Gagal mengunggah gambar ke Cloudinary' });
+      console.warn('Cloudinary upload failed, triggering GitHub/Local storage fallback:', cData?.error?.message || cData);
+      const fallbackResult = await performGitHubUpload(cleanFilename, base64Content);
+      return res.json(fallbackResult);
     }
   } catch (err: any) {
-    console.error('Cloudinary upload exception:', err.message);
-    return res.status(500).json({ error: 'Gagal mengunggah gambar: ' + err.message });
+    console.error('Cloudinary upload exception, triggering GitHub/Local storage fallback:', err.message);
+    try {
+      const fallbackResult = await performGitHubUpload(cleanFilename, base64Content);
+      return res.json(fallbackResult);
+    } catch (fallbackErr: any) {
+      return res.status(500).json({ error: 'Gagal mengunggah gambar melalui Cloudinary maupun Storage Fallback: ' + fallbackErr.message });
+    }
   }
 };
 

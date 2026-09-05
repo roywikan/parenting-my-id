@@ -3,7 +3,8 @@ interface Env {
 }
 
 export const onRequest: PagesFunction<Env> = async (context) => {
-  const siteUrl = (context.env.SITE_URL || 'https://parenting.my.id').replace(/\/$/, '');
+  const requestUrl = new URL(context.request.url);
+  const siteUrl = (context.env.SITE_URL || requestUrl.origin).replace(/\/$/, '');
   const txt = `User-agent: *
 Allow: /
 Disallow: /admin

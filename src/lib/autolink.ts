@@ -37,7 +37,7 @@ export function applyAutoLinks(htmlContent: string, autolinks: AutoLink[]): stri
 
       if (keywordMatch && replacedCount < maxReplacementsPerKeyword) {
         replacedCount++;
-        return `<a href="${link.targetUrl}" class="inline-flex items-center gap-0.5 text-rose-700 dark:text-rose-300 font-semibold underline decoration-rose-400 dark:decoration-rose-500 underline-offset-4 hover:bg-rose-50 dark:hover:bg-rose-950/60 px-1 py-0.5 rounded transition-all group/autolink" title="Artikel terkait: ${link.description || link.keyword}" data-autolink-id="${link.id}">${keywordMatch}<span class="inline-block text-[10px] opacity-70 group-hover/autolink:translate-x-0.5 transition-transform">↗</span></a>`;
+        return `<a href="${link.targetUrl}" class="inline-flex items-center gap-0.5 text-rose-700 dark:text-rose-300 font-semibold underline decoration-rose-400 dark:decoration-rose-500 underline-offset-4 hover:bg-rose-50 dark:hover:bg-rose-950/60 px-1 py-0.5 rounded transition-colors group/autolink" title="Artikel terkait: ${link.description || link.keyword}" data-autolink-id="${link.id}">${keywordMatch}<span class="inline-block text-[10px] opacity-70 group-hover/autolink:translate-x-0.5 transition-transform">↗</span></a>`;
       }
 
       return match;
@@ -102,4 +102,60 @@ export function preprocessMarkdownLineBreaks(markdown: string): string {
       return text;
     })
     .join('');
+}
+
+/**
+ * Parses custom video shortcodes [youtube:url_or_id], [tiktok:url_or_id], [instagram:url_or_id]
+ * and converts them into mobile-friendly, fluidly responsive HTML embed frames.
+ */
+export function renderResponsiveVideoEmbeds(html: string): string {
+  if (!html) return '';
+
+  // 1. YouTube [youtube:ID_or_URL]
+  let result = html.replace(/\[youtube:\s*([^\s\]]+)\s*\]/gi, (match, src) => {
+    let videoId = src;
+    const ytMatch = src.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i);
+    if (ytMatch) {
+      videoId = ytMatch[1];
+    }
+    return `
+      <div class="relative w-full pb-[56.25%] h-0 rounded-2xl overflow-hidden shadow-xs my-6 bg-slate-100 dark:bg-slate-800">
+        <iframe src="https://www.youtube.com/embed/${videoId}" class="absolute top-0 left-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    `;
+  });
+
+  // 2. TikTok [tiktok:ID_or_URL]
+  result = result.replace(/\[tiktok:\s*([^\s\]]+)\s*\]/gi, (match, src) => {
+    let videoId = src;
+    const ttMatch = src.match(/\/video\/(\d+)/i);
+    if (ttMatch) {
+      videoId = ttMatch[1];
+    }
+    return `
+      <div class="w-full flex justify-center my-6">
+        <div class="relative w-full max-w-[340px] aspect-[9/16] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xs bg-slate-100 dark:bg-slate-800">
+          <iframe src="https://www.tiktok.com/embed/v2/${videoId}" class="absolute top-0 left-0 w-full h-full border-0" allowfullscreen></iframe>
+        </div>
+      </div>
+    `;
+  });
+
+  // 3. Instagram [instagram:ID_or_URL]
+  result = result.replace(/\[instagram:\s*([^\s\]]+)\s*\]/gi, (match, src) => {
+    let postId = src;
+    const igMatch = src.match(/\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/i);
+    if (igMatch) {
+      postId = igMatch[1];
+    }
+    return `
+      <div class="w-full flex justify-center my-6">
+        <div class="relative w-full max-w-[400px] aspect-[4/5] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xs bg-slate-100 dark:bg-slate-800">
+          <iframe src="https://www.instagram.com/p/${postId}/embed" class="absolute top-0 left-0 w-full h-full border-0" allowfullscreen></iframe>
+        </div>
+      </div>
+    `;
+  });
+
+  return result;
 }

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { marked } from 'marked';
-import { applyAutoLinks, calculateReadTime, preprocessMarkdownLineBreaks } from '../lib/autolink';
+import { applyAutoLinks, calculateReadTime, preprocessMarkdownLineBreaks, renderResponsiveVideoEmbeds } from '../lib/autolink';
 import { sanitizeAndOptimizeImageUrl, sanitizeMarkdownImageUrls } from '../lib/imageUtils';
 import { AutoLink, User, PostRevision, UserRole, PostStatus } from '../types';
 import SeoAuditWidget from './SeoAuditWidget';
@@ -9,7 +9,7 @@ import {
   List, ListOrdered, CheckSquare, Quote, Code, Table, Minus, 
   Link as LinkIcon, Link2, Image as ImageIcon, Upload, Eye, Edit3, Columns, 
   Undo, Redo, Sparkles, CheckCircle2, RefreshCw, X, Copy, Check, FileText,
-  Users, History, RotateCcw, Award, ShieldCheck, Send, AlertTriangle, AlertCircle, ThumbsUp, XCircle
+  Users, History, RotateCcw, Award, ShieldCheck, Send, AlertTriangle, AlertCircle, ThumbsUp, XCircle, Video
 } from 'lucide-react';
 
 interface RichPostEditorProps {
@@ -132,6 +132,9 @@ export default function RichPostEditor({
   const [linkUrl, setLinkUrl] = useState('');
 
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [videoPlatform, setVideoPlatform] = useState<'youtube' | 'tiktok' | 'instagram'>('youtube');
+  const [videoUrl, setVideoUrl] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [imageAlt, setImageAlt] = useState('');
   const [imageTab, setImageTab] = useState<'upload' | 'unsplash' | 'url'>('upload');
@@ -255,6 +258,26 @@ export default function RichPostEditor({
     setLinkUrl('');
   };
 
+  // Insert Video Action
+  const handleInsertVideo = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!videoUrl) return;
+    const formatted = `\n\n[${videoPlatform}:${videoUrl.trim()}]\n\n`;
+    
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const fullText = textarea.value.substring(0, start) + formatted + textarea.value.substring(end);
+      updateMarkdownWithHistory(fullText);
+    } else {
+      updateMarkdownWithHistory(`${markdown}\n${formatted}`);
+    }
+
+    setShowVideoModal(false);
+    setVideoUrl('');
+  };
+
   // Insert Image Action
   const handleInsertImage = (url: string, altText: string) => {
     if (!url) return;
@@ -311,6 +334,9 @@ export default function RichPostEditor({
 
     // Inject loading="lazy" and decoding="async" into <img> tags
     rawHtml = rawHtml.replace(/<img\s+/gi, '<img loading="lazy" decoding="async" ');
+
+    // Render responsive videos
+    rawHtml = renderResponsiveVideoEmbeds(rawHtml);
 
     // Inject id attributes into <h2> and <h3> tags for TOC
     rawHtml = rawHtml.replace(/<(h[23])>(.*?)<\/\1>/gi, (match, tag, content) => {
@@ -704,6 +730,14 @@ export default function RichPostEditor({
               </button>
               <button
                 type="button"
+                onClick={() => setShowVideoModal(true)}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 font-bold shadow-xs active:bg-purple-200 shrink-0"
+                title="Sisipkan Video (YouTube, TikTok, Instagram)"
+              >
+                <Video className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
                 onClick={() => {
                   if (textareaRef.current) {
                     const start = textareaRef.current.selectionStart;
@@ -886,6 +920,16 @@ export default function RichPostEditor({
                   >
                     <ImageIcon className="w-3.5 h-3.5" />
                     <span>Gambar</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowVideoModal(true)}
+                    className="px-2 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 font-bold text-xs hover:bg-purple-100 transition-colors flex items-center gap-1"
+                    title="Sisipkan Video (YouTube, TikTok, Instagram)"
+                  >
+                    <Video className="w-3.5 h-3.5" />
+                    <span>Video</span>
                   </button>
 
                   <button
@@ -1255,7 +1299,7 @@ export default function RichPostEditor({
                 </summary>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 mt-3">
                   {writers
-                    .filter((w) => w.id !== authorId && w.id !== currentLoggedInUserId)
+                    .filter((w) => Number(w.id) !== Number(authorId) && Number(w.id) !== Number(currentLoggedInUserId))
                     .map((w) => {
                       const safeList = Array.isArray(coAuthorIds) ? coAuthorIds : [];
                       const isChecked = safeList.includes(w.id);
@@ -1815,6 +1859,92 @@ export default function RichPostEditor({
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* MODAL INSERT VIDEO */}
+      {/* ------------------------------------------------------------- */}
+      {showVideoModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <Video className="w-4 h-4 text-purple-600" />
+                <span>Sisipkan Video Responsive</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowVideoModal(false)}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleInsertVideo} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Pilih Platform Video
+                </label>
+                <div className="grid grid-cols-3 gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-bold">
+                  {(['youtube', 'tiktok', 'instagram'] as const).map((platform) => (
+                    <button
+                      key={platform}
+                      type="button"
+                      onClick={() => setVideoPlatform(platform)}
+                      className={`py-1.5 rounded-lg capitalize transition-colors ${
+                        videoPlatform === platform
+                          ? 'bg-white dark:bg-slate-900 text-purple-600 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      {platform}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Alamat URL Video atau ID Video
+                </label>
+                <input
+                  type="text"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder={
+                    videoPlatform === 'youtube'
+                      ? 'https://www.youtube.com/watch?v=...'
+                      : videoPlatform === 'tiktok'
+                      ? 'https://www.tiktok.com/@username/video/...'
+                      : 'https://www.instagram.com/p/...'
+                  }
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono"
+                  required
+                />
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 block">
+                  Tempelkan URL video lengkap. Pemutar video akan ditampilkan secara responsif dan ramah seluler.
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowVideoModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700"
+                >
+                  Sisipkan Video
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

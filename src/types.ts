@@ -104,6 +104,7 @@ export interface SiteConfig {
   footer_badge_1?: string;
   footer_badge_2?: string;
   footer_badge_3?: string;
+  turnstile_site_key?: string;
 
   // Performance Metric Box (Customizable by Admin)
   show_performance_box?: boolean;

@@ -9,12 +9,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const pathname = url.pathname;
 
   let shouldRedirect = false;
-  const targetDomain = 'parenting.my.id';
+  let targetDomain = hostname;
   let targetPath = pathname;
 
-  // 1. Domain Canonicalization: www.parenting.my.id -> parenting.my.id
-  if (hostname === 'www.parenting.my.id') {
+  // 1. Domain Canonicalization: www.anydomain.com -> anydomain.com
+  if (hostname.startsWith('www.')) {
     shouldRedirect = true;
+    targetDomain = hostname.substring(4);
   }
 
   // 2. Legacy Category Path Redirection (/makanan/*, /balita/*, etc. -> /baca/*)
