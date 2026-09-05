@@ -84,14 +84,14 @@ export function generateFeedXml(posts) {
   const items = publishedPosts
     .map((p) => {
       const pubDate = p.createdAt ? new Date(p.createdAt).toUTCString() : (p.updatedAt ? new Date(p.updatedAt).toUTCString() : new Date().toUTCString());
-      const link = `${SITE_URL}/baca/${encodeURIComponent(p.slug)}`;
-      const titleClean = escapeCdata(p.title || '');
-      const descClean = escapeCdata(p.excerpt || '');
+      const link = escapeXml(`${SITE_URL}/baca/${encodeURIComponent(p.slug)}`);
+      const titleClean = escapeXml(p.title || '');
+      const descClean = escapeXml(p.excerpt || '');
       return `    <item>
-      <title><![CDATA[${titleClean}]]></title>
+      <title>${titleClean}</title>
       <link>${link}</link>
       <guid>${link}</guid>
-      <description><![CDATA[${descClean}]]></description>
+      <description>${descClean}</description>
       <pubDate>${pubDate}</pubDate>
     </item>`;
     })
@@ -100,9 +100,9 @@ export function generateFeedXml(posts) {
   const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>Parenting.my.id - Edukasi &amp; Pola Asuh Anak Modern</title>
-    <link>${SITE_URL}</link>
-    <description>Portal artikel parenting, gizi anak, stimulasi balita, dan pencegahan stunting di Indonesia.</description>
+    <title>${escapeXml('Parenting.my.id - Edukasi & Pola Asuh Anak Modern')}</title>
+    <link>${escapeXml(SITE_URL)}</link>
+    <description>${escapeXml('Portal artikel parenting, gizi anak, stimulasi balita, dan pencegahan stunting di Indonesia.')}</description>
     <language>id-id</language>
 ${items}
   </channel>
@@ -142,6 +142,17 @@ export function parseFeedXmlItems(feedXmlContent) {
 }
 
 /**
+ * Sanitize text to remove newlines, carriage returns, tabs, and duplicate spaces.
+ * This guarantees single-line list entries for the llms.txt parser.
+ */
+function sanitizeLlmsText(text) {
+  return (text || '')
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * Generate llms.txt string taken directly from feed.xml items (Summary index format)
  */
 export function generateLlmsTxt(posts, feedXmlContent) {
@@ -161,16 +172,18 @@ export function generateLlmsTxt(posts, feedXmlContent) {
     }));
   }
 
-  const articleLinks = items
+  let articleLinks = items
     .map((item) => {
-      const cleanTitle = (item.title || '').replace(/[\[\]]/g, '').trim();
-      const cleanDesc = (item.description || '')
-        .replace(/[\r\n]+/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+      const cleanTitle = sanitizeLlmsText(item.title || '').replace(/[\[\]]/g, '').trim();
+      const cleanDesc = sanitizeLlmsText(item.description || '');
       return `- [${cleanTitle}](${item.link})${cleanDesc ? `: ${cleanDesc}` : ''}`;
     })
     .join('\n');
+
+  // Fallback item to ensure H2 section is never empty
+  if (!articleLinks.trim()) {
+    articleLinks = `- [Beranda](${SITE_URL}): Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.`;
+  }
 
   return `# Parenting.my.id
 
@@ -180,7 +193,7 @@ export function generateLlmsTxt(posts, feedXmlContent) {
 
 ${articleLinks}
 
-## Sumber Daya Tambahan
+## Optional
 
 - [Konten Lengkap LLMs](${SITE_URL}/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
 - [Sitemap XML](${SITE_URL}/sitemap.xml): Peta situs terstruktur untuk crawler.
@@ -236,7 +249,7 @@ export function generateSitemapXml(posts) {
     })
     .join('');
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${SITE_URL}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>${urls}</urlset>`;
+  const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${escapeXml(SITE_URL)}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>${urls}</urlset>`;
 
   return xml.trim();
 }

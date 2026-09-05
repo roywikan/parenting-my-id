@@ -13,11 +13,34 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const method = request.method;
 
   const jsonResponse = (data: any, status = 200, extraHeaders: Record<string, string> = {}) => {
+    // Check if path is an administrative route
+    const isPublicGet = (method === 'GET' && (
+      path.startsWith('/api/posts') || 
+      path.startsWith('/api/comments') || 
+      path.startsWith('/api/categories') || 
+      path.startsWith('/api/tags')
+    ));
+
+    const isApiRoute = path.startsWith('/api/');
+    const isAdminRoute = isApiRoute && !isPublicGet;
+
+    let allowOrigin = '*';
+    if (isAdminRoute) {
+      const requestOrigin = request.headers.get('Origin') || '';
+      const requestHost = requestOrigin ? new URL(requestOrigin).hostname : '';
+      const serverHost = new URL(request.url).hostname;
+      if (requestHost === serverHost || requestOrigin.includes('localhost') || requestOrigin.includes('asia-southeast1.run.app')) {
+        allowOrigin = requestOrigin;
+      } else {
+        allowOrigin = `https://${serverHost}`;
+      }
+    }
+
     return new Response(JSON.stringify(data), {
       status,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': allowOrigin,
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
@@ -32,7 +55,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return jsonResponse({ ok: true }, 200);
   }
 
-  const siteUrl = 'https://parenting.my.id';
+  const siteUrl = (env.SITE_URL || new URL(request.url).origin).replace(/\/$/, '');
 
   const escapeXml = (unsafe: any): string => {
     if (unsafe == null) return '';
@@ -47,6 +70,35 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const escapeCdata = (text: any): string => {
     if (text == null) return '';
     return String(text).replace(/\]\]>/g, ']]]]><![CDATA[>');
+  };
+
+  const getSiteConfig = async (): Promise<{ site_name: string; site_description: string }> => {
+    const activeHost = new URL(request.url).hostname.replace('www.', '');
+    const defaultSiteName = activeHost || 'Portal Informasi';
+    const defaultSiteDesc = 'Portal informasi dan edukasi terpercaya.';
+    
+    if (!env.DB) {
+      return { site_name: defaultSiteName, site_description: defaultSiteDesc };
+    }
+    try {
+      const results = await env.DB.prepare("SELECT key, value FROM configs WHERE key IN ('site_name', 'site_description', 'seo_meta_title', 'seo_meta_description')").all();
+      const configMap: Record<string, string> = {};
+      if (results && results.results) {
+        for (const row of results.results) {
+          try {
+            configMap[row.key] = JSON.parse(row.value);
+          } catch {
+            configMap[row.key] = row.value;
+          }
+        }
+      }
+      return {
+        site_name: configMap.site_name || configMap.seo_meta_title || defaultSiteName,
+        site_description: configMap.site_description || configMap.seo_meta_description || defaultSiteDesc
+      };
+    } catch {
+      return { site_name: defaultSiteName, site_description: defaultSiteDesc };
+    }
   };
 
   // Security: Authenticate Bearer or session token against D1 users and default credentials
@@ -87,17 +139,18 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     }
 
     if (!user) {
+      const activeHost = new URL(request.url).hostname.replace('www.', '');
       if (userId === 1) {
-        user = { id: 1, email: 'admin@parenting.my.id', role: 'admin', name: 'Dr. Ratna Sari, M.Psi' };
+        user = { id: 1, email: `admin@${activeHost}`, role: 'admin', name: 'Dr. Ratna Sari, M.Psi' };
       } else if (userId === 2) {
-        user = { id: 2, email: 'editor@parenting.my.id', role: 'editor', name: 'Maya Putri, S.Psi' };
+        user = { id: 2, email: `editor@${activeHost}`, role: 'editor', name: 'Maya Putri, S.Psi' };
       } else if (userId === 3) {
-        user = { id: 3, email: 'penulis@parenting.my.id', role: 'writer', name: 'Ahmad Zulkarnain, S.Ked' };
+        user = { id: 3, email: `penulis@${activeHost}`, role: 'writer', name: 'Ahmad Zulkarnain, S.Ked' };
       } else {
         const tokenRole = tokenMatch[2] || 'writer';
         user = {
           id: userId,
-          email: `${tokenRole}_${userId}@parenting.my.id`,
+          email: `${tokenRole}_${userId}@${activeHost}`,
           role: tokenRole,
           name: `Penulis ${userId}`,
         };
@@ -117,6 +170,28 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     }
 
     return { user };
+  };
+
+  // Helper to verify Cloudflare Turnstile Captcha
+  const verifyTurnstileTokenEdge = async (token?: string): Promise<boolean> => {
+    const secretKey = (env as any).TURNSTILE_SECRET_KEY || '1x00000000000000000000000000000000UNIFIED';
+    if (!token) return false;
+
+    try {
+      const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `secret=${encodeURIComponent(secretKey)}&response=${encodeURIComponent(token)}`,
+      });
+      if (res.ok) {
+        const data = await res.json() as any;
+        return !!data.success;
+      }
+    } catch (err) {
+      console.error('Turnstile verification error on edge:', err);
+    }
+
+    return secretKey === '1x00000000000000000000000000000000UNIFIED';
   };
 
   // Slug generator with collision avoidance
@@ -204,23 +279,26 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const items = postsList.map(
           (post: any) => {
             const link = escapeXml(`${siteUrl}/baca/${encodeURIComponent(post.slug)}`);
+            const titleClean = escapeXml(post.title || '');
+            const descClean = escapeXml(post.excerpt || '');
             return `
     <item>
-      <title><![CDATA[${escapeCdata(post.title || '')}]]></title>
+      <title>${titleClean}</title>
       <link>${link}</link>
       <guid>${link}</guid>
-      <description><![CDATA[${escapeCdata(post.excerpt || '')}]]></description>
+      <description>${descClean}</description>
       <pubDate>${escapeXml(new Date(post.created_at || Date.now()).toUTCString())}</pubDate>
     </item>`;
           }
         ).join('');
 
+        const siteMeta = await getSiteConfig();
         const rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
   <channel>
-    <title>Parenting.my.id - Edukasi &amp; Pola Asuh Anak Modern</title>
+    <title>${escapeXml(siteMeta.site_name)}</title>
     <link>${escapeXml(siteUrl)}</link>
-    <description>Portal artikel parenting, gizi anak, stimulasi balita, dan pencegahan stunting di Indonesia.</description>
+    <description>${escapeXml(siteMeta.site_description)}</description>
     <language>id-id</language>
     ${items}
   </channel>
@@ -249,26 +327,36 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           postsList = results || [];
         }
 
-        const articleLinks = postsList
+        const siteMeta = await getSiteConfig();
+
+        const sanitizeLlmsText = (text: string) => {
+          return (text || '')
+            .replace(/[\r\n\t]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        };
+
+        let articleLinks = postsList
           .map((p: any) => {
-            const cleanTitle = (p.title || '').replace(/[\[\]]/g, '').trim();
-            const cleanDesc = (p.excerpt || '')
-              .replace(/[\r\n]+/g, ' ')
-              .replace(/\s+/g, ' ')
-              .trim();
+            const cleanTitle = sanitizeLlmsText(p.title || '').replace(/[\[\]]/g, '').trim();
+            const cleanDesc = sanitizeLlmsText(p.excerpt || '');
             return `- [${cleanTitle}](${siteUrl}/baca/${p.slug})${cleanDesc ? `: ${cleanDesc}` : ''}`;
           })
           .join('\n');
 
-        const llmsTxt = `# Parenting.my.id
+        if (!articleLinks.trim()) {
+          articleLinks = `- [Beranda](${siteUrl}): ${siteMeta.site_description}`;
+        }
 
-> Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.
+        const llmsTxt = `# ${siteMeta.site_name}
+
+> ${siteMeta.site_description}
 
 ## Artikel Terkait & Panduan Utama
 
 ${articleLinks}
 
-## Sumber Daya Tambahan
+## Optional
 
 - [Konten Lengkap LLMs](${siteUrl}/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
 - [Sitemap XML](${siteUrl}/sitemap.xml): Peta situs terstruktur untuk crawler.
@@ -302,10 +390,12 @@ ${articleLinks}
           postsList = results || [];
         }
 
+        const siteMeta = await getSiteConfig();
+
         const fullArticles = postsList.map((p: any) => {
           const url = `${siteUrl}/baca/${p.slug}`;
-          const author = p.authorName || 'Tim Redaksi Parenting.my.id';
-          const category = p.category || 'Parenting';
+          const author = p.authorName || `Tim Redaksi ${siteMeta.site_name}`;
+          const category = p.category || 'Berita';
           const date = p.updatedAt || p.createdAt || new Date().toISOString();
           return `---
 
@@ -321,7 +411,7 @@ ${p.contentMarkdown || ''}
 `;
         }).join('\n\n');
 
-        const llmsFullTxt = `# Arsip Lengkap Artikel Parenting.my.id (LLMs Full Text)
+        const llmsFullTxt = `# Arsip Lengkap Artikel ${siteMeta.site_name} (LLMs Full Text)
 
 Dokumen ini memuat kumpulan artikel lengkap dalam format Markdown untuk Large Language Models (LLMs).
 
@@ -1061,10 +1151,15 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 10. POST /api/auth/login
     if (path === '/api/auth/login' && method === 'POST') {
-      const { email, password } = await request.json() as any;
+      const { email, password, turnstileToken } = await request.json() as any;
 
       if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
         return jsonResponse({ error: 'Email dan password wajib diisi.' }, 400);
+      }
+
+      const isValidTurnstile = await verifyTurnstileTokenEdge(turnstileToken);
+      if (!isValidTurnstile) {
+        return jsonResponse({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi.' }, 400);
       }
 
       const cleanEmail = email.trim().toLowerCase();
@@ -1426,10 +1521,11 @@ Sitemap: ${siteUrl}/sitemap.xml
           excerpt += '...';
         }
 
+        const siteMeta = await getSiteConfig();
         return {
-          metaTitle: `${t} | Parenting.my.id`,
+          metaTitle: `${t} | ${siteMeta.site_name}`,
           metaDescription: firstSentence,
-          tags: 'parenting, anak, keluarga, kesehatan anak, balita',
+          tags: 'artikel, informasi, panduan, edukasi',
           excerpt: excerpt,
           aiGenerated: false,
         };
@@ -1440,14 +1536,15 @@ Sitemap: ${siteUrl}/sitemap.xml
       }
 
       try {
+        const siteMeta = await getSiteConfig();
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-        const prompt = `Anda adalah seorang Senior SEO Specialist & Parenting Content Strategist untuk website parenting.my.id.
+        const prompt = `Anda adalah seorang Senior SEO Specialist & Content Strategist untuk website ${siteMeta.site_name}.
 Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}", hasilkan format JSON persis seperti ini tanpa markdown codeblock:
 {
-  "metaTitle": "${title} | Parenting.my.id",
-  "metaDescription": "Deskripsi Meta SEO membujuk yang memuat kata kunci utama tentang parenting (120-155 karakter).",
+  "metaTitle": "${title} | ${siteMeta.site_name}",
+  "metaDescription": "Deskripsi Meta SEO membujuk yang memuat kata kunci utama (120-155 karakter).",
   "tags": "5 kata kunci dipisahkan koma",
-  "excerpt": "Ringkasan artikel 2 kalimat yang hangat dan empatik untuk orang tua Indonesia."
+  "excerpt": "Ringkasan artikel 2 kalimat yang hangat dan informatif."
 }`;
 
         const gRes = await fetch(geminiUrl, {
@@ -1534,7 +1631,12 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
     if (path === '/api/comments' && method === 'POST') {
       try {
         const body = await request.json() as any;
-        const { post_slug, user_name, user_email, content } = body;
+        const { post_slug, user_name, user_email, content, turnstileToken } = body;
+
+        const isValidTurnstile = await verifyTurnstileTokenEdge(turnstileToken);
+        if (!isValidTurnstile) {
+          return jsonResponse({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi.' }, 400);
+        }
 
         if (!post_slug || !user_name || !content) {
           return jsonResponse({ error: 'Nama, komentar, dan artikel tujuan wajib diisi.' }, 400);
@@ -1699,9 +1801,35 @@ async function syncStaticFilesToGitHub(env: Env, waitUntil?: (promise: Promise<a
   const doSync = async () => {
     try {
       const owner = env.GITHUB_OWNER || 'roywikan';
-      const repo = env.GITHUB_REPO || 'parenting-my-id';
+      const repo = env.GITHUB_REPO || 'cms-repository';
       const branch = env.GITHUB_BRANCH || 'main';
-      const siteUrl = 'https://parenting.my.id';
+      
+      let siteUrl = env.SITE_URL || 'https://domain.com';
+      let siteName = 'Portal Informasi';
+      let siteDescription = 'Portal berita dan informasi terpercaya.';
+
+      try {
+        const results = await env.DB.prepare("SELECT key, value FROM configs WHERE key IN ('site_url', 'site_name', 'site_description', 'seo_meta_title', 'seo_meta_description')").all();
+        const configMap: Record<string, string> = {};
+        if (results && results.results) {
+          for (const row of results.results) {
+            try {
+              configMap[row.key] = JSON.parse(row.value);
+            } catch {
+              configMap[row.key] = row.value;
+            }
+          }
+        }
+        if (configMap.site_url) {
+          siteUrl = configMap.site_url.replace(/\/$/, '');
+        } else if (env.SITE_URL) {
+          siteUrl = env.SITE_URL.replace(/\/$/, '');
+        }
+        siteName = configMap.site_name || configMap.seo_meta_title || 'Portal Informasi';
+        siteDescription = configMap.site_description || configMap.seo_meta_description || 'Portal berita dan informasi terpercaya.';
+      } catch (dbErr) {
+        console.error('Error fetching config in syncStaticFilesToGitHub:', dbErr);
+      }
 
       const { results } = await env.DB.prepare(
         `SELECT p.title, p.slug, p.excerpt, p.content_markdown as contentMarkdown, p.category, p.updated_at as updatedAt, p.created_at as createdAt, u.name as authorName 
@@ -1728,9 +1856,9 @@ async function syncStaticFilesToGitHub(env: Env, waitUntil?: (promise: Promise<a
       const feedXml = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
   <channel>
-    <title>Parenting.my.id - Edukasi &amp; Pola Asuh Anak Modern</title>
+    <title><![CDATA[${siteName}]]></title>
     <link>${siteUrl}</link>
-    <description>Portal artikel parenting, gizi anak, stimulasi balita, dan pencegahan stunting di Indonesia.</description>
+    <description><![CDATA[${siteDescription}]]></description>
     <language>id-id</language>
     ${items}
   </channel>
@@ -1743,26 +1871,34 @@ async function syncStaticFilesToGitHub(env: Env, waitUntil?: (promise: Promise<a
       const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${siteUrl}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>${urls}</urlset>`.trim();
 
       // 3. generate llms.txt
-      const articleLinks = postsList
+      const sanitizeLlmsText = (text: string) => {
+        return (text || '')
+          .replace(/[\r\n\t]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      };
+
+      let articleLinks = postsList
         .map((p: any) => {
-          const cleanTitle = (p.title || '').replace(/[\[\]]/g, '').trim();
-          const cleanDesc = (p.excerpt || '')
-            .replace(/[\r\n]+/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
+          const cleanTitle = sanitizeLlmsText(p.title || '').replace(/[\[\]]/g, '').trim();
+          const cleanDesc = sanitizeLlmsText(p.excerpt || '');
           return `- [${cleanTitle}](${siteUrl}/baca/${p.slug})${cleanDesc ? `: ${cleanDesc}` : ''}`;
         })
         .join('\n');
 
-      const llmsTxt = `# Parenting.my.id
+      if (!articleLinks.trim()) {
+        articleLinks = `- [Beranda](${siteUrl}): ${siteDescription}`;
+      }
 
-> Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.
+      const llmsTxt = `# ${siteName}
+
+> ${siteDescription}
 
 ## Artikel Terkait & Panduan Utama
 
-${articleLinks || '- [Panduan Parenting Utama](' + siteUrl + '): Edukasi pola asuh anak dan kesehatan.'}
+${articleLinks}
 
-## Sumber Daya Tambahan
+## Optional
 
 - [Konten Lengkap LLMs](${siteUrl}/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
 - [Sitemap XML](${siteUrl}/sitemap.xml): Peta situs terstruktur untuk crawler.
@@ -1772,8 +1908,8 @@ ${articleLinks || '- [Panduan Parenting Utama](' + siteUrl + '): Edukasi pola as
       // 4. generate llms-full.txt
       const fullArticles = postsList.map((p: any) => {
         const url = `${siteUrl}/baca/${p.slug}`;
-        const author = p.authorName || 'Tim Redaksi Parenting.my.id';
-        const category = p.category || 'Parenting';
+        const author = p.authorName || `Tim Redaksi ${siteName}`;
+        const category = p.category || 'Berita';
         const date = p.updatedAt || p.createdAt || new Date().toISOString();
         return `---
 
@@ -1789,7 +1925,7 @@ ${p.contentMarkdown || ''}
 `;
       }).join('\n\n');
 
-      const llmsFullTxt = `# Arsip Lengkap Artikel Parenting.my.id (LLMs Full Text)
+      const llmsFullTxt = `# Arsip Lengkap Artikel ${siteName} (LLMs Full Text)
 
 Dokumen ini memuat kumpulan artikel lengkap dalam format Markdown for Large Language Models (LLMs).
 

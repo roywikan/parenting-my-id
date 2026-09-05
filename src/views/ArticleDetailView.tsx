@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Post, AutoLink, SiteConfig } from '../types';
-import { applyAutoLinks, preprocessMarkdownLineBreaks } from '../lib/autolink';
+import { applyAutoLinks, preprocessMarkdownLineBreaks, renderResponsiveVideoEmbeds } from '../lib/autolink';
 import { marked } from 'marked';
 import { Clock, Eye, Calendar, ArrowLeft, Share2, Check, Bookmark, Sparkles, MessageCircle, Twitter, Facebook, Copy, Award, CheckCircle2, Linkedin, Instagram, Globe, Users, ShieldCheck } from 'lucide-react';
 import SEOHelper from '../components/SEOHelper';
@@ -93,7 +93,7 @@ export default function ArticleDetailView({
     }
   }, [post?.id, post?.views]);
 
-  // Reader/Viewer Counter Tracking (Human reader scrolls past article midpoint)
+  // Reader/Viewer Counter Tracking (Automatically increments when opened)
   useEffect(() => {
     if (!post || hasTrackedView) return;
 
@@ -103,47 +103,28 @@ export default function ArticleDetailView({
       return;
     }
 
-    const handleScroll = () => {
-      // Bot detection guard
-      const isBot = /bot|googlebot|crawler|spider|robot|crawling/i.test(navigator.userAgent);
-      if (isBot) return;
+    // Bot detection guard
+    const isBot = /bot|googlebot|crawler|spider|robot|crawling/i.test(navigator.userAgent);
+    if (isBot) return;
 
-      const articleEl = document.getElementById('article-content-body');
-      if (!articleEl) return;
+    sessionStorage.setItem(sessionKey, 'true');
+    setHasTrackedView(true);
 
-      const rect = articleEl.getBoundingClientRect();
-      const elementTopRelativeToWindow = rect.top + window.scrollY;
-      const elementHeight = rect.height;
-      const midPoint = elementTopRelativeToWindow + (elementHeight * 0.45); // 45% midpoint of content
-
-      const currentScrollPosition = window.scrollY + window.innerHeight;
-
-      if (currentScrollPosition >= midPoint) {
-        sessionStorage.setItem(sessionKey, 'true');
-        setHasTrackedView(true);
-
-        fetch(`/api/posts/${post.id}/view`, { method: 'POST' })
-          .then((res) => res.json())
-          .then((data: any) => {
-            if (data && typeof data.views === 'number') {
-              setCurrentViews(data.views);
-              post.views = data.views;
-            } else {
-              setCurrentViews((prev) => prev + 1);
-              post.views += 1;
-            }
-          })
-          .catch(() => {
-            setCurrentViews((prev) => prev + 1);
-            post.views += 1;
-          });
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-
-    return () => window.removeEventListener('scroll', handleScroll);
+    fetch(`/api/posts/${post.id}/view`, { method: 'POST' })
+      .then((res) => res.json())
+      .then((data: any) => {
+        if (data && typeof data.views === 'number') {
+          setCurrentViews(data.views);
+          post.views = data.views;
+        } else {
+          setCurrentViews((prev) => prev + 1);
+          post.views += 1;
+        }
+      })
+      .catch(() => {
+        setCurrentViews((prev) => prev + 1);
+        post.views += 1;
+      });
   }, [post, hasTrackedView]);
 
   // Render markdown to HTML + extract TOC items + apply Auto-Links & Heading IDs
@@ -155,6 +136,9 @@ export default function ArticleDetailView({
 
     // Inject loading="lazy" and decoding="async" into <img> tags
     rawHtml = rawHtml.replace(/<img\s+/gi, '<img loading="lazy" decoding="async" ');
+
+    // Render responsive videos
+    rawHtml = renderResponsiveVideoEmbeds(rawHtml);
 
     const items: { id: string; text: string; level: number }[] = [];
 
@@ -178,11 +162,11 @@ export default function ArticleDetailView({
       return `<${tag} id="${id}" class="scroll-mt-24">${content}</${tag}>`;
     });
 
-    // Custom inline reference parsing: [ref: Name/Details]
-    // Example: [ref: Sari et al., Jurnal Gizi Anak, 2026]
+    // Custom inline reference parsing: [ref: ...], [referensi: ...], [jurnal: ...]
+    // Example: [ref: Sari et al., Jurnal Gizi Anak, 2026, https://doi.org/10.1234/xyz]
     const refs: string[] = [];
     let refIndex = 1;
-    rawHtml = rawHtml.replace(/\[ref:\s*([^\]]+)\]/gi, (match, refText) => {
+    rawHtml = rawHtml.replace(/\[(?:ref|referensi|jurnal):\s*([^\]]+)\]/gi, (match, refText) => {
       const currentRefIndex = refIndex++;
       const cleanRefText = refText.trim();
       refs.push(cleanRefText);
@@ -196,12 +180,20 @@ export default function ArticleDetailView({
             <span class="text-rose-600">📚</span> Referensi Ilmiah & Jurnal
           </h3>
           <ol class="space-y-1.5 text-xs text-slate-600 dark:text-slate-400 list-decimal pl-5">
-            ${refs.map((ref, idx) => `
-              <li id="ref-item-${idx + 1}" class="pl-1 leading-relaxed">
-                <span class="font-medium text-slate-800 dark:text-slate-200">${ref}</span>
-                <a href="#ref-back-${idx + 1}" class="text-rose-500 hover:text-rose-700 ml-1.5 font-bold transition-colors" title="Kembali ke teks">↩</a>
-              </li>
-            `).join('')}
+            ${refs.map((ref, idx) => {
+              // Simple URL detector to make any links clickable automatically
+              const urlRegex = /(https?:\/\/[^\s,]+)/gi;
+              let refHtml = ref;
+              if (urlRegex.test(ref)) {
+                refHtml = ref.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center gap-0.5 font-semibold">${url}</a>`);
+              }
+              return `
+                <li id="ref-item-${idx + 1}" class="pl-1 leading-relaxed">
+                  <span class="font-medium text-slate-800 dark:text-slate-200">${refHtml}</span>
+                  <a href="#ref-back-${idx + 1}" class="text-rose-500 hover:text-rose-700 ml-1.5 font-bold transition-colors" title="Kembali ke teks">↩</a>
+                </li>
+              `;
+            }).join('')}
           </ol>
         </div>
       `;

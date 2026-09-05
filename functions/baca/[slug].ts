@@ -285,23 +285,40 @@ function preprocessMarkdownLineBreaks(markdown: string): string {
     .join('');
 }
 
+function sanitizeHtmlEdge(html: string): string {
+  if (!html) return '';
+  let sanitized = html;
+  
+  // 1. Remove <script> tags and their contents
+  sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  
+  // 2. Remove inline event handlers (onerror, onload, onclick, etc.)
+  sanitized = sanitized.replace(/\s+on[a-z]+\s*=\s*"[^"]*"/gi, '');
+  sanitized = sanitized.replace(/\s+on[a-z]+\s*=\s*'[^']*'/gi, '');
+  sanitized = sanitized.replace(/\s+on[a-z]+\s*=\s*[^\s>]+/gi, '');
+  
+  // 3. Remove href="javascript:..." or src="javascript:..."
+  sanitized = sanitized.replace(/(href|src)\s*=\s*"javascript:[^"]*"/gi, '$1="#"');
+  sanitized = sanitized.replace(/(href|src)\s*=\s*'javascript:[^']*'/gi, '$1="#"');
+  sanitized = sanitized.replace(/(href|src)\s*=\s*javascript:[^\s>]+/gi, '$1="#"');
+  
+  // 4. Remove potentially dangerous iframe, object, embed tags entirely
+  sanitized = sanitized.replace(/<(iframe|object|embed|frame|frameset)\b[^>]*>([\s\S]*?)<\/\1>/gi, '');
+  sanitized = sanitized.replace(/<(iframe|object|embed|frame|frameset)\b[^>]*>/gi, '');
+
+  return sanitized;
+}
+
 function renderMarkdownToHtml(markdown: string): string {
   if (!markdown) return '';
   try {
     const preparedMd = preprocessMarkdownLineBreaks(markdown);
-    return marked.parse(preparedMd, { async: false, gfm: true, breaks: true }) as string;
+    const rawHtml = marked.parse(preparedMd, { async: false, gfm: true, breaks: true }) as string;
+    return sanitizeHtmlEdge(rawHtml);
   } catch (e) {
-    // Simple regex fallback parser
-    let html = markdown;
-    html = html.replace(/## (.*)/g, '<h2 class="text-2xl font-bold text-slate-900 mt-8 mb-4">$1</h2>');
-    html = html.replace(/### (.*)/g, '<h3 class="text-xl font-bold text-slate-900 mt-6 mb-3">$1</h3>');
-    html = html.replace(/#### (.*)/g, '<h4 class="text-lg font-bold text-slate-900 mt-4 mb-2">$1</h4>');
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    html = html.replace(/^> (.*)/gm, '<blockquote class="border-l-4 border-rose-500 pl-4 py-2 my-4 italic bg-rose-50 text-slate-700 rounded-r-xl">$1</blockquote>');
-    html = html.replace(/^- (.*)/gm, '<li class="ml-4 list-disc">$1</li>');
-    html = html.replace(/\n\n/g, '</p><p class="my-4 leading-relaxed">');
-    return `<p class="my-4 leading-relaxed">${html}</p>`;
+    console.error('Error parsing markdown with marked:', e);
+    // Safe text fallback that wraps lines cleanly to prevent layout breakage
+    return markdown.split('\n\n').map(p => `<p class="my-4 leading-relaxed">${escapeHtml(p)}</p>`).join('');
   }
 }
 

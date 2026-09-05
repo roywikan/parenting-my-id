@@ -23,17 +23,35 @@ const INITIAL_POSTS = [
 
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { env } = context;
-  const siteUrl = (env.SITE_URL || 'https://parenting.my.id').replace(/\/$/, '');
+  const requestUrl = new URL(context.request.url);
+  const siteUrl = (env.SITE_URL || requestUrl.origin).replace(/\/$/, '');
+
+  let siteName = requestUrl.hostname.replace('www.', '') || 'Portal Informasi';
+  let siteDescription = 'Portal informasi dan edukasi terpercaya.';
 
   let posts = INITIAL_POSTS;
 
   if (env.DB) {
     try {
-      const { results } = await env.DB.prepare(
+      const results = await env.DB.prepare("SELECT key, value FROM configs WHERE key IN ('site_name', 'site_description', 'seo_meta_title', 'seo_meta_description')").all();
+      const configMap: Record<string, string> = {};
+      if (results && results.results) {
+        for (const row of results.results) {
+          try {
+            configMap[row.key] = JSON.parse(row.value);
+          } catch {
+            configMap[row.key] = row.value;
+          }
+        }
+      }
+      siteName = configMap.site_name || configMap.seo_meta_title || siteName;
+      siteDescription = configMap.site_description || configMap.seo_meta_description || siteDescription;
+
+      const { results: postsResults } = await env.DB.prepare(
         "SELECT title, slug, excerpt FROM posts WHERE status = 'published' ORDER BY id DESC"
       ).all();
-      if (results && results.length > 0) {
-        posts = results.map((r: any) => ({
+      if (postsResults && postsResults.length > 0) {
+        posts = postsResults.map((r: any) => ({
           title: r.title,
           slug: r.slug,
           excerpt: r.excerpt || '',
@@ -55,9 +73,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     })
     .join('\n');
 
-  const content = `# Parenting.my.id
+  const content = `# ${siteName}
 
-> Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.
+> ${siteDescription}
 
 ## Artikel Terbit & Panduan Utama
 

@@ -14,10 +14,11 @@ import RichPostEditor from '../components/RichPostEditor';
 import NavigationBuilder, { PRESET_NAV_ITEMS } from '../components/NavigationBuilder';
 import { sanitizeAndOptimizeImageUrl } from '../lib/imageUtils';
 import { getAuthHeaders } from '../lib/auth';
+import TurnstileWidget from '../components/TurnstileWidget';
 
 interface AdminPortalProps {
   currentUser: User | null;
-  onLogin: (email: string, pass: string) => Promise<boolean>;
+  onLogin: (email: string, pass: string, turnstileToken?: string) => Promise<boolean>;
   onLogout?: () => void;
   posts: Post[];
   autolinks: AutoLink[];
@@ -51,6 +52,7 @@ export default function AdminPortal({
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   // Admin tabs: 'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security' | 'comments'
   const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security' | 'comments'>('posts');
@@ -304,6 +306,7 @@ export default function AdminPortal({
   const [cfgSiteLogoUrl, setCfgSiteLogoUrl] = useState(siteConfig?.site_logo_url || '');
   const [cfgSiteLogoIcon, setCfgSiteLogoIcon] = useState(siteConfig?.site_logo_icon || 'Heart');
   const [cfgSiteFaviconUrl, setCfgSiteFaviconUrl] = useState(siteConfig?.site_favicon_url || '/favicon.ico');
+  const [cfgTurnstileSiteKey, setCfgTurnstileSiteKey] = useState(siteConfig?.turnstile_site_key || '1x00000000000000000000000000000000UNIFIED');
   const [cfgHeaderNavLinksArray, setCfgHeaderNavLinksArray] = useState<NavLink[]>(() => {
     if (siteConfig?.header_nav_links && Array.isArray(siteConfig.header_nav_links)) {
       return siteConfig.header_nav_links;
@@ -519,6 +522,7 @@ export default function AdminPortal({
       setCfgSiteLogoUrl(siteConfig.site_logo_url || '');
       setCfgSiteLogoIcon(siteConfig.site_logo_icon || 'Heart');
       setCfgSiteFaviconUrl(siteConfig.site_favicon_url || '/favicon.ico');
+      setCfgTurnstileSiteKey(siteConfig.turnstile_site_key || '1x00000000000000000000000000000000UNIFIED');
       if (siteConfig.header_nav_links && Array.isArray(siteConfig.header_nav_links) && siteConfig.header_nav_links.length > 0) {
         setCfgHeaderNavLinksArray(siteConfig.header_nav_links);
       } else if (!hasInitializedFromPropsRef.current) {
@@ -748,6 +752,7 @@ export default function AdminPortal({
         footer_badge_1: cfgFooterBadge1,
         footer_badge_2: cfgFooterBadge2,
         footer_badge_3: cfgFooterBadge3,
+        turnstile_site_key: cfgTurnstileSiteKey,
         site_tagline: cfgSiteTagline,
         site_description: cfgSiteDescription,
         site_logo_url: cfgSiteLogoUrl,
@@ -971,11 +976,15 @@ export default function AdminPortal({
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
+    if (!turnstileToken) {
+      setLoginError('Harap selesaikan verifikasi keamanan Turnstile.');
+      return;
+    }
     setIsLoggingIn(true);
-    const success = await onLogin(emailInput, passwordInput);
+    const success = await onLogin(emailInput, passwordInput, turnstileToken);
     setIsLoggingIn(false);
     if (!success) {
-      setLoginError('Email atau password tidak terdaftar.');
+      setLoginError('Email atau password salah, atau verifikasi Turnstile gagal.');
     }
   };
 
@@ -1035,6 +1044,8 @@ export default function AdminPortal({
         ad_banner_article_start_code: cfgAdBannerArticleStartCode,
         ad_banner_article_end_enable: cfgAdBannerArticleEndEnable,
         ad_banner_article_end_code: cfgAdBannerArticleEndCode,
+
+        turnstile_site_key: cfgTurnstileSiteKey,
 
         site_tagline: cfgSiteTagline,
         site_description: cfgSiteDescription,
@@ -1422,6 +1433,12 @@ export default function AdminPortal({
       return;
     }
 
+    if (!currentUser) {
+      setAutoSaveStatus('dirty');
+      alert('❌ Gagal menyimpan artikel, Alasan penyebab gagal: pengguna tidak ditemukan atau sesi telah kedaluwarsa.');
+      return;
+    }
+
     setAutoSaveStatus('saving');
     const currentAuthorId = (currentUser?.role === 'writer' && currentUser?.id)
       ? currentUser.id
@@ -1468,7 +1485,18 @@ export default function AdminPortal({
       }
     } catch (err: any) {
       setAutoSaveStatus('dirty');
-      alert(`❌ Gagal ${status === 'published' ? 'menerbitkan' : 'menyimpan'} artikel!\n\nAlasan/Penyebab Gagal: ${err.message || 'Terjadi kesalahan pada jaringan atau server.'}`);
+      const isAuthError = !currentUser || 
+                          err.message?.toLowerCase().includes('sesi') || 
+                          err.message?.toLowerCase().includes('auth') || 
+                          err.message?.toLowerCase().includes('token') || 
+                          err.message?.toLowerCase().includes('unauthorized') || 
+                          err.message?.toLowerCase().includes('pengguna');
+      
+      if (isAuthError) {
+        alert('❌ Gagal menyimpan artikel, Alasan penyebab gagal: pengguna tidak ditemukan atau sesi telah kedaluwarsa.');
+      } else {
+        alert(`❌ Gagal ${status === 'published' ? 'menerbitkan' : 'menyimpan'} artikel!\n\nAlasan/Penyebab Gagal: ${err.message || 'Terjadi kesalahan pada jaringan atau server.'}`);
+      }
     }
   };
 
@@ -1636,6 +1664,12 @@ export default function AdminPortal({
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
+
+            <TurnstileWidget
+              siteKey={siteConfig?.turnstile_site_key}
+              onVerify={(token) => setTurnstileToken(token)}
+              onExpire={() => setTurnstileToken('')}
+            />
 
             {loginError && (
               <p className="text-xs text-rose-600 font-medium text-center bg-rose-50 p-2 rounded-lg">
@@ -2830,6 +2864,18 @@ export default function AdminPortal({
                     onChange={(e) => setCfgSiteDomain(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
                     placeholder="domain.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Cloudflare Turnstile Site Key (turnstile_site_key)
+                  </label>
+                  <input
+                    type="text"
+                    value={cfgTurnstileSiteKey}
+                    onChange={(e) => setCfgTurnstileSiteKey(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                    placeholder="1x00000000000000000000000000000000UNIFIED"
                   />
                 </div>
                 <div>
