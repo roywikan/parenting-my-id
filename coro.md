@@ -1,4 +1,5 @@
-# 📖 Panduan Instalasi & Konfigurasi Blog Engine `parenting.my.id` (Konfidensial)
+
+# 📖 Panduan Instalasi & Konfigurasi Blog Engine `parenting.my.id` (Konfidensial) rahasia
 
 Dokumen ini berisi panduan teknis internal yang sangat rahasia mengenai cara melakukan instalasi, konfigurasi database Cloudflare D1, integrasi GitHub REST API, setting DNS, setting Worker/Pages Cloudflare, panduan keamanan sistem, serta optimalisasi performa animasi.
 
@@ -271,14 +272,39 @@ Aplikasi ini menggunakan **Cloudflare Turnstile** sebagai sistem pelindung CAPTC
    - **Sisi Client (Site Key)**: Buka Portal Admin ➔ Tab **Config Situs** ➔ Masukkan nilai **Site Key** ke kolom **Turnstile Site Key**. Klik **Simpan**.
    - **Sisi Server (Secret Key)**: Masuk ke dashboard Cloudflare Pages Anda ➔ **Settings** ➔ **Environment Variables**. Tambahkan variabel lingkungan `TURNSTILE_SECRET_KEY` dan isi dengan **Secret Key** Turnstile Anda (aktifkan pilihan enkripsi). Lakukan **Trigger Re-deploy** agar perubahan diterapkan.
 
-3. **Mekanisme Failover Pengujian Lokal / Offline**:
-   - Jika `TURNSTILE_SECRET_KEY` tidak diatur di file `.env` lokal atau Cloudflare Pages, sistem server dan edge akan mendeteksi kunci unified testing secara otomatis untuk mempermudah pengerjaan development offline tanpa merusak fungsionalitas web.
+3. **Mekanisme Failover Pengujian Lokal & Pencegahan Terkunci dari Dalam**:
+   - Jika `TURNSTILE_SECRET_KEY` tidak diatur di file `.env` lokal atau Cloudflare Pages, sistem server dan edge akan mendeteksi kunci testing unified (`1x00000000000000000000000000000000UNIFIED` / `1x00000000000000000000AA`) secara otomatis untuk mempermudah pengerjaan development offline tanpa merusak fungsionalitas web.
+   - **Pencegahan Terkunci via CSP**: Script Turnstile (`https://challenges.cloudflare.com/turnstile/v0/api.js`), iframe widget, dan endpoint verifikasi telah dimasukkan secara eksplisit ke dalam Content Security Policy (`public/_headers`) pada direktif `script-src`, `frame-src`, dan `connect-src` agar browser tidak memblokir render kotak validasi Turnstile di portal login `/admin-[suffix]`.
+
+4. **Kunci Darurat Pemulihan Admin (Emergency Recovery Key & Anti Brute Force)**:
+   - **Latar Belakang**: Jika widget Cloudflare Turnstile mengalami kendala jaringan, diblokir oleh ekstensi browser ad-blocker pengguna, atau terjadi kesalahan domain pada dashboard Turnstile yang menyebabkan admin terkunci dari luar, sistem menyediakan jalur pemulihan darurat tanpa mengorbankan keamanan kode di GitHub.
+   - **Langkah Konfigurasi di Cloudflare Pages**:
+     1. Masuk ke **Cloudflare Dashboard** ➔ **Workers & Pages** ➔ Pilih proyek Pages Anda (`parenting-my-id`).
+     2. Masuk ke tab **Settings** ➔ **Environment Variables**.
+     3. Klik **Add variable**:
+        - **Variable name**: `ADMIN_EMERGENCY_KEY`
+        - **Value**: Masukkan string kunci rahasia acak yang kuat (contoh: string acak 24+ karakter).
+        - Pilih opsi **Encrypt** (Secret) agar nilai tidak terbaca oleh siapapun di dashboard.
+     4. Simpan dan lakukan **Trigger Re-deploy** pada tab Deployments agar environment variable aktif di Edge Runtime.
+   - **Cara Menggunakan Kunci Darurat Saat Terkunci**:
+     - **Metode 1 (Otomatis via URL Parameter)**:
+       Buka URL login dengan menyematkan query parameter `emergency_key`:
+       ```text
+       https://parenting.my.id/admin-9999?emergency_key=KUNCI_DARURAT_ANDA
+       ```
+       Sistem akan otomatis mendeteksi kunci darurat, menampilkan indikator *Mode Darurat*, dan mengizinkan Anda masuk menggunakan email dan password admin tanpa menunggu widget Turnstile.
+     - **Metode 2 (Manual via Formulir Login)**:
+       Pada halaman login admin, klik tombol **"Opsi Darurat Terkunci dari Luar"** yang berada di bawah formulir login. Masukkan nilai `ADMIN_EMERGENCY_KEY` ke dalam kolom input Kunci Darurat, lalu klik Masuk.
+   - **Keamanan Anti Brute Force Tetap Aktif**:
+     - Baik saat menggunakan Turnstile maupun saat menggunakan Kunci Darurat, sistem membatasi percobaan login maksimal **5 kali gagal per IP**.
+     - Percobaan gagal ke-5 akan memicu penguncian otomatis (lockout) selama **15 menit** (`HTTP 429 Too Many Requests`).
+     - Data percobaan login dicatat di tabel Cloudflare D1 `login_attempts` untuk perlindungan terdistribusi di seluruh edge network Cloudflare.
 
 ---
 
-## 🔒 12. Header Keamanan Tambahan (HTTP Security Headers)
+## 🔒 12. Header Keamanan Tambahan (HTTP Security Headers & CSP)
 
-Untuk meningkatkan proteksi keamanan browser pengguna dan mencegah serangan modern, berkas `/public/_headers` telah dikonfigurasi untuk menyajikan header keamanan HTTP bawaan Cloudflare Pages berikut pada setiap respons:
+Untuk meningkatkan proteksi keamanan browser pengguna, menangkal XSS, Clickjacking, dan mencegah serangan modern, berkas `/public/_headers` telah dikonfigurasi untuk menyajikan header keamanan HTTP bawaan Cloudflare Pages berikut pada setiap respons:
 
 ```http
 /*
@@ -286,6 +312,7 @@ Untuk meningkatkan proteksi keamanan browser pengguna dan mencegah serangan mode
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com https://cusdis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://ui-avatars.com; font-src 'self' data: https://fonts.gstatic.com; frame-src 'self' https://challenges.cloudflare.com https://cusdis.com https://www.youtube.com https://www.tiktok.com https://www.instagram.com; connect-src 'self' https://challenges.cloudflare.com https://cloudflareinsights.com https://static.cloudflareinsights.com https://cusdis.com https://api.cloudinary.com https://api.github.com;
 ```
 
 ### Penjelasan Proteksi:
@@ -293,6 +320,13 @@ Untuk meningkatkan proteksi keamanan browser pengguna dan mencegah serangan mode
 - **`X-Content-Type-Options: nosniff`**: Mencegah serangan eksploitasi berbasis tipe MIME (*MIME-sniffing*) dengan memaksa browser mengikuti deklarasi header `Content-Type` yang sah dari server.
 - **`Referrer-Policy: strict-origin-when-cross-origin`**: Melindungi kebocoran data sensitif dalam URL rujukan (*referrer URL*) saat melompat antar origin berbeda.
 - **`Permissions-Policy`**: Menonaktifkan penuh hak akses sensor peramban yang tidak diperlukan (kamera, mikrofon, geolokasi) untuk menghilangkan celah pembajakan peranti keras.
+- **`Content-Security-Policy` (CSP)**:
+  - **`script-src`**: Mengizinkan skrip internal `'self'`, `'unsafe-inline'` untuk reaktivitas SPA React, `'unsafe-eval'` untuk optimasi Cloudflare Rocket Loader, serta layanan resmi terverifikasi: Cloudflare Turnstile (`https://challenges.cloudflare.com`), Cloudflare Web Analytics / Insights (`https://static.cloudflareinsights.com`), dan widget komentar Cusdis (`https://cusdis.com`).
+  - **`style-src`**: Menetapkan `'self' 'unsafe-inline' https://fonts.googleapis.com` untuk memastikan styling dinamis React (`style={{ ... }}`), pergantian tema warna dinamis via CSS variable, dan stylesheet Google Fonts dapat di-render tanpa memicu pelanggaran CSP.
+  - **`img-src`**: Mengizinkan gambar lokal `'self'`, gambar base64 preview upload (`data:`), blob manipulasi kanvas (`blob:`), serta CDN foto resmi: Cloudinary (`https://res.cloudinary.com`), Unsplash (`https://images.unsplash.com`, `https://plus.unsplash.com`), dan UI Avatars (`https://ui-avatars.com`).
+  - **`font-src`**: Mengizinkan pemuatan font lokal `'self'`, inlined fonts (`data:`), dan Google Fonts CDN (`https://fonts.gstatic.com`).
+  - **`frame-src`**: Mengizinkan iframe verifikasi tantangan Cloudflare Turnstile (`https://challenges.cloudflare.com`), kotak komentar Cusdis (`https://cusdis.com`), serta embed multimedia aman (YouTube, TikTok, Instagram).
+  - **`connect-src`**: Mengizinkan pertukaran sinyal token Cloudflare Turnstile, telemetri Cloudflare Insights / Analytics, sinkronisasi komentar Cusdis, serta gateway API Cloudinary dan GitHub.
 
 ---
 

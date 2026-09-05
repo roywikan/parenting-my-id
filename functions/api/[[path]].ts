@@ -1151,15 +1151,87 @@ Sitemap: ${siteUrl}/sitemap.xml
 
     // 10. POST /api/auth/login
     if (path === '/api/auth/login' && method === 'POST') {
-      const { email, password, turnstileToken } = await request.json() as any;
+      const clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || '127.0.0.1';
+      const now = Date.now();
+
+      // Anti Brute Force: Check rate limiting in D1
+      if (env.DB) {
+        try {
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS login_attempts (
+              ip TEXT PRIMARY KEY,
+              attempts INTEGER DEFAULT 0,
+              last_attempt INTEGER,
+              blocked_until INTEGER
+            )
+          `).run();
+
+          const attemptRecord = await env.DB.prepare('SELECT attempts, blocked_until FROM login_attempts WHERE ip = ?').bind(clientIp).first() as any;
+          if (attemptRecord && attemptRecord.blocked_until && attemptRecord.blocked_until > now) {
+            const remainingMins = Math.ceil((attemptRecord.blocked_until - now) / 60000);
+            return jsonResponse({
+              error: `Akses ditolak (Anti Brute Force). Terlalu banyak percobaan login gagal. Silakan coba lagi dalam ${remainingMins} menit.`
+            }, 429);
+          }
+        } catch (errDbRate) {
+          console.error('Error checking login rate limit in D1:', errDbRate);
+        }
+      }
+
+      const { email, password, turnstileToken, emergencyKey } = await request.json() as any;
 
       if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
         return jsonResponse({ error: 'Email dan password wajib diisi.' }, 400);
       }
 
-      const isValidTurnstile = await verifyTurnstileTokenEdge(turnstileToken);
-      if (!isValidTurnstile) {
-        return jsonResponse({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi.' }, 400);
+      // Helper to record failed attempts and enforce lockout after 5 fails
+      const handleFailedLogin = async () => {
+        if (env.DB) {
+          try {
+            const record = await env.DB.prepare('SELECT attempts FROM login_attempts WHERE ip = ?').bind(clientIp).first() as any;
+            const newAttempts = ((record?.attempts || 0) + 1);
+            const blockedUntil = newAttempts >= 5 ? (now + 15 * 60 * 1000) : 0;
+            await env.DB.prepare(`
+              INSERT INTO login_attempts (ip, attempts, last_attempt, blocked_until)
+              VALUES (?, ?, ?, ?)
+              ON CONFLICT(ip) DO UPDATE SET
+                attempts = ?,
+                last_attempt = ?,
+                blocked_until = ?
+            `).bind(clientIp, newAttempts, now, blockedUntil, newAttempts, now, blockedUntil).run();
+            const remaining = Math.max(0, 5 - newAttempts);
+            return remaining;
+          } catch (e) {
+            console.error('Error recording failed attempt:', e);
+          }
+        }
+        return 0;
+      };
+
+      // Helper to clear failed attempts upon successful login
+      const handleSuccessfulLogin = async () => {
+        if (env.DB) {
+          try {
+            await env.DB.prepare('DELETE FROM login_attempts WHERE ip = ?').bind(clientIp).run();
+          } catch (e) {}
+        }
+      };
+
+      // Check Emergency Recovery Key (Bypass Turnstile in Emergency)
+      const configuredEmergencyKey = (env as any).ADMIN_EMERGENCY_KEY || (typeof process !== 'undefined' ? process.env?.ADMIN_EMERGENCY_KEY : '');
+      let isEmergencyBypass = false;
+
+      if (emergencyKey && typeof emergencyKey === 'string' && configuredEmergencyKey && configuredEmergencyKey.trim() !== '') {
+        if (emergencyKey.trim() === configuredEmergencyKey.trim()) {
+          isEmergencyBypass = true;
+        }
+      }
+
+      if (!isEmergencyBypass) {
+        const isValidTurnstile = await verifyTurnstileTokenEdge(turnstileToken);
+        if (!isValidTurnstile) {
+          return jsonResponse({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi atau gunakan Kunci Darurat.' }, 400);
+        }
       }
 
       const cleanEmail = email.trim().toLowerCase();
@@ -1191,9 +1263,15 @@ Sitemap: ${siteUrl}/sitemap.xml
           if (user) {
             // Strict absolute password check
             if (!cleanPass || user.password !== cleanPass) {
-              return jsonResponse({ error: 'Email atau password salah.' }, 401);
+              const remaining = await handleFailedLogin();
+              return jsonResponse({
+                error: remaining > 0
+                  ? `Email atau password salah. Sisa percobaan: ${remaining} kali sebelum akses diblokir 15 menit.`
+                  : 'Terlalu banyak percobaan gagal. Akses diblokir selama 15 menit demi keamanan (Anti Brute Force).'
+              }, 401);
             }
 
+            await handleSuccessfulLogin();
             return jsonResponse({
               success: true,
               user: {
@@ -1224,8 +1302,14 @@ Sitemap: ${siteUrl}/sitemap.xml
 
             if (cleanEmail === cEmail) {
               if (!cleanPass || cleanPass !== cPass) {
-                return jsonResponse({ error: 'Email atau password salah.' }, 401);
+                const remaining = await handleFailedLogin();
+                return jsonResponse({
+                  error: remaining > 0
+                    ? `Email atau password salah. Sisa percobaan: ${remaining} kali sebelum akses diblokir 15 menit.`
+                    : 'Terlalu banyak percobaan gagal. Akses diblokir selama 15 menit demi keamanan (Anti Brute Force).'
+                }, 401);
               }
+              await handleSuccessfulLogin();
               return jsonResponse({
                 success: true,
                 user: {
@@ -1248,8 +1332,14 @@ Sitemap: ${siteUrl}/sitemap.xml
       // Default initial login check
       if (cleanEmail === 'admin@parenting.my.id') {
         if (!cleanPass || cleanPass !== 'admin123') {
-          return jsonResponse({ error: 'Email atau password salah.' }, 401);
+          const remaining = await handleFailedLogin();
+          return jsonResponse({
+            error: remaining > 0
+              ? `Email atau password salah. Sisa percobaan: ${remaining} kali sebelum akses diblokir 15 menit.`
+              : 'Terlalu banyak percobaan gagal. Akses diblokir selama 15 menit demi keamanan (Anti Brute Force).'
+          }, 401);
         }
+        await handleSuccessfulLogin();
         return jsonResponse({
           success: true,
           user: {
@@ -1264,8 +1354,14 @@ Sitemap: ${siteUrl}/sitemap.xml
         });
       } else if (cleanEmail === 'editor@parenting.my.id') {
         if (!cleanPass || cleanPass !== 'editor123') {
-          return jsonResponse({ error: 'Email atau password salah.' }, 401);
+          const remaining = await handleFailedLogin();
+          return jsonResponse({
+            error: remaining > 0
+              ? `Email atau password salah. Sisa percobaan: ${remaining} kali sebelum akses diblokir 15 menit.`
+              : 'Terlalu banyak percobaan gagal. Akses diblokir selama 15 menit demi keamanan (Anti Brute Force).'
+          }, 401);
         }
+        await handleSuccessfulLogin();
         return jsonResponse({
           success: true,
           user: {
@@ -1280,8 +1376,14 @@ Sitemap: ${siteUrl}/sitemap.xml
         });
       } else if (cleanEmail === 'penulis@parenting.my.id') {
         if (!cleanPass || cleanPass !== 'writer123') {
-          return jsonResponse({ error: 'Email atau password salah.' }, 401);
+          const remaining = await handleFailedLogin();
+          return jsonResponse({
+            error: remaining > 0
+              ? `Email atau password salah. Sisa percobaan: ${remaining} kali sebelum akses diblokir 15 menit.`
+              : 'Terlalu banyak percobaan gagal. Akses diblokir selama 15 menit demi keamanan (Anti Brute Force).'
+          }, 401);
         }
+        await handleSuccessfulLogin();
         return jsonResponse({
           success: true,
           user: {
@@ -1296,7 +1398,12 @@ Sitemap: ${siteUrl}/sitemap.xml
         });
       }
 
-      return jsonResponse({ error: 'Email atau password salah.' }, 401);
+      const remaining = await handleFailedLogin();
+      return jsonResponse({
+        error: remaining > 0
+          ? `Email atau password salah. Sisa percobaan: ${remaining} kali sebelum akses diblokir 15 menit.`
+          : 'Terlalu banyak percobaan gagal. Akses diblokir selama 15 menit demi keamanan (Anti Brute Force).'
+      }, 401);
     }
 
     // 8a. POST /api/upload-cloudinary & /api/upload (Cloudinary WebP Pipeline with GitHub Fallback)

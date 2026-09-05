@@ -60,6 +60,19 @@ function getUnsplashSrcSet(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Security First: HTTP Security Headers & Content Security Policy
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com https://cusdis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://ui-avatars.com; font-src 'self' data: https://fonts.gstatic.com; frame-src 'self' https://challenges.cloudflare.com https://cusdis.com https://www.youtube.com https://www.tiktok.com https://www.instagram.com; connect-src 'self' https://challenges.cloudflare.com https://cloudflareinsights.com https://static.cloudflareinsights.com https://cusdis.com https://api.cloudinary.com https://api.github.com;"
+  );
+  next();
+});
+
 // Initial In-Memory / Local Seed Data mirroring Cloudflare D1
 let mockUsers = [
   {
@@ -1045,22 +1058,67 @@ const verifyTurnstileToken = async (token?: string): Promise<boolean> => {
   return true;//bypass sementara
 };
 
+// In-memory rate limiting store for login attempts (Anti Brute Force)
+interface LoginAttemptRecord {
+  attempts: number;
+  blockedUntil: number;
+}
+const loginAttemptsMap = new Map<string, LoginAttemptRecord>();
+
 // 3. AUTHENTICATION HANDLERS
 app.post('/api/auth/login', async (req, res) => {
-  const { email, password, turnstileToken } = req.body;
+  const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+  const now = Date.now();
+  const attemptRecord = loginAttemptsMap.get(clientIp);
+
+  if (attemptRecord && attemptRecord.blockedUntil > now) {
+    const remainingMinutes = Math.ceil((attemptRecord.blockedUntil - now) / 60000);
+    return res.status(429).json({
+      error: `Akses diblokir sementara (Anti Brute Force). Terlalu banyak percobaan login gagal. Silakan coba lagi dalam ${remainingMinutes} menit.`,
+    });
+  }
+
+  const { email, password, turnstileToken, emergencyKey } = req.body;
   if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
     return res.status(400).json({ error: 'Email dan password wajib diisi.' });
   }
 
-  const isValidTurnstile = await verifyTurnstileToken(turnstileToken);
-  if (!isValidTurnstile) {
-    return res.status(400).json({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi.' });
+  // Check emergency recovery key
+  const configuredEmergencyKey = process.env.ADMIN_EMERGENCY_KEY || (process.env.NODE_ENV !== 'production' ? 'darurat123' : '');
+  let isEmergencyBypass = false;
+
+  if (emergencyKey && typeof emergencyKey === 'string' && configuredEmergencyKey && configuredEmergencyKey.trim() !== '') {
+    if (emergencyKey.trim() === configuredEmergencyKey.trim()) {
+      isEmergencyBypass = true;
+    }
+  }
+
+  if (!isEmergencyBypass) {
+    const isValidTurnstile = await verifyTurnstileToken(turnstileToken);
+    if (!isValidTurnstile) {
+      return res.status(400).json({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi atau gunakan Kunci Darurat.' });
+    }
   }
 
   const user = mockUsers.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
   if (!user || !password || user.password !== password) {
-    return res.status(401).json({ error: 'Email atau password salah.' });
+    const currentRecord = loginAttemptsMap.get(clientIp) || { attempts: 0, blockedUntil: 0 };
+    currentRecord.attempts += 1;
+    if (currentRecord.attempts >= 5) {
+      currentRecord.blockedUntil = now + 15 * 60 * 1000; // Block for 15 minutes
+    }
+    loginAttemptsMap.set(clientIp, currentRecord);
+
+    const remainingAttempts = Math.max(0, 5 - currentRecord.attempts);
+    return res.status(401).json({
+      error: remainingAttempts > 0
+        ? `Email atau password salah. Sisa percobaan: ${remainingAttempts} kali sebelum akses diblokir 15 menit.`
+        : 'Terlalu banyak percobaan gagal. Akses diblokir selama 15 menit demi keamanan (Anti Brute Force).',
+    });
   }
+
+  // Reset rate limit on successful login
+  loginAttemptsMap.delete(clientIp);
 
   // Return user info and verified session token
   const { password: _, ...userWithoutPassword } = user;
