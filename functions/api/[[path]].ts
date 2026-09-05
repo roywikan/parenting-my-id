@@ -1500,7 +1500,7 @@ Sitemap: ${siteUrl}/sitemap.xml
 
       const apiKey = (env as any).GEMINI_API_KEY;
 
-      const getSmartFallback = (t: string, c: string) => {
+      const getSmartFallback = async (t: string, c: string) => {
         const cleanContent = (c || '')
           .replace(/[#*`_\[\]()]/g, '')
           .replace(/\s+/g, ' ')
@@ -1532,7 +1532,7 @@ Sitemap: ${siteUrl}/sitemap.xml
       };
 
       if (!apiKey) {
-        return jsonResponse(getSmartFallback(title, content));
+        return jsonResponse(await getSmartFallback(title, content));
       }
 
       try {
