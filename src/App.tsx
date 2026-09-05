@@ -166,12 +166,17 @@ export default function App() {
   };
 
   // Handle Login
-  const handleLogin = async (email: string, pass: string, turnstileToken?: string): Promise<boolean> => {
+  const handleLogin = async (
+    email: string,
+    pass: string,
+    turnstileToken?: string,
+    emergencyKey?: string
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: pass, turnstileToken }),
+        body: JSON.stringify({ email, password: pass, turnstileToken, emergencyKey }),
       });
       const contentType = res.headers.get('content-type');
       if (res.ok && contentType && contentType.includes('application/json')) {
@@ -181,35 +186,40 @@ export default function App() {
           localStorage.setItem('cms_user', JSON.stringify(data.user));
           const token = data.token || `session_${data.user.id}_${data.user.role || 'admin'}_${Date.now()}`;
           localStorage.setItem('cms_token', token);
-          return true;
+          return { success: true };
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        if (errData?.error) {
+          return { success: false, error: errData.error };
         }
       }
     } catch (err) {
       console.error('Login error:', err);
     }
 
-    // Client-side fallback (e.g. for static Cloudflare Pages / GitHub Pages)
+    // Client-side fallback (e.g. for static Cloudflare Pages / GitHub Pages offline dev)
     if ((email === 'admin@domain.com' || email === 'admin@parenting.my.id') && pass === 'admin123') {
       const adminUser = INITIAL_USERS[0];
       setCurrentUser(adminUser);
       localStorage.setItem('cms_user', JSON.stringify(adminUser));
       localStorage.setItem('cms_token', `session_1_admin_${Date.now()}`);
-      return true;
+      return { success: true };
     } else if ((email === 'editor@domain.com' || email === 'editor@parenting.my.id') && pass === 'editor123') {
       const editorUser = INITIAL_USERS[1];
       setCurrentUser(editorUser);
       localStorage.setItem('cms_user', JSON.stringify(editorUser));
       localStorage.setItem('cms_token', `session_2_editor_${Date.now()}`);
-      return true;
+      return { success: true };
     } else if ((email === 'penulis@domain.com' || email === 'penulis@parenting.my.id') && pass === 'writer123') {
       const writerUser = INITIAL_USERS[2];
       setCurrentUser(writerUser);
       localStorage.setItem('cms_user', JSON.stringify(writerUser));
       localStorage.setItem('cms_token', `session_3_writer_${Date.now()}`);
-      return true;
+      return { success: true };
     }
 
-    return false;
+    return { success: false, error: 'Email atau password salah.' };
   };
 
   // Handle Logout

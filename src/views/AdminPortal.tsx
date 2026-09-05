@@ -18,7 +18,7 @@ import TurnstileWidget from '../components/TurnstileWidget';
 
 interface AdminPortalProps {
   currentUser: User | null;
-  onLogin: (email: string, pass: string, turnstileToken?: string) => Promise<boolean>;
+  onLogin: (email: string, pass: string, turnstileToken?: string, emergencyKey?: string) => Promise<{ success: boolean; error?: string } | boolean>;
   onLogout?: () => void;
   posts: Post[];
   autolinks: AutoLink[];
@@ -53,6 +53,24 @@ export default function AdminPortal({
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
+
+  // Emergency Recovery State (Bypass Turnstile in Emergency)
+  const [emergencyKeyInput, setEmergencyKeyInput] = useState('');
+  const [showEmergencyInput, setShowEmergencyInput] = useState(false);
+  const [turnstileLoadError, setTurnstileLoadError] = useState(false);
+
+  // Automatically detect emergency key in URL (e.g. ?emergency_key=... or ?emergency=...)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const eKey = params.get('emergency_key') || params.get('emergency');
+      if (eKey && eKey.trim() !== '') {
+        setEmergencyKeyInput(eKey.trim());
+      }
+    } catch {
+      // Ignore URL parsing errors
+    }
+  }, []);
 
   // Admin tabs: 'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security' | 'comments'
   const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security' | 'comments'>('posts');
@@ -976,15 +994,23 @@ export default function AdminPortal({
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
-    if (!turnstileToken) {
-      setLoginError('Harap selesaikan verifikasi keamanan Turnstile.');
+
+    const cleanEmergency = emergencyKeyInput.trim();
+    if (!turnstileToken && !cleanEmergency) {
+      setLoginError('Harap selesaikan verifikasi Turnstile atau masukkan Kunci Darurat.');
       return;
     }
+
     setIsLoggingIn(true);
-    const success = await onLogin(emailInput, passwordInput, turnstileToken);
+    const result = await onLogin(emailInput, passwordInput, turnstileToken, cleanEmergency);
     setIsLoggingIn(false);
-    if (!success) {
-      setLoginError('Email atau password salah, atau verifikasi Turnstile gagal.');
+
+    if (typeof result === 'object') {
+      if (!result.success) {
+        setLoginError(result.error || 'Email atau password salah, atau verifikasi gagal.');
+      }
+    } else if (!result) {
+      setLoginError('Email atau password salah, atau verifikasi Turnstile/Kunci Darurat gagal.');
     }
   };
 
@@ -1665,11 +1691,73 @@ export default function AdminPortal({
               />
             </div>
 
-            <TurnstileWidget
-              siteKey={siteConfig?.turnstile_site_key}
-              onVerify={(token) => setTurnstileToken(token)}
-              onExpire={() => setTurnstileToken('')}
-            />
+            {/* Turnstile Widget / Emergency Bypass UI */}
+            {emergencyKeyInput && !showEmergencyInput ? (
+              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Key className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span className="font-semibold">Kunci Darurat Aktif (URL Terdeteksi)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEmergencyKeyInput('')}
+                  className="text-[11px] underline text-amber-600 hover:text-amber-800"
+                >
+                  Gunakan Turnstile
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <TurnstileWidget
+                  siteKey={siteConfig?.turnstile_site_key}
+                  onVerify={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken('')}
+                  onError={() => setTurnstileLoadError(true)}
+                />
+
+                {!showEmergencyInput ? (
+                  <div className="text-center pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowEmergencyInput(true)}
+                      className="text-[11px] text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors inline-flex items-center gap-1.5"
+                    >
+                      <Key className="w-3.5 h-3.5" />
+                      <span>{turnstileLoadError ? 'Turnstile gagal dimuat? Gunakan Kunci Darurat' : 'Opsi Darurat Terkunci dari Luar'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                        <Key className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Kunci Darurat (Emergency Recovery Key)</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowEmergencyInput(false);
+                          setEmergencyKeyInput('');
+                        }}
+                        className="text-[11px] text-slate-500 hover:text-slate-700"
+                      >
+                        Batal
+                      </button>
+                    </div>
+                    <input
+                      type="password"
+                      value={emergencyKeyInput}
+                      onChange={(e) => setEmergencyKeyInput(e.target.value)}
+                      placeholder="Masukkan ADMIN_EMERGENCY_KEY"
+                      className="w-full px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                    <p className="text-[10px] text-amber-700 dark:text-amber-400/80 leading-relaxed">
+                      Kunci darurat disimpan di Cloudflare Pages Dashboard (<code>ADMIN_EMERGENCY_KEY</code>) untuk bypass Turnstile secara aman saat terkunci.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {loginError && (
               <p className="text-xs text-rose-600 font-medium text-center bg-rose-50 p-2 rounded-lg">
