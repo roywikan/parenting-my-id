@@ -177,7 +177,7 @@ export default function Header({ currentView, onNavigate, currentUser, onLogout,
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onNavigate('admin')}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-sm transition-all ${
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-sm transition-colors ${
                     currentView === 'admin'
                       ? 'bg-rose-600 text-white shadow-rose-500/25'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-600'

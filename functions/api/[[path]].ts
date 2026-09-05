@@ -90,7 +90,17 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       if (userId === 1) {
         user = { id: 1, email: 'admin@parenting.my.id', role: 'admin', name: 'Dr. Ratna Sari, M.Psi' };
       } else if (userId === 2) {
-        user = { id: 2, email: 'penulis@parenting.my.id', role: 'writer', name: 'Ahmad Zulkarnain, S.Ked' };
+        user = { id: 2, email: 'editor@parenting.my.id', role: 'editor', name: 'Maya Putri, S.Psi' };
+      } else if (userId === 3) {
+        user = { id: 3, email: 'penulis@parenting.my.id', role: 'writer', name: 'Ahmad Zulkarnain, S.Ked' };
+      } else {
+        const tokenRole = tokenMatch[2] || 'writer';
+        user = {
+          id: userId,
+          email: `${tokenRole}_${userId}@parenting.my.id`,
+          role: tokenRole,
+          name: `Penulis ${userId}`,
+        };
       }
     }
 
@@ -240,7 +250,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
 
         const articleLinks = postsList
-          .map((p: any) => `* [${p.title}](${siteUrl}/baca/${p.slug}): ${p.excerpt || ''}`)
+          .map((p: any) => {
+            const cleanTitle = (p.title || '').replace(/[\[\]]/g, '').trim();
+            const cleanDesc = (p.excerpt || '')
+              .replace(/[\r\n]+/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim();
+            return `- [${cleanTitle}](${siteUrl}/baca/${p.slug})${cleanDesc ? `: ${cleanDesc}` : ''}`;
+          })
           .join('\n');
 
         const llmsTxt = `# Parenting.my.id
@@ -253,9 +270,9 @@ ${articleLinks}
 
 ## Sumber Daya Tambahan
 
-* [Konten Lengkap LLMs](${siteUrl}/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
-* [Sitemap XML](${siteUrl}/sitemap.xml): Peta situs terstruktur untuk crawler.
-* [RSS Feed](${siteUrl}/feed.xml): Umpan sindikasi artikel terbaru.
+- [Konten Lengkap LLMs](${siteUrl}/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
+- [Sitemap XML](${siteUrl}/sitemap.xml): Peta situs terstruktur untuk crawler.
+- [RSS Feed](${siteUrl}/feed.xml): Umpan sindikasi artikel terbaru.
 `.trim();
 
         return new Response(llmsTxt, {
@@ -1150,6 +1167,22 @@ Sitemap: ${siteUrl}/sitemap.xml
           },
           token: `session_1_admin_${Date.now()}`
         });
+      } else if (cleanEmail === 'editor@parenting.my.id') {
+        if (!cleanPass || cleanPass !== 'editor123') {
+          return jsonResponse({ error: 'Email atau password salah.' }, 401);
+        }
+        return jsonResponse({
+          success: true,
+          user: {
+            id: 2,
+            email: 'editor@parenting.my.id',
+            name: 'Maya Putri, S.Psi',
+            role: 'editor',
+            avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=100&q=75&fm=webp',
+            bio: 'Editor konten kesehatan dan pengasuhan anak dengan sertifikasi jurnalistik edukasi keluarga.'
+          },
+          token: `session_2_editor_${Date.now()}`
+        });
       } else if (cleanEmail === 'penulis@parenting.my.id') {
         if (!cleanPass || cleanPass !== 'writer123') {
           return jsonResponse({ error: 'Email atau password salah.' }, 401);
@@ -1157,14 +1190,14 @@ Sitemap: ${siteUrl}/sitemap.xml
         return jsonResponse({
           success: true,
           user: {
-            id: 2,
+            id: 3,
             email: 'penulis@parenting.my.id',
             name: 'Ahmad Zulkarnain, S.Ked',
             role: 'writer',
             avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=75&fm=webp',
             bio: 'Edukator kesehatan anak dan spesialis gizi tumbuh kembang balita.'
           },
-          token: `session_2_writer_${Date.now()}`
+          token: `session_3_writer_${Date.now()}`
         });
       }
 
@@ -1349,6 +1382,97 @@ Sitemap: ${siteUrl}/sitemap.xml
         const errData = await ghRes.json() as any;
         return jsonResponse({ error: errData.message || 'Gagal mengunggah gambar ke GitHub.' }, 500);
       }
+    }
+
+    // 8c. POST /api/ai/generate-meta (AI Gemini SEO Helper with Smart Fallback)
+    if (path === '/api/ai/generate-meta' && method === 'POST') {
+      const auth = await authenticateRequest(['admin', 'editor', 'writer']);
+      if (auth.errorResponse) return auth.errorResponse;
+
+      let title = '';
+      let content = '';
+      try {
+        const body = await request.json() as any;
+        title = body.title || '';
+        content = body.content || '';
+      } catch (e) {
+        return jsonResponse({ error: 'Body JSON tidak valid.' }, 400);
+      }
+
+      if (!title) {
+        return jsonResponse({ error: 'Judul wajib diisi untuk menghasilkan SEO metadata.' }, 400);
+      }
+
+      const apiKey = (env as any).GEMINI_API_KEY;
+
+      const getSmartFallback = (t: string, c: string) => {
+        const cleanContent = (c || '')
+          .replace(/[#*`_\[\]()]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        const sentenceMatch = cleanContent.match(/^[^.!?]+[.!?]/);
+        let firstSentence = sentenceMatch ? sentenceMatch[0] : '';
+
+        if (firstSentence.length < 40 || firstSentence.length > 200) {
+          firstSentence = cleanContent.slice(0, 150);
+          if (cleanContent.length > 150) {
+            firstSentence += '...';
+          }
+        }
+
+        let excerpt = cleanContent.slice(0, 180);
+        if (cleanContent.length > 180) {
+          excerpt += '...';
+        }
+
+        return {
+          metaTitle: `${t} | Parenting.my.id`,
+          metaDescription: firstSentence,
+          tags: 'parenting, anak, keluarga, kesehatan anak, balita',
+          excerpt: excerpt,
+          aiGenerated: false,
+        };
+      };
+
+      if (!apiKey) {
+        return jsonResponse(getSmartFallback(title, content));
+      }
+
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const prompt = `Anda adalah seorang Senior SEO Specialist & Parenting Content Strategist untuk website parenting.my.id.
+Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}", hasilkan format JSON persis seperti ini tanpa markdown codeblock:
+{
+  "metaTitle": "${title} | Parenting.my.id",
+  "metaDescription": "Deskripsi Meta SEO membujuk yang memuat kata kunci utama tentang parenting (120-155 karakter).",
+  "tags": "5 kata kunci dipisahkan koma",
+  "excerpt": "Ringkasan artikel 2 kalimat yang hangat dan empatik untuk orang tua Indonesia."
+}`;
+
+        const gRes = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' },
+          }),
+        });
+
+        if (gRes.ok) {
+          const gData = await gRes.json() as any;
+          const text = gData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            return jsonResponse({ ...parsed, aiGenerated: true });
+          }
+        }
+      } catch (err) {
+        console.error('Gemini Edge API Error:', err);
+      }
+
+      return jsonResponse(getSmartFallback(title, content));
     }
 
     // 9. GET /api/comments
@@ -1620,7 +1744,14 @@ async function syncStaticFilesToGitHub(env: Env, waitUntil?: (promise: Promise<a
 
       // 3. generate llms.txt
       const articleLinks = postsList
-        .map((p: any) => `* [${p.title}](${siteUrl}/baca/${p.slug}): ${p.excerpt || ''}`)
+        .map((p: any) => {
+          const cleanTitle = (p.title || '').replace(/[\[\]]/g, '').trim();
+          const cleanDesc = (p.excerpt || '')
+            .replace(/[\r\n]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          return `- [${cleanTitle}](${siteUrl}/baca/${p.slug})${cleanDesc ? `: ${cleanDesc}` : ''}`;
+        })
         .join('\n');
 
       const llmsTxt = `# Parenting.my.id
@@ -1629,13 +1760,13 @@ async function syncStaticFilesToGitHub(env: Env, waitUntil?: (promise: Promise<a
 
 ## Artikel Terkait & Panduan Utama
 
-${articleLinks || '* [Panduan Parenting Utama](' + siteUrl + '): Edukasi pola asuh anak dan kesehatan.'}
+${articleLinks || '- [Panduan Parenting Utama](' + siteUrl + '): Edukasi pola asuh anak dan kesehatan.'}
 
 ## Sumber Daya Tambahan
 
-* [Konten Lengkap LLMs](${siteUrl}/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
-* [Sitemap XML](${siteUrl}/sitemap.xml): Peta situs terstruktur untuk crawler.
-* [RSS Feed](${siteUrl}/feed.xml): Umpan sindikasi artikel terbaru.
+- [Konten Lengkap LLMs](${siteUrl}/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
+- [Sitemap XML](${siteUrl}/sitemap.xml): Peta situs terstruktur untuk crawler.
+- [RSS Feed](${siteUrl}/feed.xml): Umpan sindikasi artikel terbaru.
 `.trim();
 
       // 4. generate llms-full.txt

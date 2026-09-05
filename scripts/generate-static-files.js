@@ -162,7 +162,14 @@ export function generateLlmsTxt(posts, feedXmlContent) {
   }
 
   const articleLinks = items
-    .map((item) => `* [${item.title}](${item.link}): ${item.description}`)
+    .map((item) => {
+      const cleanTitle = (item.title || '').replace(/[\[\]]/g, '').trim();
+      const cleanDesc = (item.description || '')
+        .replace(/[\r\n]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return `- [${cleanTitle}](${item.link})${cleanDesc ? `: ${cleanDesc}` : ''}`;
+    })
     .join('\n');
 
   return `# Parenting.my.id
@@ -175,9 +182,9 @@ ${articleLinks}
 
 ## Sumber Daya Tambahan
 
-* [Konten Lengkap LLMs](${SITE_URL}/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
-* [Sitemap XML](${SITE_URL}/sitemap.xml): Peta situs terstruktur untuk crawler.
-* [RSS Feed](${SITE_URL}/feed.xml): Umpan sindikasi artikel terbaru.
+- [Konten Lengkap LLMs](${SITE_URL}/llms-full.txt): Kumpulan teks lengkap artikel untuk konsumsi dan inferensi model bahasa (LLM).
+- [Sitemap XML](${SITE_URL}/sitemap.xml): Peta situs terstruktur untuk crawler.
+- [RSS Feed](${SITE_URL}/feed.xml): Umpan sindikasi artikel terbaru.
 `.trim();
 }
 

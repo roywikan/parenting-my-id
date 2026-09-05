@@ -1646,7 +1646,7 @@ export default function AdminPortal({
             <button
               type="submit"
               disabled={isLoggingIn}
-              className="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2"
             >
               {isLoggingIn ? <RefreshCw className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />}
               <span>{siteConfig?.admin_login_btn_text || 'Masuk Portal CMS'}</span>
@@ -1692,7 +1692,7 @@ export default function AdminPortal({
 
         <button
           onClick={handleCreateNewPost}
-          className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2"
+          className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-colors flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           <span>Tulis Artikel Baru</span>
@@ -1703,7 +1703,7 @@ export default function AdminPortal({
       <div className="flex items-center gap-2 overflow-x-auto border-b border-slate-200 dark:border-slate-800 pb-2">
         <button
           onClick={() => setActiveTab('posts')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
             activeTab === 'posts'
               ? 'bg-rose-600 text-white shadow-sm'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -1715,7 +1715,7 @@ export default function AdminPortal({
 
         <button
           onClick={() => setActiveTab('editor')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
             activeTab === 'editor'
               ? 'bg-rose-600 text-white shadow-sm'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -1729,7 +1729,7 @@ export default function AdminPortal({
           <>
             <button
               onClick={() => setActiveTab('writers')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
                 activeTab === 'writers'
                   ? 'bg-rose-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -1741,7 +1741,7 @@ export default function AdminPortal({
 
             <button
               onClick={() => setActiveTab('autolinks')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
                 activeTab === 'autolinks'
                   ? 'bg-rose-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -1753,7 +1753,7 @@ export default function AdminPortal({
 
             <button
               onClick={() => setActiveTab('sitemap')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
                 activeTab === 'sitemap'
                   ? 'bg-rose-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -1768,7 +1768,7 @@ export default function AdminPortal({
                 setActiveTab('comments');
                 fetchComments();
               }}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
                 activeTab === 'comments'
                   ? 'bg-rose-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -1780,7 +1780,7 @@ export default function AdminPortal({
 
             <button
               onClick={() => setActiveTab('config')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
                 activeTab === 'config'
                   ? 'bg-rose-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -1795,7 +1795,7 @@ export default function AdminPortal({
         {currentUser?.role !== 'writer' && (
           <button
             onClick={() => setActiveTab('security')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
               activeTab === 'security'
                 ? 'bg-rose-600 text-white shadow-sm'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -1852,7 +1852,7 @@ export default function AdminPortal({
                 </div>
                 <button
                   onClick={() => setPostStatusFilter('pending_approval')}
-                  className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 shadow-sm transition-all"
+                  className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 shadow-sm transition-colors"
                 >
                   Lihat Artikel Pending
                 </button>
@@ -1874,7 +1874,7 @@ export default function AdminPortal({
                 <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-[11px] font-bold overflow-x-auto max-w-full">
                   <button
                     onClick={() => setPostStatusFilter('all')}
-                    className={`px-3 py-1.5 rounded-xl transition-all ${
+                    className={`px-3 py-1.5 rounded-xl transition-colors ${
                       postStatusFilter === 'all'
                         ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -1884,7 +1884,7 @@ export default function AdminPortal({
                   </button>
                   <button
                     onClick={() => setPostStatusFilter('pending_approval')}
-                    className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 ${
+                    className={`px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1 ${
                       postStatusFilter === 'pending_approval'
                         ? 'bg-amber-500 text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-amber-600'
@@ -1899,7 +1899,7 @@ export default function AdminPortal({
                   </button>
                   <button
                     onClick={() => setPostStatusFilter('draft')}
-                    className={`px-3 py-1.5 rounded-xl transition-all ${
+                    className={`px-3 py-1.5 rounded-xl transition-colors ${
                       postStatusFilter === 'draft'
                         ? 'bg-slate-700 text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -1909,7 +1909,7 @@ export default function AdminPortal({
                   </button>
                   <button
                     onClick={() => setPostStatusFilter('published')}
-                    className={`px-3 py-1.5 rounded-xl transition-all ${
+                    className={`px-3 py-1.5 rounded-xl transition-colors ${
                       postStatusFilter === 'published'
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600'
@@ -1919,7 +1919,7 @@ export default function AdminPortal({
                   </button>
                   <button
                     onClick={() => setPostStatusFilter('rejected')}
-                    className={`px-3 py-1.5 rounded-xl transition-all ${
+                    className={`px-3 py-1.5 rounded-xl transition-colors ${
                       postStatusFilter === 'rejected'
                         ? 'bg-rose-600 text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-rose-600'
@@ -2008,7 +2008,7 @@ export default function AdminPortal({
                             <td className="p-4 text-right space-x-1.5 whitespace-nowrap">
                               <button
                                 onClick={() => handleEditPost(post)}
-                                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 text-xs font-bold transition-all"
+                                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 text-xs font-bold transition-colors"
                               >
                                 {userRole === 'writer' ? (post.status === 'draft' ? 'Lanjutkan Draf' : 'Edit Artikel') : 'Edit Artikel'}
                               </button>
@@ -2018,7 +2018,7 @@ export default function AdminPortal({
                                   onClick={() => {
                                     handleEditPost(post);
                                   }}
-                                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-xs transition-all"
+                                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-xs transition-colors"
                                 >
                                   Moderasi &amp; Terbit
                                 </button>
@@ -2027,7 +2027,7 @@ export default function AdminPortal({
                               {userRole !== 'writer' && (currentUser?.role === 'admin' || currentUser?.role === 'editor' || post.authorId === currentUser?.id) && (
                                 <button
                                   onClick={() => onDeletePost(post.id)}
-                                  className="px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold transition-all"
+                                  className="px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold transition-colors"
                                 >
                                   Hapus
                                 </button>
@@ -2085,6 +2085,7 @@ export default function AdminPortal({
           userRole={currentUser?.role || 'writer'}
           currentStatus={editorStatus}
           rejectionReason={posts.find(p => p.id === editingPostId)?.rejectionReason}
+          currentLoggedInUserId={currentUser?.id}
         />
       )}
 
@@ -2106,7 +2107,7 @@ export default function AdminPortal({
 
             <button
               onClick={handleOpenAddWriterModal}
-              className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-1.5 shrink-0"
             >
               <Plus className="w-4 h-4" />
               <span>+ Tambah Penulis Baru</span>
@@ -2122,7 +2123,7 @@ export default function AdminPortal({
               return (
                 <div
                   key={w.id}
-                  className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between"
+                  className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-colors space-y-4 flex flex-col justify-between"
                 >
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-3">
@@ -2395,7 +2396,7 @@ export default function AdminPortal({
               <button
                 type="submit"
                 disabled={isSavingWriter}
-                className="w-full py-3 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 shadow-md transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isSavingWriter ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 <span>{writerModalMode === 'create' ? 'Simpan Penulis Baru' : 'Perbarui Profil Penulis'}</span>
@@ -2471,7 +2472,7 @@ export default function AdminPortal({
 
             <button
               type="submit"
-              className="px-4 py-2.5 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 shadow-md transition-all"
+              className="px-4 py-2.5 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 shadow-md transition-colors"
             >
               Simpan Kata Kunci Autolink
             </button>
@@ -2530,7 +2531,7 @@ export default function AdminPortal({
                 href="/sitemap.xml"
                 target="_blank"
                 rel="noreferrer"
-                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 transition-all flex items-center justify-between"
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 transition-colors flex items-center justify-between"
               >
                 <div>
                   <div className="font-bold text-sm text-slate-900 dark:text-white">📄 Live /sitemap.xml</div>
@@ -2543,7 +2544,7 @@ export default function AdminPortal({
                 href="/feed.xml"
                 target="_blank"
                 rel="noreferrer"
-                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 transition-all flex items-center justify-between"
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 transition-colors flex items-center justify-between"
               >
                 <div>
                   <div className="font-bold text-sm text-slate-900 dark:text-white">📡 Live /feed.xml</div>
@@ -2695,7 +2696,7 @@ export default function AdminPortal({
                 {THEME_PRESETS.map((preset) => (
                   <label
                     key={preset.id}
-                    className={`cursor-pointer border-2 rounded-xl p-3 flex items-center gap-3 transition-all ${cfgActiveThemePreset === preset.id ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 shadow-md' : 'border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-700'}`}
+                    className={`cursor-pointer border-2 rounded-xl p-3 flex items-center gap-3 transition-colors ${cfgActiveThemePreset === preset.id ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 shadow-md' : 'border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-700'}`}
                   >
                     <input
                       type="radio"
@@ -3053,7 +3054,7 @@ export default function AdminPortal({
                     key={mode.id}
                     type="button"
                     onClick={() => setCfgHomepageDisplayMode(mode.id as HomepageDisplayMode)}
-                    className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition-all relative overflow-hidden ${
+                    className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition-colors relative overflow-hidden ${
                       cfgHomepageDisplayMode === mode.id
                         ? 'bg-rose-600 text-white border-rose-600 shadow-lg shadow-rose-600/30 ring-2 ring-rose-400'
                         : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white hover:border-rose-400 shadow-2xs'
@@ -3133,7 +3134,7 @@ export default function AdminPortal({
                       key={tab.id}
                       type="button"
                       onClick={() => setSelectedModelConfigTab(tab.id as HomepageDisplayMode)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
                         selectedModelConfigTab === tab.id
                           ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs ring-1 ring-black/5 dark:ring-white/10'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -4789,7 +4790,7 @@ export default function AdminPortal({
                   {/* OPTION 1: BOTH */}
                   <div
                     onClick={() => setCfgCommentEngineMode('both')}
-                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-colors ${
                       cfgCommentEngineMode === 'both'
                         ? 'border-rose-500 bg-white dark:bg-slate-900 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
                         : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 hover:border-slate-300'
@@ -4816,7 +4817,7 @@ export default function AdminPortal({
                   {/* OPTION 2: NATIVE ONLY */}
                   <div
                     onClick={() => setCfgCommentEngineMode('native')}
-                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-colors ${
                       cfgCommentEngineMode === 'native'
                         ? 'border-rose-500 bg-white dark:bg-slate-900 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
                         : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 hover:border-slate-300'
@@ -4843,7 +4844,7 @@ export default function AdminPortal({
                   {/* OPTION 3: CUSDIS ONLY */}
                   <div
                     onClick={() => setCfgCommentEngineMode('cusdis')}
-                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-colors ${
                       cfgCommentEngineMode === 'cusdis'
                         ? 'border-rose-500 bg-white dark:bg-slate-900 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
                         : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 hover:border-slate-300'
@@ -4870,7 +4871,7 @@ export default function AdminPortal({
                   {/* OPTION 4: NONE (DISABLED) */}
                   <div
                     onClick={() => setCfgCommentEngineMode('none')}
-                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-colors ${
                       cfgCommentEngineMode === 'none'
                         ? 'border-rose-500 bg-white dark:bg-slate-900 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
                         : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 hover:border-slate-300'
@@ -4965,7 +4966,7 @@ export default function AdminPortal({
                 <button
                   type="button"
                   onClick={handleFillDemoAdsense}
-                  className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-[11px] border border-amber-500/30 flex items-center gap-1.5 transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-[11px] border border-amber-500/30 flex items-center gap-1.5 transition-colors"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                   <span>Isi Demo Snippet AdSense High-CTR</span>
@@ -5124,7 +5125,7 @@ export default function AdminPortal({
                     setCfgCustomSnippetHeadEnable(true);
                     setCfgCustomSnippetBodyEnable(true);
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 font-bold text-[11px] border border-rose-500/30 flex items-center gap-1.5 transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 font-bold text-[11px] border border-rose-500/30 flex items-center gap-1.5 transition-colors"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-rose-500" />
                   <span>Muat Sample Dummy JS/CSS</span>
@@ -5150,7 +5151,7 @@ export default function AdminPortal({
                         onChange={(e) => setCfgCustomSnippetHeadEnable(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-transform dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
                       <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                         {cfgCustomSnippetHeadEnable ? 'Aktif' : 'Nonaktif'}
                       </span>
@@ -5179,7 +5180,7 @@ export default function AdminPortal({
                         onChange={(e) => setCfgCustomSnippetBodyEnable(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-transform dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
                       <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                         {cfgCustomSnippetBodyEnable ? 'Aktif' : 'Nonaktif'}
                       </span>
@@ -5209,7 +5210,7 @@ export default function AdminPortal({
                     setCfgCustomMetaTagsCode(DEFAULT_SITE_CONFIG.custom_meta_tags_code || '');
                     setCfgCustomMetaTagsEnable(true);
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-bold text-[11px] border border-blue-500/30 flex items-center gap-1.5 transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-bold text-[11px] border border-blue-500/30 flex items-center gap-1.5 transition-colors"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-blue-500" />
                   <span>Muat Sample Dummy Meta Tag</span>
@@ -5233,7 +5234,7 @@ export default function AdminPortal({
                       onChange={(e) => setCfgCustomMetaTagsEnable(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                    <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-transform dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
                     <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                       {cfgCustomMetaTagsEnable ? 'Aktif' : 'Nonaktif'}
                     </span>
@@ -5268,7 +5269,7 @@ export default function AdminPortal({
                     setCfgAdBannerArticleStartEnable(true);
                     setCfgAdBannerArticleEndEnable(true);
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] border border-emerald-500/30 flex items-center gap-1.5 transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] border border-emerald-500/30 flex items-center gap-1.5 transition-colors"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
                   <span>Muat Sample Dummy Banner Iklan</span>
@@ -5293,7 +5294,7 @@ export default function AdminPortal({
                         onChange={(e) => setCfgAdBannerFirstHalfEnable(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-transform dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
                       <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                         {cfgAdBannerFirstHalfEnable ? 'Aktif' : 'Nonaktif'}
                       </span>
@@ -5321,7 +5322,7 @@ export default function AdminPortal({
                         onChange={(e) => setCfgAdBannerStickyFooterEnable(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-transform dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
                       <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                         {cfgAdBannerStickyFooterEnable ? 'Aktif' : 'Nonaktif'}
                       </span>
@@ -5349,7 +5350,7 @@ export default function AdminPortal({
                         onChange={(e) => setCfgAdBannerArticleStartEnable(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-transform dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
                       <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                         {cfgAdBannerArticleStartEnable ? 'Aktif' : 'Nonaktif'}
                       </span>
@@ -5377,7 +5378,7 @@ export default function AdminPortal({
                         onChange={(e) => setCfgAdBannerArticleEndEnable(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-transform dark:after:border-slate-600 peer-checked:bg-rose-600"></div>
                       <span className="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                         {cfgAdBannerArticleEndEnable ? 'Aktif' : 'Nonaktif'}
                       </span>
@@ -5506,7 +5507,7 @@ export default function AdminPortal({
                 {onLogout && (
                   <button
                     onClick={onLogout}
-                    className="px-4 py-2 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md transition-all shrink-0 flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md transition-colors shrink-0 flex items-center gap-1.5"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Logout Sekarang</span>
@@ -5678,7 +5679,7 @@ export default function AdminPortal({
                   setTimeout(() => setConfigSuccessMsg(''), 3000);
                 }}
                 disabled={isSavingConfig}
-                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md shadow-rose-500/20 flex items-center gap-2 transition-all self-start sm:self-auto disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md shadow-rose-500/20 flex items-center gap-2 transition-colors self-start sm:self-auto disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 <span>{isSavingConfig ? 'Menyimpan...' : 'Terapkan Pilihan'}</span>
@@ -5696,7 +5697,7 @@ export default function AdminPortal({
               {/* OPTION 1: BOTH */}
               <div
                 onClick={() => setCfgCommentEngineMode('both')}
-                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition-colors ${
                   cfgCommentEngineMode === 'both'
                     ? 'border-rose-500 bg-rose-50/30 dark:bg-rose-950/20 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
                     : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 hover:border-slate-300'
@@ -5723,7 +5724,7 @@ export default function AdminPortal({
               {/* OPTION 2: NATIVE ONLY */}
               <div
                 onClick={() => setCfgCommentEngineMode('native')}
-                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition-colors ${
                   cfgCommentEngineMode === 'native'
                     ? 'border-rose-500 bg-rose-50/30 dark:bg-rose-950/20 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
                     : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 hover:border-slate-300'
@@ -5750,7 +5751,7 @@ export default function AdminPortal({
               {/* OPTION 3: CUSDIS ONLY */}
               <div
                 onClick={() => setCfgCommentEngineMode('cusdis')}
-                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition-colors ${
                   cfgCommentEngineMode === 'cusdis'
                     ? 'border-rose-500 bg-rose-50/30 dark:bg-rose-950/20 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
                     : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 hover:border-slate-300'
@@ -5777,7 +5778,7 @@ export default function AdminPortal({
               {/* OPTION 4: NONE (DISABLED) */}
               <div
                 onClick={() => setCfgCommentEngineMode('none')}
-                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition-colors ${
                   cfgCommentEngineMode === 'none'
                     ? 'border-rose-500 bg-rose-50/30 dark:bg-rose-950/20 shadow-sm ring-2 ring-rose-200 dark:ring-rose-900/40'
                     : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 hover:border-slate-300'
@@ -5826,7 +5827,7 @@ export default function AdminPortal({
                   setWebhookCopied(true);
                   setTimeout(() => setWebhookCopied(false), 2500);
                 }}
-                className="px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md transition-all shrink-0 flex items-center gap-2"
+                className="px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md transition-colors shrink-0 flex items-center gap-2"
               >
                 {webhookCopied ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
                 <span>{webhookCopied ? 'Webhook URL Tersalin!' : 'Salin Webhook URL'}</span>
@@ -5886,7 +5887,7 @@ export default function AdminPortal({
                 <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-xs font-bold">
                   <button
                     onClick={() => setCommentFilter('all')}
-                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                    className={`px-3 py-1.5 rounded-lg transition-colors ${
                       commentFilter === 'all'
                         ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -5896,7 +5897,7 @@ export default function AdminPortal({
                   </button>
                   <button
                     onClick={() => setCommentFilter('pending')}
-                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
                       commentFilter === 'pending'
                         ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -5911,7 +5912,7 @@ export default function AdminPortal({
                   </button>
                   <button
                     onClick={() => setCommentFilter('approved')}
-                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                    className={`px-3 py-1.5 rounded-lg transition-colors ${
                       commentFilter === 'approved'
                         ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -5956,7 +5957,7 @@ export default function AdminPortal({
                   {filteredComments.map((comment) => (
                     <div
                       key={comment.id}
-                      className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4 ${
+                      className={`p-4 rounded-2xl border transition-colors flex flex-col sm:flex-row sm:items-start justify-between gap-4 ${
                         comment.status === 'pending'
                           ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/80 dark:border-amber-900/50'
                           : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800'
@@ -6007,7 +6008,7 @@ export default function AdminPortal({
                         {comment.status === 'pending' && (
                           <button
                             onClick={() => handleApproveComment(comment.id)}
-                            className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-xs"
+                            className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition-colors flex items-center gap-1.5 shadow-xs"
                             title="Setujui komentar agar tampil di website"
                           >
                             <Check className="w-3.5 h-3.5" />

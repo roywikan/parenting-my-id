@@ -501,7 +501,20 @@ app.get('/api/comments', (req, res) => {
 
 // POST Native Comment (Reader submits comment, saved as 'pending' with anti-XSS and schema validation)
 app.post('/api/comments', (req, res) => {
+  if (!req.body) {
+    return res.status(400).json({ error: 'Data skema komentar tidak valid.' });
+  }
+
   const { post_slug, postId, user_name, author, user_email, content } = req.body;
+
+  if (
+    post_slug === undefined || post_slug === null ||
+    content === undefined || content === null ||
+    (user_name === undefined && author === undefined) ||
+    (user_name === null && author === null)
+  ) {
+    return res.status(400).json({ error: 'Properti wajib (postId/post_slug, content, author/user_name) tidak boleh bernilai null atau undefined.' });
+  }
 
   const targetSlug = String(post_slug || postId || '').trim();
   const rawAuthor = String(user_name || author || '').trim();
@@ -1012,12 +1025,16 @@ app.post('/api/auth/update-credentials', requireAuth(['admin', 'editor', 'writer
     return res.status(403).json({ error: 'Akses ditolak: Anda hanya dapat memperbarui akun Anda sendiri.' });
   }
 
-  // Verify old password if password change requested
-  if (password && String(password).trim().length > 0) {
+  // Verify old password if password or email is being modified
+  const isEmailChanged = email && email.toLowerCase() !== user.email.toLowerCase();
+  const isPasswordChanged = password && String(password).trim().length > 0;
+  if (isEmailChanged || isPasswordChanged) {
     if (!oldPassword || user.password !== oldPassword) {
       return res.status(400).json({ error: 'Password lama tidak sesuai. Verifikasi keamanan gagal.' });
     }
-    user.password = String(password).trim();
+    if (isPasswordChanged) {
+      user.password = String(password).trim();
+    }
   }
 
   user.name = name || user.name;
@@ -1095,6 +1112,43 @@ const performGitHubUpload = async (filename: string, base64Content: string) => {
   }
 };
 
+// Helper function to validate base64 image content (MIME & Magic Bytes)
+const validateBase64Image = (base64Content: string): { isValid: boolean; error?: string; buffer?: Buffer } => {
+  const allowedMimeRegex = /^data:(image\/jpeg|image\/png|image\/webp|image\/gif|image\/svg\+xml);base64,/;
+  const isDataUri = base64Content.startsWith('data:');
+  
+  if (isDataUri && !allowedMimeRegex.test(base64Content)) {
+    return { isValid: false, error: 'Tipe file tidak diizinkan. Hanya menerima JPG, PNG, WEBP, GIF, atau SVG.' };
+  }
+
+  const base64Clean = base64Content.replace(/^data:.*?;base64,/, '');
+  let buffer: Buffer;
+  try {
+    buffer = Buffer.from(base64Clean, 'base64');
+  } catch (e) {
+    return { isValid: false, error: 'Payload base64 tidak valid.' };
+  }
+
+  if (buffer.length === 0) {
+    return { isValid: false, error: 'Payload file kosong.' };
+  }
+
+  // Magic bytes check
+  const isJpeg = buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+  const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+  const isGif = buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38;
+  const isWebp = buffer.slice(0, 4).toString('ascii') === 'RIFF' && buffer.slice(8, 12).toString('ascii') === 'WEBP';
+  
+  const fileStartStr = buffer.slice(0, 100).toString('utf-8').trim().toLowerCase();
+  const isSvg = fileStartStr.includes('<svg') || fileStartStr.includes('<?xml');
+
+  if (!isJpeg && !isPng && !isGif && !isWebp && !isSvg) {
+    return { isValid: false, error: 'Format file tidak didukung (Verifikasi magic bytes gagal).' };
+  }
+
+  return { isValid: true, buffer };
+};
+
 // 4. CLOUDINARY IMAGE UPLOAD PIPELINE (With Automatic GitHub & Local Fallback)
 const handleCloudinaryUpload = async (req: any, res: any) => {
   const { filename, base64Content } = req.body;
@@ -1103,10 +1157,16 @@ const handleCloudinaryUpload = async (req: any, res: any) => {
   }
 
   const cleanFilename = path.basename(filename).replace(/[^a-zA-Z0-9.-]/g, '_');
-  const base64Clean = base64Content.replace(/^data:image\/\w+;base64,/, '');
+  const base64Clean = base64Content.replace(/^data:.*?;base64,/, '');
   const approxBytes = Math.ceil((base64Clean.length * 3) / 4);
   if (approxBytes > 5 * 1024 * 1024) {
     return res.status(413).json({ error: 'Ukuran file melebihi batas maksimum 5MB' });
+  }
+
+  // File validation
+  const validation = validateBase64Image(base64Content);
+  if (!validation.isValid) {
+    return res.status(400).json({ error: validation.error });
   }
 
   try {
@@ -1115,10 +1175,9 @@ const handleCloudinaryUpload = async (req: any, res: any) => {
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
     const folder = process.env.CLOUDINARY_FOLDER || 'parenting-my-id';
 
-    // If Cloudinary keys are not fully provided, use fallback storage safely without exposing dummy secrets
+    // If Cloudinary keys are not fully provided, return safe error
     if (!cloudName || !apiKey || !apiSecret) {
-      const fallbackResult = await performGitHubUpload(cleanFilename, base64Content);
-      return res.json(fallbackResult);
+      return res.status(400).json({ error: 'Konfigurasi Cloudinary tidak lengkap. Unggah gambar dinonaktifkan.' });
     }
 
     const timestamp = Math.floor(Date.now() / 1000).toString();
@@ -1162,26 +1221,20 @@ const handleCloudinaryUpload = async (req: any, res: any) => {
         bytes: cData.bytes,
       });
     } else {
-      console.warn('Cloudinary upload response non-OK, using storage fallback:', cData?.error?.message || cData);
-      const ghResult = await performGitHubUpload(cleanFilename, base64Content);
-      return res.json(ghResult);
+      console.warn('Cloudinary upload response non-OK:', cData?.error?.message || cData);
+      return res.status(400).json({ error: cData?.error?.message || 'Gagal mengunggah gambar ke Cloudinary' });
     }
   } catch (err: any) {
-    console.warn('Cloudinary upload exception, using fallback:', err.message);
-    try {
-      const ghResult = await performGitHubUpload(cleanFilename, base64Content);
-      return res.json(ghResult);
-    } catch (fallbackErr: any) {
-      return res.status(500).json({ error: fallbackErr.message || 'Gagal mengunggah gambar' });
-    }
+    console.error('Cloudinary upload exception:', err.message);
+    return res.status(500).json({ error: 'Gagal mengunggah gambar: ' + err.message });
   }
 };
 
-app.post('/api/upload-cloudinary', requireAuth(['admin', 'editor', 'writer']), handleCloudinaryUpload);
-app.post('/api/upload', requireAuth(['admin', 'editor', 'writer']), handleCloudinaryUpload);
+app.post('/api/upload-cloudinary', requireAuth(['admin']), handleCloudinaryUpload);
+app.post('/api/upload', requireAuth(['admin']), handleCloudinaryUpload);
 
 // 4b. GITHUB IMAGE UPLOAD PIPELINE (LEGACY FALLBACK - Protected)
-app.post('/api/upload-github', requireAuth(['admin', 'editor', 'writer']), async (req, res) => {
+app.post('/api/upload-github', requireAuth(['admin']), async (req, res) => {
   const { filename, base64Content } = req.body;
   if (!filename || !base64Content) {
     return res.status(400).json({ error: 'Filename dan Base64 content dibutuhkan' });
@@ -1194,6 +1247,12 @@ app.post('/api/upload-github', requireAuth(['admin', 'editor', 'writer']), async
     return res.status(413).json({ error: 'Ukuran file melebihi batas maksimum 5MB' });
   }
 
+  // File validation
+  const validation = validateBase64Image(base64Content);
+  if (!validation.isValid) {
+    return res.status(400).json({ error: validation.error });
+  }
+
   try {
     const result = await performGitHubUpload(cleanFilename, base64Content);
     return res.json(result);
@@ -1202,19 +1261,43 @@ app.post('/api/upload-github', requireAuth(['admin', 'editor', 'writer']), async
   }
 });
 
-// 5. GEMINI AI ASSISTANT FOR PARENTING SEO (Protected)
+// 5. GEMINI AI ASSISTANT FOR PARENTING SEO (Protected with Smart Fallback)
 app.post('/api/ai/generate-meta', requireAuth(['admin', 'editor', 'writer']), async (req, res) => {
   const { title, content } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
 
-  if (!apiKey) {
-    return res.json({
-      metaTitle: `${title} | Parenting.my.id`,
-      metaDescription: (content || '').slice(0, 150).replace(/[#*`_]/g, '') + '...',
+  const getSmartFallback = (t: string, c: string) => {
+    const cleanContent = (c || '')
+      .replace(/[#*`_\[\]()]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const sentenceMatch = cleanContent.match(/^[^.!?]+[.!?]/);
+    let firstSentence = sentenceMatch ? sentenceMatch[0] : '';
+
+    if (firstSentence.length < 40 || firstSentence.length > 200) {
+      firstSentence = cleanContent.slice(0, 150);
+      if (cleanContent.length > 150) {
+        firstSentence += '...';
+      }
+    }
+
+    let excerpt = cleanContent.slice(0, 180);
+    if (cleanContent.length > 180) {
+      excerpt += '...';
+    }
+
+    return {
+      metaTitle: `${t} | Parenting.my.id`,
+      metaDescription: firstSentence,
       tags: 'parenting, anak, keluarga, kesehatan anak, balita',
-      excerpt: (content || '').slice(0, 180).replace(/[#*`_]/g, '') + '...',
+      excerpt: excerpt,
       aiGenerated: false,
-    });
+    };
+  };
+
+  if (!apiKey) {
+    return res.json(getSmartFallback(title, content));
   }
 
   try {
@@ -1229,7 +1312,7 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
 }`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: 'gemini-2.5-flash',
       contents: prompt,
     });
 
@@ -1243,13 +1326,7 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
     console.error('Gemini error:', err);
   }
 
-  res.json({
-    metaTitle: `${title} | Parenting.my.id`,
-    metaDescription: (content || '').slice(0, 150).replace(/[#*`_]/g, '') + '...',
-    tags: 'parenting, anak, keluarga, kesehatan anak, balita',
-    excerpt: (content || '').slice(0, 180).replace(/[#*`_]/g, '') + '...',
-    aiGenerated: false,
-  });
+  return res.json(getSmartFallback(title, content));
 });
 
 // 6. DYNAMIC SITEMAP.XML (Clean index 0 with escapeXml)

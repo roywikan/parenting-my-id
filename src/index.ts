@@ -36,9 +36,14 @@ export default {
           "SELECT title, slug, excerpt FROM posts WHERE status = 'published' ORDER BY created_at DESC"
         ).all();
 
-        const articleLinks = results.map(
-          (post: any) => `* [${post.title}](${siteUrl}/baca/${post.slug}): ${post.excerpt || ''}`
-        ).join('\n');
+        const articleLinks = results.map((post: any) => {
+          const cleanTitle = (post.title || '').replace(/[\[\]]/g, '').trim();
+          const cleanDesc = (post.excerpt || '')
+            .replace(/[\r\n]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          return `- [${cleanTitle}](${siteUrl}/baca/${post.slug})${cleanDesc ? `: ${cleanDesc}` : ''}`;
+        }).join('\n');
 
         const content = `# llms.txt Website Hub
 

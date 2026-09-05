@@ -85,14 +85,14 @@ export default function PersonalBrandingHomeLayout({ posts, onSelectPost, siteCo
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={() => setBookingOpen(true)}
-                className="px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-xl shadow-rose-600/30 transition-all hover:scale-105 inline-flex items-center gap-2"
+                className="px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-xl shadow-rose-600/30 transition-transform hover:scale-105 inline-flex items-center gap-2"
               >
                 <Calendar className="w-4 h-4" />
                 <span>Jadwalkan Konsultasi / Sesi Privat</span>
               </button>
               <a
                 href="#koleksi-artikel"
-                className="px-5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all"
+                className="px-5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-colors"
               >
                 Baca Panduan Resmi
               </a>
@@ -145,7 +145,7 @@ export default function PersonalBrandingHomeLayout({ posts, onSelectPost, siteCo
           ].map((srv, idx) => (
             <div
               key={idx}
-              className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between"
+              className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm hover:shadow-lg transition-colors flex flex-col justify-between"
             >
               <div className="space-y-3">
                 <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold">
@@ -182,7 +182,7 @@ export default function PersonalBrandingHomeLayout({ posts, onSelectPost, siteCo
             <article
               key={post.id}
               onClick={() => onSelectPost(post.slug)}
-              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all space-y-3"
+              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-colors space-y-3"
             >
               <div className="aspect-[16/9] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
@@ -274,7 +274,7 @@ export default function PersonalBrandingHomeLayout({ posts, onSelectPost, siteCo
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-lg transition-all"
+                    className="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-lg transition-colors"
                   >
                     Kirim Permintaan Jadwal
                   </button>

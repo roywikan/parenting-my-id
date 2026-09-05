@@ -156,7 +156,7 @@ export default function StaticPageView({
       <div className="flex flex-wrap gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
         <button
           onClick={() => handleTabChange('privacy')}
-          className={`flex-1 min-w-[130px] px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 min-w-[130px] px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors ${
             activeTab === 'privacy'
               ? 'bg-rose-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800'
@@ -168,7 +168,7 @@ export default function StaticPageView({
 
         <button
           onClick={() => handleTabChange('about')}
-          className={`flex-1 min-w-[130px] px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 min-w-[130px] px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors ${
             activeTab === 'about'
               ? 'bg-rose-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800'
@@ -180,7 +180,7 @@ export default function StaticPageView({
 
         <button
           onClick={() => handleTabChange('contact')}
-          className={`flex-1 min-w-[130px] px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 min-w-[130px] px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors ${
             activeTab === 'contact'
               ? 'bg-rose-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800'
@@ -192,7 +192,7 @@ export default function StaticPageView({
 
         <button
           onClick={() => handleTabChange('disclaimer')}
-          className={`flex-1 min-w-[130px] px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 min-w-[130px] px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors ${
             activeTab === 'disclaimer'
               ? 'bg-rose-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800'
@@ -204,7 +204,7 @@ export default function StaticPageView({
 
         <button
           onClick={() => handleTabChange('terms')}
-          className={`flex-1 min-w-[130px] px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 min-w-[130px] px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors ${
             activeTab === 'terms'
               ? 'bg-rose-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800'
@@ -287,7 +287,7 @@ export default function StaticPageView({
                   href="https://www.aboutads.info/choices/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 inline-flex items-center gap-1.5 transition-all"
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 inline-flex items-center gap-1.5 transition-colors"
                 >
                   <span>Digital Advertising Alliance (AboutAds)</span>
                   <ExternalLink className="w-3.5 h-3.5 text-rose-500" />
@@ -296,7 +296,7 @@ export default function StaticPageView({
                   href="https://www.networkadvertising.org/choices/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 inline-flex items-center gap-1.5 transition-all"
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 inline-flex items-center gap-1.5 transition-colors"
                 >
                   <span>Network Advertising Initiative (NAI)</span>
                   <ExternalLink className="w-3.5 h-3.5 text-rose-500" />
@@ -472,7 +472,7 @@ export default function StaticPageView({
                     <button
                       type="button"
                       onClick={() => setContactSubmitted(false)}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-all"
+                      className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors"
                     >
                       Kirim Pesan Lain
                     </button>
@@ -531,7 +531,7 @@ export default function StaticPageView({
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="px-6 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                      className="px-6 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-md hover:shadow-lg transition-colors disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <span>Mengirim Pesan...</span>

@@ -175,7 +175,7 @@ export default function NavigationBuilder({
                   key={idx}
                   type="button"
                   onClick={() => handleAddItem(preset)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors ${
                     alreadyExists
                       ? 'bg-slate-200 dark:bg-slate-800 text-slate-500 cursor-default opacity-80'
                       : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:border-rose-300'
@@ -231,7 +231,7 @@ export default function NavigationBuilder({
             links.map((link, idx) => (
               <div
                 key={idx}
-                className="group flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-rose-200 dark:hover:border-slate-700 transition-all"
+                className="group flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-rose-200 dark:hover:border-slate-700 transition-colors"
               >
                 {/* REORDER & BADGE */}
                 <div className="flex items-center gap-1.5 self-start sm:self-center">

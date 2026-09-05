@@ -155,7 +155,7 @@ export default function SeoAuditWidget({
         <button
           type="button"
           onClick={onAutoOptimizeMeta}
-          className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm"
+          className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-sm"
           title="Isi Meta Title & Meta Description secara otomatis berbasis konten"
         >
           <Sparkles className="w-3.5 h-3.5" />

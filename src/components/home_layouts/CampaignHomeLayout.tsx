@@ -77,7 +77,7 @@ export default function CampaignHomeLayout({ posts, onSelectPost, siteConfig }: 
               {/* PROGRESS BAR */}
               <div className="w-full h-3.5 bg-white/20 rounded-full overflow-hidden p-0.5">
                 <div
-                  className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 rounded-full transition-all duration-1000 shadow-sm"
+                  className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 rounded-full transition-colors duration-1000 shadow-sm"
                   style={{ width: `${percentage}%` }}
                 />
               </div>
@@ -98,7 +98,7 @@ export default function CampaignHomeLayout({ posts, onSelectPost, siteConfig }: 
             <div className="flex border-b border-slate-200 dark:border-slate-800 pb-3">
               <button
                 onClick={() => setActiveTab('donasi')}
-                className={`flex-1 py-2 text-xs font-black rounded-xl transition-all ${
+                className={`flex-1 py-2 text-xs font-black rounded-xl transition-colors ${
                   activeTab === 'donasi'
                     ? 'bg-rose-600 text-white shadow-md'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -108,7 +108,7 @@ export default function CampaignHomeLayout({ posts, onSelectPost, siteConfig }: 
               </button>
               <button
                 onClick={() => setActiveTab('petisi')}
-                className={`flex-1 py-2 text-xs font-black rounded-xl transition-all ${
+                className={`flex-1 py-2 text-xs font-black rounded-xl transition-colors ${
                   activeTab === 'petisi'
                     ? 'bg-rose-600 text-white shadow-md'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -144,7 +144,7 @@ export default function CampaignHomeLayout({ posts, onSelectPost, siteConfig }: 
                             setSelectedAmount(amt);
                             setCustomAmount('');
                           }}
-                          className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
+                          className={`py-2 px-3 rounded-xl text-xs font-bold border transition-colors ${
                             selectedAmount === amt && !customAmount
                               ? 'bg-rose-50 dark:bg-rose-950/80 border-rose-500 text-rose-700 dark:text-rose-300 ring-2 ring-rose-500/20'
                               : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
@@ -197,7 +197,7 @@ export default function CampaignHomeLayout({ posts, onSelectPost, siteConfig }: 
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-xl shadow-rose-600/30 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-xl shadow-rose-600/30 transition-colors flex items-center justify-center gap-2"
                 >
                   <Heart className="w-4 h-4 fill-current" />
                   <span>{activeTab === 'donasi' ? 'Salurkan Bantuan Sekarang' : 'Tandatangani Petisi Sekarang'}</span>
@@ -244,7 +244,7 @@ export default function CampaignHomeLayout({ posts, onSelectPost, siteConfig }: 
           ].map((item, idx) => (
             <div
               key={idx}
-              className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs hover:shadow-md transition-all"
+              className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs hover:shadow-md transition-colors"
             >
               <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold">
                 <item.icon className="w-5 h-5" />
@@ -270,7 +270,7 @@ export default function CampaignHomeLayout({ posts, onSelectPost, siteConfig }: 
             <article
               key={post.id}
               onClick={() => onSelectPost(post.slug)}
-              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all space-y-3"
+              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-colors space-y-3"
             >
               <div className="aspect-[16/9] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img

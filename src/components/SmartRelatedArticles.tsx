@@ -81,7 +81,7 @@ export default function SmartRelatedArticles({
               onSelectPost(post.slug);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="group cursor-pointer bg-white dark:bg-slate-900/90 rounded-2xl p-3.5 border border-slate-200/80 dark:border-slate-800 hover:border-rose-400 dark:hover:border-rose-500/50 hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+            className="group cursor-pointer bg-white dark:bg-slate-900/90 rounded-2xl p-3.5 border border-slate-200/80 dark:border-slate-800 hover:border-rose-400 dark:hover:border-rose-500/50 hover:shadow-md transition-colors duration-200 flex flex-col justify-between"
           >
             <div>
               {post.featuredImage && (

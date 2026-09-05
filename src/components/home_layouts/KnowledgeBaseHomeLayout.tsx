@@ -81,7 +81,7 @@ export default function KnowledgeBaseHomeLayout({ posts, onSelectPost, siteConfi
           <button
             key={t.name}
             onClick={() => setSelectedTopic(t.name)}
-            className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+            className={`p-4 rounded-2xl border text-left transition-colors flex flex-col justify-between ${
               selectedTopic === t.name
                 ? 'bg-rose-600 text-white border-rose-500 shadow-lg shadow-rose-600/20'
                 : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white hover:border-rose-500'
@@ -119,7 +119,7 @@ export default function KnowledgeBaseHomeLayout({ posts, onSelectPost, siteConfi
             <article
               key={post.id}
               onClick={() => onSelectPost(post.slug)}
-              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500 hover:shadow-lg transition-all flex flex-col justify-between space-y-3"
+              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500 hover:shadow-lg transition-colors flex flex-col justify-between space-y-3"
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">

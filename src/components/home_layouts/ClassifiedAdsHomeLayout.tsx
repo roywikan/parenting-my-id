@@ -153,7 +153,7 @@ export default function ClassifiedAdsHomeLayout({ posts, onSelectPost, siteConfi
             <button
               key={sec}
               onClick={() => setSelectedSection(sec)}
-              className={`px-3 py-1 rounded text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${
+              className={`px-3 py-1 rounded text-[11px] font-black uppercase tracking-wider transition-colors whitespace-nowrap ${
                 selectedSection === sec
                   ? 'bg-[#2b251f] text-[#fbf7ee] dark:bg-[#e4ddcc] dark:text-[#181715] shadow-xs'
                   : 'bg-black/5 dark:bg-white/5 border border-[#3c362e]/30 dark:border-[#5c5448] hover:bg-black/10'
@@ -351,7 +351,7 @@ export default function ClassifiedAdsHomeLayout({ posts, onSelectPost, siteConfi
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-2.5 rounded-lg bg-[#2b251f] hover:bg-black text-[#fbf7ee] font-black text-xs uppercase tracking-wider shadow-sm transition-all"
+                    className="w-full py-2.5 rounded-lg bg-[#2b251f] hover:bg-black text-[#fbf7ee] font-black text-xs uppercase tracking-wider shadow-sm transition-colors"
                   >
                     Kirim & Tayangkan Iklan Baris
                   </button>

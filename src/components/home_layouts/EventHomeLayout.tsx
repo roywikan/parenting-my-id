@@ -157,14 +157,14 @@ export default function EventHomeLayout({ posts, onSelectPost, siteConfig }: Lay
             <div className="flex flex-wrap items-center gap-4">
               <button
                 onClick={() => setTicketModalOpen(true)}
-                className="px-7 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-sm shadow-xl shadow-rose-600/30 transition-all hover:scale-105 inline-flex items-center gap-2"
+                className="px-7 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-sm shadow-xl shadow-rose-600/30 transition-transform hover:scale-105 inline-flex items-center gap-2"
               >
                 <Ticket className="w-4 h-4" />
                 <span>{siteConfig?.event_cta_text || 'Daftar / Dapatkan Tiket'}</span>
               </button>
               <a
                 href="#agenda-sesi"
-                className="px-6 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition-all inline-flex items-center gap-2"
+                className="px-6 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition-colors inline-flex items-center gap-2"
               >
                 <span>Lihat Susunan Acara</span>
                 <ArrowRight className="w-4 h-4" />
@@ -192,7 +192,7 @@ export default function EventHomeLayout({ posts, onSelectPost, siteConfig }: Lay
           {eventSpeakers.map((sp, idx) => (
             <div
               key={idx}
-              className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 hover:shadow-lg transition-all"
+              className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 hover:shadow-lg transition-colors"
             >
               <div className="flex items-center gap-4">
                 <img
@@ -236,7 +236,7 @@ export default function EventHomeLayout({ posts, onSelectPost, siteConfig }: Lay
               <button
                 key={d.day}
                 onClick={() => setActiveDay(d.day)}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-colors ${
                   activeDay === d.day
                     ? 'bg-rose-600 text-white shadow-md shadow-rose-500/20'
                     : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
@@ -319,7 +319,7 @@ export default function EventHomeLayout({ posts, onSelectPost, siteConfig }: Lay
           ].map((pkg, idx) => (
             <div
               key={idx}
-              className={`p-6 sm:p-8 rounded-3xl border flex flex-col justify-between transition-all ${
+              className={`p-6 sm:p-8 rounded-3xl border flex flex-col justify-between transition-colors ${
                 pkg.highlight
                   ? 'bg-rose-600 text-white border-rose-500 shadow-xl shadow-rose-600/20 ring-2 ring-rose-400'
                   : 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-slate-200 dark:border-slate-800 shadow-md'
@@ -354,7 +354,7 @@ export default function EventHomeLayout({ posts, onSelectPost, siteConfig }: Lay
                     setRegForm((prev) => ({ ...prev, tier: pkg.tier }));
                     setTicketModalOpen(true);
                   }}
-                  className={`w-full py-3 rounded-2xl font-black text-xs transition-all shadow-md ${
+                  className={`w-full py-3 rounded-2xl font-black text-xs transition-colors shadow-md ${
                     pkg.highlight
                       ? 'bg-white text-rose-900 hover:bg-rose-50'
                       : 'bg-rose-600 hover:bg-rose-500 text-white'
@@ -382,7 +382,7 @@ export default function EventHomeLayout({ posts, onSelectPost, siteConfig }: Lay
             <article
               key={post.id}
               onClick={() => onSelectPost(post.slug)}
-              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all space-y-3"
+              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-colors space-y-3"
             >
               <div className="aspect-[16/9] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
@@ -483,7 +483,7 @@ export default function EventHomeLayout({ posts, onSelectPost, siteConfig }: Lay
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-lg transition-all"
+                    className="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-lg transition-colors"
                   >
                     Konfirmasi & Amankan Kursi
                   </button>

@@ -46,14 +46,14 @@ export default function CorporateHomeLayout({ posts, onSelectPost, siteConfig }:
                 href={siteConfig?.corporate_whatsapp ? `https://wa.me/${siteConfig.corporate_whatsapp}?text=Halo%20kami%20ingin%20konsultasi%20program%20parenting%20korporasi` : '#hubungi-b2b'}
                 target={siteConfig?.corporate_whatsapp ? '_blank' : '_self'}
                 rel="noreferrer"
-                className="px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-xl shadow-rose-600/30 transition-all hover:scale-105 inline-flex items-center gap-2"
+                className="px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-xl shadow-rose-600/30 transition-transform hover:scale-105 inline-flex items-center gap-2"
               >
                 <span>Konsultasi Kebutuhan Perusahaan</span>
                 <ArrowRight className="w-4 h-4" />
               </a>
               <a
                 href="#solusi-bisnis"
-                className="px-5 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-all"
+                className="px-5 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-colors"
               >
                 Jelajahi Layanan
               </a>
@@ -120,7 +120,7 @@ export default function CorporateHomeLayout({ posts, onSelectPost, siteConfig }:
           ].map((sol, idx) => (
             <div
               key={idx}
-              className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm hover:shadow-lg transition-all"
+              className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm hover:shadow-lg transition-colors"
             >
               <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold">
                 <sol.icon className="w-6 h-6" />
@@ -214,7 +214,7 @@ export default function CorporateHomeLayout({ posts, onSelectPost, siteConfig }:
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-xl shadow-rose-600/30 transition-all"
+                className="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-xl shadow-rose-600/30 transition-colors"
               >
                 Kirim Permintaan Proposal Korporasi
               </button>
@@ -237,7 +237,7 @@ export default function CorporateHomeLayout({ posts, onSelectPost, siteConfig }:
             <article
               key={post.id}
               onClick={() => onSelectPost(post.slug)}
-              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all space-y-3"
+              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-colors space-y-3"
             >
               <div className="aspect-[16/9] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img

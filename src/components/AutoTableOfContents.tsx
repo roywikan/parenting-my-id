@@ -19,7 +19,7 @@ export default function AutoTableOfContents({ items }: AutoTableOfContentsProps)
   return (
     <nav
       aria-label="Daftar Isi Artikel"
-      className="my-6 p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 transition-all duration-200 shadow-sm"
+      className="my-6 p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 transition-colors duration-200 shadow-sm"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -47,7 +47,7 @@ export default function AutoTableOfContents({ items }: AutoTableOfContentsProps)
           {items.map((item, idx) => (
             <li
               key={item.id || idx}
-              className={`transition-all ${item.level === 3 ? 'pl-4 border-l-2 border-slate-200 dark:border-slate-800' : ''}`}
+              className={`transition-colors ${item.level === 3 ? 'pl-4 border-l-2 border-slate-200 dark:border-slate-800' : ''}`}
             >
               <a
                 href={`#${item.id}`}

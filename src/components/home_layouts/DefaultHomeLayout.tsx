@@ -66,7 +66,7 @@ export default function DefaultHomeLayout({
                 <div className="pt-2">
                   <a
                     href={heroCtaLink}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-rose-900 font-black text-xs shadow-lg hover:bg-rose-50 transition-all hover:scale-105"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-rose-900 font-black text-xs shadow-lg hover:bg-rose-50 transition-transform hover:scale-105"
                   >
                     <span>{heroCtaText}</span>
                     <ArrowRight className="w-4 h-4" />
@@ -96,7 +96,7 @@ export default function DefaultHomeLayout({
                   const targetSlug = link.targetUrl.split('/').pop() || '';
                   if (targetSlug) onSelectPost(targetSlug);
                 }}
-                className="h-[32px] px-3 py-1 rounded-lg bg-white dark:bg-slate-900 border border-rose-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 hover:border-rose-500 hover:text-rose-700 dark:hover:text-rose-300 transition-all shadow-2xs font-bold inline-flex items-center gap-1 group shrink-0 whitespace-nowrap leading-none"
+                className="h-[32px] px-3 py-1 rounded-lg bg-white dark:bg-slate-900 border border-rose-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 hover:border-rose-500 hover:text-rose-700 dark:hover:text-rose-300 transition-colors shadow-2xs font-bold inline-flex items-center gap-1 group shrink-0 whitespace-nowrap leading-none"
               >
                 <span>#{link.keyword}</span>
                 <span className="text-[10px] text-rose-700 dark:text-rose-300 font-black group-hover:translate-x-0.5 transition-transform">↗</span>
@@ -109,7 +109,7 @@ export default function DefaultHomeLayout({
       {/* FEATURED POST */}
       {featuredPost && !searchQuery && selectedCategory === 'Semua' && (
         <section
-          className="group cursor-pointer h-auto lg:h-[420px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900"
+          className="group cursor-pointer h-auto lg:h-[420px] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-colors duration-300 border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900"
           onClick={() => onSelectPost(featuredPost.slug)}
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 h-auto lg:h-[420px] w-full overflow-hidden">
@@ -202,7 +202,7 @@ export default function DefaultHomeLayout({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={`Cari artikel atau kata kunci di ${siteConfig?.site_name || 'website'}...`}
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500 transition-all shadow-2xs"
+              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500 transition-colors shadow-2xs"
             />
           </div>
 
@@ -211,7 +211,7 @@ export default function DefaultHomeLayout({
               <button
                 key={cat}
                 onClick={() => onSelectCategory(cat)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-colors ${
                   selectedCategory === cat
                     ? 'bg-rose-700 text-white shadow-sm shadow-rose-500/20'
                     : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:border-rose-500'
@@ -278,7 +278,7 @@ export default function DefaultHomeLayout({
               <article
                 key={post.id}
                 onClick={() => onSelectPost(post.slug)}
-                className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+                className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-lg transition-colors duration-300 flex flex-col justify-between"
               >
                 <div className="space-y-4">
                   <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
@@ -361,7 +361,7 @@ export default function DefaultHomeLayout({
                     <article
                       key={post.id}
                       onClick={() => onSelectPost(post.slug)}
-                      className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-md transition-all flex flex-col justify-between"
+                      className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-md transition-colors flex flex-col justify-between"
                     >
                       <div className="space-y-3">
                         <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">

@@ -48,6 +48,7 @@ interface RichPostEditorProps {
   userRole?: UserRole;
   currentStatus?: PostStatus;
   rejectionReason?: string;
+  currentLoggedInUserId?: number;
 }
 
 export default function RichPostEditor({
@@ -86,10 +87,26 @@ export default function RichPostEditor({
   userRole = 'writer',
   currentStatus = 'draft',
   rejectionReason = '',
+  currentLoggedInUserId: currentLoggedInUserIdProp,
 }: RichPostEditorProps) {
   // Rejection modal state
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectNote, setRejectNote] = useState('');
+
+  // Get currently logged-in user id
+  const currentLoggedInUserId = useMemo(() => {
+    if (currentLoggedInUserIdProp) return Number(currentLoggedInUserIdProp);
+    try {
+      const stored = localStorage.getItem('cms_user');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.id) return Number(parsed.id);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return null;
+  }, [currentLoggedInUserIdProp]);
 
   // Editor view modes: 'write' | 'split' | 'preview'
   const [viewMode, setViewMode] = useState<'write' | 'split' | 'preview'>('write');
@@ -303,6 +320,36 @@ export default function RichPostEditor({
       return `<${tag} id="${id}" class="scroll-mt-24">${content}</${tag}>`;
     });
 
+    // Custom inline reference parsing: [ref: Name/Details]
+    // Example: [ref: Sari et al., Jurnal Gizi Anak, 2026]
+    const refs: string[] = [];
+    let refIndex = 1;
+    rawHtml = rawHtml.replace(/\[ref:\s*([^\]]+)\]/gi, (match, refText) => {
+      const currentRefIndex = refIndex++;
+      const cleanRefText = refText.trim();
+      refs.push(cleanRefText);
+      return `<sup><a href="#ref-item-${currentRefIndex}" id="ref-back-${currentRefIndex}" class="text-rose-600 font-extrabold hover:underline" title="${cleanRefText}">[${currentRefIndex}]</a></sup>`;
+    });
+
+    if (refs.length > 0) {
+      const refListHtml = `
+        <div class="mt-12 pt-6 border-t border-slate-200 dark:border-slate-800" id="daftar-referensi">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
+            <span class="text-rose-600">📚</span> Referensi Ilmiah & Jurnal
+          </h3>
+          <ol class="space-y-1.5 text-xs text-slate-600 dark:text-slate-400 list-decimal pl-5">
+            ${refs.map((ref, idx) => `
+              <li id="ref-item-${idx + 1}" class="pl-1 leading-relaxed">
+                <span class="font-medium text-slate-800 dark:text-slate-200">${ref}</span>
+                <a href="#ref-back-${idx + 1}" class="text-rose-500 hover:text-rose-700 ml-1.5 font-bold transition-colors" title="Kembali ke teks">↩</a>
+              </li>
+            `).join('')}
+          </ol>
+        </div>
+      `;
+      rawHtml += refListHtml;
+    }
+
     return applyAutoLinks(rawHtml, autolinks);
   }, [markdown, autolinks]);
 
@@ -338,7 +385,7 @@ export default function RichPostEditor({
           <button
             type="button"
             onClick={() => setViewMode('write')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
               viewMode === 'write'
                 ? 'bg-rose-600 text-white shadow-xs'
                 : userRole === 'writer' ? 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700' : 'text-slate-300 hover:text-white hover:bg-slate-700'
@@ -352,7 +399,7 @@ export default function RichPostEditor({
           <button
             type="button"
             onClick={() => setViewMode('split')}
-            className={`hidden md:flex px-3 py-1.5 rounded-xl text-xs font-bold transition-all items-center gap-1.5 ${
+            className={`hidden md:flex px-3 py-1.5 rounded-xl text-xs font-bold transition-colors items-center gap-1.5 ${
               viewMode === 'split'
                 ? 'bg-rose-600 text-white shadow-xs'
                 : userRole === 'writer' ? 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700' : 'text-slate-300 hover:text-white hover:bg-slate-700'
@@ -365,7 +412,7 @@ export default function RichPostEditor({
           <button
             type="button"
             onClick={() => setViewMode('preview')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
               viewMode === 'preview'
                 ? 'bg-rose-600 text-white shadow-xs'
                 : userRole === 'writer' ? 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700' : 'text-slate-300 hover:text-white hover:bg-slate-700'
@@ -412,7 +459,7 @@ export default function RichPostEditor({
             <button
               type="button"
               onClick={() => onPublishSubmit('pending_approval')}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-colors flex items-center gap-1.5 shrink-0"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Kirim untuk Ditinjau 🚀</span>
@@ -433,7 +480,7 @@ export default function RichPostEditor({
               <button
                 type="button"
                 onClick={() => onPublishSubmit('published')}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold hover:from-emerald-500 hover:to-teal-500 shadow-md transition-all flex items-center gap-1.5 shrink-0"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold hover:from-emerald-500 hover:to-teal-500 shadow-md transition-colors flex items-center gap-1.5 shrink-0"
               >
                 <ThumbsUp className="w-3.5 h-3.5" />
                 <span>Setujui & Terbitkan ✅</span>
@@ -556,7 +603,7 @@ export default function RichPostEditor({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Contoh: Panduan Lengkap & Strategi Terbaru..."
-                className={`w-full px-4 py-3.5 rounded-2xl border text-lg font-extrabold transition-all placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                className={`w-full px-4 py-3.5 rounded-2xl border text-lg font-extrabold transition-colors placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
                   userRole === 'writer'
                     ? 'bg-[#FAF9F6] dark:bg-slate-900 border-[#E2E0D8] dark:border-slate-800 text-[#2D3748] dark:text-white focus:ring-emerald-500/50'
                     : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-rose-500'
@@ -669,6 +716,14 @@ export default function RichPostEditor({
                 title="Sisipkan Tautan"
               >
                 <LinkIcon className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => applyFormatting('[ref: ', ']', 'Sari et al., Jurnal Gizi Anak, 2026')}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 font-bold shadow-xs active:bg-amber-200 shrink-0"
+                title="Sisipkan Referensi Jurnal Ilmiah (E-E-A-T)"
+              >
+                <span className="text-base">📚</span>
               </button>
               <button
                 type="button"
@@ -832,6 +887,16 @@ export default function RichPostEditor({
                     <ImageIcon className="w-3.5 h-3.5" />
                     <span>Gambar</span>
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => applyFormatting('[ref: ', ']', 'Sari et al., Jurnal Gizi Anak, 2026')}
+                    className="px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-300 font-bold text-xs hover:bg-amber-100 transition-colors flex items-center gap-1"
+                    title="Sisipkan Referensi Jurnal Ilmiah (E-E-A-T)"
+                  >
+                    <span>📚</span>
+                    <span>Referensi</span>
+                  </button>
                 </div>
 
                 {/* HISTORY UNDO/REDO & CLEAR */}
@@ -971,6 +1036,17 @@ export default function RichPostEditor({
               </div>
             </div>
 
+            {/* TIPS REFERENSI ILMIAH (E-E-A-T) */}
+            <div className="mt-4 p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/60 dark:border-amber-900/30 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2.5">
+              <span className="text-base shrink-0">💡</span>
+              <div className="space-y-1">
+                <span className="font-extrabold block text-amber-900 dark:text-amber-100">Tips Referensi Ilmiah (Kredibilitas E-E-A-T):</span>
+                <span className="block leading-relaxed">
+                  Tulis <code className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 font-mono text-[11px] text-amber-900 dark:text-amber-300 font-bold">[ref: Sari et al., Jurnal Kesehatan Anak, 2026]</code> di akhir kalimat Anda untuk otomatis menyisipkan tautan catatan kaki dan membangun daftar referensi ilmiah yang rapi di akhir artikel secara otomatis.
+                </span>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -993,7 +1069,7 @@ export default function RichPostEditor({
                 type="button"
                 onClick={onAiGenerateMeta}
                 disabled={isAiLoading || !title}
-                className="w-full py-2.5 rounded-xl bg-white text-rose-600 font-bold text-xs shadow-sm hover:bg-rose-50 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                className="w-full py-2.5 rounded-xl bg-white text-rose-600 font-bold text-xs shadow-sm hover:bg-rose-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 {isAiLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-rose-600" />}
                 <span>Generate SEO Meta dengan AI</span>
@@ -1179,7 +1255,7 @@ export default function RichPostEditor({
                 </summary>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 mt-3">
                   {writers
-                    .filter((w) => w.id !== authorId)
+                    .filter((w) => w.id !== authorId && w.id !== currentLoggedInUserId)
                     .map((w) => {
                       const safeList = Array.isArray(coAuthorIds) ? coAuthorIds : [];
                       const isChecked = safeList.includes(w.id);
@@ -1266,7 +1342,7 @@ export default function RichPostEditor({
                         <button
                           type="button"
                           onClick={() => onRestoreRevision(rev)}
-                          className="w-full py-1.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shadow-sm transition-all flex items-center justify-center gap-1.5"
+                          className="w-full py-1.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shadow-sm transition-colors flex items-center justify-center gap-1.5"
                         >
                           <RotateCcw className="w-3 h-3" />
                           <span>Kembalikan ke Versi Ini (Rollback)</span>
@@ -1306,7 +1382,7 @@ export default function RichPostEditor({
           <button
             type="button"
             onClick={() => onPublishSubmit('draft')}
-            className="px-4 py-2.5 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 text-xs font-bold transition-all flex items-center gap-2"
+            className="px-4 py-2.5 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 text-xs font-bold transition-colors flex items-center gap-2"
           >
             <FileText className="w-4 h-4 text-slate-500" />
             <span>Simpan Draf</span>
@@ -1317,7 +1393,7 @@ export default function RichPostEditor({
             <button
               type="button"
               onClick={() => onPublishSubmit('pending_approval')}
-              className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2"
+              className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-colors flex items-center gap-2"
             >
               <Send className="w-4 h-4" />
               <span>Kirim untuk Ditinjau 🚀</span>
@@ -1339,7 +1415,7 @@ export default function RichPostEditor({
               <button
                 type="button"
                 onClick={() => onPublishSubmit('published')}
-                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg transition-all flex items-center gap-2"
+                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg transition-colors flex items-center gap-2"
               >
                 <ThumbsUp className="w-4 h-4" />
                 <span>Setujui & Terbitkan ✅</span>
@@ -1442,7 +1518,7 @@ export default function RichPostEditor({
               <button
                 type="button"
                 onClick={() => setImageTab('upload')}
-                className={`flex-1 py-1.5 rounded-lg transition-all ${
+                className={`flex-1 py-1.5 rounded-lg transition-colors ${
                   imageTab === 'upload' ? 'bg-white dark:bg-slate-900 text-rose-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -1451,7 +1527,7 @@ export default function RichPostEditor({
               <button
                 type="button"
                 onClick={() => setImageTab('unsplash')}
-                className={`flex-1 py-1.5 rounded-lg transition-all ${
+                className={`flex-1 py-1.5 rounded-lg transition-colors ${
                   imageTab === 'unsplash' ? 'bg-white dark:bg-slate-900 text-rose-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -1460,7 +1536,7 @@ export default function RichPostEditor({
               <button
                 type="button"
                 onClick={() => setImageTab('url')}
-                className={`flex-1 py-1.5 rounded-lg transition-all ${
+                className={`flex-1 py-1.5 rounded-lg transition-colors ${
                   imageTab === 'url' ? 'bg-white dark:bg-slate-900 text-rose-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -1630,7 +1706,7 @@ export default function RichPostEditor({
                         setImageUrl(preset.url);
                         setImageAlt(preset.label);
                       }}
-                      className={`group relative rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${
+                      className={`group relative rounded-xl overflow-hidden border-2 cursor-pointer transition-colors ${
                         imageUrl === preset.url ? 'border-rose-500 ring-2 ring-rose-200' : 'border-transparent hover:border-slate-300'
                       }`}
                     >

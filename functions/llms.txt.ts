@@ -45,7 +45,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   const articlesList = posts
-    .map((p) => `* [${p.title}](${siteUrl}/baca/${p.slug})${p.excerpt ? `: ${p.excerpt}` : ''}`)
+    .map((p) => {
+      const cleanTitle = (p.title || '').replace(/[\[\]]/g, '').trim();
+      const cleanDesc = (p.excerpt || '')
+        .replace(/[\r\n]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return `- [${cleanTitle}](${siteUrl}/baca/${p.slug})${cleanDesc ? `: ${cleanDesc}` : ''}`;
+    })
     .join('\n');
 
   const content = `# Parenting.my.id

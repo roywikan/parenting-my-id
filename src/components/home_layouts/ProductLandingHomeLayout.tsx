@@ -85,7 +85,7 @@ export default function ProductLandingHomeLayout({ posts, onSelectPost, siteConf
                   href={`https://wa.me/${siteConfig.product_whatsapp}?text=Halo%20saya%20ingin%20pesan%20paket%20MPASI%20anak`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-7 py-3.5 rounded-2xl bg-white hover:bg-rose-50 text-rose-900 font-black text-xs shadow-xl transition-all hover:scale-105 inline-flex items-center gap-2"
+                  className="px-7 py-3.5 rounded-2xl bg-white hover:bg-rose-50 text-rose-900 font-black text-xs shadow-xl transition-transform hover:scale-105 inline-flex items-center gap-2"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>{siteConfig?.product_cta_text || 'Pesan Sekarang & Dapatkan Bonus'}</span>
@@ -93,7 +93,7 @@ export default function ProductLandingHomeLayout({ posts, onSelectPost, siteConf
               ) : (
                 <button
                   onClick={() => setCheckoutModalOpen(true)}
-                  className="px-7 py-3.5 rounded-2xl bg-white hover:bg-rose-50 text-rose-900 font-black text-xs shadow-xl transition-all hover:scale-105 inline-flex items-center gap-2"
+                  className="px-7 py-3.5 rounded-2xl bg-white hover:bg-rose-50 text-rose-900 font-black text-xs shadow-xl transition-transform hover:scale-105 inline-flex items-center gap-2"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>{siteConfig?.product_cta_text || 'Pesan Sekarang & Dapatkan Bonus'}</span>
@@ -166,7 +166,7 @@ export default function ProductLandingHomeLayout({ posts, onSelectPost, siteConf
           ].map((item, idx) => (
             <div
               key={idx}
-              className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs hover:shadow-md transition-all"
+              className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs hover:shadow-md transition-colors"
             >
               <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold">
                 <CheckCircle2 className="w-5 h-5" />
@@ -213,7 +213,7 @@ export default function ProductLandingHomeLayout({ posts, onSelectPost, siteConf
           ].map((pkg, idx) => (
             <div
               key={idx}
-              className={`p-6 sm:p-8 rounded-3xl border flex flex-col justify-between transition-all ${
+              className={`p-6 sm:p-8 rounded-3xl border flex flex-col justify-between transition-colors ${
                 pkg.highlight
                   ? 'bg-rose-600 text-white border-rose-500 shadow-xl shadow-rose-600/20 ring-2 ring-rose-400'
                   : 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-slate-200 dark:border-slate-800 shadow-md'
@@ -248,7 +248,7 @@ export default function ProductLandingHomeLayout({ posts, onSelectPost, siteConf
                     setOrderForm((prev) => ({ ...prev, package: pkg.name }));
                     setCheckoutModalOpen(true);
                   }}
-                  className={`w-full py-3 rounded-2xl font-black text-xs transition-all shadow-md ${
+                  className={`w-full py-3 rounded-2xl font-black text-xs transition-colors shadow-md ${
                     pkg.highlight
                       ? 'bg-white text-rose-900 hover:bg-rose-50'
                       : 'bg-rose-600 hover:bg-rose-500 text-white'
@@ -308,7 +308,7 @@ export default function ProductLandingHomeLayout({ posts, onSelectPost, siteConf
             <article
               key={post.id}
               onClick={() => onSelectPost(post.slug)}
-              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all space-y-3"
+              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-colors space-y-3"
             >
               <div className="aspect-[16/9] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
@@ -409,7 +409,7 @@ export default function ProductLandingHomeLayout({ posts, onSelectPost, siteConf
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-lg transition-all"
+                    className="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-lg transition-colors"
                   >
                     Konfirmasi Pembelian (Bayar di Tempat / Transfer)
                   </button>

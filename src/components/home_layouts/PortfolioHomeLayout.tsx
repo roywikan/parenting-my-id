@@ -102,7 +102,7 @@ export default function PortfolioHomeLayout({ posts, onSelectPost, siteConfig }:
           <button
             key={f}
             onClick={() => setActiveFilter(f)}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-colors ${
               activeFilter === f
                 ? 'bg-rose-600 text-white shadow-md shadow-rose-500/20'
                 : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-rose-500'
@@ -118,7 +118,7 @@ export default function PortfolioHomeLayout({ posts, onSelectPost, siteConfig }:
         {filteredItems.map((item, idx) => (
           <div
             key={idx}
-            className="group rounded-3xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md hover:shadow-xl transition-all space-y-4"
+            className="group rounded-3xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md hover:shadow-xl transition-colors space-y-4"
           >
             <div className="aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
               <img
@@ -165,7 +165,7 @@ export default function PortfolioHomeLayout({ posts, onSelectPost, siteConfig }:
             <article
               key={post.id}
               onClick={() => onSelectPost(post.slug)}
-              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all space-y-3"
+              className="cursor-pointer group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-colors space-y-3"
             >
               <div className="aspect-[16/9] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
