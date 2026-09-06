@@ -791,6 +791,8 @@ export default function ArticleDetailView({
         pageUrl={articleUrl}
         pageTitle={post.title}
         engineMode={siteConfig?.comment_engine_mode || 'both'}
+        turnstileSiteKey={siteConfig?.turnstile_site_key}
+        enableTurnstile={siteConfig?.enable_comment_turnstile ?? true}
       />
 
       {/* SMART RELATED ARTICLES (AUTO RELEVANCE & INTERNAL LINK JUICE) */}

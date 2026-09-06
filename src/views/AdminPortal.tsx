@@ -324,7 +324,7 @@ export default function AdminPortal({
   const [cfgSiteLogoUrl, setCfgSiteLogoUrl] = useState(siteConfig?.site_logo_url || '');
   const [cfgSiteLogoIcon, setCfgSiteLogoIcon] = useState(siteConfig?.site_logo_icon || 'Heart');
   const [cfgSiteFaviconUrl, setCfgSiteFaviconUrl] = useState(siteConfig?.site_favicon_url || '/favicon.ico');
-  const [cfgTurnstileSiteKey, setCfgTurnstileSiteKey] = useState(siteConfig?.turnstile_site_key || '1x00000000000000000000000000000000UNIFIED');
+  const [cfgTurnstileSiteKey, setCfgTurnstileSiteKey] = useState(siteConfig?.turnstile_site_key || '');
   const [cfgHeaderNavLinksArray, setCfgHeaderNavLinksArray] = useState<NavLink[]>(() => {
     if (siteConfig?.header_nav_links && Array.isArray(siteConfig.header_nav_links)) {
       return siteConfig.header_nav_links;
@@ -366,6 +366,7 @@ export default function AdminPortal({
   const [cfgEnableFeaturedPost, setCfgEnableFeaturedPost] = useState(siteConfig?.enable_featured_post ?? true);
   const [cfgPaginationType, setCfgPaginationType] = useState<'load_more' | 'infinite_scroll' | 'numbered'>(siteConfig?.pagination_type || 'load_more');
   const [cfgCommentEngineMode, setCfgCommentEngineMode] = useState<'both' | 'native' | 'cusdis' | 'none'>(siteConfig?.comment_engine_mode || 'both');
+  const [cfgEnableCommentTurnstile, setCfgEnableCommentTurnstile] = useState(siteConfig?.enable_comment_turnstile ?? true);
 
   const [cfgShowSidebar, setCfgShowSidebar] = useState(siteConfig?.show_sidebar ?? true);
   const [cfgPopularPostsCount, setCfgPopularPostsCount] = useState(siteConfig?.popular_posts_count || 5);
@@ -540,7 +541,7 @@ export default function AdminPortal({
       setCfgSiteLogoUrl(siteConfig.site_logo_url || '');
       setCfgSiteLogoIcon(siteConfig.site_logo_icon || 'Heart');
       setCfgSiteFaviconUrl(siteConfig.site_favicon_url || '/favicon.ico');
-      setCfgTurnstileSiteKey(siteConfig.turnstile_site_key || '1x00000000000000000000000000000000UNIFIED');
+      setCfgTurnstileSiteKey(siteConfig.turnstile_site_key || '');
       if (siteConfig.header_nav_links && Array.isArray(siteConfig.header_nav_links) && siteConfig.header_nav_links.length > 0) {
         setCfgHeaderNavLinksArray(siteConfig.header_nav_links);
       } else if (!hasInitializedFromPropsRef.current) {
@@ -620,6 +621,7 @@ export default function AdminPortal({
       setCfgEnableFeaturedPost(siteConfig.enable_featured_post ?? true);
       setCfgPaginationType(siteConfig.pagination_type || 'load_more');
       setCfgCommentEngineMode(siteConfig.comment_engine_mode || 'both');
+      setCfgEnableCommentTurnstile(siteConfig.enable_comment_turnstile ?? true);
 
       setCfgShowSidebar(siteConfig.show_sidebar ?? true);
       setCfgPopularPostsCount(siteConfig.popular_posts_count || 5);
@@ -822,6 +824,7 @@ export default function AdminPortal({
         enable_featured_post: cfgEnableFeaturedPost,
         pagination_type: cfgPaginationType,
         comment_engine_mode: cfgCommentEngineMode,
+        enable_comment_turnstile: cfgEnableCommentTurnstile,
         show_sidebar: cfgShowSidebar,
         popular_posts_count: Number(cfgPopularPostsCount),
         categories_widget_limit: Number(cfgCategoriesWidgetLimit),
@@ -1131,6 +1134,7 @@ export default function AdminPortal({
         enable_featured_post: cfgEnableFeaturedPost,
         pagination_type: cfgPaginationType,
         comment_engine_mode: cfgCommentEngineMode,
+        enable_comment_turnstile: cfgEnableCommentTurnstile,
 
         show_sidebar: cfgShowSidebar,
         popular_posts_count: Number(cfgPopularPostsCount),
@@ -2955,16 +2959,22 @@ export default function AdminPortal({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Cloudflare Turnstile Site Key (turnstile_site_key)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Cloudflare Turnstile Site Key (turnstile_site_key)
+                    </label>
+                    <span className="text-[10px] text-slate-400 font-medium">Format: 0x4... (Produksi)</span>
+                  </div>
                   <input
                     type="text"
                     value={cfgTurnstileSiteKey}
                     onChange={(e) => setCfgTurnstileSiteKey(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
-                    placeholder="1x00000000000000000000000000000000UNIFIED"
+                    placeholder="Contoh: 0x4AAAAAAAEr... (atau kosongkan untuk test key)"
                   />
+                  <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                    Dapatkan di Cloudflare Dashboard &gt; Turnstile &gt; Add Widget. Jika field ini kosong atau menggunakan test key (1x...), widget akan menampilkan status <em>&ldquo;For testing only. If seen, report to site owner&rdquo;</em>.
+                  </p>
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -5028,6 +5038,24 @@ export default function AdminPortal({
                       Tutup seluruh kolom komentar di semua artikel.
                     </p>
                   </div>
+                </div>
+
+                {/* TOGGLE TURNSTILE PADA KOMENTAR NATIVE */}
+                <div className="flex items-start justify-between p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mt-3">
+                  <div className="pr-3">
+                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer">
+                      <span>Gunakan Cloudflare Turnstile pada Form Komentar (enable_comment_turnstile)</span>
+                    </label>
+                    <p className="text-[10.5px] text-slate-500 mt-0.5 leading-relaxed">
+                      Aktifkan captcha Cloudflare Turnstile untuk mencegah spam bot pada form komentar native. Jika dimatikan, komentar tetap aman terlindungi oleh honeypot anti-spam tanpa menampilkan widget Turnstile.
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={cfgEnableCommentTurnstile}
+                    onChange={(e) => setCfgEnableCommentTurnstile(e.target.checked)}
+                    className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500 shrink-0 mt-0.5"
+                  />
                 </div>
               </div>
             </div>

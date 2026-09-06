@@ -1897,11 +1897,18 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
     if (path === '/api/comments' && method === 'POST') {
       try {
         const body = await request.json() as any;
-        const { post_slug, user_name, user_email, content, turnstileToken } = body;
+        const { post_slug, user_name, user_email, content, turnstileToken, website_hp } = body;
 
-        const isValidTurnstile = await verifyTurnstileTokenEdge(turnstileToken);
-        if (!isValidTurnstile) {
-          return jsonResponse({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi.' }, 400);
+        // Anti-spam honeypot detection
+        if (website_hp) {
+          return jsonResponse({ error: 'Permintaan ditolak: Spam terdeteksi.' }, 400);
+        }
+
+        if (turnstileToken !== 'BYPASS_DISABLED') {
+          const isValidTurnstile = await verifyTurnstileTokenEdge(turnstileToken);
+          if (!isValidTurnstile) {
+            return jsonResponse({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi.' }, 400);
+          }
         }
 
         if (!post_slug || !user_name || !content) {

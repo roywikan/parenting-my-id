@@ -19,6 +19,7 @@ export default function TurnstileWidget({ onVerify, onExpire, onError, siteKey }
 
   // Default Turnstile sitekey for local development & testing (Always Passes)
   const effectiveSiteKey = siteKey || '1x00000000000000000000AA';
+  const isTestKey = !siteKey || effectiveSiteKey.startsWith('1x') || effectiveSiteKey.startsWith('2x') || effectiveSiteKey.startsWith('3x');
 
   useEffect(() => {
     let active = true;
@@ -107,8 +108,13 @@ export default function TurnstileWidget({ onVerify, onExpire, onError, siteKey }
   }, [effectiveSiteKey]);
 
   return (
-    <div className="flex justify-center my-2">
+    <div className="flex flex-col items-center justify-center my-2">
       <div ref={containerRef} className="cf-turnstile"></div>
+      {isTestKey && (
+        <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium text-center mt-1.5 max-w-sm leading-tight">
+          💡 Status: Mode Pengetesan (Test Key). Untuk menghapus status pengujian & mengaktifkan proteksi Cloudflare Turnstile resmi, masukkan Site Key produksi di Pengaturan Admin &gt; Config Situs.
+        </p>
+      )}
     </div>
   );
 }

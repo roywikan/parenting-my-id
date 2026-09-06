@@ -546,11 +546,17 @@ app.post('/api/comments', async (req, res) => {
     return res.status(400).json({ error: 'Data skema komentar tidak valid.' });
   }
 
-  const { post_slug, postId, user_name, author, user_email, content, turnstileToken } = req.body;
+  const { post_slug, postId, user_name, author, user_email, content, turnstileToken, website_hp } = req.body;
 
-  const isValidTurnstile = await verifyTurnstileToken(turnstileToken);
-  if (!isValidTurnstile) {
-    return res.status(400).json({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi.' });
+  if (website_hp) {
+    return res.status(400).json({ error: 'Permintaan ditolak: Spam terdeteksi.' });
+  }
+
+  if (turnstileToken !== 'BYPASS_DISABLED') {
+    const isValidTurnstile = await verifyTurnstileToken(turnstileToken);
+    if (!isValidTurnstile) {
+      return res.status(400).json({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi.' });
+    }
   }
 
   const effectivePostId = postId !== undefined ? postId : post_slug;

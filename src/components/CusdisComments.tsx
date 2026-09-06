@@ -12,6 +12,8 @@ interface CusdisCommentsProps {
   appId?: string;
   host?: string;
   engineMode?: CommentEngineMode;
+  turnstileSiteKey?: string;
+  enableTurnstile?: boolean;
 }
 
 declare global {
@@ -31,6 +33,8 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
   appId = 'f4b0713e-4ae1-40c4-a301-f502d7b70249',
   host = 'https://cusdis.com',
   engineMode = 'both',
+  turnstileSiteKey,
+  enableTurnstile = true,
 }) => {
   // If comments are completely disabled in admin config
   if (engineMode === 'none') {
@@ -53,10 +57,12 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [content, setContent] = useState('');
+  const [honeypot, setHoneypot] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileLoadFailed, setTurnstileLoadFailed] = useState(false);
 
   // Native Approved Comments State
   const [nativeComments, setNativeComments] = useState<any[]>([]);
@@ -92,11 +98,19 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
   // Handle Native Submit
   const handleNativeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (honeypot.trim()) {
+      // Invisible honeypot filled by automated bot
+      setSubmitError('Pengiriman spam terdeteksi.');
+      return;
+    }
+
     if (!name.trim() || !content.trim()) {
       setSubmitError('Nama dan isi komentar wajib diisi.');
       return;
     }
-    if (!turnstileToken) {
+
+    // Require Turnstile token only if Turnstile is enabled and loaded
+    if (enableTurnstile !== false && !turnstileLoadFailed && !turnstileToken) {
       setSubmitError('Harap selesaikan verifikasi keamanan Turnstile sebelum mengirim komentar.');
       return;
     }
@@ -114,7 +128,8 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
           user_name: name.trim(),
           user_email: email.trim(),
           content: content.trim(),
-          turnstileToken,
+          turnstileToken: turnstileToken || 'BYPASS_DISABLED',
+          website_hp: honeypot,
         }),
       });
 
@@ -125,6 +140,8 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
         setName('');
         setEmail('');
         setContent('');
+        setHoneypot('');
+        setTurnstileToken('');
       } else {
         setSubmitError(data.error || 'Gagal mengirim komentar. Silakan coba lagi.');
       }
@@ -344,10 +361,34 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
                 />
               </div>
 
-              <TurnstileWidget
-                onVerify={(token) => setTurnstileToken(token)}
-                onExpire={() => setTurnstileToken('')}
+              {/* Invisible Honeypot Anti-Spam (Real humans don't fill this) */}
+              <input
+                type="text"
+                name="website_hp"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+                className="hidden opacity-0 pointer-events-none absolute -left-[9999px]"
+                aria-hidden="true"
               />
+
+              {enableTurnstile !== false && (
+                <div className="space-y-1">
+                  <TurnstileWidget
+                    siteKey={turnstileSiteKey}
+                    onVerify={(token) => {
+                      setTurnstileToken(token);
+                      setSubmitError('');
+                    }}
+                    onExpire={() => setTurnstileToken('')}
+                    onError={(err) => {
+                      console.warn('Turnstile load notice:', err);
+                      setTurnstileLoadFailed(true);
+                    }}
+                  />
+                </div>
+              )}
 
               <div className="flex items-center justify-between pt-1">
                 <p className="text-[11px] text-slate-400">
