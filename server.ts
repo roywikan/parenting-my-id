@@ -9,6 +9,7 @@ import { GoogleGenAI } from '@google/genai';
 import { marked } from 'marked';
 import sanitizeHtml from 'sanitize-html';
 import { generateStaticFiles, generateSitemapXml, generateFeedXml, generateLlmsTxt, generateLlmsFullTxt, parseFeedXmlItems } from './scripts/generate-static-files.js';
+import { signJwtHmacSha256, verifyJwtHmacSha256, extractTokenFromHeaderOrCookie } from './src/lib/jwt.js';
 
 dotenv.config();
 
@@ -419,22 +420,41 @@ function getUniquePostSlug(baseTitleOrSlug: string, currentId?: number | string 
   return candidate;
 }
 
-// AUTHENTICATION & AUTHORIZATION MIDDLEWARE
+// AUTHENTICATION & AUTHORIZATION MIDDLEWARE (Stateless Signed JWT with HMAC-SHA256)
 function requireAuth(allowedRoles: string[] = ['admin', 'editor', 'writer']) {
-  return (req: any, res: any, next: any) => {
+  return async (req: any, res: any, next: any) => {
     const authHeader = req.headers.authorization || req.headers['x-session-token'];
-    if (!authHeader) {
-      return res.status(401).json({ error: 'Akses ditolak: Autentikasi sesi diperlukan.' });
-    }
-
-    const token = typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
-      ? authHeader.slice(7).trim()
-      : String(authHeader).trim();
+    const cookieHeader = req.headers.cookie;
+    const token = extractTokenFromHeaderOrCookie(authHeader, cookieHeader);
 
     if (!token) {
-      return res.status(401).json({ error: 'Akses ditolak: Token autentikasi kosong.' });
+      return res.status(401).json({ error: 'Akses ditolak: Autentikasi sesi diperlukan (Header Authorization Bearer atau Cookie).' });
     }
 
+    const jwtSecret = process.env.JWT_SECRET || 'parenting-unified-jwt-secret-key-2026-secure';
+
+    // 1. STATELESS SIGNED JWT VALIDATION (Zero database query load, cryptographic verification)
+    if (token.includes('.') && token.split('.').length === 3) {
+      const jwtResult = await verifyJwtHmacSha256(token, jwtSecret);
+      if (!jwtResult.valid || !jwtResult.payload) {
+        return res.status(401).json({ error: `Akses ditolak: ${jwtResult.error || 'Token tidak valid atau telah kedaluwarsa.'}` });
+      }
+
+      const role = jwtResult.payload.role || 'writer';
+      if (allowedRoles.length > 0 && !allowedRoles.includes(role)) {
+        return res.status(403).json({ error: `Akses ditolak: Role '${role}' tidak diizinkan untuk tindakan ini.` });
+      }
+
+      req.user = {
+        id: Number(jwtResult.payload.id),
+        email: jwtResult.payload.email,
+        role,
+        name: jwtResult.payload.name,
+      };
+      return next();
+    }
+
+    // 2. Backward compatibility fallback for legacy tokens during rollout
     const parts = token.split('_');
     if (parts.length >= 3 && parts[0] === 'session') {
       const userId = Number(parts[1]);
@@ -1511,12 +1531,31 @@ app.post('/api/auth/login', async (req, res) => {
   // Reset rate limit on successful login
   loginAttemptsMap.delete(clientIp);
 
-  // Return user info and verified session token
+  // Return user info and verified stateless Signed JWT token (zero DB overhead)
   const { password: _, ...userWithoutPassword } = user;
+  const jwtSecret = process.env.JWT_SECRET || 'parenting-unified-jwt-secret-key-2026-secure';
+  const token = await signJwtHmacSha256(
+    {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    },
+    jwtSecret,
+    86400 * 7
+  );
+
+  res.cookie('cms_token', token, {
+    maxAge: 86400 * 7 * 1000,
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  });
+
   res.json({
     success: true,
     user: userWithoutPassword,
-    token: `session_${user.id}_${user.role}_${Date.now()}`,
+    token,
   });
 });
 

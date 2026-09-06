@@ -1,10 +1,150 @@
 interface Env {
   DB?: any;
+  JWT_SECRET?: string;
   GITHUB_TOKEN?: string;
   GITHUB_OWNER?: string;
   GITHUB_REPO?: string;
   GITHUB_BRANCH?: string;
+  TURNSTILE_SECRET_KEY?: string;
+  ADMIN_EMERGENCY_KEY?: string;
 }
+
+// =========================================================================
+// Stateless HMAC-SHA256 Signed JWT Utilities (Web Crypto API)
+// =========================================================================
+const base64UrlEncode = (input: string | Uint8Array): string => {
+  let binary = '';
+  const bytes = typeof input === 'string' ? new TextEncoder().encode(input) : input;
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
+
+const base64UrlDecode = (str: string): string => {
+  let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (base64.length % 4) {
+    base64 += '=';
+  }
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder().decode(bytes);
+};
+
+const base64UrlToUint8Array = (str: string): Uint8Array => {
+  let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (base64.length % 4) {
+    base64 += '=';
+  }
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+};
+
+const signJwtHmacSha256 = async (
+  payload: Record<string, any>,
+  secret: string,
+  expiresInSeconds: number = 86400 * 7
+): Promise<string> => {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const now = Math.floor(Date.now() / 1000);
+  const fullPayload = {
+    ...payload,
+    iat: now,
+    exp: now + expiresInSeconds,
+  };
+
+  const headerB64 = base64UrlEncode(JSON.stringify(header));
+  const payloadB64 = base64UrlEncode(JSON.stringify(fullPayload));
+  const dataToSign = `${headerB64}.${payloadB64}`;
+
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const sigBuffer = await crypto.subtle.sign('HMAC', key, enc.encode(dataToSign));
+  const sigB64 = base64UrlEncode(new Uint8Array(sigBuffer));
+  return `${dataToSign}.${sigB64}`;
+};
+
+const verifyJwtHmacSha256 = async (
+  token: string,
+  secret: string
+): Promise<{ valid: boolean; payload?: any; error?: string }> => {
+  try {
+    if (!token || typeof token !== 'string') {
+      return { valid: false, error: 'Token tidak disediakan.' };
+    }
+    const parts = token.trim().split('.');
+    if (parts.length !== 3) {
+      return { valid: false, error: 'Format token bukan JWT yang valid (3 bagian header.payload.signature).' };
+    }
+
+    const [headerB64, payloadB64, sigB64] = parts;
+    const dataToVerify = `${headerB64}.${payloadB64}`;
+
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      enc.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+
+    const sigBytes = base64UrlToUint8Array(sigB64);
+    const isValid = await crypto.subtle.verify('HMAC', key, sigBytes, enc.encode(dataToVerify));
+    if (!isValid) {
+      return { valid: false, error: 'Tanda tangan token tidak valid. Manipulasi atau token palsu terdeteksi.' };
+    }
+
+    const payload = JSON.parse(base64UrlDecode(payloadB64));
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp && typeof payload.exp === 'number' && payload.exp < now) {
+      return { valid: false, error: 'Token sesi telah kedaluwarsa. Silakan lakukan login ulang.' };
+    }
+
+    return { valid: true, payload };
+  } catch (err: any) {
+    return { valid: false, error: `Verifikasi token gagal: ${err?.message || 'Token tidak terbaca'}` };
+  }
+};
+
+const extractTokenFromHeaderOrCookie = (
+  authHeader?: string | null,
+  cookieHeader?: string | null
+): string => {
+  if (authHeader && typeof authHeader === 'string') {
+    const trimmed = authHeader.trim();
+    if (trimmed.toLowerCase().startsWith('bearer ')) {
+      return trimmed.slice(7).trim();
+    }
+    if (trimmed) {
+      return trimmed;
+    }
+  }
+
+  if (cookieHeader && typeof cookieHeader === 'string') {
+    const match = cookieHeader.match(/(?:^|;\s*)(?:cms_token|session_token|auth_token|token)=([^;]+)/i);
+    if (match) {
+      return decodeURIComponent(match[1].trim());
+    }
+  }
+
+  return '';
+};
 
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
@@ -239,21 +379,51 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     }
   };
 
-  // Security: Authenticate Bearer or session token against D1 users and default credentials
+  // Security: Authenticate Bearer or session token (Stateless HMAC-SHA256 JWT, zero D1 query load)
   const authenticateRequest = async (allowedRoles?: string[]): Promise<{ user?: any; errorResponse?: Response }> => {
     const authHeader = request.headers.get('Authorization') || request.headers.get('x-session-token') || '';
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+    const cookieHeader = request.headers.get('Cookie') || '';
+    const token = extractTokenFromHeaderOrCookie(authHeader, cookieHeader);
 
     if (!token) {
       return {
-        errorResponse: jsonResponse({ error: 'Akses ditolak: Token autentikasi diperlukan.' }, 401),
+        errorResponse: jsonResponse({ error: 'Akses ditolak: Token autentikasi diperlukan (Header Authorization Bearer atau Cookie).' }, 401),
       };
     }
 
+    const jwtSecret = env.JWT_SECRET || (typeof process !== 'undefined' ? process.env?.JWT_SECRET : '') || 'parenting-unified-jwt-secret-key-2026-secure';
+
+    // 1. STATELESS SIGNED JWT VALIDATION (Zero D1 reads, verified cryptographically via HMAC-SHA256)
+    if (token.includes('.') && token.split('.').length === 3) {
+      const jwtResult = await verifyJwtHmacSha256(token, jwtSecret);
+      if (!jwtResult.valid || !jwtResult.payload) {
+        return {
+          errorResponse: jsonResponse({ error: `Akses ditolak: ${jwtResult.error || 'Token tidak valid atau telah kedaluwarsa.'}` }, 401),
+        };
+      }
+
+      const user = {
+        id: Number(jwtResult.payload.id),
+        email: jwtResult.payload.email,
+        role: jwtResult.payload.role || 'writer',
+        name: jwtResult.payload.name,
+      };
+
+      if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+        return {
+          errorResponse: jsonResponse({ error: `Akses ditolak: Role '${user.role}' tidak memiliki izin untuk tindakan ini.` }, 403),
+        };
+      }
+
+      // Completely stateless success - zero queries to D1!
+      return { user };
+    }
+
+    // 2. Backward compatibility for legacy session tokens during migration rollout
     const tokenMatch = token.match(/^session_(\d+)(?:_([a-zA-Z0-9]+))?_(\d+)$/);
     if (!tokenMatch) {
       return {
-        errorResponse: jsonResponse({ error: 'Token sesi tidak valid.' }, 401),
+        errorResponse: jsonResponse({ error: 'Token sesi tidak valid atau format tidak dikenali.' }, 401),
       };
     }
 
@@ -1317,6 +1487,7 @@ Sitemap: ${siteUrl}/sitemap.xml
     if (path === '/api/auth/login' && method === 'POST') {
       const clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || '127.0.0.1';
       const now = Date.now();
+      const jwtSecret = env.JWT_SECRET || (typeof process !== 'undefined' ? process.env?.JWT_SECRET : '') || 'parenting-unified-jwt-secret-key-2026-secure';
 
       // Anti Brute Force: Check rate limiting in D1
       if (env.DB) {
@@ -1431,6 +1602,13 @@ Sitemap: ${siteUrl}/sitemap.xml
             }
 
             await handleSuccessfulLogin();
+            const token = await signJwtHmacSha256({
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role || 'writer',
+            }, jwtSecret, 86400 * 7);
+
             return jsonResponse({
               success: true,
               user: {
@@ -1441,7 +1619,9 @@ Sitemap: ${siteUrl}/sitemap.xml
                 avatar: user.avatar,
                 bio: user.bio,
               },
-              token: `session_${user.id}_${user.role || 'writer'}_${Date.now()}`
+              token
+            }, 200, {
+              'Set-Cookie': `cms_token=${token}; Path=/; Max-Age=${86400 * 7}; HttpOnly; SameSite=Lax; Secure`
             });
           }
         } catch (e) {
@@ -1469,6 +1649,13 @@ Sitemap: ${siteUrl}/sitemap.xml
                 }, 401);
               }
               await handleSuccessfulLogin();
+              const token = await signJwtHmacSha256({
+                id: 1,
+                email: cEmail,
+                name: 'Admin Utama',
+                role: 'admin',
+              }, jwtSecret, 86400 * 7);
+
               return jsonResponse({
                 success: true,
                 user: {
@@ -1477,9 +1664,11 @@ Sitemap: ${siteUrl}/sitemap.xml
                   name: 'Admin Utama',
                   role: 'admin',
                   avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=75&fm=webp',
-                  bio: 'Administrator Utama Parenting.my.id'
+                  bio: 'Administrator Utama'
                 },
-                token: `session_1_admin_${Date.now()}`
+                token
+              }, 200, {
+                'Set-Cookie': `cms_token=${token}; Path=/; Max-Age=${86400 * 7}; HttpOnly; SameSite=Lax; Secure`
               });
             }
           }
@@ -1499,6 +1688,13 @@ Sitemap: ${siteUrl}/sitemap.xml
           }, 401);
         }
         await handleSuccessfulLogin();
+        const token = await signJwtHmacSha256({
+          id: 1,
+          email: 'admin@parenting.my.id',
+          name: 'Dr. Ratna Sari, M.Psi',
+          role: 'admin',
+        }, jwtSecret, 86400 * 7);
+
         return jsonResponse({
           success: true,
           user: {
@@ -1509,7 +1705,9 @@ Sitemap: ${siteUrl}/sitemap.xml
             avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=75&fm=webp',
             bio: 'Psikolog anak dan praktisi parenting terkemuka di Indonesia.'
           },
-          token: `session_1_admin_${Date.now()}`
+          token
+        }, 200, {
+          'Set-Cookie': `cms_token=${token}; Path=/; Max-Age=${86400 * 7}; HttpOnly; SameSite=Lax; Secure`
         });
       } else if (cleanEmail === 'editor@parenting.my.id') {
         if (!cleanPass || cleanPass !== 'editor123') {
@@ -1521,6 +1719,13 @@ Sitemap: ${siteUrl}/sitemap.xml
           }, 401);
         }
         await handleSuccessfulLogin();
+        const token = await signJwtHmacSha256({
+          id: 2,
+          email: 'editor@parenting.my.id',
+          name: 'Maya Putri, S.Psi',
+          role: 'editor',
+        }, jwtSecret, 86400 * 7);
+
         return jsonResponse({
           success: true,
           user: {
@@ -1531,7 +1736,9 @@ Sitemap: ${siteUrl}/sitemap.xml
             avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=100&q=75&fm=webp',
             bio: 'Editor konten kesehatan dan pengasuhan anak dengan sertifikasi jurnalistik edukasi keluarga.'
           },
-          token: `session_2_editor_${Date.now()}`
+          token
+        }, 200, {
+          'Set-Cookie': `cms_token=${token}; Path=/; Max-Age=${86400 * 7}; HttpOnly; SameSite=Lax; Secure`
         });
       } else if (cleanEmail === 'penulis@parenting.my.id') {
         if (!cleanPass || cleanPass !== 'writer123') {
@@ -1543,6 +1750,13 @@ Sitemap: ${siteUrl}/sitemap.xml
           }, 401);
         }
         await handleSuccessfulLogin();
+        const token = await signJwtHmacSha256({
+          id: 3,
+          email: 'penulis@parenting.my.id',
+          name: 'Ahmad Zulkarnain, S.Ked',
+          role: 'writer',
+        }, jwtSecret, 86400 * 7);
+
         return jsonResponse({
           success: true,
           user: {
@@ -1553,7 +1767,9 @@ Sitemap: ${siteUrl}/sitemap.xml
             avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=75&fm=webp',
             bio: 'Edukator kesehatan anak dan spesialis gizi tumbuh kembang balita.'
           },
-          token: `session_3_writer_${Date.now()}`
+          token
+        }, 200, {
+          'Set-Cookie': `cms_token=${token}; Path=/; Max-Age=${86400 * 7}; HttpOnly; SameSite=Lax; Secure`
         });
       }
 
