@@ -101,6 +101,138 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     }
   };
 
+  // Helper to ensure users table schema compatibility (supporting both password & password_hash)
+  // and automatically seeding initial users (Admin, Maya Putri as Editor, Ahmad Zulkarnain as Writer) to D1
+  const syncAndPrepareUsersTable = async (db: any): Promise<Set<string>> => {
+    try {
+      await db.prepare(`
+        CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          email TEXT UNIQUE,
+          password TEXT,
+          password_hash TEXT,
+          name TEXT,
+          role TEXT DEFAULT 'writer',
+          avatar TEXT,
+          bio TEXT,
+          title TEXT,
+          social_instagram TEXT,
+          social_linkedin TEXT,
+          social_website TEXT,
+          created_at TEXT
+        )
+      `).run();
+
+      const missingCols = [
+        'password TEXT',
+        'password_hash TEXT',
+        'role TEXT DEFAULT \'writer\'',
+        'avatar TEXT',
+        'bio TEXT',
+        'title TEXT',
+        'social_instagram TEXT',
+        'social_linkedin TEXT',
+        'social_website TEXT'
+      ];
+      for (const colDef of missingCols) {
+        try {
+          await db.prepare(`ALTER TABLE users ADD COLUMN ${colDef}`).run();
+        } catch {}
+      }
+
+      const colInfo = await db.prepare('PRAGMA table_info(users)').all();
+      const cols = new Set<string>((colInfo?.results || []).map((c: any) => c.name));
+
+      // Check if table is empty or missing Maya Putri
+      try {
+        const countRes = await db.prepare('SELECT COUNT(*) as count FROM users').first() as any;
+        const totalCount = Number(countRes?.count || 0);
+
+        if (totalCount === 0) {
+          const initialSeed = [
+            {
+              id: 1,
+              email: 'admin@parenting.my.id',
+              password: 'admin123',
+              name: 'Dr. Ratna Sari, M.Psi',
+              role: 'admin',
+              title: 'Psikolog Anak & Pakar Parenting',
+              avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=75&fm=webp',
+              bio: 'Psikolog anak dan praktisi parenting terkemuka di Indonesia.',
+              instagram: 'https://instagram.com/ratnasari.mpsi',
+              linkedin: 'https://linkedin.com/in/ratnasari-mpsi',
+              website: 'https://parenting.my.id'
+            },
+            {
+              id: 2,
+              email: 'editor@parenting.my.id',
+              password: 'editor123',
+              name: 'Maya Putri, S.Psi',
+              role: 'editor',
+              title: 'Senior Editor & Content Moderator',
+              avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=80&q=50&fm=webp',
+              bio: 'Editor konten kesehatan dan pengasuhan anak dengan sertifikasi jurnalistik edukasi keluarga.',
+              instagram: 'https://instagram.com/mayaputri.editor',
+              linkedin: 'https://linkedin.com/in/maya-putri-editor',
+              website: 'https://parenting.my.id'
+            },
+            {
+              id: 3,
+              email: 'penulis@parenting.my.id',
+              password: 'writer123',
+              name: 'Ahmad Zulkarnain, S.Ked',
+              role: 'writer',
+              title: 'Edukator Kesehatan Anak & Balita',
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=75&fm=webp',
+              bio: 'Edukator kesehatan anak dan spesialis gizi tumbuh kembang balita.',
+              instagram: 'https://instagram.com/ahmad.zk',
+              linkedin: '',
+              website: ''
+            }
+          ];
+
+          for (const u of initialSeed) {
+            if (cols.has('password_hash')) {
+              await db.prepare(`
+                INSERT INTO users (id, email, password, password_hash, name, role, title, avatar, bio, social_instagram, social_linkedin, social_website, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `).bind(u.id, u.email, u.password, u.password, u.name, u.role, u.title, u.avatar, u.bio, u.instagram, u.linkedin, u.website, new Date().toISOString()).run();
+            } else {
+              await db.prepare(`
+                INSERT INTO users (id, email, password, name, role, title, avatar, bio, social_instagram, social_linkedin, social_website, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `).bind(u.id, u.email, u.password, u.name, u.role, u.title, u.avatar, u.bio, u.instagram, u.linkedin, u.website, new Date().toISOString()).run();
+            }
+          }
+        } else {
+          // Ensure Maya Putri (Editor) exists in D1
+          const editorInDb = await db.prepare("SELECT id FROM users WHERE role = 'editor' OR LOWER(email) LIKE 'editor@%'").first();
+          if (!editorInDb) {
+            const now = new Date().toISOString();
+            if (cols.has('password_hash')) {
+              await db.prepare(`
+                INSERT INTO users (email, password, password_hash, name, role, title, avatar, bio, social_instagram, social_linkedin, social_website, created_at)
+                VALUES (?, ?, ?, ?, 'editor', ?, ?, ?, ?, ?, ?, ?)
+              `).bind('editor@parenting.my.id', 'editor123', 'editor123', 'Maya Putri, S.Psi', 'Senior Editor & Content Moderator', 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=80&q=50&fm=webp', 'Editor konten kesehatan dan pengasuhan anak dengan sertifikasi jurnalistik edukasi keluarga.', 'https://instagram.com/mayaputri.editor', 'https://linkedin.com/in/maya-putri-editor', 'https://parenting.my.id', now).run();
+            } else {
+              await db.prepare(`
+                INSERT INTO users (email, password, name, role, title, avatar, bio, social_instagram, social_linkedin, social_website, created_at)
+                VALUES (?, ?, ?, 'editor', ?, ?, ?, ?, ?, ?, ?)
+              `).bind('editor@parenting.my.id', 'editor123', 'Maya Putri, S.Psi', 'Senior Editor & Content Moderator', 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=80&q=50&fm=webp', 'Editor konten kesehatan dan pengasuhan anak dengan sertifikasi jurnalistik edukasi keluarga.', 'https://instagram.com/mayaputri.editor', 'https://linkedin.com/in/maya-putri-editor', 'https://parenting.my.id', now).run();
+            }
+          }
+        }
+      } catch (seedErr) {
+        console.error('Error auto-seeding users in D1:', seedErr);
+      }
+
+      return cols;
+    } catch (err) {
+      console.error('Error preparing users table in D1:', err);
+      return new Set<string>(['id', 'email', 'password', 'password_hash', 'name', 'role']);
+    }
+  };
+
   // Security: Authenticate Bearer or session token against D1 users and default credentials
   const authenticateRequest = async (allowedRoles?: string[]): Promise<{ user?: any; errorResponse?: Response }> => {
     const authHeader = request.headers.get('Authorization') || request.headers.get('x-session-token') || '';
@@ -124,6 +256,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     if (env.DB) {
       try {
+        await syncAndPrepareUsersTable(env.DB);
         const dbUser = await env.DB.prepare('SELECT id, email, role, name FROM users WHERE id = ?').bind(userId).first();
         if (dbUser) {
           user = {
@@ -472,27 +605,7 @@ Sitemap: ${siteUrl}/sitemap.xml
 
       if (env.DB) {
         try {
-          await env.DB.prepare(`
-            CREATE TABLE IF NOT EXISTS users (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              email TEXT UNIQUE,
-              password TEXT,
-              name TEXT,
-              role TEXT,
-              avatar TEXT,
-              bio TEXT,
-              title TEXT,
-              social_instagram TEXT,
-              social_linkedin TEXT,
-              social_website TEXT,
-              created_at TEXT
-            )
-          `).run();
-
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN title TEXT").run(); } catch {}
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN social_instagram TEXT").run(); } catch {}
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN social_linkedin TEXT").run(); } catch {}
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN social_website TEXT").run(); } catch {}
+          await syncAndPrepareUsersTable(env.DB);
 
           const { results } = await env.DB.prepare(`
             SELECT 
@@ -534,40 +647,28 @@ Sitemap: ${siteUrl}/sitemap.xml
       const userAvatar = avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80';
       const userTitle = title || 'Edukator Parenting';
       const userBio = bio || 'Penulis dan kontributor artikel.';
+      const passVal = String(password && String(password).trim().length > 0 ? password : 'writer123');
       const now = new Date().toISOString();
 
       if (env.DB) {
         try {
-          await env.DB.prepare(`
-            CREATE TABLE IF NOT EXISTS users (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              email TEXT UNIQUE,
-              password TEXT,
-              name TEXT,
-              role TEXT,
-              avatar TEXT,
-              bio TEXT,
-              title TEXT,
-              social_instagram TEXT,
-              social_linkedin TEXT,
-              social_website TEXT,
-              created_at TEXT
-            )
-          `).run();
-
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN title TEXT").run(); } catch {}
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN social_instagram TEXT").run(); } catch {}
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN social_linkedin TEXT").run(); } catch {}
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN social_website TEXT").run(); } catch {}
+          const cols = await syncAndPrepareUsersTable(env.DB);
 
           if (id) {
             const existing = await env.DB.prepare('SELECT id FROM users WHERE id = ?').bind(id).first();
             if (existing) {
               if (password && String(password).trim().length > 0) {
-                await env.DB.prepare(`
-                  UPDATE users SET name = ?, email = ?, password = ?, role = ?, avatar = ?, title = ?, bio = ?, social_instagram = ?, social_linkedin = ?, social_website = ?
-                  WHERE id = ?
-                `).bind(name, email, String(password), userRole, userAvatar, userTitle, userBio, instagram, linkedin, website, id).run();
+                if (cols.has('password_hash')) {
+                  await env.DB.prepare(`
+                    UPDATE users SET name = ?, email = ?, password = ?, password_hash = ?, role = ?, avatar = ?, title = ?, bio = ?, social_instagram = ?, social_linkedin = ?, social_website = ?
+                    WHERE id = ?
+                  `).bind(name, email, passVal, passVal, userRole, userAvatar, userTitle, userBio, instagram, linkedin, website, id).run();
+                } else {
+                  await env.DB.prepare(`
+                    UPDATE users SET name = ?, email = ?, password = ?, role = ?, avatar = ?, title = ?, bio = ?, social_instagram = ?, social_linkedin = ?, social_website = ?
+                    WHERE id = ?
+                  `).bind(name, email, passVal, userRole, userAvatar, userTitle, userBio, instagram, linkedin, website, id).run();
+                }
               } else {
                 await env.DB.prepare(`
                   UPDATE users SET name = ?, email = ?, role = ?, avatar = ?, title = ?, bio = ?, social_instagram = ?, social_linkedin = ?, social_website = ?
@@ -582,10 +683,18 @@ Sitemap: ${siteUrl}/sitemap.xml
             }
           }
 
-          const insertRes = await env.DB.prepare(`
-            INSERT INTO users (name, email, password, role, avatar, title, bio, social_instagram, social_linkedin, social_website, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `).bind(name, email, password || 'writer123', userRole, userAvatar, userTitle, userBio, instagram, linkedin, website, now).run();
+          let insertRes;
+          if (cols.has('password_hash')) {
+            insertRes = await env.DB.prepare(`
+              INSERT INTO users (name, email, password, password_hash, role, avatar, title, bio, social_instagram, social_linkedin, social_website, created_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).bind(name, email, passVal, passVal, userRole, userAvatar, userTitle, userBio, instagram, linkedin, website, now).run();
+          } else {
+            insertRes = await env.DB.prepare(`
+              INSERT INTO users (name, email, password, role, avatar, title, bio, social_instagram, social_linkedin, social_website, created_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).bind(name, email, passVal, userRole, userAvatar, userTitle, userBio, instagram, linkedin, website, now).run();
+          }
 
           const newId = insertRes.meta?.last_row_id || Date.now();
 
@@ -935,40 +1044,37 @@ Sitemap: ${siteUrl}/sitemap.xml
       if (body.admin_email || body.admin_password || body.admin_name) {
         if (env.DB) {
           try {
-            await env.DB.prepare(`
-              CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT UNIQUE,
-                password TEXT,
-                name TEXT,
-                role TEXT,
-                avatar TEXT,
-                bio TEXT,
-                created_at TEXT
-              )
-            `).run();
-            try { await env.DB.prepare("ALTER TABLE users ADD COLUMN password TEXT").run(); } catch {}
-            try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
-            try { await env.DB.prepare("ALTER TABLE users ADD COLUMN bio TEXT").run(); } catch {}
+            const cols = await syncAndPrepareUsersTable(env.DB);
 
-            const email = body.admin_email;
+            const email = body.admin_email || 'admin@parenting.my.id';
             const password = body.admin_password;
-            const name = body.admin_name;
-            const avatar = body.admin_avatar;
-            const bio = body.admin_bio;
+            const name = body.admin_name || 'Admin';
+            const avatar = body.admin_avatar || '';
+            const bio = body.admin_bio || '';
+            const passVal = String(password || 'admin123');
 
-            const existing = await env.DB.prepare('SELECT id FROM users WHERE LOWER(email) = LOWER(?) OR role = "admin"').bind(email || '').first();
+            const existing = await env.DB.prepare('SELECT id FROM users WHERE LOWER(email) = LOWER(?) OR role = "admin"').bind(email).first();
             if (existing) {
               if (password && String(password).trim().length > 0) {
-                await env.DB.prepare('UPDATE users SET name = ?, email = ?, password = ?, avatar = ?, bio = ? WHERE id = ?')
-                  .bind(name || 'Admin', email || 'admin@parenting.my.id', String(password), avatar || '', bio || '', existing.id).run();
+                if (cols.has('password_hash')) {
+                  await env.DB.prepare('UPDATE users SET name = ?, email = ?, password = ?, password_hash = ?, avatar = ?, bio = ? WHERE id = ?')
+                    .bind(name, email, passVal, passVal, avatar, bio, existing.id).run();
+                } else {
+                  await env.DB.prepare('UPDATE users SET name = ?, email = ?, password = ?, avatar = ?, bio = ? WHERE id = ?')
+                    .bind(name, email, passVal, avatar, bio, existing.id).run();
+                }
               } else {
                 await env.DB.prepare('UPDATE users SET name = ?, email = ?, avatar = ?, bio = ? WHERE id = ?')
-                  .bind(name || 'Admin', email || 'admin@parenting.my.id', avatar || '', bio || '', existing.id).run();
+                  .bind(name, email, avatar, bio, existing.id).run();
               }
             } else {
-              await env.DB.prepare('INSERT INTO users (email, password, name, role, avatar, bio, created_at) VALUES (?, ?, ?, "admin", ?, ?, ?)')
-                .bind(email || 'admin@parenting.my.id', String(password || 'admin123'), name || 'Admin', avatar || '', bio || '', new Date().toISOString()).run();
+              if (cols.has('password_hash')) {
+                await env.DB.prepare('INSERT INTO users (email, password, password_hash, name, role, avatar, bio, created_at) VALUES (?, ?, ?, ?, "admin", ?, ?, ?)')
+                  .bind(email, passVal, passVal, name, avatar, bio, new Date().toISOString()).run();
+              } else {
+                await env.DB.prepare('INSERT INTO users (email, password, name, role, avatar, bio, created_at) VALUES (?, ?, ?, "admin", ?, ?, ?)')
+                  .bind(email, passVal, name, avatar, bio, new Date().toISOString()).run();
+              }
             }
           } catch (uErr) {
             console.error('Error syncing admin user from config payload:', uErr);
@@ -1080,30 +1186,20 @@ Sitemap: ${siteUrl}/sitemap.xml
 
       if (env.DB) {
         try {
-          await env.DB.prepare(`
-            CREATE TABLE IF NOT EXISTS users (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              email TEXT UNIQUE,
-              password TEXT,
-              name TEXT,
-              role TEXT,
-              avatar TEXT,
-              bio TEXT,
-              created_at TEXT
-            )
-          `).run();
-
-          // Ensure missing columns exist in existing D1 table
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN password TEXT").run(); } catch {}
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN bio TEXT").run(); } catch {}
+          const cols = await syncAndPrepareUsersTable(env.DB);
 
           // SECURITY PURGE: Purge any sensitive keys from configs table
           try {
             await env.DB.prepare("DELETE FROM configs WHERE key LIKE 'admin_%' OR key LIKE '%password%' OR key LIKE '%secret%'").run();
           } catch {}
 
-          const existingUser = await env.DB.prepare('SELECT id, email, password, role FROM users WHERE id = ? OR LOWER(email) = LOWER(?)').bind(numId, email).first();
+          const existingUser = await env.DB.prepare(`
+            SELECT id, email, COALESCE(password, password_hash) as password, role 
+            FROM users 
+            WHERE id = ? OR LOWER(email) = LOWER(?)
+          `).bind(numId, email).first();
+
+          const passVal = String(password || 'writer123');
 
           if (existingUser) {
             if (password && String(password).trim().length > 0) {
@@ -1112,10 +1208,17 @@ Sitemap: ${siteUrl}/sitemap.xml
                 return jsonResponse({ error: 'Password lama salah. Verifikasi keamanan gagal.' }, 400);
               }
 
-              await env.DB.prepare(`
-                UPDATE users SET name = ?, email = ?, password = ?, avatar = ?, bio = ?
-                WHERE id = ?
-              `).bind(name || 'User', email, String(password), avatar || '', bio || '', existingUser.id).run();
+              if (cols.has('password_hash')) {
+                await env.DB.prepare(`
+                  UPDATE users SET name = ?, email = ?, password = ?, password_hash = ?, avatar = ?, bio = ?
+                  WHERE id = ?
+                `).bind(name || 'User', email, passVal, passVal, avatar || '', bio || '', existingUser.id).run();
+              } else {
+                await env.DB.prepare(`
+                  UPDATE users SET name = ?, email = ?, password = ?, avatar = ?, bio = ?
+                  WHERE id = ?
+                `).bind(name || 'User', email, passVal, avatar || '', bio || '', existingUser.id).run();
+              }
             } else {
               await env.DB.prepare(`
                 UPDATE users SET name = ?, email = ?, avatar = ?, bio = ?
@@ -1123,10 +1226,17 @@ Sitemap: ${siteUrl}/sitemap.xml
               `).bind(name || 'User', email, avatar || '', bio || '', existingUser.id).run();
             }
           } else {
-            await env.DB.prepare(`
-              INSERT INTO users (id, email, password, name, role, avatar, bio, created_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            `).bind(numId, email, password || 'writer123', name || 'User', 'writer', avatar || '', bio || '', new Date().toISOString()).run();
+            if (cols.has('password_hash')) {
+              await env.DB.prepare(`
+                INSERT INTO users (id, email, password, password_hash, name, role, avatar, bio, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `).bind(numId, email, passVal, passVal, name || 'User', 'writer', avatar || '', bio || '', new Date().toISOString()).run();
+            } else {
+              await env.DB.prepare(`
+                INSERT INTO users (id, email, password, name, role, avatar, bio, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+              `).bind(numId, email, passVal, name || 'User', 'writer', avatar || '', bio || '', new Date().toISOString()).run();
+            }
           }
 
           const updatedUser = await env.DB.prepare('SELECT id, email, name, role, avatar, bio FROM users WHERE id = ? OR LOWER(email) = LOWER(?)').bind(numId, email).first();
@@ -1239,26 +1349,21 @@ Sitemap: ${siteUrl}/sitemap.xml
 
       if (env.DB) {
         try {
-          await env.DB.prepare(`
-            CREATE TABLE IF NOT EXISTS users (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              email TEXT UNIQUE,
-              password TEXT,
-              name TEXT,
-              role TEXT,
-              avatar TEXT,
-              bio TEXT,
-              created_at TEXT
-            )
-          `).run();
+          await syncAndPrepareUsersTable(env.DB);
 
-          // Ensure missing columns exist in existing D1 table
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN password TEXT").run(); } catch {}
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run(); } catch {}
-          try { await env.DB.prepare("ALTER TABLE users ADD COLUMN bio TEXT").run(); } catch {}
+          // Support aliases between @parenting.my.id and @domain.com
+          const altEmail = cleanEmail.includes('@domain.com')
+            ? cleanEmail.replace('@domain.com', '@parenting.my.id')
+            : cleanEmail.includes('@parenting.my.id')
+            ? cleanEmail.replace('@parenting.my.id', '@domain.com')
+            : cleanEmail;
 
-          // Query user by email
-          const user = await env.DB.prepare('SELECT id, email, password, name, role, avatar, bio FROM users WHERE LOWER(email) = LOWER(?)').bind(cleanEmail).first();
+          // Query user by email (using COALESCE to check both password and password_hash)
+          const user = await env.DB.prepare(`
+            SELECT id, email, COALESCE(password, password_hash) as password, name, role, avatar, bio 
+            FROM users 
+            WHERE LOWER(email) = LOWER(?) OR LOWER(email) = LOWER(?)
+          `).bind(cleanEmail, altEmail).first();
           
           if (user) {
             // Strict absolute password check
