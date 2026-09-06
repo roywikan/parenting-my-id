@@ -60,22 +60,23 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     htmlTemplate = `<!doctype html><html lang="id"><head><meta charset="UTF-8"><title>${siteName}</title></head><body><div id="root"></div></body></html>`;
   }
 
-  // 4. Inject Real SEO Meta & Open Graph Tags for WhatsApp / Crawler
-  let html = htmlTemplate;
+  // 4. Strip any pre-existing static preloads and generic SEO description/OpenGraph tags to prevent duplicates or crawler fallback
+  let html = htmlTemplate
+    .replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '')
+    .replace(/<meta[^>]*name="description"[^>]*>/gi, '')
+    .replace(/<meta[^>]*property="og:[^>]*>/gi, '')
+    .replace(/<meta[^>]*name="twitter:[^>]*>/gi, '');
 
-  // Replace default title
-  html = html.replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(seoTitle)}</title>`);
-
-  // Replace default descriptions and open graph tags
-  html = html.replace(/<meta name="description" content=".*?" \/>/gi, `<meta name="description" content="${escapeHtml(seoDesc)}" />`);
-  html = html.replace(/<meta property="og:title" content=".*?" \/>/gi, `<meta property="og:title" content="${escapeHtml(seoTitle)}" />`);
-  html = html.replace(/<meta property="og:description" content=".*?" \/>/gi, `<meta property="og:description" content="${escapeHtml(seoDesc)}" />`);
-
-  // Inject additional precise social media tags for social sharing previews
+  // 5. Build Unified Head SEO HTML Injection
   const seoHeadTags = `
+    <title>${escapeHtml(seoTitle)}</title>
+    <meta name="description" content="${escapeHtml(seoDesc)}" />
     <link rel="canonical" href="${siteUrl}/" />
-    <meta property="og:url" content="${siteUrl}/" />
+    <meta property="og:site_name" content="${escapeHtml(siteName)}" />
+    <meta property="og:title" content="${escapeHtml(seoTitle)}" />
+    <meta property="og:description" content="${escapeHtml(seoDesc)}" />
     <meta property="og:image" content="${escapeHtml(featuredImage)}" />
+    <meta property="og:url" content="${siteUrl}/" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(seoTitle)}" />
@@ -83,7 +84,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <meta name="twitter:image" content="${escapeHtml(featuredImage)}" />
   `;
 
-  html = html.replace('</head>', `${seoHeadTags}</head>`);
+  // Replace <title> and inject SEO tags into <head>
+  if (html.includes('<title>')) {
+    html = html.replace(/<title>.*?<\/title>/i, seoHeadTags);
+  } else {
+    html = html.replace('</head>', `${seoHeadTags}</head>`);
+  }
 
   return new Response(html, {
     headers: {

@@ -697,8 +697,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <script type="application/ld+json">${JSON.stringify(schemaBreadcrumb)}</script>
   `;
 
-  // Strip any pre-existing static image preload from base template to avoid duplicate/unused preloads
-  let finalHtml = htmlTemplate.replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '');
+  // Strip any pre-existing static preloads and generic SEO description/OpenGraph tags to prevent duplicates or crawler fallback
+  let finalHtml = htmlTemplate
+    .replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '')
+    .replace(/<meta[^>]*name="description"[^>]*>/gi, '')
+    .replace(/<meta[^>]*property="og:[^>]*>/gi, '')
+    .replace(/<meta[^>]*name="twitter:[^>]*>/gi, '');
 
   // Replace <title> and inject SEO tags into <head>
   if (finalHtml.includes('<title>')) {
