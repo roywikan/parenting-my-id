@@ -45,7 +45,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   // 2. Resolve Dynamic Metadata Values
   const siteName = siteConfig?.site_name || env.SITE_NAME || url.hostname.replace('www.', '') || 'Blog Engine';
   const siteDesc = siteConfig?.site_description || 'Portal berita & informasi terpercaya.';
-  const seoTitle = siteConfig?.seo_meta_title || `${siteName} - Modern Edge Blog Engine`;
+  const seoTitle = siteConfig?.seo_meta_title || `${siteName} - Beranda`;
   const seoDesc = siteConfig?.seo_meta_description || siteDesc;
   const siteUrl = (env.SITE_URL || url.origin).replace(/\/$/, '');
   const featuredImage = siteConfig?.site_logo || 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&h=630&q=80&fm=webp';
