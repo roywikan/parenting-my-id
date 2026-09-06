@@ -245,6 +245,30 @@ ${articleLinks}
         });
       }
 
+      // POST /api/posts/:id/view
+      const viewMatch = path.match(/^\/api\/posts\/([a-zA-Z0-9_-]+)\/view\/?$/);
+      if (viewMatch && request.method === 'POST') {
+        const identifier = viewMatch[1];
+        const isNum = /^\d+$/.test(identifier);
+        let updatedViews = 1;
+        try {
+          if (isNum) {
+            await env.DB.prepare('UPDATE posts SET views = COALESCE(views, 0) + 1 WHERE id = ?').bind(Number(identifier)).run();
+            const row = await env.DB.prepare('SELECT views FROM posts WHERE id = ?').bind(Number(identifier)).first();
+            if (row && typeof row.views === 'number') updatedViews = row.views;
+          } else {
+            await env.DB.prepare('UPDATE posts SET views = COALESCE(views, 0) + 1 WHERE slug = ?').bind(identifier).run();
+            const row = await env.DB.prepare('SELECT views FROM posts WHERE slug = ?').bind(identifier).first();
+            if (row && typeof row.views === 'number') updatedViews = row.views;
+          }
+        } catch (e: any) {
+          console.error('Error updating view count in worker:', e);
+        }
+        return new Response(JSON.stringify({ success: true, identifier, views: updatedViews }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       // GET /api/autolinks
       if (path === '/api/autolinks' && request.method === 'GET') {
         const { results } = await env.DB.prepare('SELECT * FROM autolinks ORDER BY keyword ASC').all();

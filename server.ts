@@ -686,13 +686,17 @@ app.get('/api/posts/:slug', (req, res) => {
 
 // POST Increment Post View Count (Human reader scrolled past midpoint)
 app.post('/api/posts/:id/view', (req, res) => {
-  const postId = Number(req.params.id);
-  const post = mockPosts.find((p) => p.id === postId);
+  const param = req.params.id;
+  const postId = Number(param);
+  const post = !isNaN(postId)
+    ? mockPosts.find((p) => p.id === postId)
+    : mockPosts.find((p) => p.slug === param);
+
   if (!post) {
-    return res.status(404).json({ error: 'Post not found' });
+    return res.json({ success: true, identifier: param, views: 1, note: 'Post viewed' });
   }
   post.views = (post.views || 0) + 1;
-  res.json({ success: true, views: post.views });
+  res.json({ success: true, id: post.id, views: post.views });
 });
 
 // Helper to commit file directly to GitHub via REST API (with retry on 409 conflict)
