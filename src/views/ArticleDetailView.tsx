@@ -10,6 +10,7 @@ import SmartRelatedArticles from '../components/SmartRelatedArticles';
 import AdSlot from '../components/AdSlot';
 import { CusdisComments } from '../components/CusdisComments';
 import { optimizeUnsplashUrl, getUnsplashSrcSet, getOptimizedAvatarUrl } from '../lib/imageUtils';
+import { parseAndRenderReferences } from '../lib/referenceParser';
 
 interface ArticleDetailViewProps {
   slug: string;
@@ -261,43 +262,9 @@ export default function ArticleDetailView({
       return `<${tag} id="${id}" class="scroll-mt-24">${content}</${tag}>`;
     });
 
-    // Custom inline reference parsing: [ref: ...], [referensi: ...], [jurnal: ...]
-    // Example: [ref: Sari et al., Jurnal Gizi Anak, 2026, https://doi.org/10.1234/xyz]
-    const refs: string[] = [];
-    let refIndex = 1;
-    rawHtml = rawHtml.replace(/\[(?:ref|referensi|jurnal):\s*([^\]]+)\]/gi, (match, refText) => {
-      const currentRefIndex = refIndex++;
-      const cleanRefText = refText.trim();
-      refs.push(cleanRefText);
-      return `<sup><a href="#ref-item-${currentRefIndex}" id="ref-back-${currentRefIndex}" class="text-rose-600 font-extrabold hover:underline" title="${cleanRefText}">[${currentRefIndex}]</a></sup>`;
-    });
-
-    if (refs.length > 0) {
-      const refListHtml = `
-        <div class="mt-12 pt-6 border-t border-slate-200 dark:border-slate-800" id="daftar-referensi">
-          <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
-            <span class="text-rose-600">📚</span> Referensi Ilmiah & Jurnal
-          </h3>
-          <ol class="space-y-1.5 text-xs text-slate-600 dark:text-slate-400 list-decimal pl-5">
-            ${refs.map((ref, idx) => {
-              // Simple URL detector to make any links clickable automatically
-              const urlRegex = /(https?:\/\/[^\s,]+)/gi;
-              let refHtml = ref;
-              if (urlRegex.test(ref)) {
-                refHtml = ref.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center gap-0.5 font-semibold">${url}</a>`);
-              }
-              return `
-                <li id="ref-item-${idx + 1}" class="pl-1 leading-relaxed">
-                  <span class="font-medium text-slate-800 dark:text-slate-200">${refHtml}</span>
-                  <a href="#ref-back-${idx + 1}" class="text-rose-500 hover:text-rose-700 ml-1.5 font-bold transition-colors" title="Kembali ke teks">↩</a>
-                </li>
-              `;
-            }).join('')}
-          </ol>
-        </div>
-      `;
-      rawHtml += refListHtml;
-    }
+    // Parse inline scientific references ([ref:...], [referensi:...], [jurnal:...])
+    // Supports optional URL/DOI at the end with automatic bibliography generation
+    rawHtml = parseAndRenderReferences(rawHtml);
 
     const finalHtml = applyAutoLinks(rawHtml, autolinks);
     return { parsedHtml: finalHtml, tocItems: items };

@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { marked } from 'marked';
 import { applyAutoLinks, calculateReadTime, preprocessMarkdownLineBreaks, renderResponsiveVideoEmbeds } from '../lib/autolink';
 import { sanitizeAndOptimizeImageUrl, sanitizeMarkdownImageUrls } from '../lib/imageUtils';
+import { parseAndRenderReferences } from '../lib/referenceParser';
 import { AutoLink, User, PostRevision, UserRole, PostStatus } from '../types';
 import SeoAuditWidget from './SeoAuditWidget';
 import { 
@@ -131,6 +132,13 @@ export default function RichPostEditor({
   const [linkText, setLinkText] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
 
+  const [showRefModal, setShowRefModal] = useState(false);
+  const [refAuthor, setRefAuthor] = useState('');
+  const [refTitle, setRefTitle] = useState('');
+  const [refJournal, setRefJournal] = useState('');
+  const [refYear, setRefYear] = useState('');
+  const [refUrl, setRefUrl] = useState('');
+
   const [showImageModal, setShowImageModal] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [videoPlatform, setVideoPlatform] = useState<'youtube' | 'tiktok' | 'instagram'>('youtube');
@@ -258,6 +266,52 @@ export default function RichPostEditor({
     setLinkUrl('');
   };
 
+  // Open Reference Modal (Prefills selected text if any)
+  const handleOpenRefModal = () => {
+    if (textareaRef.current) {
+      const start = textareaRef.current.selectionStart;
+      const end = textareaRef.current.selectionEnd;
+      const selected = textareaRef.current.value.substring(start, end).trim();
+      if (selected) {
+        setRefAuthor(selected);
+      }
+    }
+    setShowRefModal(true);
+  };
+
+  // Insert Scientific Reference Action (E-E-A-T)
+  const handleInsertReference = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const author = refAuthor.trim() || 'Prof. Suparman';
+    const parts: string[] = [author];
+    if (refTitle.trim()) {
+      const cleanTitle = refTitle.trim().replace(/^["']|["']$/g, '');
+      parts.push(`"${cleanTitle}"`);
+    }
+    if (refJournal.trim()) parts.push(refJournal.trim());
+    if (refYear.trim()) parts.push(refYear.trim());
+    if (refUrl.trim()) parts.push(refUrl.trim());
+
+    const formatted = ` [ref: ${parts.join(', ')}]`;
+
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const fullText = textarea.value.substring(0, start) + formatted + textarea.value.substring(end);
+      updateMarkdownWithHistory(fullText);
+    } else {
+      updateMarkdownWithHistory(`${markdown}${formatted}`);
+    }
+
+    setShowRefModal(false);
+    setRefAuthor('');
+    setRefTitle('');
+    setRefJournal('');
+    setRefYear('');
+    setRefUrl('');
+  };
+
   // Insert Video Action
   const handleInsertVideo = (e: React.FormEvent) => {
     e.preventDefault();
@@ -346,35 +400,9 @@ export default function RichPostEditor({
       return `<${tag} id="${id}" class="scroll-mt-24">${content}</${tag}>`;
     });
 
-    // Custom inline reference parsing: [ref: Name/Details]
-    // Example: [ref: Sari et al., Jurnal Gizi Anak, 2026]
-    const refs: string[] = [];
-    let refIndex = 1;
-    rawHtml = rawHtml.replace(/\[ref:\s*([^\]]+)\]/gi, (match, refText) => {
-      const currentRefIndex = refIndex++;
-      const cleanRefText = refText.trim();
-      refs.push(cleanRefText);
-      return `<sup><a href="#ref-item-${currentRefIndex}" id="ref-back-${currentRefIndex}" class="text-rose-600 font-extrabold hover:underline" title="${cleanRefText}">[${currentRefIndex}]</a></sup>`;
-    });
-
-    if (refs.length > 0) {
-      const refListHtml = `
-        <div class="mt-12 pt-6 border-t border-slate-200 dark:border-slate-800" id="daftar-referensi">
-          <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
-            <span class="text-rose-600">📚</span> Referensi Ilmiah & Jurnal
-          </h3>
-          <ol class="space-y-1.5 text-xs text-slate-600 dark:text-slate-400 list-decimal pl-5">
-            ${refs.map((ref, idx) => `
-              <li id="ref-item-${idx + 1}" class="pl-1 leading-relaxed">
-                <span class="font-medium text-slate-800 dark:text-slate-200">${ref}</span>
-                <a href="#ref-back-${idx + 1}" class="text-rose-500 hover:text-rose-700 ml-1.5 font-bold transition-colors" title="Kembali ke teks">↩</a>
-              </li>
-            `).join('')}
-          </ol>
-        </div>
-      `;
-      rawHtml += refListHtml;
-    }
+    // Parse inline scientific references ([ref:...], [referensi:...], [jurnal:...])
+    // Supports optional URL/DOI at the end with automatic bibliography generation
+    rawHtml = parseAndRenderReferences(rawHtml);
 
     return applyAutoLinks(rawHtml, autolinks);
   }, [markdown, autolinks]);
@@ -753,9 +781,9 @@ export default function RichPostEditor({
               </button>
               <button
                 type="button"
-                onClick={() => applyFormatting('[ref: ', ']', 'Sari et al., Jurnal Gizi Anak, 2026')}
+                onClick={handleOpenRefModal}
                 className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 font-bold shadow-xs active:bg-amber-200 shrink-0"
-                title="Sisipkan Referensi Jurnal Ilmiah (E-E-A-T)"
+                title="💡 Tips Referensi E-E-A-T: Tulis [ref: Nama Penulis, Judul Artikel, Nama Jurnal, Tahun] atau tambahkan URL/DOI di akhir jika ada. Tautan dan nomor catatan kaki [1] akan dibuat otomatis!"
               >
                 <span className="text-base">📚</span>
               </button>
@@ -934,9 +962,9 @@ export default function RichPostEditor({
 
                   <button
                     type="button"
-                    onClick={() => applyFormatting('[ref: ', ']', 'Sari et al., Jurnal Gizi Anak, 2026')}
+                    onClick={handleOpenRefModal}
                     className="px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-300 font-bold text-xs hover:bg-amber-100 transition-colors flex items-center gap-1"
-                    title="Sisipkan Referensi Jurnal Ilmiah (E-E-A-T)"
+                    title="💡 Tips Referensi E-E-A-T: Tulis [ref: Nama Penulis, Judul Artikel, Nama Jurnal, Tahun] atau tambahkan URL/DOI di akhir jika ada. Tautan dan nomor catatan kaki [1] akan dibuat otomatis!"
                   >
                     <span>📚</span>
                     <span>Referensi</span>
@@ -1081,13 +1109,49 @@ export default function RichPostEditor({
             </div>
 
             {/* TIPS REFERENSI ILMIAH (E-E-A-T) */}
-            <div className="mt-4 p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/60 dark:border-amber-900/30 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2.5">
-              <span className="text-base shrink-0">💡</span>
-              <div className="space-y-1">
-                <span className="font-extrabold block text-amber-900 dark:text-amber-100">Tips Referensi Ilmiah (Kredibilitas E-E-A-T):</span>
-                <span className="block leading-relaxed">
-                  Tulis <code className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 font-mono text-[11px] text-amber-900 dark:text-amber-300 font-bold">[ref: Sari et al., Jurnal Kesehatan Anak, 2026]</code> di akhir kalimat Anda untuk otomatis menyisipkan tautan catatan kaki dan membangun daftar referensi ilmiah yang rapi di akhir artikel secara otomatis.
-                </span>
+            <div className="mt-4 p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-200 space-y-3">
+              <div className="flex items-start gap-2.5">
+                <span className="text-base shrink-0">💡</span>
+                <div className="space-y-1">
+                  <span className="font-extrabold block text-amber-950 dark:text-amber-100">Tips Referensi E-E-A-T:</span>
+                  <p className="leading-relaxed font-medium">
+                    Tulis <code className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 font-mono text-[11px] text-amber-950 dark:text-amber-200 font-bold">[ref: Nama Penulis, Judul Artikel, Nama Jurnal, Tahun]</code> atau tambahkan URL/DOI di akhir jika ada. Tautan dan nomor catatan kaki [1] akan dibuat otomatis!
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-amber-200/60 dark:border-amber-900/30 text-[11px]">
+                <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/70 border border-amber-200/60 dark:border-amber-900/30">
+                  <div className="font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center justify-between">
+                    <span>1. Format Tanpa URL (Termudah):</span>
+                    <button 
+                      type="button"
+                      onClick={() => applyFormatting('', '', ' [ref: Prof. Suparman, "Pola Makan Balita", Jurnal Kesehatan, 2026]')}
+                      className="text-[10px] text-rose-600 dark:text-rose-400 font-bold hover:underline"
+                    >
+                      + Sisipkan
+                    </button>
+                  </div>
+                  <code className="block font-mono text-[10px] text-slate-600 dark:text-slate-400 break-all select-all">
+                    [ref: Prof. Suparman, "Pola Makan Balita", Jurnal Kesehatan, 2026]
+                  </code>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/70 border border-amber-200/60 dark:border-amber-900/30">
+                  <div className="font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center justify-between">
+                    <span>2. Format Dengan URL/DOI:</span>
+                    <button 
+                      type="button"
+                      onClick={() => applyFormatting('', '', ' [ref: Prof. Suparman, "Pola Makan Balita", Jurnal Kesehatan, 2026, https://doi.org/10.1016/j.kesehatan.2026]')}
+                      className="text-[10px] text-rose-600 dark:text-rose-400 font-bold hover:underline"
+                    >
+                      + Sisipkan
+                    </button>
+                  </div>
+                  <code className="block font-mono text-[10px] text-slate-600 dark:text-slate-400 break-all select-all">
+                    [ref: Prof. Suparman, "Pola Makan Balita", Jurnal Kesehatan, 2026, https://doi.org/10.1016/j.kesehatan.2026]
+                  </code>
+                </div>
               </div>
             </div>
 
@@ -1511,7 +1575,7 @@ export default function RichPostEditor({
                   type="text"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
-                  placeholder="https://parenting.my.id/baca/..."
+                  placeholder="https://domain-anda.com/baca/..."
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono"
                   required
                 />
@@ -1530,6 +1594,184 @@ export default function RichPostEditor({
                   className="px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700"
                 >
                   Sisipkan Tautan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* MODAL INSERT SCIENTIFIC REFERENCE (E-E-A-T) */}
+      {/* ------------------------------------------------------------- */}
+      {showRefModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <span className="text-base">📚</span>
+                <span>Sisipkan Referensi Ilmiah (E-E-A-T)</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowRefModal(false)}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Tooltip Tips Box */}
+            <div className="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+              <span className="text-sm shrink-0">💡</span>
+              <p className="leading-relaxed font-medium">
+                <strong>Tips Referensi E-E-A-T:</strong> Tulis <code>[ref: Nama Penulis, Judul Artikel, Nama Jurnal, Tahun]</code> atau tambahkan URL/DOI di akhir jika ada. Tautan dan nomor catatan kaki [1] akan dibuat otomatis!
+              </p>
+            </div>
+
+            {/* Preset Buttons */}
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400 font-bold mr-1">Contoh Cepat:</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setRefAuthor('Prof. Suparman');
+                  setRefTitle('Pola Makan Balita');
+                  setRefJournal('Jurnal Kesehatan');
+                  setRefYear('2026');
+                  setRefUrl('');
+                }}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold"
+              >
+                Tanpa URL (Termudah)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRefAuthor('Prof. Suparman');
+                  setRefTitle('Pola Makan Balita');
+                  setRefJournal('Jurnal Kesehatan');
+                  setRefYear('2026');
+                  setRefUrl('https://doi.org/10.1016/j.kesehatan.2026');
+                }}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold"
+              >
+                Dengan DOI / URL
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRefAuthor('');
+                  setRefTitle('');
+                  setRefJournal('');
+                  setRefYear('');
+                  setRefUrl('');
+                }}
+                className="px-2 py-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium"
+              >
+                Reset
+              </button>
+            </div>
+
+            <form onSubmit={handleInsertReference} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Nama Penulis / Institusi <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={refAuthor}
+                  onChange={(e) => setRefAuthor(e.target.value)}
+                  placeholder="Contoh: Prof. Suparman atau Suparman et al."
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-medium"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Judul Artikel / Publikasi <span className="text-slate-400 font-normal">(Opsional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={refTitle}
+                  onChange={(e) => setRefTitle(e.target.value)}
+                  placeholder="Contoh: Pola Makan Balita Sehat"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-medium"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Nama Jurnal / Penerbit <span className="text-slate-400 font-normal">(Opsional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={refJournal}
+                    onChange={(e) => setRefJournal(e.target.value)}
+                    placeholder="Contoh: Jurnal Kesehatan"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Tahun Terbit <span className="text-slate-400 font-normal">(Opsional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={refYear}
+                    onChange={(e) => setRefYear(e.target.value)}
+                    placeholder="Contoh: 2026"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-medium"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  URL Tautan atau Nomor DOI <span className="text-slate-400 font-normal">(Opsional - boleh dikosongkan)</span>
+                </label>
+                <input
+                  type="text"
+                  value={refUrl}
+                  onChange={(e) => setRefUrl(e.target.value)}
+                  placeholder="Contoh: https://doi.org/10.1016/... atau 10.1016/..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-mono"
+                />
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                  Jika dikosongkan, referensi tetap tampil elegan dan kredibel tanpa tautan biru.
+                </p>
+              </div>
+
+              {/* Tag Live Preview */}
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px]">
+                <span className="text-slate-400 block mb-0.5 font-bold">Kode Tag yang Akan Disisipkan:</span>
+                <code className="font-mono text-rose-600 dark:text-rose-400 font-bold break-all">
+                  {`[ref: ${[
+                    refAuthor.trim() || 'Prof. Suparman',
+                    refTitle.trim() ? `"${refTitle.trim().replace(/^["']|["']$/g, '')}"` : '',
+                    refJournal.trim(),
+                    refYear.trim(),
+                    refUrl.trim()
+                  ].filter(Boolean).join(', ')}]`}
+                </code>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowRefModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 shadow-sm flex items-center gap-1.5"
+                >
+                  <span>Sisipkan Referensi</span>
+                  <span>✨</span>
                 </button>
               </div>
             </form>
