@@ -53,7 +53,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   // 3. Get static index.html from Cloudflare Pages Asset storage
   let htmlTemplate = '';
   try {
-    const assetRes = await env.ASSETS.fetch(request);
+    const assetRes = await env.ASSETS.fetch(new URL('/index.html', request.url));
     htmlTemplate = await assetRes.text();
   } catch (e) {
     console.error('Failed to fetch ASSETS in homepage Function:', e);

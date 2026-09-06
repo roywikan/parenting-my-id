@@ -1,15 +1,17 @@
 {
   "version": 1,
   "include": [
-    "/api/*",
-    "/feed.xml",
-    "/rss.xml",
-    "/sitemap.xml",
-    "/llms.txt",
-    "/llms-full.txt",
-    "/robots.txt"
+    "/*"
   ],
   "exclude": [
-    "/assets/*"
+    "/assets/*",
+    "/uploads/*",
+    "/favicon.ico",
+    "/favicon-16x16.png",
+    "/favicon-32x32.png",
+    "/apple-touch-icon.png",
+    "/android-chrome-192x192.png",
+    "/android-chrome-512x512.png",
+    "/site.webmanifest"
   ]
 }

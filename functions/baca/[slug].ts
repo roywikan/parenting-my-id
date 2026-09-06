@@ -434,7 +434,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   // Get base HTML asset
   let htmlTemplate = '';
   try {
-    const assetRes = await env.ASSETS.fetch(new URL('/', request.url));
+    const assetRes = await env.ASSETS.fetch(new URL('/index.html', request.url));
     htmlTemplate = await assetRes.text();
   } catch (e) {
     console.error('Failed to fetch ASSETS in Cloudflare Pages Function:', e);
