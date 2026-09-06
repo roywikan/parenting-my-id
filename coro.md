@@ -1,4 +1,5 @@
 
+
 # 📖 Panduan Instalasi & Konfigurasi Blog Engine `parenting.my.id` (Konfidensial) rahasia
 
 Dokumen ini berisi panduan teknis internal yang sangat rahasia mengenai cara melakukan instalasi, konfigurasi database Cloudflare D1, integrasi GitHub REST API, setting DNS, setting Worker/Pages Cloudflare, panduan keamanan sistem, serta optimalisasi performa animasi.
