@@ -13,7 +13,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const method = request.method;
 
   const jsonResponse = (data: any, status = 200, extraHeaders: Record<string, string> = {}) => {
-    // Check if path is an administrative route
+    // Check if path is a public route
     const isPublicGet = (method === 'GET' && (
       path.startsWith('/api/posts') || 
       path.startsWith('/api/comments') || 
@@ -21,8 +21,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       path.startsWith('/api/tags')
     ));
 
+    const isPublicPost = (method === 'POST' && (
+      path.startsWith('/api/comments') ||
+      path.startsWith('/api/newsletter') ||
+      /^\/api\/posts\/[^/]+\/view\/?$/.test(path)
+    ));
+
     const isApiRoute = path.startsWith('/api/');
-    const isAdminRoute = isApiRoute && !isPublicGet;
+    const isAdminRoute = isApiRoute && !isPublicGet && !isPublicPost;
 
     let allowOrigin = '*';
     if (isAdminRoute) {
@@ -766,6 +772,54 @@ Sitemap: ${siteUrl}/sitemap.xml
         }
       }
       return jsonResponse([]);
+    }
+
+    // 1b. POST /api/posts/:id/view (Atomic view count increment in Cloudflare D1)
+    const viewMatch = path.match(/^\/api\/posts\/([a-zA-Z0-9_-]+)\/view\/?$/);
+    if (viewMatch && method === 'POST') {
+      const identifier = viewMatch[1];
+      const isNum = /^\d+$/.test(identifier);
+      const postId = isNum ? Number(identifier) : null;
+
+      let updatedViews = 1;
+      if (env.DB) {
+        try {
+          if (isNum && postId) {
+            await env.DB.prepare(`
+              UPDATE posts 
+              SET views = COALESCE(views, 0) + 1 
+              WHERE id = ?
+            `).bind(postId).run();
+
+            const row = await env.DB.prepare(`
+              SELECT views FROM posts WHERE id = ?
+            `).bind(postId).first();
+
+            if (row && typeof row.views === 'number') {
+              updatedViews = row.views;
+            }
+          } else {
+            await env.DB.prepare(`
+              UPDATE posts 
+              SET views = COALESCE(views, 0) + 1 
+              WHERE slug = ?
+            `).bind(identifier).run();
+
+            const row = await env.DB.prepare(`
+              SELECT views FROM posts WHERE slug = ?
+            `).bind(identifier).first();
+
+            if (row && typeof row.views === 'number') {
+              updatedViews = row.views;
+            }
+          }
+        } catch (e: any) {
+          console.error('Error incrementing post view count in D1:', e);
+          return jsonResponse({ success: true, identifier, views: updatedViews, fallback: true });
+        }
+      }
+
+      return jsonResponse({ success: true, identifier, views: updatedViews });
     }
 
     // 2. POST /api/posts

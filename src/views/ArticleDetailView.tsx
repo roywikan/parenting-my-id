@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Post, AutoLink, SiteConfig } from '../types';
 import { applyAutoLinks, preprocessMarkdownLineBreaks, renderResponsiveVideoEmbeds } from '../lib/autolink';
 import { marked } from 'marked';
@@ -85,21 +85,28 @@ export default function ArticleDetailView({
 
   const [currentViews, setCurrentViews] = useState(post ? post.views : 0);
   const [hasTrackedView, setHasTrackedView] = useState(false);
+  const articleContainerRef = useRef<HTMLDivElement | null>(null);
+  const midpointSentinelRef = useRef<HTMLDivElement | null>(null);
+  const hasTriggeredRef = useRef(false);
+  const maxScrollYRef = useRef(0);
 
   useEffect(() => {
     if (post) {
       setCurrentViews(post.views);
       setHasTrackedView(false);
+      hasTriggeredRef.current = false;
+      maxScrollYRef.current = 0;
     }
   }, [post?.id, post?.views]);
 
-  // Reader/Viewer Counter Tracking (Automatically increments when opened)
+  // Reader/Viewer Counter Tracking: triggers when user reads down to midpoint or scrolls upward after reading
   useEffect(() => {
-    if (!post || hasTrackedView) return;
+    if (!post || hasTrackedView || hasTriggeredRef.current) return;
 
     const sessionKey = `viewed_article_${post.id}`;
     if (sessionStorage.getItem(sessionKey)) {
       setHasTrackedView(true);
+      hasTriggeredRef.current = true;
       return;
     }
 
@@ -107,25 +114,117 @@ export default function ArticleDetailView({
     const isBot = /bot|googlebot|crawler|spider|robot|crawling/i.test(navigator.userAgent);
     if (isBot) return;
 
-    sessionStorage.setItem(sessionKey, 'true');
-    setHasTrackedView(true);
+    let cleanupListeners: (() => void) | null = null;
 
-    fetch(`/api/posts/${post.id}/view`, { method: 'POST' })
-      .then((res) => res.json())
-      .then((data: any) => {
-        if (data && typeof data.views === 'number') {
-          setCurrentViews(data.views);
-          post.views = data.views;
-        } else {
-          setCurrentViews((prev) => prev + 1);
-          post.views += 1;
+    const recordView = async () => {
+      if (hasTriggeredRef.current) return;
+      hasTriggeredRef.current = true;
+      setHasTrackedView(true);
+      sessionStorage.setItem(sessionKey, 'true');
+
+      if (cleanupListeners) {
+        cleanupListeners();
+        cleanupListeners = null;
+      }
+
+      try {
+        const res = await fetch(`/api/posts/${post.id}/view`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (res.ok) {
+          const data = await res.json().catch(() => null);
+          if (data && typeof data.views === 'number') {
+            setCurrentViews(data.views);
+            post.views = data.views;
+            return;
+          }
         }
-      })
-      .catch(() => {
-        setCurrentViews((prev) => prev + 1);
-        post.views += 1;
-      });
-  }, [post, hasTrackedView]);
+      } catch {
+        // Graceful degradation: silently ignore network errors without throwing or warning
+      }
+
+      // Optimistic fallback increment
+      setCurrentViews((prev) => prev + 1);
+      post.views = (post.views || 0) + 1;
+    };
+
+    // 1. Scroll listener: triggers at vertical midpoint (>= 40% scroll) OR when user scrolls upward after reading
+    const handleScroll = () => {
+      if (hasTriggeredRef.current) return;
+      const currentScrollY = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+      // Check vertical midpoint based on overall scroll progress
+      if (docHeight > 0 && currentScrollY / docHeight >= 0.4) {
+        recordView();
+        return;
+      }
+
+      // Check vertical midpoint based on article container element
+      if (articleContainerRef.current) {
+        const rect = articleContainerRef.current.getBoundingClientRect();
+        const articleMid = rect.top + currentScrollY + (rect.height * 0.45);
+        const viewportMarker = currentScrollY + (window.innerHeight * 0.65);
+        if (viewportMarker >= articleMid) {
+          recordView();
+          return;
+        }
+      }
+
+      // Upward scroll detection ("menggeser layar ke atas")
+      // Triggered when user has scrolled down into the article (> 300px), and then scrolls upward (> 60px)
+      if (currentScrollY > maxScrollYRef.current) {
+        maxScrollYRef.current = currentScrollY;
+      } else if (maxScrollYRef.current > 300 && (maxScrollYRef.current - currentScrollY) > 60) {
+        recordView();
+        return;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // 2. IntersectionObserver on midpoint marker
+    let observer: IntersectionObserver | null = null;
+    if (midpointSentinelRef.current && 'IntersectionObserver' in window) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              recordView();
+              break;
+            }
+          }
+        },
+        { threshold: 0.1 }
+      );
+      observer.observe(midpointSentinelRef.current);
+    }
+
+    // 3. Fallback timer for very short articles that fit entirely on screen without scrolling
+    const dwellTimer = setTimeout(() => {
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight <= 150) {
+        recordView();
+      }
+    }, 8000);
+
+    cleanupListeners = () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      clearTimeout(dwellTimer);
+    };
+
+    return () => {
+      if (cleanupListeners) {
+        cleanupListeners();
+      }
+    };
+  }, [post?.id, hasTrackedView]);
 
   // Render markdown to HTML + extract TOC items + apply Auto-Links & Heading IDs
   const { parsedHtml, tocItems } = useMemo(() => {
@@ -463,6 +562,9 @@ export default function ArticleDetailView({
       {/* TABLE OF CONTENTS (IF HEADINGS EXIST) */}
       <AutoTableOfContents items={tocItems} />
 
+      {/* MIDPOINT SENTINEL FOR VIEW TRACKING */}
+      <div ref={midpointSentinelRef} className="h-px w-full pointer-events-none opacity-0" aria-hidden="true" />
+
       {/* STRATEGIC AD PLACEMENT: IN-ARTICLE MIDDLE */}
       <AdSlot
         code={siteConfig?.adsense_article_middle}
@@ -473,6 +575,7 @@ export default function ArticleDetailView({
       {/* ARTICLE CONTENT BODY WITH AUTO-LINKING */}
       <div
         id="article-content-body"
+        ref={articleContainerRef}
         className="article-body prose prose-rose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 space-y-4"
         dangerouslySetInnerHTML={{ __html: parsedHtml }}
       />

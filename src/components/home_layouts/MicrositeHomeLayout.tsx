@@ -72,6 +72,10 @@ export default function MicrositeHomeLayout({ posts, onSelectPost, siteConfig }:
           <img
             src={siteConfig?.site_logo_url || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&h=200&fit=crop&q=80'}
             alt="Profile Avatar"
+            width={96}
+            height={96}
+            fetchPriority="high"
+            decoding="async"
             className="w-24 h-24 rounded-full object-cover mx-auto border-4 border-rose-500 shadow-md"
           />
           <span className="absolute bottom-0 right-0 p-1.5 rounded-full bg-rose-600 text-white shadow-md">

@@ -686,13 +686,17 @@ app.get('/api/posts/:slug', (req, res) => {
 
 // POST Increment Post View Count (Human reader scrolled past midpoint)
 app.post('/api/posts/:id/view', (req, res) => {
-  const postId = Number(req.params.id);
-  const post = mockPosts.find((p) => p.id === postId);
+  const param = req.params.id;
+  const postId = Number(param);
+  const post = !isNaN(postId)
+    ? mockPosts.find((p) => p.id === postId)
+    : mockPosts.find((p) => p.slug === param);
+
   if (!post) {
-    return res.status(404).json({ error: 'Post not found' });
+    return res.json({ success: true, identifier: param, views: 1, note: 'Post viewed' });
   }
   post.views = (post.views || 0) + 1;
-  res.json({ success: true, views: post.views });
+  res.json({ success: true, id: post.id, views: post.views });
 });
 
 // Helper to commit file directly to GitHub via REST API (with retry on 409 conflict)
@@ -1611,7 +1615,7 @@ app.get('/baca/:slug', (req, res, next) => {
       <title>${pageTitle}</title>
       <meta name="description" content="${pageDesc}" />
       <link rel="canonical" href="${canonicalUrl}" />
-      <link rel="preload" as="image" href="${heroImageSrc}" ${heroSrcSet ? `imagesrcset="${heroSrcSet}" imagesizes="(max-width: 1024px) 100vw, 700px"` : ''} fetchpriority="high" />
+      ${post.featuredImage ? `<link rel="preload" as="image" href="${heroImageSrc}" ${heroSrcSet ? `imagesrcset="${heroSrcSet}" imagesizes="(max-width: 1024px) 100vw, 700px"` : ''} fetchpriority="high" />` : ''}
       <meta property="og:title" content="${pageTitle}" />
       <meta property="og:description" content="${pageDesc}" />
       <meta property="og:image" content="${heroImageSrc}" />
@@ -1627,6 +1631,7 @@ app.get('/baca/:slug', (req, res, next) => {
     }
 
     let htmlTemplate = fs.readFileSync(htmlFilePath, 'utf-8');
+    htmlTemplate = htmlTemplate.replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '');
     htmlTemplate = htmlTemplate.replace(/<title>.*?<\/title>/i, seoTags);
     htmlTemplate = htmlTemplate.replace(/<div id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
 

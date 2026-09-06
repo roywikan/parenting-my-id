@@ -36,7 +36,11 @@ export default function PersonalBrandingHomeLayout({ posts, onSelectPost, siteCo
             <div className="relative inline-block">
               <img
                 src={siteConfig?.doctor_avatar_url || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=600&h=600&fit=crop&q=80'}
-                alt={siteConfig?.doctor_name || 'Pakar Parenting'}
+                alt={siteConfig?.doctor_name || 'Pakar'}
+                width={320}
+                height={320}
+                fetchPriority="high"
+                decoding="async"
                 className="w-64 h-64 sm:w-80 sm:h-80 rounded-3xl object-cover shadow-2xl border-4 border-rose-500/80 mx-auto"
               />
               <div className="absolute -bottom-4 -right-2 bg-rose-600 text-white px-4 py-2 rounded-2xl shadow-xl flex items-center gap-1.5 text-xs font-black">
