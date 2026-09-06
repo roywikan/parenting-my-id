@@ -337,3 +337,19 @@ export interface SEOInfo {
   canonicalUrl: string;
   keywords: string[];
 }
+
+export interface DatabaseTableInfo {
+  name: string;
+  rowCount: number;
+  description?: string;
+  columns?: string[];
+}
+
+export interface DatabaseDumpOptions {
+  tables: string[];
+  includeSchema: boolean;
+  includeData: boolean;
+  insertMode: 'INSERT OR REPLACE INTO' | 'INSERT INTO';
+  addDropTable: boolean;
+  format: 'sql' | 'json';
+}

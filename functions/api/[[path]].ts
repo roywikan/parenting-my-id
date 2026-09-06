@@ -2061,6 +2061,413 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
       }
     }
 
+    // ==========================================
+    // DATABASE BACKUP & SCHEMA EXPORT ENDPOINTS (ADMIN ONLY)
+    // ==========================================
+
+    // 1. GET /api/database/tables (List detected tables & row counts)
+    if (path === '/api/database/tables' && method === 'GET') {
+      const auth = await authenticateRequest(['admin']);
+      if (auth.errorResponse) return auth.errorResponse;
+
+      if (env.DB) {
+        try {
+          const { results } = await env.DB.prepare(
+            "SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'sqlite_%' ORDER BY name ASC"
+          ).all();
+
+          const tablesList = [];
+          for (const row of (results || [])) {
+            const tableName = String(row.name);
+            let count = 0;
+            try {
+              const countRes: any = await env.DB.prepare(`SELECT count(*) as total FROM "${tableName}"`).first();
+              count = countRes ? Number(countRes.total) : 0;
+            } catch (cErr) {
+              console.warn(`Could not count rows for table ${tableName}:`, cErr);
+            }
+
+            let description = `Tabel ${tableName}`;
+            if (tableName === 'users') description = 'Akun pengguna, hak akses, peran, dan kredensial';
+            else if (tableName === 'posts') description = 'Seluruh artikel, konten, SEO meta, dan view count';
+            else if (tableName === 'configs') description = 'Konfigurasi situs dinamis key-value';
+            else if (tableName === 'categories') description = 'Kategori dan taksonomi artikel';
+            else if (tableName === 'autolinks') description = 'Aturan internal auto-linking engine';
+            else if (tableName === 'comments') description = 'Komentar artikel native dan sinkronisasi Cusdis';
+            else if (tableName === 'login_attempts') description = 'Pelacakan IP pengamanan anti brute force';
+
+            tablesList.push({
+              name: tableName,
+              rowCount: count,
+              description,
+            });
+          }
+
+          if (tablesList.length > 0) {
+            return jsonResponse({
+              success: true,
+              databaseEngine: 'Cloudflare D1 (SQLite)',
+              tables: tablesList,
+            });
+          }
+        } catch (e: any) {
+          console.error('Error fetching tables from D1:', e);
+        }
+      }
+
+      // Fallback table list
+      return jsonResponse({
+        success: true,
+        databaseEngine: 'Cloudflare D1 (Fallback Mode)',
+        tables: [
+          { name: 'users', rowCount: 3, description: 'Akun pengguna, hak akses, peran, dan kredensial' },
+          { name: 'posts', rowCount: 15, description: 'Seluruh artikel, konten, SEO meta, dan view count' },
+          { name: 'configs', rowCount: 25, description: 'Konfigurasi situs dinamis key-value' },
+          { name: 'categories', rowCount: 6, description: 'Kategori dan taksonomi artikel' },
+          { name: 'autolinks', rowCount: 5, description: 'Aturan internal auto-linking engine' },
+          { name: 'comments', rowCount: 12, description: 'Komentar artikel native dan sinkronisasi Cusdis' },
+          { name: 'login_attempts', rowCount: 0, description: 'Pelacakan IP pengamanan anti brute force' },
+        ],
+      });
+    }
+
+    // 2. GET /api/database/schema (CREATE TABLE DDL only)
+    if (path === '/api/database/schema' && method === 'GET') {
+      const auth = await authenticateRequest(['admin']);
+      if (auth.errorResponse) return auth.errorResponse;
+
+      let ddl = '';
+      if (env.DB) {
+        try {
+          const { results } = await env.DB.prepare(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'sqlite_%' AND sql IS NOT NULL ORDER BY name ASC"
+          ).all();
+
+          if (results && results.length > 0) {
+            ddl = results.map((r: any) => {
+              let s = String(r.sql || '').trim();
+              if (!s.endsWith(';')) s += ';';
+              return s;
+            }).join('\n\n');
+          }
+        } catch (e: any) {
+          console.error('Error reading schema from D1:', e);
+        }
+      }
+
+      if (!ddl) {
+        ddl = `CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'writer',
+  name TEXT NOT NULL,
+  avatar_url TEXT,
+  bio TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  content TEXT NOT NULL,
+  excerpt TEXT,
+  cover_image TEXT,
+  author_id INTEGER,
+  author_name TEXT,
+  author_avatar TEXT,
+  category TEXT,
+  tags TEXT,
+  meta_title TEXT,
+  meta_description TEXT,
+  status TEXT DEFAULT 'published',
+  views INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS configs (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  description TEXT,
+  icon TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS autolinks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  keyword TEXT NOT NULL,
+  url TEXT NOT NULL,
+  rel TEXT DEFAULT 'dofollow',
+  target TEXT DEFAULT '_self',
+  max_replacements INTEGER DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER,
+  post_slug TEXT,
+  user_name TEXT NOT NULL,
+  user_email TEXT,
+  user_avatar TEXT,
+  content TEXT NOT NULL,
+  status TEXT DEFAULT 'approved',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+  ip TEXT PRIMARY KEY,
+  attempts INTEGER DEFAULT 0,
+  last_attempt INTEGER DEFAULT 0
+);`;
+      }
+
+      const generatedAt = new Date().toISOString();
+      const outputSql = `-- ==========================================================
+-- Cloudflare D1 Database Schema Dump (DDL Only)
+-- Generated: ${generatedAt}
+-- Engine: SQLite / Cloudflare D1
+-- ==========================================================
+
+${ddl}
+`;
+
+      return jsonResponse({
+        success: true,
+        schema: outputSql,
+        filename: `d1_schema_${generatedAt.split('T')[0]}.sql`,
+      });
+    }
+
+    // 3. POST /api/database/dump (Schema + Data Dump with selective tables)
+    if (path === '/api/database/dump' && method === 'POST') {
+      const auth = await authenticateRequest(['admin']);
+      if (auth.errorResponse) return auth.errorResponse;
+
+      try {
+        const body = await request.json() as any;
+        const requestedTables: string[] = Array.isArray(body?.tables) ? body.tables : [];
+        const includeSchema = body?.includeSchema !== false;
+        const includeData = body?.includeData !== false;
+        const insertMode = body?.insertMode === 'INSERT INTO' ? 'INSERT INTO' : 'INSERT OR REPLACE INTO';
+        const addDropTable = Boolean(body?.addDropTable);
+        const format = body?.format === 'json' ? 'json' : 'sql';
+
+        const escapeSqlVal = (val: any): string => {
+          if (val === null || val === undefined) return 'NULL';
+          if (typeof val === 'number') return isFinite(val) ? String(val) : 'NULL';
+          if (typeof val === 'boolean') return val ? '1' : '0';
+          if (typeof val === 'object') {
+            return `'${JSON.stringify(val).replace(/'/g, "''")}'`;
+          }
+          return `'${String(val).replace(/'/g, "''")}'`;
+        };
+
+        const targetTables = requestedTables.length > 0
+          ? requestedTables
+          : ['users', 'posts', 'configs', 'categories', 'autolinks', 'comments', 'login_attempts'];
+
+        const jsonData: Record<string, any[]> = {};
+        const sqlChunks: string[] = [];
+        let totalRows = 0;
+
+        const generatedAt = new Date().toISOString();
+        const dateStr = generatedAt.split('T')[0];
+
+        if (format === 'sql') {
+          sqlChunks.push(`-- ==========================================================
+-- Cloudflare D1 Full Database Backup (Schema & Data)
+-- Generated At : ${generatedAt}
+-- Target Tables: ${targetTables.join(', ')}
+-- Engine       : SQLite / Cloudflare D1
+-- ==========================================================
+
+PRAGMA foreign_keys = OFF;
+
+BEGIN TRANSACTION;
+`);
+        }
+
+        for (const tableName of targetTables) {
+          // Verify table name format to prevent SQL injection
+          if (!/^[a-zA-Z0-9_]+$/.test(tableName)) continue;
+
+          let createSql = '';
+          let rows: any[] = [];
+
+          if (env.DB) {
+            try {
+              // 1. Fetch schema
+              const schemaRow: any = await env.DB.prepare(
+                "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ? AND sql IS NOT NULL"
+              ).bind(tableName).first();
+              if (schemaRow && schemaRow.sql) {
+                createSql = String(schemaRow.sql).trim();
+                if (!createSql.endsWith(';')) createSql += ';';
+              }
+
+              // 2. Fetch rows
+              const { results } = await env.DB.prepare(`SELECT * FROM "${tableName}"`).all();
+              if (results) {
+                rows = results;
+              }
+            } catch (err) {
+              console.warn(`Error querying table ${tableName} in D1:`, err);
+            }
+          }
+
+          // Fallback if env.DB had no rows/schema
+          if (!createSql) {
+            if (tableName === 'users') {
+              createSql = `CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'writer',
+  name TEXT NOT NULL,
+  avatar_url TEXT,
+  bio TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`;
+            } else if (tableName === 'posts') {
+              createSql = `CREATE TABLE IF NOT EXISTS posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  content TEXT NOT NULL,
+  excerpt TEXT,
+  cover_image TEXT,
+  author_id INTEGER,
+  author_name TEXT,
+  author_avatar TEXT,
+  category TEXT,
+  tags TEXT,
+  meta_title TEXT,
+  meta_description TEXT,
+  status TEXT DEFAULT 'published',
+  views INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`;
+            } else if (tableName === 'configs') {
+              createSql = `CREATE TABLE IF NOT EXISTS configs (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`;
+            } else if (tableName === 'categories') {
+              createSql = `CREATE TABLE IF NOT EXISTS categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  description TEXT,
+  icon TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`;
+            } else if (tableName === 'autolinks') {
+              createSql = `CREATE TABLE IF NOT EXISTS autolinks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  keyword TEXT NOT NULL,
+  url TEXT NOT NULL,
+  rel TEXT DEFAULT 'dofollow',
+  target TEXT DEFAULT '_self',
+  max_replacements INTEGER DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`;
+            } else if (tableName === 'comments') {
+              createSql = `CREATE TABLE IF NOT EXISTS comments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER,
+  post_slug TEXT,
+  user_name TEXT NOT NULL,
+  user_email TEXT,
+  user_avatar TEXT,
+  content TEXT NOT NULL,
+  status TEXT DEFAULT 'approved',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`;
+            } else if (tableName === 'login_attempts') {
+              createSql = `CREATE TABLE IF NOT EXISTS login_attempts (
+  ip TEXT PRIMARY KEY,
+  attempts INTEGER DEFAULT 0,
+  last_attempt INTEGER DEFAULT 0
+);`;
+            } else {
+              createSql = `CREATE TABLE IF NOT EXISTS "${tableName}" (id INTEGER PRIMARY KEY);`;
+            }
+          }
+
+          jsonData[tableName] = rows;
+          totalRows += rows.length;
+
+          if (format === 'sql') {
+            sqlChunks.push(`\n-- ----------------------------------------------------------`);
+            sqlChunks.push(`-- Table Structure & Data for \`${tableName}\` (${rows.length} rows)`);
+            sqlChunks.push(`-- ----------------------------------------------------------`);
+
+            if (addDropTable) {
+              sqlChunks.push(`DROP TABLE IF EXISTS "${tableName}";`);
+            }
+
+            if (includeSchema && createSql) {
+              sqlChunks.push(createSql);
+            }
+
+            if (includeData && rows.length > 0) {
+              const insertStatements: string[] = [];
+              for (const row of rows) {
+                const cols = Object.keys(row).map((k) => `"${k}"`).join(', ');
+                const vals = Object.values(row).map((v) => escapeSqlVal(v)).join(', ');
+                insertStatements.push(`${insertMode} "${tableName}" (${cols}) VALUES (${vals});`);
+              }
+              sqlChunks.push(insertStatements.join('\n'));
+            }
+          }
+        }
+
+        if (format === 'sql') {
+          sqlChunks.push(`\nCOMMIT;`);
+          sqlChunks.push(`\nPRAGMA foreign_keys = ON;\n`);
+          const fullSql = sqlChunks.join('\n');
+
+          return jsonResponse({
+            success: true,
+            filename: `d1_backup_${targetTables.length === 7 ? 'full' : `${targetTables.length}_tables`}_${dateStr}.sql`,
+            sql: fullSql,
+            stats: {
+              totalTables: targetTables.length,
+              totalRows,
+              sizeBytes: new TextEncoder().encode(fullSql).length,
+            },
+          });
+        } else {
+          return jsonResponse({
+            success: true,
+            filename: `d1_backup_${dateStr}.json`,
+            data: jsonData,
+            stats: {
+              totalTables: targetTables.length,
+              totalRows,
+            },
+          });
+        }
+      } catch (err: any) {
+        console.error('Error generating database dump:', err);
+        return jsonResponse({ error: 'Gagal membuat dump database: ' + err.message }, 500);
+      }
+    }
+
     return jsonResponse({ error: 'Endpoint tidak ditemukan' }, 404);
   } catch (err: any) {
     return jsonResponse({ error: err.message || 'Internal Server Error' }, 500);

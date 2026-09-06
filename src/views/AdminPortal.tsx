@@ -7,7 +7,7 @@ import {
   Upload, Eye, Sparkles, CheckCircle2, RefreshCw, Bold, Italic, Heading2, 
   Heading3, List, ListOrdered, Quote, Image as ImageIcon, Code, UserCheck, 
   ExternalLink, Search, Zap, AlertCircle, Settings, Key, Copy, Check, 
-  LogOut, Globe, Palette, Layout, MessageSquare, Droplet, Users, Award, History, RotateCcw, X, Menu, LayoutGrid
+  LogOut, Globe, Palette, Layout, MessageSquare, Droplet, Users, Award, History, RotateCcw, X, Menu, LayoutGrid, Database
 } from 'lucide-react';
 import { generateSlug } from '../lib/autolink';
 import RichPostEditor from '../components/RichPostEditor';
@@ -15,6 +15,7 @@ import NavigationBuilder, { PRESET_NAV_ITEMS } from '../components/NavigationBui
 import { sanitizeAndOptimizeImageUrl } from '../lib/imageUtils';
 import { getAuthHeaders } from '../lib/auth';
 import TurnstileWidget from '../components/TurnstileWidget';
+import DatabaseBackupManager from '../components/DatabaseBackupManager';
 
 interface AdminPortalProps {
   currentUser: User | null;
@@ -72,8 +73,8 @@ export default function AdminPortal({
     }
   }, []);
 
-  // Admin tabs: 'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security' | 'comments'
-  const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security' | 'comments'>('posts');
+  // Admin tabs: 'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security' | 'comments' | 'database'
+  const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'writers' | 'autolinks' | 'sitemap' | 'config' | 'security' | 'comments' | 'database'>('posts');
 
   // Comments & Cusdis Webhook State
   const [comments, setComments] = useState<any[]>([]);
@@ -1914,6 +1915,18 @@ export default function AdminPortal({
             >
               <Settings className="w-4 h-4" />
               <span>⚙️ Configs Situs</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('database')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
+                activeTab === 'database'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Database className="w-4 h-4 text-indigo-400" />
+              <span>🗄️ Database & Schema D1</span>
             </button>
           </>
         )}
@@ -6193,6 +6206,13 @@ export default function AdminPortal({
             })()}
           </div>
         </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 9: DATABASE & SCHEMA D1 BACKUP MANAGER (ROLE ADMIN ONLY) */}
+      {/* ------------------------------------------------------------- */}
+      {activeTab === 'database' && currentUser?.role === 'admin' && (
+        <DatabaseBackupManager siteConfig={siteConfig} />
       )}
 
     </div>

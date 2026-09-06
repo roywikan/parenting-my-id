@@ -1044,6 +1044,387 @@ app.post('/api/autolinks/:id/click', (req, res) => {
   res.json({ success: true });
 });
 
+// ==========================================
+// DATABASE BACKUP & SCHEMA EXPORT ENDPOINTS (ADMIN ONLY)
+// ==========================================
+
+// 1. GET /api/database/tables
+app.get('/api/database/tables', requireAuth(['admin']), (req, res) => {
+  try {
+    const configCount = fs.existsSync(path.join(process.cwd(), 'public', 'site_config.json'))
+      ? Object.keys(JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'site_config.json'), 'utf-8'))).length
+      : 20;
+
+    const uniqueCategories = Array.from(new Set(mockPosts.map((p) => p.category).filter(Boolean)));
+
+    const tables = [
+      { name: 'users', rowCount: mockUsers.length, description: 'Akun pengguna, hak akses, peran, dan kredensial' },
+      { name: 'posts', rowCount: mockPosts.length, description: 'Seluruh artikel, konten, SEO meta, dan view count' },
+      { name: 'configs', rowCount: configCount, description: 'Konfigurasi situs dinamis key-value' },
+      { name: 'categories', rowCount: uniqueCategories.length || 6, description: 'Kategori dan taksonomi artikel' },
+      { name: 'autolinks', rowCount: mockAutolinks.length, description: 'Aturan internal auto-linking engine' },
+      { name: 'comments', rowCount: mockComments.length, description: 'Komentar artikel native dan sinkronisasi Cusdis' },
+      { name: 'login_attempts', rowCount: 0, description: 'Pelacakan IP pengamanan anti brute force' },
+    ];
+
+    res.json({
+      success: true,
+      databaseEngine: 'Cloudflare D1 (SQLite)',
+      tables,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Gagal memuat tabel database: ' + err.message });
+  }
+});
+
+// 2. GET /api/database/schema
+app.get('/api/database/schema', requireAuth(['admin']), (req, res) => {
+  try {
+    const ddl = `-- ==========================================================
+-- Cloudflare D1 Database Schema Dump (DDL Only)
+-- Generated: ${new Date().toISOString()}
+-- Engine: SQLite / Cloudflare D1
+-- ==========================================================
+
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'writer',
+  name TEXT NOT NULL,
+  avatar_url TEXT,
+  bio TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  content TEXT NOT NULL,
+  excerpt TEXT,
+  cover_image TEXT,
+  author_id INTEGER,
+  author_name TEXT,
+  author_avatar TEXT,
+  category TEXT,
+  tags TEXT,
+  meta_title TEXT,
+  meta_description TEXT,
+  status TEXT DEFAULT 'published',
+  views INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS configs (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  description TEXT,
+  icon TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS autolinks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  keyword TEXT NOT NULL,
+  url TEXT NOT NULL,
+  rel TEXT DEFAULT 'dofollow',
+  target TEXT DEFAULT '_self',
+  max_replacements INTEGER DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER,
+  post_slug TEXT,
+  user_name TEXT NOT NULL,
+  user_email TEXT,
+  user_avatar TEXT,
+  content TEXT NOT NULL,
+  status TEXT DEFAULT 'approved',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+  ip TEXT PRIMARY KEY,
+  attempts INTEGER DEFAULT 0,
+  last_attempt INTEGER DEFAULT 0
+);
+`;
+
+    res.json({
+      success: true,
+      schema: ddl,
+      filename: `d1_schema_${new Date().toISOString().split('T')[0]}.sql`,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Gagal memuat skema database: ' + err.message });
+  }
+});
+
+// 3. POST /api/database/dump
+app.post('/api/database/dump', requireAuth(['admin']), (req, res) => {
+  try {
+    const { tables: reqTables, includeSchema = true, includeData = true, insertMode = 'INSERT OR REPLACE INTO', addDropTable = false, format = 'sql' } = req.body || {};
+
+    const availableTables = ['users', 'posts', 'configs', 'categories', 'autolinks', 'comments', 'login_attempts'];
+    const targetTables = Array.isArray(reqTables) && reqTables.length > 0 ? reqTables : availableTables;
+
+    const escapeSqlVal = (val: any): string => {
+      if (val === null || val === undefined) return 'NULL';
+      if (typeof val === 'number') return isFinite(val) ? String(val) : 'NULL';
+      if (typeof val === 'boolean') return val ? '1' : '0';
+      if (typeof val === 'object') {
+        return `'${JSON.stringify(val).replace(/'/g, "''")}'`;
+      }
+      return `'${String(val).replace(/'/g, "''")}'`;
+    };
+
+    const tableSchemas: Record<string, string> = {
+      users: `CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'writer',
+  name TEXT NOT NULL,
+  avatar_url TEXT,
+  bio TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`,
+      posts: `CREATE TABLE IF NOT EXISTS posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  content TEXT NOT NULL,
+  excerpt TEXT,
+  cover_image TEXT,
+  author_id INTEGER,
+  author_name TEXT,
+  author_avatar TEXT,
+  category TEXT,
+  tags TEXT,
+  meta_title TEXT,
+  meta_description TEXT,
+  status TEXT DEFAULT 'published',
+  views INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`,
+      configs: `CREATE TABLE IF NOT EXISTS configs (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`,
+      categories: `CREATE TABLE IF NOT EXISTS categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  description TEXT,
+  icon TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`,
+      autolinks: `CREATE TABLE IF NOT EXISTS autolinks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  keyword TEXT NOT NULL,
+  url TEXT NOT NULL,
+  rel TEXT DEFAULT 'dofollow',
+  target TEXT DEFAULT '_self',
+  max_replacements INTEGER DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`,
+      comments: `CREATE TABLE IF NOT EXISTS comments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER,
+  post_slug TEXT,
+  user_name TEXT NOT NULL,
+  user_email TEXT,
+  user_avatar TEXT,
+  content TEXT NOT NULL,
+  status TEXT DEFAULT 'approved',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`,
+      login_attempts: `CREATE TABLE IF NOT EXISTS login_attempts (
+  ip TEXT PRIMARY KEY,
+  attempts INTEGER DEFAULT 0,
+  last_attempt INTEGER DEFAULT 0
+);`,
+    };
+
+    // Prepare table data rows
+    let configRows: any[] = [];
+    try {
+      const configPath = path.join(process.cwd(), 'public', 'site_config.json');
+      if (fs.existsSync(configPath)) {
+        const parsed = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+        configRows = Object.entries(parsed).map(([key, val]) => ({
+          key,
+          value: typeof val === 'object' ? JSON.stringify(val) : String(val),
+          updated_at: new Date().toISOString(),
+        }));
+      }
+    } catch {}
+
+    const categoriesRows = Array.from(new Set(mockPosts.map((p) => p.category).filter(Boolean))).map((cat, idx) => ({
+      id: idx + 1,
+      name: cat,
+      slug: String(cat).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      description: `Kategori ${cat}`,
+      icon: 'Tag',
+      created_at: new Date().toISOString(),
+    }));
+
+    const tableData: Record<string, any[]> = {
+      users: mockUsers.map((u: any) => ({
+        id: u.id,
+        email: u.email,
+        password_hash: u.password_hash || u.password || '$2a$10$defaultMockHashPlaceholder',
+        role: u.role,
+        name: u.name,
+        avatar_url: u.avatar || '',
+        bio: u.bio || '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })),
+      posts: mockPosts.map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        slug: p.slug,
+        content: p.content,
+        excerpt: p.excerpt || '',
+        cover_image: p.cover_image || '',
+        author_id: p.author_id || 1,
+        author_name: p.author_name || 'Admin',
+        author_avatar: p.author_avatar || '',
+        category: p.category || 'Umum',
+        tags: Array.isArray(p.tags) ? p.tags.join(', ') : String(p.tags || ''),
+        meta_title: p.meta_title || p.title,
+        meta_description: p.meta_description || p.excerpt || '',
+        status: p.status || 'published',
+        views: p.views || 0,
+        created_at: p.created_at || new Date().toISOString(),
+        updated_at: p.updated_at || new Date().toISOString(),
+      })),
+      configs: configRows,
+      categories: categoriesRows,
+      autolinks: mockAutolinks.map((a: any) => ({
+        id: a.id,
+        keyword: a.keyword,
+        url: a.targetUrl,
+        rel: 'dofollow',
+        target: '_self',
+        max_replacements: 1,
+        created_at: a.createdAt || new Date().toISOString(),
+      })),
+      comments: mockComments.map((c: any) => ({
+        id: c.id,
+        post_id: c.post_id || null,
+        post_slug: c.post_slug || '',
+        user_name: c.user_name || 'Anonim',
+        user_email: c.user_email || '',
+        user_avatar: c.user_avatar || '',
+        content: c.content || '',
+        status: c.status || 'approved',
+        created_at: c.created_at || new Date().toISOString(),
+      })),
+      login_attempts: [],
+    };
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    const generatedAt = new Date().toISOString();
+
+    if (format === 'json') {
+      const exportJson: Record<string, any[]> = {};
+      let totalRows = 0;
+      for (const t of targetTables) {
+        exportJson[t] = tableData[t] || [];
+        totalRows += (tableData[t] || []).length;
+      }
+      return res.json({
+        success: true,
+        filename: `d1_backup_${targetTables.length === availableTables.length ? 'full' : `${targetTables.length}_tables`}_${dateStr}.json`,
+        data: exportJson,
+        stats: {
+          totalTables: targetTables.length,
+          totalRows,
+        },
+      });
+    }
+
+    // SQL format
+    const sqlChunks: string[] = [];
+    sqlChunks.push(`-- ==========================================================
+-- Cloudflare D1 Full Database Backup (Schema & Data)
+-- Generated At : ${generatedAt}
+-- Target Tables: ${targetTables.join(', ')}
+-- Engine       : SQLite / Cloudflare D1
+-- ==========================================================
+
+PRAGMA foreign_keys = OFF;
+
+BEGIN TRANSACTION;
+`);
+
+    let totalRows = 0;
+
+    for (const tableName of targetTables) {
+      const rows = tableData[tableName] || [];
+      const createSql = tableSchemas[tableName];
+      totalRows += rows.length;
+
+      sqlChunks.push(`\n-- ----------------------------------------------------------`);
+      sqlChunks.push(`-- Table Structure & Data for \`${tableName}\` (${rows.length} rows)`);
+      sqlChunks.push(`-- ----------------------------------------------------------`);
+
+      if (addDropTable) {
+        sqlChunks.push(`DROP TABLE IF EXISTS "${tableName}";`);
+      }
+
+      if (includeSchema && createSql) {
+        sqlChunks.push(createSql);
+      }
+
+      if (includeData && rows.length > 0) {
+        const inserts: string[] = [];
+        for (const row of rows) {
+          const cols = Object.keys(row).map((k) => `"${k}"`).join(', ');
+          const vals = Object.values(row).map((v) => escapeSqlVal(v)).join(', ');
+          inserts.push(`${insertMode} "${tableName}" (${cols}) VALUES (${vals});`);
+        }
+        sqlChunks.push(inserts.join('\n'));
+      }
+    }
+
+    sqlChunks.push(`\nCOMMIT;`);
+    sqlChunks.push(`\nPRAGMA foreign_keys = ON;\n`);
+
+    const fullSql = sqlChunks.join('\n');
+
+    res.json({
+      success: true,
+      filename: `d1_backup_${targetTables.length === availableTables.length ? 'full' : `${targetTables.length}_tables`}_${dateStr}.sql`,
+      sql: fullSql,
+      stats: {
+        totalTables: targetTables.length,
+        totalRows,
+        sizeBytes: Buffer.byteLength(fullSql, 'utf-8'),
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Gagal membuat dump database: ' + err.message });
+  }
+});
+
 // Helper to verify Cloudflare Turnstile Captcha
 const verifyTurnstileToken = async (token?: string): Promise<boolean> => {
   const secretKey = process.env.TURNSTILE_SECRET_KEY || '1x00000000000000000000000000000000UNIFIED';
