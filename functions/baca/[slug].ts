@@ -485,7 +485,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     year: 'numeric',
   });
 
-  const pageTitle = `${post.metaTitle || post.title} | Parenting.my.id`;
+  const siteName = siteConfig?.site_name || env.SITE_NAME || 'Blog Engine';
+  const pageTitle = `${post.metaTitle || post.title} | ${siteName}`;
   const pageDesc = post.metaDescription || post.excerpt;
   const canonicalUrl = `${siteUrl}/baca/${post.slug}`;
   const tagsList = post.tags ? post.tags.split(',').map((t) => t.trim()) : ['parenting', 'anak'];
@@ -523,7 +524,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     },
     'publisher': {
       '@type': 'Organization',
-      'name': 'Parenting.my.id',
+      'name': siteName,
       'url': siteUrl,
       'logo': {
         '@type': 'ImageObject',
@@ -672,10 +673,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
     <link rel="canonical" href="${canonicalUrl}" />
-    <link rel="preload" as="image" href="${heroImageSrc}" ${heroSrcSet ? `imagesrcset="${heroSrcSet}" imagesizes="(max-width: 1024px) 100vw, 700px"` : ''} fetchpriority="high" />
+    ${post.featuredImage ? `<link rel="preload" as="image" href="${heroImageSrc}" ${heroSrcSet ? `imagesrcset="${heroSrcSet}" imagesizes="(max-width: 1024px) 100vw, 700px"` : ''} fetchpriority="high" />` : ''}
 
     <!-- OpenGraph Meta Tags -->
-    <meta property="og:site_name" content="Parenting.my.id" />
+    <meta property="og:site_name" content="${escapeHtml(siteName)}" />
     <meta property="og:title" content="${escapeHtml(pageTitle)}" />
     <meta property="og:description" content="${escapeHtml(pageDesc)}" />
     <meta property="og:image" content="${ogImageSrc}" />
@@ -695,9 +696,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <script type="application/ld+json">${JSON.stringify(schemaBreadcrumb)}</script>
   `;
 
-  // Replace <title> and inject SEO tags into <head>
-  let finalHtml = htmlTemplate;
+  // Strip any pre-existing static image preload from base template to avoid duplicate/unused preloads
+  let finalHtml = htmlTemplate.replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '');
 
+  // Replace <title> and inject SEO tags into <head>
   if (finalHtml.includes('<title>')) {
     finalHtml = finalHtml.replace(/<title>.*?<\/title>/i, seoHeadTags);
   } else {

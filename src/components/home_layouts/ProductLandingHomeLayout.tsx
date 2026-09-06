@@ -116,6 +116,10 @@ export default function ProductLandingHomeLayout({ posts, onSelectPost, siteConf
               <img
                 src="https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&h=450&fit=crop&q=80"
                 alt="Product Mockup"
+                width={600}
+                height={450}
+                fetchPriority="high"
+                decoding="async"
                 className="w-full h-64 sm:h-72 rounded-2xl object-cover"
               />
               <div className="pt-3 text-center text-xs font-bold text-white">

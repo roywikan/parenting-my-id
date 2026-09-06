@@ -25,19 +25,21 @@ export default function SEOHelper({
   description,
   image,
   ogImage,
-  canonicalUrl = 'https://parenting.my.id',
+  canonicalUrl,
   type = 'article',
-  authorName = 'Tim Redaksi Parenting.my.id',
-  authorRole = 'Editor & Pakar Pengasuhan',
+  authorName = 'Tim Redaksi',
+  authorRole = 'Editor & Kontributor',
   datePublished,
   dateModified,
-  category = 'Parenting',
+  category = 'Umum',
   keywords = [],
   contentMarkdown = '',
-  siteName = 'Parenting.my.id',
-  siteLogo = 'https://parenting.my.id/favicon-32x32.png',
+  siteName = 'Blog Engine',
+  siteLogo = '/favicon-32x32.png',
   articleData,
 }: SEOProps) {
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+  const effectiveCanonicalUrl = canonicalUrl || (typeof window !== 'undefined' ? window.location.href : '');
   const finalImage = ogImage || image || 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=80';
   useEffect(() => {
     // 1. Document Title
@@ -100,7 +102,7 @@ export default function SEOHelper({
       canonicalEl.setAttribute('rel', 'canonical');
       document.head.appendChild(canonicalEl);
     }
-    canonicalEl.setAttribute('href', canonicalUrl);
+    canonicalEl.setAttribute('href', effectiveCanonicalUrl);
 
     let hreflangEl = document.querySelector('link[rel="alternate"][hreflang="id-ID"]');
     if (!hreflangEl) {
@@ -109,26 +111,13 @@ export default function SEOHelper({
       hreflangEl.setAttribute('hreflang', 'id-ID');
       document.head.appendChild(hreflangEl);
     }
-    hreflangEl.setAttribute('href', canonicalUrl);
+    hreflangEl.setAttribute('href', effectiveCanonicalUrl);
 
-    if (image) {
-      const heroImageSrc = optimizeUnsplashUrl(image, 700, 55, 'webp');
-      const heroSrcSet = getUnsplashSrcSet(image, [400, 700], 55, 'webp');
-
-      let preloadEl = document.querySelector('link[rel="preload"][as="image"]');
-      if (!preloadEl) {
-        preloadEl = document.createElement('link');
-        preloadEl.setAttribute('rel', 'preload');
-        preloadEl.setAttribute('as', 'image');
-        preloadEl.setAttribute('fetchpriority', 'high');
-        document.head.appendChild(preloadEl);
-      }
-      preloadEl.setAttribute('href', heroImageSrc);
-      if (heroSrcSet) {
-        preloadEl.setAttribute('imagesrcset', heroSrcSet);
-        preloadEl.setAttribute('imagesizes', '(max-width: 1024px) 100vw, 700px');
-      }
-    }
+    // In client-side SPA, hero/featured images are rendered directly with fetchPriority="high".
+    // Remove any stale or leftover <link rel="preload" as="image"> in document.head
+    // to prevent Chrome's "preloaded using link preload but not used within a few seconds" DevTools warning.
+    const stalePreloads = document.querySelectorAll('link[rel="preload"][as="image"]');
+    stalePreloads.forEach((el) => el.remove());
 
     // 6. JSON-LD Structured Data Schema Injection
     const injectJsonLd = (id: string, jsonObj: object) => {
@@ -183,19 +172,19 @@ export default function SEOHelper({
           '@type': 'ListItem',
           'position': 1,
           'name': 'Beranda',
-          'item': 'https://parenting.my.id',
+          'item': currentOrigin || '/',
         },
         {
           '@type': 'ListItem',
           'position': 2,
           'name': category,
-          'item': `https://parenting.my.id/#${category.toLowerCase()}`,
+          'item': `${currentOrigin}/#${encodeURIComponent(category.toLowerCase())}`,
         },
         {
           '@type': 'ListItem',
           'position': 3,
           'name': title,
-          'item': canonicalUrl,
+          'item': effectiveCanonicalUrl,
         },
       ],
     };

@@ -169,7 +169,9 @@ export default function DefaultHomeLayout({
                     <div className="text-xs font-bold text-slate-900 dark:text-white">
                       {featuredPost.authorName}
                     </div>
-                    <div className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold">Tim Pakar Parenting</div>
+                    <div className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold">
+                      {siteConfig?.site_name ? `Tim Redaksi ${siteConfig.site_name}` : 'Tim Redaksi'}
+                    </div>
                   </div>
                 </div>
 

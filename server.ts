@@ -1611,7 +1611,7 @@ app.get('/baca/:slug', (req, res, next) => {
       <title>${pageTitle}</title>
       <meta name="description" content="${pageDesc}" />
       <link rel="canonical" href="${canonicalUrl}" />
-      <link rel="preload" as="image" href="${heroImageSrc}" ${heroSrcSet ? `imagesrcset="${heroSrcSet}" imagesizes="(max-width: 1024px) 100vw, 700px"` : ''} fetchpriority="high" />
+      ${post.featuredImage ? `<link rel="preload" as="image" href="${heroImageSrc}" ${heroSrcSet ? `imagesrcset="${heroSrcSet}" imagesizes="(max-width: 1024px) 100vw, 700px"` : ''} fetchpriority="high" />` : ''}
       <meta property="og:title" content="${pageTitle}" />
       <meta property="og:description" content="${pageDesc}" />
       <meta property="og:image" content="${heroImageSrc}" />
@@ -1627,6 +1627,7 @@ app.get('/baca/:slug', (req, res, next) => {
     }
 
     let htmlTemplate = fs.readFileSync(htmlFilePath, 'utf-8');
+    htmlTemplate = htmlTemplate.replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '');
     htmlTemplate = htmlTemplate.replace(/<title>.*?<\/title>/i, seoTags);
     htmlTemplate = htmlTemplate.replace(/<div id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
 
