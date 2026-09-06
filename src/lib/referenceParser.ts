@@ -20,6 +20,38 @@ export interface ParsedReference {
 }
 
 /**
+ * Unescapes common HTML entities to prevent double-escaping when Markdown
+ * has already been partially processed by marked (e.g. &quot; -> ", &amp; -> &).
+ */
+export function unescapeHtmlEntities(str: string): string {
+  return str
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * Cleans potential URL/DOI string by unwrapping any autolink <a> tags created
+ * by Markdown parsers (GFM) and removing trailing encoded or unencoded brackets (%5D, ]).
+ */
+export function cleanUrlOrDoi(input: string): string {
+  let clean = input.trim();
+  // If wrapped in <a href="...">...</a> by marked autolink
+  const aMatch = clean.match(/<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/i);
+  if (aMatch) {
+    clean = aMatch[1] || aMatch[2];
+  }
+  // Remove any residual HTML tags
+  clean = clean.replace(/<[^>]+>/g, '').trim();
+  // Strip trailing encoded or raw brackets/parentheses (%5D, %5d, ], ))
+  clean = clean.replace(/(?:%5D|%5d|\]|\))+$/gi, '').trim();
+  return clean;
+}
+
+/**
  * Splits reference string by commas while respecting quotes.
  * e.g. 'Prof. Suparman, "Pola Makan, Gizi & Tumbuh Kembang", Jurnal, 2026'
  */
@@ -59,7 +91,7 @@ export function splitRespectingQuotes(input: string): string[] {
  * Matches: http://, https://, 10.xxx, doi:xxx, doi.org/xxx
  */
 export function detectUrlOrDoi(input: string): { isUrl: boolean; canonicalUrl?: string; displayUrl?: string } {
-  const clean = input.trim();
+  const clean = cleanUrlOrDoi(input);
   if (!clean) return { isUrl: false };
 
   // 1. Standard http:// or https://
@@ -107,12 +139,14 @@ export function detectUrlOrDoi(input: string): { isUrl: boolean; canonicalUrl?: 
  * Parses the interior content of a reference tag.
  */
 export function parseSingleReference(rawContent: string, index: number): ParsedReference {
-  const elements = splitRespectingQuotes(rawContent);
+  // Decode any HTML entities (&quot;, &amp;, etc.) so quotes and ampersands can be processed cleanly
+  const unescaped = unescapeHtmlEntities(rawContent);
+  const elements = splitRespectingQuotes(unescaped);
 
   if (elements.length === 0) {
     return {
       index,
-      citationText: rawContent.trim(),
+      citationText: unescaped.replace(/<[^>]+>/g, '').trim(),
     };
   }
 
@@ -121,8 +155,8 @@ export function parseSingleReference(rawContent: string, index: number): ParsedR
   const urlCheck = detectUrlOrDoi(lastElement);
 
   if (urlCheck.isUrl && urlCheck.canonicalUrl) {
-    const citationParts = elements.slice(0, -1);
-    const citationText = citationParts.length > 0 ? citationParts.join(', ') : lastElement;
+    const citationParts = elements.slice(0, -1).map(part => part.replace(/<[^>]+>/g, '').trim());
+    const citationText = citationParts.length > 0 ? citationParts.join(', ') : cleanUrlOrDoi(lastElement);
     return {
       index,
       citationText,
@@ -132,9 +166,10 @@ export function parseSingleReference(rawContent: string, index: number): ParsedR
   }
 
   // No URL provided: all elements constitute the citation text
+  const cleanedParts = elements.map(part => part.replace(/<[^>]+>/g, '').trim());
   return {
     index,
-    citationText: elements.join(', '),
+    citationText: cleanedParts.join(', '),
   };
 }
 
@@ -151,15 +186,20 @@ function escapeHtml(str: string): string {
 }
 
 /**
- * Parses article HTML, replaces [ref:...], [referensi:...], [jurnal:...] with
+ * Parses article HTML or Markdown, replaces [ref:...], [referensi:...], [jurnal:...] with
  * superscript footnote links [1], and appends a bibliography list at the bottom.
+ *
+ * Robust against marked GFM autolink issues (e.g. trailing `%5D` and `]</a>`).
  */
 export function parseAndRenderReferences(rawHtml: string): string {
   const refs: ParsedReference[] = [];
   let refIndex = 1;
 
-  // Replace tags inline with superscript footnotes
-  let parsedHtml = rawHtml.replace(/\[(?:ref|referensi|jurnal):\s*([^\]]+)\]/gi, (_match, refContent) => {
+  // Replace tags inline with superscript footnotes.
+  // Note: (?:<\/a>)? handles case where marked GFM autolink placed </a> after the closing bracket.
+  const regex = /\[(?:ref|referensi|jurnal):\s*([\s\S]*?)\](?:<\/a>)?/gi;
+
+  let parsedHtml = rawHtml.replace(regex, (_match, refContent) => {
     const currentIndex = refIndex++;
     const parsed = parseSingleReference(refContent, currentIndex);
     refs.push(parsed);
@@ -174,35 +214,14 @@ export function parseAndRenderReferences(rawHtml: string): string {
   }
 
   // Generate reference list (Bibliography)
-  const refListHtml = `
-    <div class="mt-12 pt-6 border-t border-slate-200 dark:border-slate-800" id="daftar-referensi">
-      <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
-        <span class="text-rose-600">📚</span> Referensi Ilmiah &amp; Jurnal
-      </h3>
-      <ol class="space-y-2 text-xs text-slate-600 dark:text-slate-400 list-decimal pl-5">
-        ${refs.map((ref) => {
-          const escapedCitation = escapeHtml(ref.citationText);
-          const hasUrl = Boolean(ref.url);
-          const escapedUrl = ref.url ? escapeHtml(ref.url) : '';
-          const escapedDisplayUrl = ref.displayUrl ? escapeHtml(ref.displayUrl) : escapedUrl;
+  const refListHtml = `<div class="mt-12 pt-6 border-t border-slate-200 dark:border-slate-800" id="daftar-referensi"><h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3"><span class="text-rose-600">📚</span> Referensi Ilmiah &amp; Jurnal</h3><ol class="space-y-2 text-xs text-slate-600 dark:text-slate-400 list-decimal pl-5">${refs.map((ref) => {
+    const escapedCitation = escapeHtml(ref.citationText);
+    const hasUrl = Boolean(ref.url);
+    const escapedUrl = ref.url ? escapeHtml(ref.url) : '';
+    const escapedDisplayUrl = ref.displayUrl ? escapeHtml(ref.displayUrl) : escapedUrl;
 
-          return `
-            <li id="ref-item-${ref.index}" class="pl-1 leading-relaxed">
-              <span class="font-medium text-slate-800 dark:text-slate-200">${escapedCitation}</span>
-              ${hasUrl ? `
-                <span class="text-slate-400 dark:text-slate-600 mx-1">—</span>
-                <a href="${escapedUrl}" target="_blank" rel="noopener noreferrer" class="text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center gap-0.5 font-semibold">
-                  <span>${escapedDisplayUrl}</span>
-                  <svg class="w-3 h-3 inline-block ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                </a>
-              ` : ''}
-              <a href="#ref-back-${ref.index}" class="text-rose-500 hover:text-rose-700 ml-1.5 font-bold transition-colors" title="Kembali ke teks">↩</a>
-            </li>
-          `;
-        }).join('')}
-      </ol>
-    </div>
-  `;
+    return `<li id="ref-item-${ref.index}" class="pl-1 leading-relaxed"><span class="font-medium text-slate-800 dark:text-slate-200">${escapedCitation}</span>${hasUrl ? ` <span class="text-slate-400 dark:text-slate-600 mx-1">—</span> <a href="${escapedUrl}" target="_blank" rel="noopener noreferrer" class="text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center gap-0.5 font-semibold"><span>${escapedDisplayUrl}</span><svg class="w-3 h-3 inline-block ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>` : ''} <a href="#ref-back-${ref.index}" class="text-rose-500 hover:text-rose-700 ml-1.5 font-bold transition-colors" title="Kembali ke teks">↩</a></li>`;
+  }).join('')}</ol></div>`;
 
   return parsedHtml + refListHtml;
 }
