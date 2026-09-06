@@ -11,6 +11,12 @@ export default function TurnstileWidget({ onVerify, onExpire, onError, siteKey }
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
 
+  // Keep latest callbacks in ref to avoid re-triggering effect on every parent re-render
+  const callbacksRef = useRef({ onVerify, onExpire, onError });
+  useEffect(() => {
+    callbacksRef.current = { onVerify, onExpire, onError };
+  });
+
   // Default Turnstile sitekey for local development & testing (Always Passes)
   const effectiveSiteKey = siteKey || '1x00000000000000000000AA';
 
@@ -18,7 +24,7 @@ export default function TurnstileWidget({ onVerify, onExpire, onError, siteKey }
     let active = true;
     let timer: any = null;
     let retries = 0;
-    const MAX_RETRIES = 12; // ~3.6s wait time
+    const MAX_RETRIES = 15; // ~4.5s wait time
 
     const renderWidget = () => {
       if (!containerRef.current || !active) return;
@@ -27,7 +33,9 @@ export default function TurnstileWidget({ onVerify, onExpire, onError, siteKey }
       if (!turnstile) {
         retries++;
         if (retries > MAX_RETRIES) {
-          if (onError) onError('Gagal memuat script Turnstile dari Cloudflare.');
+          if (callbacksRef.current.onError) {
+            callbacksRef.current.onError('Gagal memuat script Turnstile dari Cloudflare.');
+          }
           return;
         }
         // Turnstile script not loaded yet, retry in 300ms
@@ -38,25 +46,43 @@ export default function TurnstileWidget({ onVerify, onExpire, onError, siteKey }
       try {
         // Reset any existing widget in this container before rendering
         if (widgetIdRef.current) {
-          turnstile.remove(widgetIdRef.current);
+          const oldId = widgetIdRef.current;
           widgetIdRef.current = null;
+          try {
+            turnstile.remove(oldId);
+          } catch {
+            // Ignore removal errors
+          }
+        }
+
+        // Clean container DOM if any stale elements remain
+        if (containerRef.current) {
+          containerRef.current.innerHTML = '';
         }
 
         widgetIdRef.current = turnstile.render(containerRef.current, {
           sitekey: effectiveSiteKey,
           callback: (token: string) => {
-            if (active) onVerify(token);
+            if (active && callbacksRef.current.onVerify) {
+              callbacksRef.current.onVerify(token);
+            }
           },
           'expired-callback': () => {
-            if (active && onExpire) onExpire();
+            if (active && callbacksRef.current.onExpire) {
+              callbacksRef.current.onExpire();
+            }
           },
           'error-callback': () => {
-            if (active && onError) onError('Verifikasi Turnstile mengalami kegagalan.');
+            if (active && callbacksRef.current.onError) {
+              callbacksRef.current.onError('Verifikasi Turnstile mengalami kegagalan.');
+            }
           },
         });
       } catch (err: any) {
         console.error('Error rendering Cloudflare Turnstile:', err);
-        if (onError) onError(err?.message || 'Gagal memproses widget Turnstile.');
+        if (callbacksRef.current.onError) {
+          callbacksRef.current.onError(err?.message || 'Gagal memproses widget Turnstile.');
+        }
       }
     };
 
@@ -67,15 +93,18 @@ export default function TurnstileWidget({ onVerify, onExpire, onError, siteKey }
       if (timer) clearTimeout(timer);
       
       const turnstile = (window as any).turnstile;
-      if (turnstile && widgetIdRef.current) {
+      const currentWidgetId = widgetIdRef.current;
+      widgetIdRef.current = null;
+
+      if (turnstile && currentWidgetId) {
         try {
-          turnstile.remove(widgetIdRef.current);
-        } catch (e) {
+          turnstile.remove(currentWidgetId);
+        } catch {
           // Ignore removal errors on unmount
         }
       }
     };
-  }, [effectiveSiteKey, onVerify, onExpire, onError]);
+  }, [effectiveSiteKey]);
 
   return (
     <div className="flex justify-center my-2">
