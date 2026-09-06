@@ -41,12 +41,30 @@ const INITIAL_POSTS = [
 
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { env } = context;
-  const siteUrl = env.SITE_URL || 'https://parenting.my.id';
+  const requestUrl = new URL(context.request.url);
+  const siteUrl = (env.SITE_URL || requestUrl.origin).replace(/\/$/, '');
 
+  let siteName = requestUrl.hostname.replace('www.', '') || 'Blog Engine';
+  let siteDescription = 'Portal berita & informasi terpercaya.';
   let posts = INITIAL_POSTS;
 
   if (env.DB) {
     try {
+      // Fetch site config
+      const configRes = await env.DB.prepare("SELECT key, value FROM configs WHERE key IN ('site_name', 'site_description', 'seo_meta_title', 'seo_meta_description')").all();
+      const configMap: Record<string, string> = {};
+      if (configRes && configRes.results) {
+        for (const row of configRes.results) {
+          try {
+            configMap[row.key] = JSON.parse(row.value);
+          } catch {
+            configMap[row.key] = row.value;
+          }
+        }
+      }
+      siteName = configMap.site_name || configMap.seo_meta_title || siteName;
+      siteDescription = configMap.site_description || configMap.seo_meta_description || siteDescription;
+
       const { results } = await env.DB.prepare(
         "SELECT title, slug, excerpt, created_at as createdAt FROM posts WHERE status = 'published' ORDER BY id DESC"
       ).all();
@@ -59,7 +77,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }));
       }
     } catch (e) {
-      console.error('Error fetching posts for RSS feed:', e);
+      console.error('Error fetching data for RSS feed:', e);
     }
   }
 
@@ -82,9 +100,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
   <channel>
-    <title>Parenting.my.id - Edukasi &amp; Pola Asuh Anak</title>
+    <title>${escapeXml(siteName)}</title>
     <link>${escapeXml(siteUrl)}</link>
-    <description>Portal berita &amp; informasi parenting terpercaya di Indonesia.</description>
+    <description>${escapeXml(siteDescription)}</description>
     <language>id-id</language>
     ${items}
   </channel>

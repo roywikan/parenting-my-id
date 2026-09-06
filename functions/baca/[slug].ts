@@ -350,7 +350,7 @@ function applyAutoLinks(htmlContent: string, autolinks: AutoLink[]): string {
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env, params } = context;
   const url = new URL(request.url);
-  const siteUrl = env.SITE_URL || 'https://parenting.my.id';
+  const siteUrl = (env.SITE_URL || url.origin).replace(/\/$/, '');
 
   const rawSlug = params.slug;
   const slug = Array.isArray(rawSlug) ? rawSlug.join('/') : String(rawSlug || '');
@@ -424,6 +424,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     }
   }
 
+  const siteName = siteConfig?.site_name || env.SITE_NAME || 'Blog Engine';
+
   // Fallback to initial seed posts if not in DB
   if (!post) {
     post = INITIAL_POSTS.find((p) => p.slug === slug) || null;
@@ -436,7 +438,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     htmlTemplate = await assetRes.text();
   } catch (e) {
     console.error('Failed to fetch ASSETS in Cloudflare Pages Function:', e);
-    htmlTemplate = `<!doctype html><html lang="id"><head><meta charset="UTF-8"><title>Parenting.my.id</title></head><body><div id="root"></div></body></html>`;
+    htmlTemplate = `<!doctype html><html lang="id"><head><meta charset="UTF-8"><title>${siteName}</title></head><body><div id="root"></div></body></html>`;
   }
 
   // IF POST NOT FOUND (404 Page)
@@ -446,14 +448,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         <div class="text-center max-w-md bg-white p-8 rounded-3xl shadow-lg border border-slate-200">
           <div class="text-5xl mb-4">🔍</div>
           <h1 class="text-2xl font-black text-slate-900 mb-2">Artikel Tidak Ditemukan</h1>
-          <p class="text-sm text-slate-600 mb-6">Maaf, artikel parenting yang Anda cari tidak tersedia atau telah dipindahkan.</p>
+          <p class="text-sm text-slate-600 mb-6">Maaf, artikel yang Anda cari tidak tersedia atau telah dipindahkan.</p>
           <a href="/" class="inline-block px-6 py-3 rounded-2xl bg-rose-600 text-white font-bold text-sm hover:bg-rose-700 transition-colors">Kembali ke Beranda Utama</a>
         </div>
       </div>
     `;
 
     const rendered404 = htmlTemplate
-      .replace(/<title>.*?<\/title>/i, `<title>Artikel Tidak Ditemukan (404) | Parenting.my.id</title>`)
+      .replace(/<title>.*?<\/title>/i, `<title>Artikel Tidak Ditemukan (404) | ${siteName}</title>`)
       .replace(/<div id="root"><\/div>/i, `<div id="root">${notFoundHtml}</div>`);
 
     return new Response(rendered404, {
@@ -485,7 +487,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     year: 'numeric',
   });
 
-  const siteName = siteConfig?.site_name || env.SITE_NAME || 'Blog Engine';
   const pageTitle = `${post.metaTitle || post.title} | ${siteName}`;
   const pageDesc = post.metaDescription || post.excerpt;
   const canonicalUrl = `${siteUrl}/baca/${post.slug}`;
@@ -574,7 +575,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <a href="/" class="flex items-center gap-2 text-rose-600 font-black text-xl tracking-tight">
             <span class="bg-rose-600 text-white p-2 rounded-2xl shadow-sm">👶</span>
-            <span>Parenting.my.id</span>
+            <span>${escapeHtml(siteName)}</span>
           </a>
           <nav class="hidden md:flex items-center gap-6 text-xs font-bold text-slate-700">
             <a href="/" class="hover:text-rose-600 transition-colors">Beranda</a>
@@ -649,7 +650,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           <div class="space-y-1">
             <h4 class="font-black text-sm text-slate-900">${escapeHtml(post.authorName || 'Dr. Ratna Sari, M.Psi')}</h4>
             <p class="text-xs text-rose-800 font-extrabold">${post.authorRole === 'admin' ? 'Psikolog Anak & Tim Redaksi Utama' : 'Penulis Konten Kesehatan'}</p>
-            <p class="text-xs text-slate-700 leading-relaxed font-medium">Penulis berdedikasi menyajikan panduan parenting berbasis riset ilmiah dan edukasi praktis untuk keluarga Indonesia.</p>
+            <p class="text-xs text-slate-700 leading-relaxed font-medium">Penulis berdedikasi menyajikan panduan berkualitas tinggi dan edukasi praktis berbasis riset ilmiah.</p>
           </div>
         </div>
       </main>
@@ -657,9 +658,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       <!-- FOOTER -->
       <footer class="bg-slate-900 text-slate-200 py-12 mt-16 border-t border-slate-800">
         <div class="max-w-7xl mx-auto px-4 text-center space-y-3">
-          <p class="font-black text-xl text-white tracking-tight">Parenting.my.id</p>
-          <p class="text-xs text-slate-300 max-w-md mx-auto font-medium">Portal Media Edukasi Pola Asuh, Gizi Balita, & Tumbuh Kembang Anak Terpercaya di Indonesia.</p>
-          <p class="text-[11px] text-slate-300 pt-4 font-medium">© 2026 Parenting.my.id. Seluruh hak cipta dilindungi undang-undang.</p>
+          <p class="font-black text-xl text-white tracking-tight">${escapeHtml(siteName)}</p>
+          <p class="text-xs text-slate-300 max-w-md mx-auto font-medium">${escapeHtml(siteConfig?.site_description || env.SITE_DESCRIPTION || 'Portal berita & informasi terpercaya.')}</p>
+          <p class="text-[11px] text-slate-300 pt-4 font-medium">© 2026 ${escapeHtml(siteName)}. Seluruh hak cipta dilindungi undang-undang.</p>
         </div>
       </footer>
     </div>

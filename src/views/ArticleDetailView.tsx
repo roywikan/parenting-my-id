@@ -288,6 +288,81 @@ export default function ArticleDetailView({
     return () => document.removeEventListener('click', handleAutolinkClick);
   }, [onSelectPost]);
 
+  // Handle Citation/Footnote clicks to scroll beautifully to "Referensi Ilmiah & Jurnal"
+  useEffect(() => {
+    const handleCitationClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('a');
+      if (!target) return;
+
+      const href = target.getAttribute('href');
+      if (href && href.startsWith('#ref-item-')) {
+        e.preventDefault();
+        
+        // Locate "Referensi Ilmiah & Jurnal" header section & target citation item
+        const refSection = document.getElementById('daftar-referensi');
+        const specificItem = document.getElementById(href.substring(1));
+
+        if (refSection) {
+          const headerOffset = 100;
+          const elementPosition = refSection.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+
+          // Highlight the specific citation list item temporarily to guide reader's eye
+          if (specificItem) {
+            // Remove previous highlights
+            document.querySelectorAll('.citation-highlight').forEach(el => {
+              el.classList.remove('citation-highlight', 'bg-rose-100', 'dark:bg-rose-950/50', 'ring-4', 'ring-rose-200/50', 'dark:ring-rose-900/40', 'rounded-lg', 'p-2');
+            });
+
+            // Apply new highlight classes
+            specificItem.classList.add(
+              'citation-highlight',
+              'bg-rose-100',
+              'dark:bg-rose-950/50',
+              'ring-4',
+              'ring-rose-200/50',
+              'dark:ring-rose-900/40',
+              'rounded-lg',
+              'p-2'
+            );
+
+            // Gradually fade out the highlight after 3 seconds
+            setTimeout(() => {
+              specificItem.classList.remove('bg-rose-100', 'dark:bg-rose-950/50', 'ring-4', 'ring-rose-200/50', 'dark:ring-rose-900/40');
+            }, 3000);
+          }
+        }
+      } else if (href && href.startsWith('#ref-back-')) {
+        e.preventDefault();
+        const backItem = document.getElementById(href.substring(1));
+        if (backItem) {
+          const headerOffset = 140;
+          const elementPosition = backItem.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+
+          // Temporary highlights back in the markdown content text
+          backItem.classList.add('bg-rose-100', 'dark:bg-rose-900/40', 'p-1', 'rounded', 'transition-all');
+          setTimeout(() => {
+            backItem.classList.remove('bg-rose-100', 'dark:bg-rose-900/40', 'p-1', 'rounded');
+          }, 1500);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleCitationClick);
+    return () => document.removeEventListener('click', handleCitationClick);
+  }, []);
+
   // 1. Loading State (Data fetching in progress)
   if (!post && (isPostsLoading || isFetchingSingle)) {
     return (

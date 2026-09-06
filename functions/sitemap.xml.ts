@@ -21,7 +21,8 @@ const INITIAL_SLUGS = [
 
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { env } = context;
-  const siteUrl = env.SITE_URL || 'https://parenting.my.id';
+  const requestUrl = new URL(context.request.url);
+  const siteUrl = (env.SITE_URL || requestUrl.origin).replace(/\/$/, '');
 
   let posts: { slug: string; updatedAt: string }[] = INITIAL_SLUGS;
 

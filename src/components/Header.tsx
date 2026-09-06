@@ -13,8 +13,8 @@ interface HeaderProps {
 export default function Header({ currentView, onNavigate, currentUser, onLogout, siteConfig }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const siteName = siteConfig?.site_name || 'Parenting.my.id';
-  const siteTagline = siteConfig?.site_tagline || 'PORTAL EDUKASI POLA ASUH & GIZI ANAK';
+  const siteName = siteConfig?.site_name || (typeof window !== 'undefined' ? window.location.hostname.replace('www.', '') : '') || 'Blog Engine';
+  const siteTagline = siteConfig?.site_tagline || 'PORTAL BERITA & INFORMASI TERPERCAYA';
   const rawHeaderLinks = siteConfig?.header_nav_links && siteConfig.header_nav_links.length > 0
     ? siteConfig.header_nav_links
     : [

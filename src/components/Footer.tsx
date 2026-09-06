@@ -8,9 +8,9 @@ interface FooterProps {
 }
 
 export default function Footer({ siteConfig, onNavigate }: FooterProps) {
-  const siteName = siteConfig?.site_name || 'Parenting.my.id';
-  const aboutText = siteConfig?.footer_about_text || 'Parenting.my.id menghadirkan bacaan berkualitas seputar dunia pengasuhan anak, kesehatan keluarga, dan pendidikan anak usia dini.';
-  const copyrightText = siteConfig?.footer_copyright_text || `© ${new Date().getFullYear()} Parenting.my.id. Hak Cipta Dilindungi Undang-Undang.`;
+  const siteName = siteConfig?.site_name || (typeof window !== 'undefined' ? window.location.hostname.replace('www.', '') : '') || 'Blog Engine';
+  const aboutText = siteConfig?.footer_about_text || `${siteName} menghadirkan bacaan berkualitas seputar berita, artikel opini, dan informasi terkini terpercaya di Indonesia.`;
+  const copyrightText = siteConfig?.footer_copyright_text || `© ${new Date().getFullYear()} ${siteName}. Hak Cipta Dilindungi Undang-Undang.`;
   const footerLinks = siteConfig?.footer_menu_links || [
     { label: 'Dynamic Sitemap.xml', url: '/sitemap.xml' },
     { label: 'Dynamic RSS Feed', url: '/feed.xml' },

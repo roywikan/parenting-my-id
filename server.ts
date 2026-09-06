@@ -1821,10 +1821,22 @@ app.post('/api/upload-github', requireAuth(['admin']), async (req, res) => {
   }
 });
 
-// 5. GEMINI AI ASSISTANT FOR PARENTING SEO (Protected with Smart Fallback)
+// 5. GEMINI AI ASSISTANT FOR SEO (Protected with Smart Fallback)
 app.post('/api/ai/generate-meta', requireAuth(['admin', 'editor', 'writer']), async (req, res) => {
   const { title, content } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
+
+  let siteName = 'Blog Engine';
+  try {
+    const configPath = path.join(process.cwd(), 'public', 'site_config.json');
+    if (fs.existsSync(configPath)) {
+      const fileData = fs.readFileSync(configPath, 'utf-8');
+      const parsed = JSON.parse(fileData);
+      siteName = parsed.site_name || siteName;
+    }
+  } catch (err) {
+    console.error('Error reading siteName for AI SEO:', err);
+  }
 
   const getSmartFallback = (t: string, c: string) => {
     const cleanContent = (c || '')
@@ -1848,9 +1860,9 @@ app.post('/api/ai/generate-meta', requireAuth(['admin', 'editor', 'writer']), as
     }
 
     return {
-      metaTitle: `${t} | Parenting.my.id`,
+      metaTitle: `${t} | ${siteName}`,
       metaDescription: firstSentence,
-      tags: 'parenting, anak, keluarga, kesehatan anak, balita',
+      tags: 'edukasi, artikel, informasi, berita',
       excerpt: excerpt,
       aiGenerated: false,
     };
@@ -1862,13 +1874,13 @@ app.post('/api/ai/generate-meta', requireAuth(['admin', 'editor', 'writer']), as
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const prompt = `Anda adalah seorang Senior SEO Specialist & Parenting Content Strategist untuk website parenting.my.id.
+    const prompt = `Anda adalah seorang Senior SEO Specialist & Content Strategist untuk website ${siteName}.
 Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}", hasilkan format JSON persis seperti ini tanpa markdown codeblock:
 {
-  "metaTitle": "${title} | Parenting.my.id",
-  "metaDescription": "Deskripsi Meta SEO membujuk yang memuat kata kunci utama tentang parenting (120-155 karakter).",
+  "metaTitle": "${title} | ${siteName}",
+  "metaDescription": "Deskripsi Meta SEO membujuk yang memuat kata kunci utama (120-155 karakter).",
   "tags": "5 kata kunci dipisahkan koma",
-  "excerpt": "Ringkasan artikel 2 kalimat yang hangat dan empatik untuk orang tua Indonesia."
+  "excerpt": "Ringkasan artikel 2 kalimat yang hangat, berbobot, dan menarik bagi pembaca."
 }`;
 
     const response = await ai.models.generateContent({
@@ -1952,8 +1964,23 @@ app.get('/baca/:slug', (req, res, next) => {
   }
 
   try {
-    const siteUrl = 'https://parenting.my.id';
-    const pageTitle = `${post.metaTitle || post.title} | Parenting.my.id`;
+    const siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+    
+    let siteName = 'Blog Engine';
+    let siteDescription = 'Portal berita & informasi terpercaya.';
+    try {
+      const configPath = path.join(process.cwd(), 'public', 'site_config.json');
+      if (fs.existsSync(configPath)) {
+        const fileData = fs.readFileSync(configPath, 'utf-8');
+        const parsed = JSON.parse(fileData);
+        siteName = parsed.site_name || siteName;
+        siteDescription = parsed.site_description || siteDescription;
+      }
+    } catch (e) {
+      console.error('Error loading config for local SSR:', e);
+    }
+
+    const pageTitle = `${post.metaTitle || post.title} | ${siteName}`;
     const pageDesc = post.metaDescription || post.excerpt;
     const canonicalUrl = `${siteUrl}/baca/${post.slug}`;
 
@@ -1989,7 +2016,7 @@ app.get('/baca/:slug', (req, res, next) => {
       <div class="min-h-screen bg-slate-50 text-slate-900 font-sans">
         <header class="bg-white border-b border-slate-200 p-4">
           <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <a href="/" class="text-rose-600 font-black text-xl">👶 Parenting.my.id</a>
+            <a href="/" class="text-rose-600 font-black text-xl">👶 ${siteName}</a>
           </div>
         </header>
         <main class="max-w-4xl mx-auto px-4 py-8">
@@ -2021,12 +2048,12 @@ app.get('/baca/:slug', (req, res, next) => {
       'dateModified': dateMod,
       'author': {
         '@type': 'Person',
-        'name': 'Dr. Ratna Sari, M.Psi',
+        'name': post.authorName || 'Tim Redaksi',
         'url': `${siteUrl}/#penulis`,
       },
       'publisher': {
         '@type': 'Organization',
-        'name': 'Parenting.my.id',
+        'name': siteName,
         'url': siteUrl,
         'logo': {
           '@type': 'ImageObject',

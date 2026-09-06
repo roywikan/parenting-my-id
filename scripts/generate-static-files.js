@@ -6,7 +6,23 @@ const __filename = typeof import.meta !== 'undefined' && import.meta.url ? fileU
 const __dirname = typeof import.meta !== 'undefined' && import.meta.url && __filename ? path.dirname(__filename) : process.cwd();
 const rootDir = path.resolve(__dirname, '..');
 
-const SITE_URL = 'https://parenting.my.id';
+// Load dynamic configurations if available
+const configPath = path.join(rootDir, 'public', 'site_config.json');
+let siteName = 'Blog Engine';
+let siteDescription = 'Portal berita dan informasi terpercaya di Indonesia.';
+let SITE_URL = process.env.SITE_URL || 'https://blog.my.id';
+
+try {
+  if (fs.existsSync(configPath)) {
+    const fileData = fs.readFileSync(configPath, 'utf-8');
+    const parsed = JSON.parse(fileData);
+    siteName = parsed.site_name || siteName;
+    siteDescription = parsed.site_description || siteDescription;
+    SITE_URL = parsed.site_url || SITE_URL;
+  }
+} catch (err) {
+  console.error('Error loading config in generate-static-files.js:', err);
+}
 
 /**
  * Load initial posts from src/data/initialData.ts if no posts array is provided
@@ -100,9 +116,9 @@ export function generateFeedXml(posts) {
   const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>${escapeXml('Parenting.my.id - Edukasi & Pola Asuh Anak Modern')}</title>
+    <title>${escapeXml(siteName)}</title>
     <link>${escapeXml(SITE_URL)}</link>
-    <description>${escapeXml('Portal artikel parenting, gizi anak, stimulasi balita, dan pencegahan stunting di Indonesia.')}</description>
+    <description>${escapeXml(siteDescription)}</description>
     <language>id-id</language>
 ${items}
   </channel>
@@ -182,12 +198,12 @@ export function generateLlmsTxt(posts, feedXmlContent) {
 
   // Fallback item to ensure H2 section is never empty
   if (!articleLinks.trim()) {
-    articleLinks = `- [Beranda](${SITE_URL}): Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.`;
+    articleLinks = `- [Beranda](${SITE_URL}): ${siteDescription}`;
   }
 
-  return `# Parenting.my.id
+  return `# ${siteName}
 
-> Portal berita dan informasi parenting terpercaya di Indonesia. Menyajikan edukasi pola asuh anak, kesehatan, serta nutrisi keluarga.
+> ${siteDescription}
 
 ## Artikel Terkait & Panduan Utama
 
@@ -209,8 +225,8 @@ export function generateLlmsFullTxt(posts) {
 
   const fullArticles = publishedPosts.map((p) => {
     const url = `${SITE_URL}/baca/${p.slug}`;
-    const author = p.authorName || 'Tim Redaksi Parenting.my.id';
-    const category = p.category || 'Parenting';
+    const author = p.authorName || `Tim Redaksi ${siteName}`;
+    const category = p.category || 'Umum';
     const date = p.updatedAt || p.createdAt || new Date().toISOString();
     return `---
 
@@ -226,7 +242,7 @@ ${p.contentMarkdown || ''}
 `;
   }).join('\n\n');
 
-  return `# Arsip Lengkap Artikel Parenting.my.id (LLMs Full Text)
+  return `# Arsip Lengkap Artikel ${siteName} (LLMs Full Text)
 
 Dokumen ini memuat kumpulan artikel lengkap dalam format Markdown untuk Large Language Models (LLMs).
 
