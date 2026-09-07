@@ -2123,9 +2123,9 @@ app.get('/baca/:slug', (req, res, next) => {
     const pageDesc = post.metaDescription || post.excerpt;
     const canonicalUrl = `${siteUrl}/baca/${post.slug}`;
 
-    // Check Accept: text/markdown header for AI Agents (Markdown for Agents)
-    const acceptHeader = (req.headers['accept'] || '').toLowerCase();
-    if (acceptHeader.includes('text/markdown')) {
+    // Check Accept header with RFC 9110 Content Negotiation for AI Agents
+    const acceptHeader = (req.headers['accept'] as string) || '';
+    if (negotiateContent(acceptHeader) === 'markdown') {
       const pubDate = new Date(post.createdAt).toLocaleDateString('id-ID', {
         day: 'numeric',
         month: 'long',
@@ -2330,9 +2330,77 @@ app.get('/.well-known/api-catalog', (req, res) => {
   return res.send(JSON.stringify(catalog, null, 2));
 });
 
+/**
+ * RFC 9110 Content Negotiation helper honoring q-values and media type specificity.
+ */
+function negotiateContent(acceptHeader: string | null | undefined): 'markdown' | 'html' {
+  if (!acceptHeader || typeof acceptHeader !== 'string') return 'html';
+
+  const entries = acceptHeader.split(',');
+  const items: Array<{ mime: string; type: string; subtype: string; q: number; specificity: number }> = [];
+
+  for (const entry of entries) {
+    const parts = entry.trim().split(';');
+    const mime = parts[0].trim().toLowerCase();
+    if (!mime) continue;
+
+    let q = 1.0;
+    for (let i = 1; i < parts.length; i++) {
+      const p = parts[i].trim();
+      if (p.startsWith('q=')) {
+        const val = parseFloat(p.slice(2));
+        if (!isNaN(val)) {
+          q = Math.max(0, Math.min(1, val));
+        }
+      }
+    }
+
+    const slashIdx = mime.indexOf('/');
+    if (slashIdx === -1) continue;
+    const type = mime.slice(0, slashIdx);
+    const subtype = mime.slice(slashIdx + 1);
+
+    let specificity = 3;
+    if (type === '*' && subtype === '*') specificity = 1;
+    else if (subtype === '*') specificity = 2;
+
+    items.push({ mime, type, subtype, q, specificity });
+  }
+
+  function getBestQ(targets: string[]): { spec: number; q: number } {
+    let bestSpec = 0;
+    let bestQ = 0;
+    for (const it of items) {
+      const matches = targets.some((t) => {
+        if (it.specificity === 3) return it.mime === t;
+        if (it.specificity === 2) return t.startsWith(it.type + '/');
+        if (it.specificity === 1) return true;
+        return false;
+      });
+      if (matches) {
+        if (it.specificity > bestSpec) {
+          bestSpec = it.specificity;
+          bestQ = it.q;
+        } else if (it.specificity === bestSpec) {
+          bestQ = Math.max(bestQ, it.q);
+        }
+      }
+    }
+    return { spec: bestSpec, q: bestQ };
+  }
+
+  const htmlMatch = getBestQ(['text/html', 'application/xhtml+xml']);
+  const mdMatch = getBestQ(['text/markdown', 'text/x-markdown']);
+
+  if (mdMatch.q > 0 && mdMatch.q > htmlMatch.q) {
+    return 'markdown';
+  }
+  return 'html';
+}
+
 function handleMarkdownNegotiation(req: express.Request, res: express.Response): boolean {
-  const acceptHeader = (req.headers['accept'] || '').toLowerCase();
-  if (!acceptHeader.includes('text/markdown')) {
+  const acceptHeader = (req.headers['accept'] as string) || '';
+  if (negotiateContent(acceptHeader) !== 'markdown') {
     return false;
   }
 
@@ -2459,7 +2527,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server parenting.my.id running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 

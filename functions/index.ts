@@ -14,6 +14,83 @@ function escapeHtml(unsafe: any): string {
     .replace(/'/g, '&apos;');
 }
 
+/**
+ * RFC 9110 Content Negotiation helper honoring q-values and media type specificity.
+ * Supported media representations:
+ * - HTML: 'text/html', 'application/xhtml+xml', 'text/*', '*/*'
+ * - Markdown: 'text/markdown', 'text/x-markdown', 'text/*', '*/*'
+ *
+ * Rules:
+ * 1. Calculate highest-precedence quality weight (q-value) for each supported representation.
+ * 2. More specific media ranges (exact type/subtype) override wildcards (text/*, */*).
+ * 3. If q(markdown) > 0 and q(markdown) > q(html), serve Markdown.
+ * 4. Otherwise (higher q for HTML, equal q, unsupported probe, or defaults), serve HTML.
+ */
+function negotiateContent(acceptHeader: string | null | undefined): 'markdown' | 'html' {
+  if (!acceptHeader || typeof acceptHeader !== 'string') return 'html';
+
+  const entries = acceptHeader.split(',');
+  const items: Array<{ mime: string; type: string; subtype: string; q: number; specificity: number }> = [];
+
+  for (const entry of entries) {
+    const parts = entry.trim().split(';');
+    const mime = parts[0].trim().toLowerCase();
+    if (!mime) continue;
+
+    let q = 1.0;
+    for (let i = 1; i < parts.length; i++) {
+      const p = parts[i].trim();
+      if (p.startsWith('q=')) {
+        const val = parseFloat(p.slice(2));
+        if (!isNaN(val)) {
+          q = Math.max(0, Math.min(1, val));
+        }
+      }
+    }
+
+    const slashIdx = mime.indexOf('/');
+    if (slashIdx === -1) continue;
+    const type = mime.slice(0, slashIdx);
+    const subtype = mime.slice(slashIdx + 1);
+
+    let specificity = 3;
+    if (type === '*' && subtype === '*') specificity = 1;
+    else if (subtype === '*') specificity = 2;
+
+    items.push({ mime, type, subtype, q, specificity });
+  }
+
+  function getBestQ(targets: string[]): { spec: number; q: number } {
+    let bestSpec = 0;
+    let bestQ = 0;
+    for (const it of items) {
+      const matches = targets.some((t) => {
+        if (it.specificity === 3) return it.mime === t;
+        if (it.specificity === 2) return t.startsWith(it.type + '/');
+        if (it.specificity === 1) return true;
+        return false;
+      });
+      if (matches) {
+        if (it.specificity > bestSpec) {
+          bestSpec = it.specificity;
+          bestQ = it.q;
+        } else if (it.specificity === bestSpec) {
+          bestQ = Math.max(bestQ, it.q);
+        }
+      }
+    }
+    return { spec: bestSpec, q: bestQ };
+  }
+
+  const htmlMatch = getBestQ(['text/html', 'application/xhtml+xml']);
+  const mdMatch = getBestQ(['text/markdown', 'text/x-markdown']);
+
+  if (mdMatch.q > 0 && mdMatch.q > htmlMatch.q) {
+    return 'markdown';
+  }
+  return 'html';
+}
+
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -50,9 +127,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const siteUrl = (env.SITE_URL || url.origin).replace(/\/$/, '');
   const featuredImage = siteConfig?.site_logo || 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&h=630&q=80&fm=webp';
 
-  // MARKDOWN CONTENT NEGOTIATION FOR AGENTS (RFC 8288 & Markdown for Agents)
-  const acceptHeader = (request.headers.get('Accept') || '').toLowerCase();
-  if (acceptHeader.includes('text/markdown')) {
+  // MARKDOWN CONTENT NEGOTIATION FOR AGENTS (RFC 8288, RFC 9110 & Markdown for Agents)
+  const acceptHeader = request.headers.get('Accept') || '';
+  if (negotiateContent(acceptHeader) === 'markdown') {
     let recentPosts: any[] = [];
     if (env.DB) {
       try {
