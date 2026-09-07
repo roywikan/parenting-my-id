@@ -772,9 +772,17 @@ export default function RichPostEditor({
             {/* POST TYPE SELECTION */}
             {setPostType && (
               <div className="pt-2">
-                {!showAllFormats && postType === 'article' ? (
+                {!showAllFormats ? (
                   <div className="flex items-center justify-between py-2.5 px-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs">
-                    <span className="text-slate-500 dark:text-slate-400 font-medium">Format: <strong className="text-slate-700 dark:text-slate-300">📝 Artikel Edukasi</strong></span>
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">
+                      Format: <strong className="text-slate-700 dark:text-slate-300">
+                        {postType === 'article' && '📝 Artikel Edukasi'}
+                        {postType === 'interactive_configurator' && '🎛️ Widget Konfigurator'}
+                        {postType === 'interactive_showcase' && '🏛️ Showcase Pilar'}
+                        {postType === 'interactive_radar' && '🕸️ Roda Radar Profiling'}
+                        {postType === 'interactive_quiz' && '🎓 Kuis IQ & Wawasan'}
+                      </strong>
+                    </span>
                     <button
                       type="button"
                       onClick={() => setShowAllFormats(true)}
@@ -800,261 +808,258 @@ export default function RichPostEditor({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                       {/* Default/Active Button: Artikel Edukasi */}
-                      {(showAllFormats || postType === 'article') && (
-                        <button
-                          type="button"
-                          onClick={() => setPostType('article')}
-                          className={`p-3 rounded-xl border text-left transition-all ${
-                            postType === 'article'
-                              ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
-                              : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
-                          }`}
-                        >
-                          <div className="font-bold text-xs">📝 Artikel Edukasi</div>
-                          <div className="text-[10px] opacity-75 mt-0.5">Konten artikel standar dengan format Markdown penuh.</div>
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPostType('article');
+                          setShowAllFormats(false);
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          postType === 'article'
+                            ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                            : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="font-bold text-xs">📝 Artikel Edukasi</div>
+                        <div className="text-[10px] opacity-75 mt-0.5">Konten artikel standar dengan format Markdown penuh.</div>
+                      </button>
 
                       {/* Configurator */}
-                      {(showAllFormats || postType === 'interactive_configurator') && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPostType('interactive_configurator');
-                            if (!interactiveConfigurator) {
-                              setInteractiveConfigurator({
-                                title: 'Kalkulator Gizi & Pola Makan Anak',
-                                description: 'Hitung kebutuhan nutrisi harian anak Anda berdasarkan usia, berat badan, dan aktivitas.',
-                                criteria: [
-                                  { id: 'age', name: 'Usia Anak', placeholder: 'Pilih rentang usia...', options: ['6-12 bulan', '1-3 tahun', '4-6 tahun'] },
-                                  { id: 'weight', name: 'Berat Badan', placeholder: 'Pilih berat badan...', options: ['Ideal', 'Kurang', 'Berlebih'] },
-                                  { id: 'activity', name: 'Tingkat Aktivitas', placeholder: 'Pilih tingkat aktivitas...', options: ['Sangat Aktif', 'Normal', 'Kurang Aktif'] }
-                                ],
-                                recommendations: [
-                                  { age: '6-12 bulan', weight: 'Ideal', activity: 'Normal', recommendation: 'Lanjutkan ASI ditambah MPASI padat gizi seimbang dengan porsi kecil tapi sering.', title: 'Nutrisi ASI + MPASI Berimbang', category: 'Nutrisi' },
-                                  { age: '1-3 tahun', weight: 'Ideal', activity: 'Sangat Aktif', recommendation: 'Pastikan asupan protein 15g per hari dan karbohidrat yang cukup untuk mendukung energi eksploratifnya.', title: 'Asupan Protein & Energi Cukup', category: 'Nutrisi' }
-                                ]
-                              });
-                            }
-                          }}
-                          className={`p-3 rounded-xl border text-left transition-all ${
-                            postType === 'interactive_configurator'
-                              ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
-                              : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
-                          }`}
-                        >
-                          <div className="font-bold text-xs">🎛️ Widget Konfigurator</div>
-                          <div className="text-[10px] opacity-75 mt-0.5">Widget interaktif dinamis dengan multi-kriteria kustom.</div>
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPostType('interactive_configurator');
+                          setShowAllFormats(false);
+                          if (!interactiveConfigurator) {
+                            setInteractiveConfigurator({
+                              title: 'Kalkulator Gizi & Pola Makan Anak',
+                              description: 'Hitung kebutuhan nutrisi harian anak Anda berdasarkan usia, berat badan, dan aktivitas.',
+                              criteria: [
+                                { id: 'age', name: 'Usia Anak', placeholder: 'Pilih rentang usia...', options: ['6-12 bulan', '1-3 tahun', '4-6 tahun'] },
+                                { id: 'weight', name: 'Berat Badan', placeholder: 'Pilih berat badan...', options: ['Ideal', 'Kurang', 'Berlebih'] },
+                                { id: 'activity', name: 'Tingkat Aktivitas', placeholder: 'Pilih tingkat aktivitas...', options: ['Sangat Aktif', 'Normal', 'Kurang Aktif'] }
+                              ],
+                              recommendations: [
+                                { age: '6-12 bulan', weight: 'Ideal', activity: 'Normal', recommendation: 'Lanjutkan ASI ditambah MPASI padat gizi seimbang dengan porsi kecil tapi sering.', title: 'Nutrisi ASI + MPASI Berimbang', category: 'Nutrisi' },
+                                { age: '1-3 tahun', weight: 'Ideal', activity: 'Sangat Aktif', recommendation: 'Pastikan asupan protein 15g per hari dan karbohidrat yang cukup untuk mendukung energi eksploratifnya.', title: 'Asupan Protein & Energi Cukup', category: 'Nutrisi' }
+                              ]
+                            });
+                          }
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          postType === 'interactive_configurator'
+                            ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                            : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="font-bold text-xs">🎛️ Widget Konfigurator</div>
+                        <div className="text-[10px] opacity-75 mt-0.5">Widget interaktif dinamis dengan multi-kriteria kustom.</div>
+                      </button>
 
                       {/* Showcase */}
-                      {(showAllFormats || postType === 'interactive_showcase') && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPostType('interactive_showcase');
-                            if (!interactiveShowcase) {
-                              setInteractiveShowcase({
-                                title: '5 Pilar Pola Asuh Anak Hebat',
-                                description: 'Jelajahi fondasi penting pengasuhan anak untuk membentuk kepribadian yang tangguh dan kreatif.',
-                                pillars: [
-                                  {
-                                    id: 'pillar-1',
-                                    title: 'Komunikasi Penuh Welas Asih',
-                                    icon: 'Heart',
-                                    desc: 'Menghadirkan komunikasi yang berfokus pada empati, mendengarkan aktif tanpa menghakimi, dan menstabilkan regulasi emosi anak.',
-                                    longDesc: 'Menghadirkan komunikasi yang berfokus pada empati, mendengarkan aktif tanpa menghakimi, dan menstabilkan regulasi emosi anak.',
-                                    challengeTitle: 'TANTANGAN HARIAN KELUARGA',
-                                    challenge: 'Tantangan Hari Ini: Dengarkan cerita si kecil selama 10 menit tanpa menyela atau memberi penilaian langsung.',
-                                    tips: [
-                                      'Gunakan kontak mata setinggi mata anak.',
-                                      'Gunakan frasa empati seperti: "Ibu mengerti perasaanmu..."',
-                                      'Dengarkan dengan saksama tanpa memegang gawai.'
-                                    ],
-                                    footnote: 'Membantu melatih koneksi emosional',
-                                    methodology: 'Metodologi Ramah Anak'
-                                  },
-                                  {
-                                    id: 'pillar-2',
-                                    title: 'Waktu Berkualitas Terencana',
-                                    icon: 'Clock',
-                                    desc: 'Bukan tentang kuantitas jam, melainkan kehadiran penuh pikiran dan emosi (mindful presence) tanpa gangguan gadget.',
-                                    longDesc: 'Bukan tentang kuantitas jam, melainkan kehadiran penuh pikiran dan emosi (mindful presence) tanpa gangguan gadget.',
-                                    challengeTitle: 'TANTANGAN HARIAN KELUARGA',
-                                    challenge: 'Tantangan Hari Ini: Matikan semua gawai selama 30 menit saat makan malam bersama keluarga.',
-                                    tips: [
-                                      'Buat rutinitas bebas layar harian.',
-                                      'Lakukan satu aktivitas interaktif bersama anak seperti menggambar.',
-                                      'Fokus pada pertukaran cerita ringan.'
-                                    ],
-                                    footnote: 'Meningkatkan rasa aman pada anak',
-                                    methodology: 'Pengasuhan Responsif'
-                                  },
-                                  {
-                                    id: 'pillar-3',
-                                    title: 'Apresiasi & Dukungan Positif',
-                                    icon: 'Award',
-                                    desc: 'Memuji usaha dan proses belajar anak (growth mindset) alih-alih melulu fokus pada hasil akhir atau bakat bawaan.',
-                                    longDesc: 'Memuji usaha dan proses belajar anak (growth mindset) alih-alih melulu fokus pada hasil akhir atau bakat bawaan.',
-                                    challengeTitle: 'TANTANGAN HARIAN KELUARGA',
-                                    challenge: 'Tantangan Hari Ini: Berikan pujian spesifik pada proses belajar anak saat merapikan mainannya sendiri.',
-                                    tips: [
-                                      'Ucapkan pujian yang spesifik: "Terima kasih sudah berusaha merapikan bukumu."',
-                                      'Fokus pada kerja keras mereka, bukan hanya hasil.',
-                                      'Dorong anak untuk berani mencoba kembali jika gagal.'
-                                    ],
-                                    footnote: 'Membentuk kepercayaan diri yang sehat',
-                                    methodology: 'Penguatan Positif'
-                                  },
-                                  {
-                                    id: 'pillar-4',
-                                    title: 'Kesehatan Mental & Batasan Lembut',
-                                    icon: 'Shield',
-                                    desc: 'Menetapkan batasan aturan rumah secara konsisten, namun disampaikan dengan nada lembut, aman, dan penuh penjelasan logis.',
-                                    longDesc: 'Menetapkan batasan aturan rumah secara konsisten, namun disampaikan dengan nada lembut, aman, dan penuh penjelasan logis.',
-                                    challengeTitle: 'TANTANGAN HARIAN KELUARGA',
-                                    challenge: 'Tantangan Hari Ini: Terapkan aturan batas layar (screen-time) dengan ketegasan yang ramah tanpa berteriak.',
-                                    tips: [
-                                      'Jelaskan alasan di balik aturan: \'Kita tidur cepat agar tubuhmu segar besok pagi.\'',
-                                      'Berikan pilihan terbatas: \'Mau sikat gigi dulu atau ganti baju piyama dulu?\'',
-                                      'Fokus pada solusi daripada sekadar menghukum kesalahan.'
-                                    ],
-                                    footnote: 'Membantu melatih regulasi diri',
-                                    methodology: 'Metodologi Ramah Anak'
-                                  }
-                                ]
-                              });
-                            }
-                          }}
-                          className={`p-3 rounded-xl border text-left transition-all ${
-                            postType === 'interactive_showcase'
-                              ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
-                              : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
-                          }`}
-                        >
-                          <div className="font-bold text-xs">🏛️ Showcase Pilar</div>
-                          <div className="text-[10px] opacity-75 mt-0.5">Showcase pilar asuh premium sesuai visual mockup figma.</div>
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPostType('interactive_showcase');
+                          setShowAllFormats(false);
+                          if (!interactiveShowcase) {
+                            setInteractiveShowcase({
+                              title: '5 Pilar Pola Asuh Anak Hebat',
+                              description: 'Jelajahi fondasi penting pengasuhan anak untuk membentuk kepribadian yang tangguh dan kreatif.',
+                              pillars: [
+                                {
+                                  id: 'pillar-1',
+                                  title: 'Komunikasi Penuh Welas Asih',
+                                  icon: 'Heart',
+                                  desc: 'Menghadirkan komunikasi yang berfokus pada empati, mendengarkan aktif tanpa menghakimi, dan menstabilkan regulasi emosi anak.',
+                                  longDesc: 'Menghadirkan komunikasi yang berfokus pada empati, mendengarkan aktif tanpa menghakimi, dan menstabilkan regulasi emosi anak.',
+                                  challengeTitle: 'TANTANGAN HARIAN KELUARGA',
+                                  challenge: 'Tantangan Hari Ini: Dengarkan cerita si kecil selama 10 menit tanpa menyela atau memberi penilaian langsung.',
+                                  tips: [
+                                    'Gunakan kontak mata setinggi mata anak.',
+                                    'Gunakan frasa empati seperti: "Ibu mengerti perasaanmu..."',
+                                    'Dengarkan dengan saksama tanpa memegang gawai.'
+                                  ],
+                                  footnote: 'Membantu melatih koneksi emosional',
+                                  methodology: 'Metodologi Ramah Anak'
+                                },
+                                {
+                                  id: 'pillar-2',
+                                  title: 'Waktu Berkualitas Terencana',
+                                  icon: 'Clock',
+                                  desc: 'Bukan tentang kuantitas jam, melainkan kehadiran penuh pikiran dan emosi (mindful presence) tanpa gangguan gadget.',
+                                  longDesc: 'Bukan tentang kuantitas jam, melainkan kehadiran penuh pikiran dan emosi (mindful presence) tanpa gangguan gadget.',
+                                  challengeTitle: 'TANTANGAN HARIAN KELUARGA',
+                                  challenge: 'Tantangan Hari Ini: Matikan semua gawai selama 30 menit saat makan malam bersama keluarga.',
+                                  tips: [
+                                    'Buat rutinitas bebas layar harian.',
+                                    'Lakukan satu aktivitas interaktif bersama anak seperti menggambar.',
+                                    'Fokus pada pertukaran cerita ringan.'
+                                  ],
+                                  footnote: 'Meningkatkan rasa aman pada anak',
+                                  methodology: 'Pengasuhan Responsif'
+                                },
+                                {
+                                  id: 'pillar-3',
+                                  title: 'Apresiasi & Dukungan Positif',
+                                  icon: 'Award',
+                                  desc: 'Memuji usaha dan proses belajar anak (growth mindset) alih-alih melulu fokus pada hasil akhir atau bakat bawaan.',
+                                  longDesc: 'Memuji usaha dan proses belajar anak (growth mindset) alih-alih melulu fokus pada hasil akhir atau bakat bawaan.',
+                                  challengeTitle: 'TANTANGAN HARIAN KELUARGA',
+                                  challenge: 'Tantangan Hari Ini: Berikan pujian spesifik pada proses belajar anak saat merapikan mainannya sendiri.',
+                                  tips: [
+                                    'Ucapkan pujian yang spesifik: "Terima kasih sudah berusaha merapikan bukumu."',
+                                    'Fokus pada kerja keras mereka, bukan hanya hasil.',
+                                    'Dorong anak untuk berani mencoba kembali jika gagal.'
+                                  ],
+                                  footnote: 'Membentuk kepercayaan diri yang sehat',
+                                  methodology: 'Penguatan Positif'
+                                },
+                                {
+                                  id: 'pillar-4',
+                                  title: 'Kesehatan Mental & Batasan Lembut',
+                                  icon: 'Shield',
+                                  desc: 'Menetapkan batasan aturan rumah secara konsisten, namun disampaikan dengan nada lembut, aman, dan penuh penjelasan logis.',
+                                  longDesc: 'Menetapkan batasan aturan rumah secara konsisten, namun disampaikan dengan nada lembut, aman, dan penuh penjelasan logis.',
+                                  challengeTitle: 'TANTANGAN HARIAN KELUARGA',
+                                  challenge: 'Tantangan Hari Ini: Terapkan aturan batas layar (screen-time) dengan ketegasan yang ramah tanpa berteriak.',
+                                  tips: [
+                                    'Jelaskan alasan di balik aturan: \'Kita tidur cepat agar tubuhmu segar besok pagi.\'',
+                                    'Berikan pilihan terbatas: \'Mau sikat gigi dulu atau ganti baju piyama dulu?\'',
+                                    'Fokus pada solusi daripada sekadar menghukum kesalahan.'
+                                  ],
+                                  footnote: 'Membantu melatih regulasi diri',
+                                  methodology: 'Metodologi Ramah Anak'
+                                }
+                              ]
+                            });
+                          }
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          postType === 'interactive_showcase'
+                            ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                            : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="font-bold text-xs">🏛️ Showcase Pilar</div>
+                        <div className="text-[10px] opacity-75 mt-0.5">Showcase pilar asuh premium sesuai visual mockup figma.</div>
+                      </button>
 
                       {/* Radar */}
-                      {(showAllFormats || postType === 'interactive_radar') && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPostType('interactive_radar');
-                            if (!interactiveRadar) {
-                              setInteractiveRadar({
-                                widgetTitle: 'Roda Radar Profiling Gaya Asuh',
-                                widgetDescription: 'Geser slider pilar pengasuhan di bawah ini untuk melihat analisis profil asuh Anda secara instan pada grafik radar sebelah kanan.',
-                                axes: [
-                                  { id: 'kesabaran', label: 'Kesabaran Menghadapi Anak', defaultValue: 5 },
-                                  { id: 'konsistensi', label: 'Konsistensi Aturan Rumah', defaultValue: 5 },
-                                  { id: 'komunikasi', label: 'Komunikasi Dua Arah', defaultValue: 9 },
-                                  { id: 'batasan_layar', label: 'Batasan Gadget (Screen-time)', defaultValue: 6 },
-                                  { id: 'nutrisi', label: 'Nutrisi & Pola Sehat', defaultValue: 9 }
-                                ],
-                                profiles: [
-                                  {
-                                    profileName: 'Orang Tua Seimbang & Suportif (The Balanced Supporter)',
-                                    minScores: { kesabaran: 5, konsistensi: 5, komunikasi: 5, batasan_layar: 5, nutrisi: 5 },
-                                    description: 'Anda adalah pengasuh yang mengalir seimbang. Cukup baik dalam membagi peran antara bercanda, mendengarkan aktif, dan menjaga kebugaran tubuh sang buah hati.',
-                                    primaryStrength: 'Menciptakan lingkungan keluarga yang harmonis dan demokratis.',
-                                    criticalWeakness: 'Terkadang kurang tegas dalam situasi darurat atau terdesak.',
-                                    actionSteps: [
-                                      'Tetapkan konsekuensi logis secara konsisten tanpa tawar-menawar.',
-                                      'Latih komunikasi tegas namun tetap penuh kasih.'
-                                    ],
-                                    cardThemeHex: '#FFF9F2'
-                                  },
-                                  {
-                                    profileName: 'Orang Tua Penghibur yang Fleksibel (The Empathetic Companion)',
-                                    minScores: { kesabaran: 7, konsistensi: 2, komunikasi: 8, batasan_layar: 2, nutrisi: 6 },
-                                    description: 'Anda adalah sosok pendengar yang luar biasa hangat dan sabar. Anak merasa sangat aman bercerita kepada Anda. Namun, skor konsistensi dan batasan layar yang rendah menunjukkan Anda sering mengalah demi menghindari konflik instan.',
-                                    primaryStrength: 'Tingkat empati yang tinggi membuat anak tumbuh dengan kecerdasan emosional yang matang dan rasa percaya diri yang kuat.',
-                                    criticalWeakness: 'Anak rentan mengalami kebingungan aturan (disorientasi batasan) karena aturan rumah sering berubah tergantung situasi hati Anda.',
-                                    actionSteps: [
-                                      'Buat 3 aturan tertulis yang mutlak di rumah (misal: Tidak ada HP di meja makan) dan sepakati konsekuensinya bersama anak.',
-                                      'Latih diri untuk berkata \'Tidak\' dengan nada lembut namun tetap teguh tanpa perlu merasa bersalah.'
-                                    ],
-                                    cardThemeHex: '#FEF5EE'
-                                  }
-                                ]
-                              });
-                            }
-                          }}
-                          className={`p-3 rounded-xl border text-left transition-all ${
-                            postType === 'interactive_radar'
-                              ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
-                              : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
-                          }`}
-                        >
-                          <div className="font-bold text-xs">🕸️ Roda Radar Profiling</div>
-                          <div className="text-[10px] opacity-75 mt-0.5">Widget diagram radar interaktif N-axis dinamis real-time.</div>
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPostType('interactive_radar');
+                          setShowAllFormats(false);
+                          if (!interactiveRadar) {
+                            setInteractiveRadar({
+                              widgetTitle: 'Roda Radar Profiling Gaya Asuh',
+                              widgetDescription: 'Geser slider pilar pengasuhan di bawah ini untuk melihat analisis profil asuh Anda secara instan pada grafik radar sebelah kanan.',
+                              axes: [
+                                { id: 'kesabaran', label: 'Kesabaran Menghadapi Anak', defaultValue: 5 },
+                                { id: 'konsistensi', label: 'Konsistensi Aturan Rumah', defaultValue: 5 },
+                                { id: 'komunikasi', label: 'Komunikasi Dua Arah', defaultValue: 9 },
+                                { id: 'batasan_layar', label: 'Batasan Gadget (Screen-time)', defaultValue: 6 },
+                                { id: 'nutrisi', label: 'Nutrisi & Pola Sehat', defaultValue: 9 }
+                              ],
+                              profiles: [
+                                {
+                                  profileName: 'Orang Tua Seimbang & Suportif (The Balanced Supporter)',
+                                  minScores: { kesabaran: 5, konsistensi: 5, komunikasi: 5, batasan_layar: 5, nutrisi: 5 },
+                                  description: 'Anda adalah pengasuh yang mengalir seimbang. Cukup baik dalam membagi peran antara bercanda, mendengarkan aktif, dan menjaga kebugaran tubuh sang buah hati.',
+                                  primaryStrength: 'Menciptakan lingkungan keluarga yang harmonis dan demokratis.',
+                                  criticalWeakness: 'Terkadang kurang tegas dalam situasi darurat atau terdesak.',
+                                  actionSteps: [
+                                    'Tetapkan konsekuensi logis secara konsisten tanpa tawar-menawar.',
+                                    'Latih komunikasi tegas namun tetap penuh kasih.'
+                                  ],
+                                  cardThemeHex: '#FFF9F2'
+                                },
+                                {
+                                  profileName: 'Orang Tua Penghibur yang Fleksibel (The Empathetic Companion)',
+                                  minScores: { kesabaran: 7, konsistensi: 2, komunikasi: 8, batasan_layar: 2, nutrisi: 6 },
+                                  description: 'Anda adalah sosok pendengar yang luar biasa hangat dan sabar. Anak merasa sangat aman bercerita kepada Anda. Namun, skor konsistensi dan batasan layar yang rendah menunjukkan Anda sering mengalah demi menghindari konflik instan.',
+                                  primaryStrength: 'Tingkat empati yang tinggi membuat anak tumbuh dengan kecerdasan emosional yang matang dan rasa percaya diri yang kuat.',
+                                  criticalWeakness: 'Anak rentan mengalami kebingungan aturan (disorientasi batasan) karena aturan rumah sering berubah tergantung situasi hati Anda.',
+                                  actionSteps: [
+                                    'Buat 3 aturan tertulis yang mutlak di rumah (misal: Tidak ada HP di meja makan) dan sepakati konsekuensinya bersama anak.',
+                                    'Latih diri untuk berkata \'Tidak\' dengan nada lembut namun tetap teguh tanpa perlu merasa bersalah.'
+                                  ],
+                                  cardThemeHex: '#FEF5EE'
+                                }
+                              ]
+                            });
+                          }
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          postType === 'interactive_radar'
+                            ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                            : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="font-bold text-xs">🕸️ Roda Radar Profiling</div>
+                        <div className="text-[10px] opacity-75 mt-0.5">Widget diagram radar interaktif N-axis dinamis real-time.</div>
+                      </button>
 
                       {/* Quiz */}
-                      {(showAllFormats || postType === 'interactive_quiz') && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (setPostType) {
-                              setPostType('interactive_quiz');
-                              setInteractiveQuiz({
-                                widgetTitle: 'Uji Potensi Kognitif & Logika Psikologis',
-                                widgetDescription: 'Asah daya analisis, logika, dan kemampuan berpikir deduktif Anda dengan tes ringan standar psikologi klinis di bawah ini.',
-                                baseScore: 80,
-                                pointsPerCorrect: 15,
-                                questions: [
-                                  {
-                                    id: 'q1',
-                                    question: 'Perhatikan deret angka berikut: 2, 4, 8, 16, 32, ... Berapakah angka selanjutnya jika pola deret ini berlanjut secara logis?',
-                                    category: 'Logika Numerik',
-                                    options: [
-                                      { text: '48', isCorrect: false },
-                                      { text: '64', isCorrect: true },
-                                      { text: '128', isCorrect: false },
-                                      { text: '96', isCorrect: false }
-                                    ]
-                                  },
-                                  {
-                                    id: 'q2',
-                                    question: 'Kaki berhubungan dengan Sepatu, sebagaimana Kepala berhubungan dengan...',
-                                    category: 'Analogi Verbal',
-                                    options: [
-                                      { text: 'Sakit', isCorrect: false },
-                                      { text: 'Topi', isCorrect: true },
-                                      { text: 'Rambut', isCorrect: false },
-                                      { text: 'Mata', isCorrect: false }
-                                    ]
-                                  },
-                                  {
-                                    id: 'q3',
-                                    question: 'Jika semua mamalia menyusui anaknya, dan lumba-lumba adalah mamalia, kesimpulan deduktif yang mutlak adalah...',
-                                    category: 'Penalaran Deduktif',
-                                    options: [
-                                      { text: 'Lumba-lumba pasti bernapas dengan paru-paru', isCorrect: false },
-                                      { text: 'Lumba-lumba pasti menyusui anaknya', isCorrect: true },
-                                      { text: 'Beberapa lumba-lumba tidak menyusui anaknya', isCorrect: false },
-                                      { text: 'Lumba-lumba adalah sejenis ikan yang cerdas', isCorrect: false }
-                                    ]
-                                  }
-                                ]
-                              });
-                            }
-                          }}
-                          className={`p-3 rounded-xl border text-left transition-all ${
-                            postType === 'interactive_quiz'
-                              ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
-                              : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
-                          }`}
-                        >
-                          <div className="font-bold text-xs">🎓 Kuis IQ & Wawasan Ringan</div>
-                          <div className="text-[10px] opacity-75 mt-0.5">Komponen uji pemahaman bertingkat dengan kalkulasi skor otomatis.</div>
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPostType('interactive_quiz');
+                          setShowAllFormats(false);
+                          if (!interactiveQuiz) {
+                            setInteractiveQuiz({
+                              widgetTitle: 'Uji Potensi Kognitif & Logika Psikologis',
+                              widgetDescription: 'Asah daya analisis, logika, dan kemampuan berpikir deduktif Anda dengan tes ringan standar psikologi klinis di bawah ini.',
+                              baseScore: 80,
+                              pointsPerCorrect: 15,
+                              questions: [
+                                {
+                                  id: 'q1',
+                                  question: 'Perhatikan deret angka berikut: 2, 4, 8, 16, 32, ... Berapakah angka selanjutnya jika pola deret ini berlanjut secara logis?',
+                                  category: 'Logika Numerik',
+                                  options: [
+                                    { text: '48', isCorrect: false },
+                                    { text: '64', isCorrect: true },
+                                    { text: '128', isCorrect: false },
+                                    { text: '96', isCorrect: false }
+                                  ]
+                                },
+                                {
+                                  id: 'q2',
+                                  question: 'Kaki berhubungan dengan Sepatu, sebagaimana Kepala berhubungan dengan...',
+                                  category: 'Analogi Verbal',
+                                  options: [
+                                    { text: 'Sakit', isCorrect: false },
+                                    { text: 'Topi', isCorrect: true },
+                                    { text: 'Rambut', isCorrect: false },
+                                    { text: 'Mata', isCorrect: false }
+                                  ]
+                                },
+                                {
+                                  id: 'q3',
+                                  question: 'Jika semua mamalia menyusui anaknya, dan lumba-lumba adalah mamalia, kesimpulan deduktif yang mutlak adalah...',
+                                  category: 'Penalaran Deduktif',
+                                  options: [
+                                    { text: 'Lumba-lumba pasti bernapas dengan paru-paru', isCorrect: false },
+                                    { text: 'Lumba-lumba pasti menyusui anaknya', isCorrect: true },
+                                    { text: 'Beberapa lumba-lumba tidak menyusui anaknya', isCorrect: false },
+                                    { text: 'Lumba-lumba adalah sejenis ikan yang cerdas', isCorrect: false }
+                                  ]
+                                }
+                              ]
+                            });
+                          }
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          postType === 'interactive_quiz'
+                            ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                            : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="font-bold text-xs">🎓 Kuis IQ & Wawasan Ringan</div>
+                        <div className="text-[10px] opacity-75 mt-0.5">Komponen uji pemahaman bertingkat dengan kalkulasi skor otomatis.</div>
+                      </button>
                     </div>
                   </>
                 )}
