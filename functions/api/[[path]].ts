@@ -158,7 +158,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       path.startsWith('/api/posts') || 
       path.startsWith('/api/comments') || 
       path.startsWith('/api/categories') || 
-      path.startsWith('/api/tags')
+      path.startsWith('/api/tags') ||
+      path.startsWith('/api/config') ||
+      path.startsWith('/api/dns-aid')
     ));
 
     const isPublicPost = (method === 'POST' && (
@@ -1252,6 +1254,135 @@ Sitemap: ${siteUrl}/sitemap.xml
         }
       }
       return jsonResponse({}, 200, cacheHeaders);
+    }
+
+    // 7.1 GET /api/dns-aid (DNS for AI Discovery RFC 9460 & draft-mozleywilliams-dnsop-dnsaid)
+    if (path === '/api/dns-aid' && method === 'GET') {
+      try {
+        const queryParamDomain = url.searchParams.get('domain');
+        const rawHost = new URL(request.url).hostname;
+        let domain = (queryParamDomain || rawHost).replace(/^www\./, '');
+
+        if (domain === 'localhost' || domain === '127.0.0.1' || domain.endsWith('.pages.dev') || domain.endsWith('.run.app')) {
+          if (env.SITE_URL) {
+            try {
+              const u = new URL(env.SITE_URL);
+              if (u.hostname && !u.hostname.includes('localhost') && !u.hostname.endsWith('.pages.dev') && !u.hostname.endsWith('.run.app')) {
+                domain = u.hostname.replace(/^www\./, '');
+              }
+            } catch (e) {}
+          }
+        }
+
+        const records = [
+          {
+            subdomain: '_index._agents',
+            fqdn: `_index._agents.${domain}`,
+            type: 'SVCB',
+            priority: 1,
+            target: domain,
+            params: 'alpn="h3,h2" port=443',
+            description: 'Well-known entrypoint untuk indeks agen & katalog API sentral organisasi (draft-mozleywilliams-dnsop-dnsaid & RFC 9460)',
+            cloudflare: {
+              type: 'SVCB',
+              name: '_index._agents',
+              priority: 1,
+              target: domain,
+              value: 'alpn="h3,h2" port=443'
+            },
+            bind: `_index._agents.${domain}. 3600 IN SVCB 1 ${domain}. alpn="h3,h2" port=443`
+          },
+          {
+            subdomain: '_a2a._agents',
+            fqdn: `_a2a._agents.${domain}`,
+            type: 'SVCB',
+            priority: 1,
+            target: domain,
+            params: 'alpn="a2a" port=443 mandatory=alpn,port',
+            description: 'Well-known entrypoint untuk protokol Agent-to-Agent (A2A) komunikasi antar-agen otonom',
+            cloudflare: {
+              type: 'SVCB',
+              name: '_a2a._agents',
+              priority: 1,
+              target: domain,
+              value: 'alpn="a2a" port=443 mandatory=alpn,port'
+            },
+            bind: `_a2a._agents.${domain}. 3600 IN SVCB 1 ${domain}. alpn="a2a" port=443 mandatory=alpn,port`
+          }
+        ];
+
+        const shouldCheck = url.searchParams.get('check') === '1' || url.searchParams.get('check') === 'true';
+        let checkResults: Record<string, any> | null = null;
+
+        if (shouldCheck) {
+          checkResults = {};
+          for (const rec of records) {
+            let dohSuccess = false;
+            let answerData: any = null;
+            let adFlag = false;
+
+            try {
+              const cfUrl = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(rec.fqdn)}&type=SVCB`;
+              const cfRes = await fetch(cfUrl, {
+                headers: { 'accept': 'application/dns-json' },
+              });
+              if (cfRes.ok) {
+                const cfJson: any = await cfRes.json();
+                if (cfJson.Status === 0 && cfJson.Answer && cfJson.Answer.length > 0) {
+                  dohSuccess = true;
+                  answerData = cfJson.Answer;
+                  adFlag = !!cfJson.AD;
+                }
+              }
+            } catch (e) {}
+
+            if (!dohSuccess) {
+              try {
+                const gUrl = `https://dns.google/resolve?name=${encodeURIComponent(rec.fqdn)}&type=64`;
+                const gRes = await fetch(gUrl, {
+                  headers: { 'accept': 'application/dns-json' },
+                });
+                if (gRes.ok) {
+                  const gJson: any = await gRes.json();
+                  if (gJson.Status === 0 && gJson.Answer && gJson.Answer.length > 0) {
+                    dohSuccess = true;
+                    answerData = gJson.Answer;
+                    adFlag = !!gJson.AD;
+                  }
+                }
+              } catch (e) {}
+            }
+
+            checkResults[rec.subdomain] = {
+              fqdn: rec.fqdn,
+              status: dohSuccess ? 'pass' : 'fail',
+              authenticatedData: adFlag,
+              answers: answerData || []
+            };
+          }
+        }
+
+        return jsonResponse({
+          domain,
+          standard: 'DNS for AI Discovery (DNS-AID) draft-mozleywilliams-dnsop-dnsaid & RFC 9460',
+          records,
+          dnssec: {
+            required: true,
+            summary: 'Publikasi DNS-AID wajib ditandatangani dengan DNSSEC agar validating resolver mengembalikan flag AD (Authenticated Data).',
+            cloudflareSteps: [
+              'Masuk ke Cloudflare Dashboard -> Pilih domain Anda.',
+              'Buka menu DNS -> klik tab Settings.',
+              'Pada bagian DNSSEC, klik tombol "Enable DNSSEC".',
+              'Salin informasi DS Record (Key Tag, Algorithm, Digest Type, Digest) yang digenerate Cloudflare.',
+              'Buka panel pengelolaan registrar domain Anda dan masukkan DS Record tersebut.',
+              'Status DNSSEC akan berubah menjadi "Active / Success".'
+            ]
+          },
+          checks: checkResults
+        }, 200, { 'Cache-Control': 'public, max-age=60' });
+      } catch (err: any) {
+        return jsonResponse({ error: 'Gagal memproses DNS-AID: ' + err.message }, 500);
+      }
     }
 
     // 8. POST /api/config

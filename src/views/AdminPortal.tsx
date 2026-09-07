@@ -81,6 +81,31 @@ export default function AdminPortal({
   const [commentFilter, setCommentFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [webhookCopied, setWebhookCopied] = useState(false);
 
+  // DNS for AI Discovery (DNS-AID) & DNSSEC State
+  const [dnsAidData, setDnsAidData] = useState<any>(null);
+  const [isCheckingDnsAid, setIsCheckingDnsAid] = useState(false);
+  const [customTestDomain, setCustomTestDomain] = useState('');
+  const [copiedRecordKey, setCopiedRecordKey] = useState<string | null>(null);
+
+  const fetchDnsAid = async (check = false, domainToTest?: string) => {
+    try {
+      if (check) setIsCheckingDnsAid(true);
+      const domainQuery = domainToTest ? `&domain=${encodeURIComponent(domainToTest)}` : (customTestDomain ? `&domain=${encodeURIComponent(customTestDomain)}` : '');
+      const res = await fetch(`/api/dns-aid?check=${check ? '1' : '0'}${domainQuery}`);
+      if (res.ok) {
+        const data = await res.json();
+        setDnsAidData(data);
+        if (!customTestDomain && data.domain) {
+          setCustomTestDomain(data.domain);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch DNS-AID:', err);
+    } finally {
+      setIsCheckingDnsAid(false);
+    }
+  };
+
   const fetchComments = async () => {
     try {
       const res = await fetch('/api/comments');
@@ -1879,7 +1904,10 @@ export default function AdminPortal({
             </button>
 
             <button
-              onClick={() => setActiveTab('sitemap')}
+              onClick={() => {
+                setActiveTab('sitemap');
+                fetchDnsAid(false);
+              }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
                 activeTab === 'sitemap'
                   ? 'bg-rose-600 text-white shadow-sm'
@@ -1887,7 +1915,7 @@ export default function AdminPortal({
               }`}
             >
               <Zap className="w-4 h-4" />
-              <span>SEO Inspector</span>
+              <span>SEO & AI Agent Discovery</span>
             </button>
 
             <button
@@ -2655,42 +2683,301 @@ export default function AdminPortal({
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* TAB 4: SEO & SITEMAP INSPECTOR */}
+      {/* TAB 4: SEO & AI AGENT DISCOVERY INSPECTOR (DNS-AID) */}
       {/* ------------------------------------------------------------- */}
       {activeTab === 'sitemap' && currentUser?.role === 'admin' && (
         <div className="space-y-6">
+          {/* Section 1: Standard Discovery Endpoints */}
           <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
-            <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
-              <Zap className="w-5 h-5 text-amber-500" />
-              <span>Inspector Dynamic Sitemap & RSS Feed</span>
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                <Zap className="w-5 h-5 text-amber-500" />
+                <span>Katalog & Sumber Daya Penemuan Mesin (AI & Search Engines)</span>
+              </h3>
+              <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-200 dark:border-emerald-800">
+                Live & Standar Industri
+              </span>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
               <a
                 href="/sitemap.xml"
                 target="_blank"
                 rel="noreferrer"
-                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 transition-colors flex items-center justify-between"
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 transition-colors flex flex-col justify-between"
               >
                 <div>
-                  <div className="font-bold text-sm text-slate-900 dark:text-white">📄 Live /sitemap.xml</div>
-                  <div className="text-xs text-slate-500">Otomatis diindeks oleh Google Search Console</div>
+                  <div className="font-bold text-sm text-slate-900 dark:text-white">📄 /sitemap.xml</div>
+                  <div className="text-xs text-slate-500 mt-1">XML Sitemap untuk Google Search Console & Bing Webmaster</div>
                 </div>
-                <ExternalLink className="w-4 h-4 text-rose-500" />
+                <div className="flex items-center justify-end mt-3">
+                  <ExternalLink className="w-4 h-4 text-rose-500" />
+                </div>
               </a>
 
               <a
                 href="/feed.xml"
                 target="_blank"
                 rel="noreferrer"
-                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 transition-colors flex items-center justify-between"
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 transition-colors flex flex-col justify-between"
               >
                 <div>
-                  <div className="font-bold text-sm text-slate-900 dark:text-white">📡 Live /feed.xml</div>
-                  <div className="text-xs text-slate-500">RSS Feed XML standar untuk sindikasi konten</div>
+                  <div className="font-bold text-sm text-slate-900 dark:text-white">📡 /feed.xml</div>
+                  <div className="text-xs text-slate-500 mt-1">RSS 2.0 Feed XML standar untuk sindikasi konten dan agregator</div>
                 </div>
-                <ExternalLink className="w-4 h-4 text-amber-500" />
+                <div className="flex items-center justify-end mt-3">
+                  <ExternalLink className="w-4 h-4 text-amber-500" />
+                </div>
               </a>
+
+              <a
+                href="/.well-known/api-catalog"
+                target="_blank"
+                rel="noreferrer"
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 transition-colors flex flex-col justify-between"
+              >
+                <div>
+                  <div className="font-bold text-sm text-slate-900 dark:text-white">🤖 /api-catalog</div>
+                  <div className="text-xs text-slate-500 mt-1">RFC 9727 API Catalog (linkset+json) untuk penemuan agen cerdas</div>
+                </div>
+                <div className="flex items-center justify-end mt-3">
+                  <ExternalLink className="w-4 h-4 text-indigo-500" />
+                </div>
+              </a>
+
+              <a
+                href="/llms.txt"
+                target="_blank"
+                rel="noreferrer"
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 transition-colors flex flex-col justify-between"
+              >
+                <div>
+                  <div className="font-bold text-sm text-slate-900 dark:text-white">🧠 /llms.txt</div>
+                  <div className="text-xs text-slate-500 mt-1">Standar konteks Markdown untuk LLM & AI Agents (llmstxt.org)</div>
+                </div>
+                <div className="flex items-center justify-end mt-3">
+                  <ExternalLink className="w-4 h-4 text-emerald-500" />
+                </div>
+              </a>
+            </div>
+          </div>
+
+          {/* Section 2: DNS for AI Discovery (DNS-AID) & DNSSEC */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-6 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-indigo-500" />
+                  <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                    DNS for AI Discovery (DNS-AID) & DNSSEC (RFC 9460)
+                  </h3>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider border border-indigo-200 dark:border-indigo-800">
+                    IETF Draft
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Publikasikan catatan DNS ServiceMode <code>SVCB</code> atau <code>HTTPS</code> di bawah namespace <code>_agents</code> (seperti <code>_index._agents</code> dan <code>_a2a._agents</code>) serta aktifkan penandatanganan DNSSEC agar bot dan agen AI otonom dapat menemukan dan memvalidasi endpoint Anda via DNS.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Domain Anda (contoh: domain.com)"
+                  value={customTestDomain}
+                  onChange={(e) => setCustomTestDomain(e.target.value.trim())}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 w-48"
+                />
+                <button
+                  type="button"
+                  disabled={isCheckingDnsAid}
+                  onClick={() => fetchDnsAid(true, customTestDomain)}
+                  className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                >
+                  {isCheckingDnsAid ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Search className="w-3.5 h-3.5" />
+                  )}
+                  <span>{isCheckingDnsAid ? 'Memeriksa DoH...' : 'Periksa Live via DoH'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Live Check Result Alert */}
+            {dnsAidData?.checks && (
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-indigo-500" />
+                  <span>Hasil Pengecekan DoH (DNS-over-HTTPS Cloudflare / Google) untuk Domain: <code>{dnsAidData.domain}</code></span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {Object.entries(dnsAidData.checks).map(([sub, chk]: [string, any]) => (
+                    <div
+                      key={sub}
+                      className={`p-3 rounded-xl border text-xs flex flex-col justify-between ${
+                        chk.status === 'pass'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+                          : 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-bold">{chk.fqdn}</span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          chk.status === 'pass' ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100' : 'bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100'
+                        }`}>
+                          {chk.status === 'pass' ? 'Ditemukan' : 'Belum Terdeteksi'}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-[11px] flex items-center justify-between text-slate-600 dark:text-slate-400">
+                        <span>Status DNSSEC (AD Flag):</span>
+                        <span className={`font-semibold ${chk.authenticatedData ? 'text-emerald-600 font-bold' : 'text-amber-600'}`}>
+                          {chk.authenticatedData ? '✅ Authenticated (Valid)' : '⚠️ Belum Ada Flag AD (DNSSEC Belum Aktif)'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* DNS Records Configuration Ready to Copy */}
+            <div className="space-y-4">
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
+                <span>Catatan DNS ServiceMode SVCB yang Wajib Dipasang di Cloudflare DNS:</span>
+                <span className="text-slate-400 font-normal">Domain Target: <strong>{customTestDomain || dnsAidData?.domain || 'domain-anda.com'}</strong></span>
+              </div>
+
+              <div className="space-y-3">
+                {(dnsAidData?.records || [
+                  {
+                    subdomain: '_index._agents',
+                    fqdn: `_index._agents.${customTestDomain || 'domain-anda.com'}`,
+                    type: 'SVCB',
+                    priority: 1,
+                    target: customTestDomain || 'domain-anda.com',
+                    params: 'alpn="h3,h2" port=443',
+                    description: 'Well-known entrypoint untuk indeks agen & katalog API sentral organisasi (draft-mozleywilliams-dnsop-dnsaid & RFC 9460)',
+                    cloudflare: {
+                      type: 'SVCB',
+                      name: '_index._agents',
+                      priority: 1,
+                      target: customTestDomain || 'domain-anda.com',
+                      value: 'alpn="h3,h2" port=443'
+                    },
+                    bind: `_index._agents.${customTestDomain || 'domain-anda.com'}. 3600 IN SVCB 1 ${customTestDomain || 'domain-anda.com'}. alpn="h3,h2" port=443`
+                  },
+                  {
+                    subdomain: '_a2a._agents',
+                    fqdn: `_a2a._agents.${customTestDomain || 'domain-anda.com'}`,
+                    type: 'SVCB',
+                    priority: 1,
+                    target: customTestDomain || 'domain-anda.com',
+                    params: 'alpn="a2a" port=443 mandatory=alpn,port',
+                    description: 'Well-known entrypoint untuk protokol Agent-to-Agent (A2A) komunikasi antar-agen otonom',
+                    cloudflare: {
+                      type: 'SVCB',
+                      name: '_a2a._agents',
+                      priority: 1,
+                      target: customTestDomain || 'domain-anda.com',
+                      value: 'alpn="a2a" port=443 mandatory=alpn,port'
+                    },
+                    bind: `_a2a._agents.${customTestDomain || 'domain-anda.com'}. 3600 IN SVCB 1 ${customTestDomain || 'domain-anda.com'}. alpn="a2a" port=443 mandatory=alpn,port`
+                  }
+                ]).map((rec: any) => {
+                  const targetDomain = customTestDomain || dnsAidData?.domain || 'domain-anda.com';
+                  const cfName = rec.subdomain;
+                  const cfValue = rec.params;
+                  const bindLine = `${rec.subdomain}.${targetDomain}. 3600 IN SVCB 1 ${targetDomain}. ${rec.params}`;
+
+                  return (
+                    <div key={rec.subdomain} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <div className="font-mono font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs">{rec.type}</span>
+                            <span>{rec.subdomain}.{targetDomain}</span>
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{rec.description}</div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(bindLine);
+                              setCopiedRecordKey(`bind-${rec.subdomain}`);
+                              setTimeout(() => setCopiedRecordKey(null), 2500);
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 text-[11px] font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1 transition-colors"
+                          >
+                            {copiedRecordKey === `bind-${rec.subdomain}` ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>{copiedRecordKey === `bind-${rec.subdomain}` ? 'Tersalin (BIND)' : 'Salin BIND Format'}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cfSummary = `Type: SVCB\nName: ${cfName}\nPriority: 1\nTarget: ${targetDomain}\nValue: ${cfValue}`;
+                              navigator.clipboard.writeText(cfSummary);
+                              setCopiedRecordKey(`cf-${rec.subdomain}`);
+                              setTimeout(() => setCopiedRecordKey(null), 2500);
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-medium flex items-center gap-1 transition-colors shadow-sm"
+                          >
+                            {copiedRecordKey === `cf-${rec.subdomain}` ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>{copiedRecordKey === `cf-${rec.subdomain}` ? 'Tersalin (Cloudflare)' : 'Salin Nilai Cloudflare'}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Detail Parameters Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1 font-mono text-[11px]">
+                        <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                          <div className="text-[10px] uppercase text-slate-400 font-sans">Type</div>
+                          <div className="font-bold text-slate-800 dark:text-slate-200">SVCB</div>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                          <div className="text-[10px] uppercase text-slate-400 font-sans">Name</div>
+                          <div className="font-bold text-slate-800 dark:text-slate-200 truncate">{cfName}</div>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                          <div className="text-[10px] uppercase text-slate-400 font-sans">Priority</div>
+                          <div className="font-bold text-slate-800 dark:text-slate-200">1</div>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                          <div className="text-[10px] uppercase text-slate-400 font-sans">Target</div>
+                          <div className="font-bold text-slate-800 dark:text-slate-200 truncate">{targetDomain}</div>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 col-span-2 sm:col-span-1">
+                          <div className="text-[10px] uppercase text-slate-400 font-sans">Value / Params</div>
+                          <div className="font-bold text-indigo-600 dark:text-indigo-400 truncate" title={cfValue}>{cfValue}</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* DNSSEC Activation Instruction Guide */}
+            <div className="p-5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/60 space-y-3">
+              <div className="flex items-center gap-2 font-bold text-xs text-indigo-950 dark:text-indigo-200 uppercase tracking-wider">
+                <Key className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span>Panduan Aktivasi DNSSEC di Cloudflare (Wajib untuk DNS-AID)</span>
+              </div>
+              <p className="text-xs text-indigo-900 dark:text-indigo-300">
+                DNSSEC memastikan catatan discovery tidak dapat dipalsukan (*tamper-proof*). Validating resolver seperti Cloudflare 1.1.1.1 dan Google Public DNS akan memverifikasi tanda tangan kriptografi dan mengembalikan status <code>AD: true</code> (Authenticated Data):
+              </p>
+              <ol className="list-decimal list-inside space-y-1.5 text-xs text-indigo-950 dark:text-indigo-200">
+                <li>Buka dashboard <strong>Cloudflare</strong> &gt; pilih domain Anda.</li>
+                <li>Masuk ke menu <strong>DNS</strong> &gt; klik tab <strong>Settings</strong>.</li>
+                <li>Scroll ke bagian <strong>DNSSEC</strong> dan klik tombol <strong>Enable DNSSEC</strong>.</li>
+                <li>Salin parameter <strong>DS Record</strong> yang diberikan Cloudflare (<em>Key Tag, Algorithm, Digest Type, Digest</em>).</li>
+                <li>Buka panel registrar domain Anda (Namecheap, Porkbun, Rumahweb, Niagahoster, dll.) dan tempelkan DS Record tersebut.</li>
+                <li>Dalam hitungan menit, DNSSEC akan aktif dan terverifikasi secara global.</li>
+              </ol>
             </div>
           </div>
         </div>
