@@ -233,6 +233,11 @@ export default function AdminPortal({
   const [editorTags, setEditorTags] = useState('parenting, anak, keluarga');
   const [editorAuthorId, setEditorAuthorId] = useState<number>(currentUser?.id || 1);
   const [editorCoAuthorIds, setEditorCoAuthorIds] = useState<number[]>([]);
+  const [editorPostType, setEditorPostType] = useState<'article' | 'interactive_configurator' | 'interactive_showcase' | 'interactive_radar' | 'interactive_quiz'>('article');
+  const [editorInteractiveConfigurator, setEditorInteractiveConfigurator] = useState<any>(null);
+  const [editorInteractiveShowcase, setEditorInteractiveShowcase] = useState<any>(null);
+  const [editorInteractiveRadar, setEditorInteractiveRadar] = useState<any>(null);
+  const [editorInteractiveQuiz, setEditorInteractiveQuiz] = useState<any>(null);
 
   // Auto-Save Draft Status Indicator
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'dirty'>('saved');
@@ -1324,6 +1329,11 @@ export default function AdminPortal({
     setEditorTags(post.tags || 'berita, edukasi');
     setEditorAuthorId(post.authorId || 1);
     setEditorCoAuthorIds(parseCoAuthorIds(post));
+    setEditorPostType(post.postType || 'article');
+    setEditorInteractiveConfigurator(post.interactiveConfigurator || null);
+    setEditorInteractiveShowcase(post.interactiveShowcase || null);
+    setEditorInteractiveRadar(post.interactiveRadar || null);
+    setEditorInteractiveQuiz(post.interactiveQuiz || null);
     setActiveTab('editor');
     setAutoSaveStatus('saved');
   };
@@ -1343,6 +1353,11 @@ export default function AdminPortal({
     setEditorTags('berita, edukasi, informasi');
     setEditorAuthorId(currentUser?.id || 1);
     setEditorCoAuthorIds([]);
+    setEditorPostType('article');
+    setEditorInteractiveConfigurator(null);
+    setEditorInteractiveShowcase(null);
+    setEditorInteractiveRadar(null);
+    setEditorInteractiveQuiz(null);
     setActiveTab('editor');
     setAutoSaveStatus('saved');
   };
@@ -1384,6 +1399,11 @@ export default function AdminPortal({
           tags: editorTags,
           authorId: currentAuthorId,
           coAuthorIds: editorCoAuthorIds,
+          postType: editorPostType,
+          interactiveConfigurator: editorInteractiveConfigurator,
+          interactiveShowcase: editorInteractiveShowcase,
+          interactiveRadar: editorInteractiveRadar,
+          interactiveQuiz: editorInteractiveQuiz,
         });
 
         if (saved && saved.id && !editingPostId) {
@@ -1399,7 +1419,7 @@ export default function AdminPortal({
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
-  }, [editorTitle, editorMarkdown, editorExcerpt, editorCategory, editorImage, editorAuthorId, editorCoAuthorIds, currentUser, editingPostId]);
+  }, [editorTitle, editorMarkdown, editorExcerpt, editorCategory, editorImage, editorAuthorId, editorCoAuthorIds, editorPostType, editorInteractiveConfigurator, editorInteractiveShowcase, editorInteractiveRadar, editorInteractiveQuiz, currentUser, editingPostId]);
 
   // Insert Markdown formatting toolbar
   const insertToolbar = (prefix: string, suffix: string = '') => {
@@ -1516,6 +1536,11 @@ export default function AdminPortal({
         tags: editorTags,
         authorId: currentAuthorId,
         coAuthorIds: editorCoAuthorIds,
+        postType: editorPostType,
+        interactiveConfigurator: editorInteractiveConfigurator,
+        interactiveShowcase: editorInteractiveShowcase,
+        interactiveRadar: editorInteractiveRadar,
+        interactiveQuiz: editorInteractiveQuiz,
       });
 
       if (saved && saved.id) {
@@ -2253,6 +2278,16 @@ export default function AdminPortal({
           currentStatus={editorStatus}
           rejectionReason={posts.find(p => p.id === editingPostId)?.rejectionReason}
           currentLoggedInUserId={currentUser?.id}
+          postType={editorPostType}
+          setPostType={setEditorPostType}
+          interactiveConfigurator={editorInteractiveConfigurator}
+          setInteractiveConfigurator={setEditorInteractiveConfigurator}
+          interactiveShowcase={editorInteractiveShowcase}
+          setInteractiveShowcase={setEditorInteractiveShowcase}
+          interactiveRadar={editorInteractiveRadar}
+          setInteractiveRadar={setEditorInteractiveRadar}
+          interactiveQuiz={editorInteractiveQuiz}
+          setInteractiveQuiz={setEditorInteractiveQuiz}
         />
       )}
 

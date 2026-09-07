@@ -1018,7 +1018,7 @@ app.delete('/api/users/:id', requireAuth(['admin']), (req, res) => {
 
 // POST Create or Update Post (With Multi-Author, Auto-Save Draft & Revision History max 3 - Protected)
 app.post('/api/posts', requireAuth(['admin', 'editor', 'writer']), (req, res) => {
-  const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, co_writers, status, rejectionReason, metaTitle, metaDescription, tags } = req.body;
+  const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, co_writers, status, rejectionReason, metaTitle, metaDescription, tags, postType, interactiveConfigurator, interactiveShowcase, interactiveRadar, interactiveQuiz } = req.body;
 
   if (!title || !contentMarkdown) {
     return res.status(400).json({ error: 'Judul dan konten markdown wajib diisi.' });
@@ -1084,6 +1084,11 @@ app.post('/api/posts', requireAuth(['admin', 'editor', 'writer']), (req, res) =>
         metaTitle: metaTitle || `${title} | Parenting.my.id`,
         metaDescription: metaDescription || excerpt || 'Artikel edukasi parenting Indonesia.',
         tags: tags || 'parenting, anak',
+        postType: postType || existingPost.postType || 'article',
+        interactiveConfigurator: interactiveConfigurator !== undefined ? interactiveConfigurator : existingPost.interactiveConfigurator,
+        interactiveShowcase: interactiveShowcase !== undefined ? interactiveShowcase : existingPost.interactiveShowcase,
+        interactiveRadar: interactiveRadar !== undefined ? interactiveRadar : existingPost.interactiveRadar,
+        interactiveQuiz: interactiveQuiz !== undefined ? interactiveQuiz : existingPost.interactiveQuiz,
         updatedAt: new Date().toISOString(),
       };
 
@@ -1126,6 +1131,11 @@ app.post('/api/posts', requireAuth(['admin', 'editor', 'writer']), (req, res) =>
     metaTitle: metaTitle || `${title} | Parenting.my.id`,
     metaDescription: metaDescription || excerpt || 'Artikel edukasi parenting Indonesia.',
     tags: tags || 'parenting, anak',
+    postType: postType || 'article',
+    interactiveConfigurator: interactiveConfigurator || null,
+    interactiveShowcase: interactiveShowcase || null,
+    interactiveRadar: interactiveRadar || null,
+    interactiveQuiz: interactiveQuiz || null,
     views: 0,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

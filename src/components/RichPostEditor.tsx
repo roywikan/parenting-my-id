@@ -50,6 +50,16 @@ interface RichPostEditorProps {
   currentStatus?: PostStatus;
   rejectionReason?: string;
   currentLoggedInUserId?: number;
+  postType?: 'article' | 'interactive_configurator' | 'interactive_showcase' | 'interactive_radar' | 'interactive_quiz';
+  setPostType?: (val: 'article' | 'interactive_configurator' | 'interactive_showcase' | 'interactive_radar' | 'interactive_quiz') => void;
+  interactiveConfigurator?: any;
+  setInteractiveConfigurator?: (val: any) => void;
+  interactiveShowcase?: any;
+  setInteractiveShowcase?: (val: any) => void;
+  interactiveRadar?: any;
+  setInteractiveRadar?: (val: any) => void;
+  interactiveQuiz?: any;
+  setInteractiveQuiz?: (val: any) => void;
 }
 
 export default function RichPostEditor({
@@ -89,6 +99,16 @@ export default function RichPostEditor({
   currentStatus = 'draft',
   rejectionReason = '',
   currentLoggedInUserId: currentLoggedInUserIdProp,
+  postType = 'article',
+  setPostType,
+  interactiveConfigurator,
+  setInteractiveConfigurator,
+  interactiveShowcase,
+  setInteractiveShowcase,
+  interactiveRadar,
+  setInteractiveRadar,
+  interactiveQuiz,
+  setInteractiveQuiz,
 }: RichPostEditorProps) {
   // Rejection modal state
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -127,6 +147,9 @@ export default function RichPostEditor({
   // Textarea Ref
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
+  // Toggle to show all interactive formatting options
+  const [showAllFormats, setShowAllFormats] = useState(false);
+
   // Modals state
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkText, setLinkText] = useState('');
@@ -146,6 +169,42 @@ export default function RichPostEditor({
   const [imageUrl, setImageUrl] = useState('');
   const [imageAlt, setImageAlt] = useState('');
   const [imageTab, setImageTab] = useState<'upload' | 'unsplash' | 'url'>('upload');
+
+  const handleUpdateConfigurator = (updates: any) => {
+    if (setInteractiveConfigurator) {
+      setInteractiveConfigurator({
+        ...interactiveConfigurator,
+        ...updates
+      });
+    }
+  };
+
+  const handleUpdateShowcase = (updates: any) => {
+    if (setInteractiveShowcase) {
+      setInteractiveShowcase({
+        ...interactiveShowcase,
+        ...updates
+      });
+    }
+  };
+
+  const handleUpdateRadar = (updates: any) => {
+    if (setInteractiveRadar) {
+      setInteractiveRadar({
+        ...interactiveRadar,
+        ...updates
+      });
+    }
+  };
+
+  const handleUpdateQuiz = (updates: any) => {
+    if (setInteractiveQuiz) {
+      setInteractiveQuiz({
+        ...interactiveQuiz,
+        ...updates
+      });
+    }
+  };
   const [lastUploadedUrl, setLastUploadedUrl] = useState<string>('');
   const [unsplashSearch, setUnsplashSearch] = useState('');
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
@@ -709,6 +768,1191 @@ export default function RichPostEditor({
                 </datalist>
               </div>
             </div>
+
+            {/* POST TYPE SELECTION */}
+            {setPostType && (
+              <div className="pt-2">
+                {!showAllFormats && postType === 'article' ? (
+                  <div className="flex items-center justify-between py-2.5 px-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Format: <strong className="text-slate-700 dark:text-slate-300">📝 Artikel Edukasi</strong></span>
+                    <button
+                      type="button"
+                      onClick={() => setShowAllFormats(true)}
+                      className="font-extrabold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:underline transition-all flex items-center gap-1"
+                    >
+                      ✨ Ubah Format / Jenis Postingan
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Format / Jenis Postingan
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowAllFormats(false)}
+                        className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:underline transition-all flex items-center gap-1"
+                      >
+                        🙈 Sembunyikan Pilihan
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      {/* Default/Active Button: Artikel Edukasi */}
+                      {(showAllFormats || postType === 'article') && (
+                        <button
+                          type="button"
+                          onClick={() => setPostType('article')}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            postType === 'article'
+                              ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                              : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="font-bold text-xs">📝 Artikel Edukasi</div>
+                          <div className="text-[10px] opacity-75 mt-0.5">Konten artikel standar dengan format Markdown penuh.</div>
+                        </button>
+                      )}
+
+                      {/* Configurator */}
+                      {(showAllFormats || postType === 'interactive_configurator') && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPostType('interactive_configurator');
+                            if (!interactiveConfigurator) {
+                              setInteractiveConfigurator({
+                                title: 'Kalkulator Gizi & Pola Makan Anak',
+                                description: 'Hitung kebutuhan nutrisi harian anak Anda berdasarkan usia, berat badan, dan aktivitas.',
+                                criteria: [
+                                  { id: 'age', name: 'Usia Anak', placeholder: 'Pilih rentang usia...', options: ['6-12 bulan', '1-3 tahun', '4-6 tahun'] },
+                                  { id: 'weight', name: 'Berat Badan', placeholder: 'Pilih berat badan...', options: ['Ideal', 'Kurang', 'Berlebih'] },
+                                  { id: 'activity', name: 'Tingkat Aktivitas', placeholder: 'Pilih tingkat aktivitas...', options: ['Sangat Aktif', 'Normal', 'Kurang Aktif'] }
+                                ],
+                                recommendations: [
+                                  { age: '6-12 bulan', weight: 'Ideal', activity: 'Normal', recommendation: 'Lanjutkan ASI ditambah MPASI padat gizi seimbang dengan porsi kecil tapi sering.', title: 'Nutrisi ASI + MPASI Berimbang', category: 'Nutrisi' },
+                                  { age: '1-3 tahun', weight: 'Ideal', activity: 'Sangat Aktif', recommendation: 'Pastikan asupan protein 15g per hari dan karbohidrat yang cukup untuk mendukung energi eksploratifnya.', title: 'Asupan Protein & Energi Cukup', category: 'Nutrisi' }
+                                ]
+                              });
+                            }
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            postType === 'interactive_configurator'
+                              ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                              : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="font-bold text-xs">🎛️ Widget Konfigurator</div>
+                          <div className="text-[10px] opacity-75 mt-0.5">Widget interaktif dinamis dengan multi-kriteria kustom.</div>
+                        </button>
+                      )}
+
+                      {/* Showcase */}
+                      {(showAllFormats || postType === 'interactive_showcase') && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPostType('interactive_showcase');
+                            if (!interactiveShowcase) {
+                              setInteractiveShowcase({
+                                title: '5 Pilar Pola Asuh Anak Hebat',
+                                description: 'Jelajahi fondasi penting pengasuhan anak untuk membentuk kepribadian yang tangguh dan kreatif.',
+                                pillars: [
+                                  {
+                                    id: 'pillar-1',
+                                    title: 'Komunikasi Penuh Welas Asih',
+                                    icon: 'Heart',
+                                    desc: 'Menghadirkan komunikasi yang berfokus pada empati, mendengarkan aktif tanpa menghakimi, dan menstabilkan regulasi emosi anak.',
+                                    longDesc: 'Menghadirkan komunikasi yang berfokus pada empati, mendengarkan aktif tanpa menghakimi, dan menstabilkan regulasi emosi anak.',
+                                    challengeTitle: 'TANTANGAN HARIAN KELUARGA',
+                                    challenge: 'Tantangan Hari Ini: Dengarkan cerita si kecil selama 10 menit tanpa menyela atau memberi penilaian langsung.',
+                                    tips: [
+                                      'Gunakan kontak mata setinggi mata anak.',
+                                      'Gunakan frasa empati seperti: "Ibu mengerti perasaanmu..."',
+                                      'Dengarkan dengan saksama tanpa memegang gawai.'
+                                    ],
+                                    footnote: 'Membantu melatih koneksi emosional',
+                                    methodology: 'Metodologi Ramah Anak'
+                                  },
+                                  {
+                                    id: 'pillar-2',
+                                    title: 'Waktu Berkualitas Terencana',
+                                    icon: 'Clock',
+                                    desc: 'Bukan tentang kuantitas jam, melainkan kehadiran penuh pikiran dan emosi (mindful presence) tanpa gangguan gadget.',
+                                    longDesc: 'Bukan tentang kuantitas jam, melainkan kehadiran penuh pikiran dan emosi (mindful presence) tanpa gangguan gadget.',
+                                    challengeTitle: 'TANTANGAN HARIAN KELUARGA',
+                                    challenge: 'Tantangan Hari Ini: Matikan semua gawai selama 30 menit saat makan malam bersama keluarga.',
+                                    tips: [
+                                      'Buat rutinitas bebas layar harian.',
+                                      'Lakukan satu aktivitas interaktif bersama anak seperti menggambar.',
+                                      'Fokus pada pertukaran cerita ringan.'
+                                    ],
+                                    footnote: 'Meningkatkan rasa aman pada anak',
+                                    methodology: 'Pengasuhan Responsif'
+                                  },
+                                  {
+                                    id: 'pillar-3',
+                                    title: 'Apresiasi & Dukungan Positif',
+                                    icon: 'Award',
+                                    desc: 'Memuji usaha dan proses belajar anak (growth mindset) alih-alih melulu fokus pada hasil akhir atau bakat bawaan.',
+                                    longDesc: 'Memuji usaha dan proses belajar anak (growth mindset) alih-alih melulu fokus pada hasil akhir atau bakat bawaan.',
+                                    challengeTitle: 'TANTANGAN HARIAN KELUARGA',
+                                    challenge: 'Tantangan Hari Ini: Berikan pujian spesifik pada proses belajar anak saat merapikan mainannya sendiri.',
+                                    tips: [
+                                      'Ucapkan pujian yang spesifik: "Terima kasih sudah berusaha merapikan bukumu."',
+                                      'Fokus pada kerja keras mereka, bukan hanya hasil.',
+                                      'Dorong anak untuk berani mencoba kembali jika gagal.'
+                                    ],
+                                    footnote: 'Membentuk kepercayaan diri yang sehat',
+                                    methodology: 'Penguatan Positif'
+                                  },
+                                  {
+                                    id: 'pillar-4',
+                                    title: 'Kesehatan Mental & Batasan Lembut',
+                                    icon: 'Shield',
+                                    desc: 'Menetapkan batasan aturan rumah secara konsisten, namun disampaikan dengan nada lembut, aman, dan penuh penjelasan logis.',
+                                    longDesc: 'Menetapkan batasan aturan rumah secara konsisten, namun disampaikan dengan nada lembut, aman, dan penuh penjelasan logis.',
+                                    challengeTitle: 'TANTANGAN HARIAN KELUARGA',
+                                    challenge: 'Tantangan Hari Ini: Terapkan aturan batas layar (screen-time) dengan ketegasan yang ramah tanpa berteriak.',
+                                    tips: [
+                                      'Jelaskan alasan di balik aturan: \'Kita tidur cepat agar tubuhmu segar besok pagi.\'',
+                                      'Berikan pilihan terbatas: \'Mau sikat gigi dulu atau ganti baju piyama dulu?\'',
+                                      'Fokus pada solusi daripada sekadar menghukum kesalahan.'
+                                    ],
+                                    footnote: 'Membantu melatih regulasi diri',
+                                    methodology: 'Metodologi Ramah Anak'
+                                  }
+                                ]
+                              });
+                            }
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            postType === 'interactive_showcase'
+                              ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                              : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="font-bold text-xs">🏛️ Showcase Pilar</div>
+                          <div className="text-[10px] opacity-75 mt-0.5">Showcase pilar asuh premium sesuai visual mockup figma.</div>
+                        </button>
+                      )}
+
+                      {/* Radar */}
+                      {(showAllFormats || postType === 'interactive_radar') && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPostType('interactive_radar');
+                            if (!interactiveRadar) {
+                              setInteractiveRadar({
+                                widgetTitle: 'Roda Radar Profiling Gaya Asuh',
+                                widgetDescription: 'Geser slider pilar pengasuhan di bawah ini untuk melihat analisis profil asuh Anda secara instan pada grafik radar sebelah kanan.',
+                                axes: [
+                                  { id: 'kesabaran', label: 'Kesabaran Menghadapi Anak', defaultValue: 5 },
+                                  { id: 'konsistensi', label: 'Konsistensi Aturan Rumah', defaultValue: 5 },
+                                  { id: 'komunikasi', label: 'Komunikasi Dua Arah', defaultValue: 9 },
+                                  { id: 'batasan_layar', label: 'Batasan Gadget (Screen-time)', defaultValue: 6 },
+                                  { id: 'nutrisi', label: 'Nutrisi & Pola Sehat', defaultValue: 9 }
+                                ],
+                                profiles: [
+                                  {
+                                    profileName: 'Orang Tua Seimbang & Suportif (The Balanced Supporter)',
+                                    minScores: { kesabaran: 5, konsistensi: 5, komunikasi: 5, batasan_layar: 5, nutrisi: 5 },
+                                    description: 'Anda adalah pengasuh yang mengalir seimbang. Cukup baik dalam membagi peran antara bercanda, mendengarkan aktif, dan menjaga kebugaran tubuh sang buah hati.',
+                                    primaryStrength: 'Menciptakan lingkungan keluarga yang harmonis dan demokratis.',
+                                    criticalWeakness: 'Terkadang kurang tegas dalam situasi darurat atau terdesak.',
+                                    actionSteps: [
+                                      'Tetapkan konsekuensi logis secara konsisten tanpa tawar-menawar.',
+                                      'Latih komunikasi tegas namun tetap penuh kasih.'
+                                    ],
+                                    cardThemeHex: '#FFF9F2'
+                                  },
+                                  {
+                                    profileName: 'Orang Tua Penghibur yang Fleksibel (The Empathetic Companion)',
+                                    minScores: { kesabaran: 7, konsistensi: 2, komunikasi: 8, batasan_layar: 2, nutrisi: 6 },
+                                    description: 'Anda adalah sosok pendengar yang luar biasa hangat dan sabar. Anak merasa sangat aman bercerita kepada Anda. Namun, skor konsistensi dan batasan layar yang rendah menunjukkan Anda sering mengalah demi menghindari konflik instan.',
+                                    primaryStrength: 'Tingkat empati yang tinggi membuat anak tumbuh dengan kecerdasan emosional yang matang dan rasa percaya diri yang kuat.',
+                                    criticalWeakness: 'Anak rentan mengalami kebingungan aturan (disorientasi batasan) karena aturan rumah sering berubah tergantung situasi hati Anda.',
+                                    actionSteps: [
+                                      'Buat 3 aturan tertulis yang mutlak di rumah (misal: Tidak ada HP di meja makan) dan sepakati konsekuensinya bersama anak.',
+                                      'Latih diri untuk berkata \'Tidak\' dengan nada lembut namun tetap teguh tanpa perlu merasa bersalah.'
+                                    ],
+                                    cardThemeHex: '#FEF5EE'
+                                  }
+                                ]
+                              });
+                            }
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            postType === 'interactive_radar'
+                              ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                              : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="font-bold text-xs">🕸️ Roda Radar Profiling</div>
+                          <div className="text-[10px] opacity-75 mt-0.5">Widget diagram radar interaktif N-axis dinamis real-time.</div>
+                        </button>
+                      )}
+
+                      {/* Quiz */}
+                      {(showAllFormats || postType === 'interactive_quiz') && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (setPostType) {
+                              setPostType('interactive_quiz');
+                              setInteractiveQuiz({
+                                widgetTitle: 'Uji Potensi Kognitif & Logika Psikologis',
+                                widgetDescription: 'Asah daya analisis, logika, dan kemampuan berpikir deduktif Anda dengan tes ringan standar psikologi klinis di bawah ini.',
+                                baseScore: 80,
+                                pointsPerCorrect: 15,
+                                questions: [
+                                  {
+                                    id: 'q1',
+                                    question: 'Perhatikan deret angka berikut: 2, 4, 8, 16, 32, ... Berapakah angka selanjutnya jika pola deret ini berlanjut secara logis?',
+                                    category: 'Logika Numerik',
+                                    options: [
+                                      { text: '48', isCorrect: false },
+                                      { text: '64', isCorrect: true },
+                                      { text: '128', isCorrect: false },
+                                      { text: '96', isCorrect: false }
+                                    ]
+                                  },
+                                  {
+                                    id: 'q2',
+                                    question: 'Kaki berhubungan dengan Sepatu, sebagaimana Kepala berhubungan dengan...',
+                                    category: 'Analogi Verbal',
+                                    options: [
+                                      { text: 'Sakit', isCorrect: false },
+                                      { text: 'Topi', isCorrect: true },
+                                      { text: 'Rambut', isCorrect: false },
+                                      { text: 'Mata', isCorrect: false }
+                                    ]
+                                  },
+                                  {
+                                    id: 'q3',
+                                    question: 'Jika semua mamalia menyusui anaknya, dan lumba-lumba adalah mamalia, kesimpulan deduktif yang mutlak adalah...',
+                                    category: 'Penalaran Deduktif',
+                                    options: [
+                                      { text: 'Lumba-lumba pasti bernapas dengan paru-paru', isCorrect: false },
+                                      { text: 'Lumba-lumba pasti menyusui anaknya', isCorrect: true },
+                                      { text: 'Beberapa lumba-lumba tidak menyusui anaknya', isCorrect: false },
+                                      { text: 'Lumba-lumba adalah sejenis ikan yang cerdas', isCorrect: false }
+                                    ]
+                                  }
+                                ]
+                              });
+                            }
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            postType === 'interactive_quiz'
+                              ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                              : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="font-bold text-xs">🎓 Kuis IQ & Wawasan Ringan</div>
+                          <div className="text-[10px] opacity-75 mt-0.5">Komponen uji pemahaman bertingkat dengan kalkulasi skor otomatis.</div>
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* INTERACTIVE FORM PANEL: CONFIGURATOR */}
+            {postType === 'interactive_configurator' && interactiveConfigurator && (
+              <div className="p-5 rounded-2xl border border-rose-100 dark:border-slate-800 bg-rose-500/[0.02] dark:bg-slate-900/50 space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-base">🎛️</span>
+                  <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200">Pengaturan Widget Konfigurator Interaktif</h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Judul Widget</label>
+                    <input
+                      type="text"
+                      value={interactiveConfigurator.title || ''}
+                      onChange={(e) => handleUpdateConfigurator({ title: e.target.value })}
+                      placeholder="Cth: Kalkulator Gizi & Pola Makan Anak"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Deskripsi Widget</label>
+                    <input
+                      type="text"
+                      value={interactiveConfigurator.description || ''}
+                      onChange={(e) => handleUpdateConfigurator({ description: e.target.value })}
+                      placeholder="Cth: Hitung kebutuhan nutrisi harian anak Anda..."
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* CRITERIA SECTION */}
+                <div className="space-y-3 pt-2">
+                  <h5 className="font-extrabold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider">Kriteria Pilihan (Maksimal 3)</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {(interactiveConfigurator.criteria || []).map((crit: any, critIdx: number) => (
+                      <div key={crit.id || critIdx} className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                          <span>Kriteria {critIdx + 1} ({crit.id})</span>
+                        </div>
+                        <input
+                          type="text"
+                          value={crit.name || ''}
+                          onChange={(e) => {
+                            const newCriteria = [...interactiveConfigurator.criteria];
+                            newCriteria[critIdx] = { ...crit, name: e.target.value };
+                            handleUpdateConfigurator({ criteria: newCriteria });
+                          }}
+                          placeholder="Nama Kriteria (Cth: Usia Anak)"
+                          className="w-full px-2 py-1.5 rounded-lg border text-[11px] font-bold"
+                        />
+                        <input
+                          type="text"
+                          value={crit.placeholder || ''}
+                          onChange={(e) => {
+                            const newCriteria = [...interactiveConfigurator.criteria];
+                            newCriteria[critIdx] = { ...crit, placeholder: e.target.value };
+                            handleUpdateConfigurator({ criteria: newCriteria });
+                          }}
+                          placeholder="Placeholder (Cth: Pilih rentang usia...)"
+                          className="w-full px-2 py-1.5 rounded-lg border text-[10px]"
+                        />
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Pilihan (pisahkan koma)</label>
+                          <input
+                            type="text"
+                            value={Array.isArray(crit.options) ? crit.options.join(', ') : ''}
+                            onChange={(e) => {
+                              const newCriteria = [...interactiveConfigurator.criteria];
+                              newCriteria[critIdx] = { 
+                                ...crit, 
+                                options: e.target.value.split(',').map((v: string) => v.trim()).filter((v: string) => v !== '') 
+                              };
+                              handleUpdateConfigurator({ criteria: newCriteria });
+                            }}
+                            placeholder="Cth: Opsi A, Opsi B, Opsi C"
+                            className="w-full px-2 py-1 rounded-lg border text-[10px] font-mono text-slate-800 dark:text-slate-100 bg-transparent"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* RECOMMENDATIONS MAPPING */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-extrabold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider">Hasil Rekomendasi Berdasarkan Pilihan</h5>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newRecs = [...(interactiveConfigurator.recommendations || [])];
+                        const defaultMapping: any = {};
+                        (interactiveConfigurator.criteria || []).forEach((c: any) => {
+                          defaultMapping[c.id] = c.options?.[0] || '';
+                        });
+                        newRecs.push({
+                          ...defaultMapping,
+                          title: 'Rekomendasi Baru',
+                          category: 'Tips',
+                          recommendation: 'Tulis isi saran atau solusi interaktif di sini...'
+                        });
+                        handleUpdateConfigurator({ recommendations: newRecs });
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px]"
+                    >
+                      + Tambah Aturan Hasil
+                    </button>
+                  </div>
+
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                    {(interactiveConfigurator.recommendations || []).map((rec: any, recIdx: number) => (
+                      <div key={recIdx} className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3 relative group">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newRecs = (interactiveConfigurator.recommendations || []).filter((_: any, idx: number) => idx !== recIdx);
+                            handleUpdateConfigurator({ recommendations: newRecs });
+                          }}
+                          className="absolute top-2.5 right-2.5 p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                          title="Hapus Rekomendasi"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Dropdowns to match criteria options */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+                          {(interactiveConfigurator.criteria || []).map((crit: any) => (
+                            <div key={crit.id} className="space-y-0.5">
+                              <label className="block text-[9px] text-slate-400 font-bold">{crit.name}</label>
+                              <select
+                                value={rec[crit.id] || ''}
+                                onChange={(e) => {
+                                  const newRecs = [...interactiveConfigurator.recommendations];
+                                  newRecs[recIdx] = { ...rec, [crit.id]: e.target.value };
+                                  handleUpdateConfigurator({ recommendations: newRecs });
+                                }}
+                                className="w-full p-1 rounded-lg border text-[10px] font-semibold bg-white dark:bg-slate-800"
+                              >
+                                <option value="">Semua Opsi</option>
+                                {(crit.options || []).map((opt: string) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Title, Category, Content of Advice */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <input
+                              type="text"
+                              value={rec.title || ''}
+                              onChange={(e) => {
+                                const newRecs = [...interactiveConfigurator.recommendations];
+                                newRecs[recIdx] = { ...rec, title: e.target.value };
+                                handleUpdateConfigurator({ recommendations: newRecs });
+                              }}
+                              placeholder="Judul Rekomendasi (Cth: Stimulasi Motorik Halus)"
+                              className="w-full px-2.5 py-1.5 rounded-lg border text-[11px] font-bold"
+                            />
+                          </div>
+                          <div>
+                            <input
+                              type="text"
+                              value={rec.category || ''}
+                              onChange={(e) => {
+                                const newRecs = [...interactiveConfigurator.recommendations];
+                                newRecs[recIdx] = { ...rec, category: e.target.value };
+                                handleUpdateConfigurator({ recommendations: newRecs });
+                              }}
+                              placeholder="Kategori (Cth: Stimulasi / Nutrisi)"
+                              className="w-full px-2.5 py-1.5 rounded-lg border text-[11px] font-bold text-rose-600 dark:text-rose-400"
+                            />
+                          </div>
+                        </div>
+
+                        <textarea
+                          rows={2}
+                          value={rec.recommendation || ''}
+                          onChange={(e) => {
+                            const newRecs = [...interactiveConfigurator.recommendations];
+                            newRecs[recIdx] = { ...rec, recommendation: e.target.value };
+                            handleUpdateConfigurator({ recommendations: newRecs });
+                          }}
+                          placeholder="Tuliskan saran rekomendasi spesifik atau tindakan nyata di sini..."
+                          className="w-full p-2.5 rounded-lg border text-[10px] leading-relaxed"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* INTERACTIVE FORM PANEL: PILLAR SHOWCASE */}
+            {postType === 'interactive_showcase' && interactiveShowcase && (
+              <div className="p-5 rounded-2xl border border-rose-100 dark:border-slate-800 bg-rose-500/[0.02] dark:bg-slate-900/50 space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-base">🏛️</span>
+                  <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200">Pengaturan Showcase Pilar Interaktif</h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Judul Showcase</label>
+                    <input
+                      type="text"
+                      value={interactiveShowcase.title || ''}
+                      onChange={(e) => handleUpdateShowcase({ title: e.target.value })}
+                      placeholder="Cth: 5 Pilar Pola Asuh Anak Hebat"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Deskripsi Singkat</label>
+                    <input
+                      type="text"
+                      value={interactiveShowcase.description || ''}
+                      onChange={(e) => handleUpdateShowcase({ description: e.target.value })}
+                      placeholder="Cth: Jelajahi fondasi penting pengasuhan anak..."
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* PILLARS SECTION */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-extrabold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider">Daftar Pilar / Tab Navigasi</h5>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newPillars = [...(interactiveShowcase.pillars || [])];
+                        newPillars.push({
+                          id: `pillar-${Date.now()}`,
+                          title: 'Pilar Baru',
+                          icon: 'Heart',
+                          content: 'Tulis isi penjelasan pilar secara detail di sini...'
+                        });
+                        handleUpdateShowcase({ pillars: newPillars });
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px]"
+                    >
+                      + Tambah Pilar Baru
+                    </button>
+                  </div>
+
+                  <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                    {(interactiveShowcase.pillars || []).map((pillar: any, pillIdx: number) => (
+                      <div key={pillar.id || pillIdx} className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3 relative group">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newPillars = (interactiveShowcase.pillars || []).filter((_: any, idx: number) => idx !== pillIdx);
+                            handleUpdateShowcase({ pillars: newPillars });
+                          }}
+                          className="absolute top-2.5 right-2.5 p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                          title="Hapus Pilar"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="sm:col-span-2">
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Judul Pilar / Tab</label>
+                            <input
+                              type="text"
+                              value={pillar.title || ''}
+                              onChange={(e) => {
+                                const newPillars = [...interactiveShowcase.pillars];
+                                newPillars[pillIdx] = { ...pillar, title: e.target.value };
+                                handleUpdateShowcase({ pillars: newPillars });
+                              }}
+                              placeholder="Cth: Komunikasi Empatis"
+                              className="w-full px-2.5 py-1.5 rounded-lg border text-[11px] font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Simbol Ikon (Lucide)</label>
+                            <select
+                              value={pillar.icon || 'Heart'}
+                              onChange={(e) => {
+                                const newPillars = [...interactiveShowcase.pillars];
+                                newPillars[pillIdx] = { ...pillar, icon: e.target.value };
+                                handleUpdateShowcase({ pillars: newPillars });
+                              }}
+                              className="w-full p-1.5 rounded-lg border text-[11px] font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
+                            >
+                              <option value="Heart">❤️ Heart</option>
+                              <option value="Clock">🕒 Clock</option>
+                              <option value="Shield">🛡️ Shield</option>
+                              <option value="Zap">⚡ Zap</option>
+                              <option value="Award">🏆 Award</option>
+                              <option value="Users">👥 Users</option>
+                              <option value="Brain">🧠 Brain</option>
+                              <option value="Book">📖 Book</option>
+                              <option value="Activity">📈 Activity</option>
+                              <option value="Star">⭐️ Star</option>
+                              <option value="FileText">📄 Document</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Deskripsi Singkat Tab (Kiri)</label>
+                          <input
+                            type="text"
+                            value={pillar.desc || ''}
+                            onChange={(e) => {
+                              const newPillars = [...interactiveShowcase.pillars];
+                              newPillars[pillIdx] = { ...pillar, desc: e.target.value };
+                              handleUpdateShowcase({ pillars: newPillars });
+                            }}
+                            placeholder="Cth: Penjelasan ringkas untuk sub-bagian ini..."
+                            className="w-full px-2.5 py-1.5 rounded-lg border text-[11px]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Detail Penjelasan Utama (Kanan)</label>
+                          <textarea
+                            rows={3}
+                            value={pillar.longDesc || pillar.content || ''}
+                            onChange={(e) => {
+                              const newPillars = [...interactiveShowcase.pillars];
+                              newPillars[pillIdx] = { 
+                                ...pillar, 
+                                longDesc: e.target.value,
+                                content: e.target.value 
+                              };
+                              handleUpdateShowcase({ pillars: newPillars });
+                            }}
+                            placeholder="Cth: Tulis rincian mendalam, pembahasan materi, analisis, atau detail pilar..."
+                            className="w-full p-2.5 rounded-lg border text-[11px] leading-relaxed"
+                          />
+                        </div>
+
+                        {/* CHALLENGE AND TIPS */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
+                          <div>
+                            <label className="block text-[9px] text-emerald-600 dark:text-emerald-400 font-bold mb-0.5">Judul Kotak Highlight / Fokus</label>
+                            <input
+                              type="text"
+                              value={pillar.challengeTitle || 'FOKUS / HIGHLIGHT UTAMA'}
+                              onChange={(e) => {
+                                const newPillars = [...interactiveShowcase.pillars];
+                                newPillars[pillIdx] = { ...pillar, challengeTitle: e.target.value };
+                                handleUpdateShowcase({ pillars: newPillars });
+                              }}
+                              placeholder="Cth: REKOMENDASI UTAMA / TARGET HARIAN"
+                              className="w-full px-2 py-1 rounded-lg border text-[10px] font-bold"
+                            />
+                            <label className="block text-[9px] text-slate-400 font-bold mt-1.5 mb-0.5">Isi Kotak Highlight / Pesan Kunci</label>
+                            <textarea
+                              rows={2}
+                              value={pillar.challenge || ''}
+                              onChange={(e) => {
+                                const newPillars = [...interactiveShowcase.pillars];
+                                newPillars[pillIdx] = { ...pillar, challenge: e.target.value };
+                                handleUpdateShowcase({ pillars: newPillars });
+                              }}
+                              placeholder="Cth: Berikan pesan kunci yang langsung menyoroti fokus bagian ini..."
+                              className="w-full p-2 rounded-lg border text-[10px] leading-relaxed"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[9px] text-rose-600 dark:text-rose-400 font-bold mb-0.5">Poin Rincian & Langkah Detail (Satu Per Baris)</label>
+                            <textarea
+                              rows={4}
+                              value={Array.isArray(pillar.tips) ? pillar.tips.join('\n') : ''}
+                              onChange={(e) => {
+                                const newPillars = [...interactiveShowcase.pillars];
+                                newPillars[pillIdx] = { 
+                                  ...pillar, 
+                                  tips: e.target.value.split('\n').map((v: string) => v.trim()).filter((v: string) => v !== '') 
+                                };
+                                handleUpdateShowcase({ pillars: newPillars });
+                              }}
+                              placeholder="Cth: Langkah pertama yang diperlukan&#10;Langkah kedua berikutnya&#10;Catatan pendukung tambahan"
+                              className="w-full p-2 rounded-lg border text-[10px] leading-relaxed font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        {/* FOOTNOTE AND METHODOLOGY */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Catatan Kaki Kiri Bawah (💡 Keterangan)</label>
+                            <input
+                              type="text"
+                              value={pillar.footnote || ''}
+                              onChange={(e) => {
+                                const newPillars = [...interactiveShowcase.pillars];
+                                newPillars[pillIdx] = { ...pillar, footnote: e.target.value };
+                                handleUpdateShowcase({ pillars: newPillars });
+                              }}
+                              placeholder="Cth: Memberikan dampak efisiensi jangka panjang"
+                              className="w-full px-2.5 py-1.5 rounded-lg border text-[10px]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Label Klasifikasi Kanan Bawah (🏷️ Klasifikasi/Metode)</label>
+                            <input
+                              type="text"
+                              value={pillar.methodology || ''}
+                              onChange={(e) => {
+                                const newPillars = [...interactiveShowcase.pillars];
+                                newPillars[pillIdx] = { ...pillar, methodology: e.target.value };
+                                handleUpdateShowcase({ pillars: newPillars });
+                              }}
+                              placeholder="Cth: Metodologi Ramah Anak"
+                              className="w-full px-2.5 py-1.5 rounded-lg border text-[10px] font-bold text-teal-600 dark:text-teal-400"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* INTERACTIVE FORM PANEL: RADAR WHEEL / PROFILING ENGINE */}
+            {postType === 'interactive_radar' && interactiveRadar && (
+              <div className="p-5 rounded-2xl border border-rose-100 dark:border-slate-800 bg-rose-500/[0.02] dark:bg-slate-900/50 space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-base">🕸️</span>
+                  <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200">Pengaturan Roda Radar Profiling Interaktif</h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Judul Roda Radar / Widget</label>
+                    <input
+                      type="text"
+                      value={interactiveRadar.widgetTitle || ''}
+                      onChange={(e) => handleUpdateRadar({ widgetTitle: e.target.value })}
+                      placeholder="Cth: Roda Radar Profiling Gaya Asuh"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Deskripsi Petunjuk/Analisis</label>
+                    <input
+                      type="text"
+                      value={interactiveRadar.widgetDescription || ''}
+                      onChange={(e) => handleUpdateRadar({ widgetDescription: e.target.value })}
+                      placeholder="Cth: Geser slider pilar pengasuhan di bawah..."
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* AXES DEFINITION */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between pb-2 border-b border-dashed border-slate-100 dark:border-slate-800">
+                    <h5 className="font-extrabold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider">Definisi Sumbu Radar (5-6 Sumbu Ideal)</h5>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newAxes = [...(interactiveRadar.axes || [])];
+                        const uniqueId = `axis_${Date.now().toString().slice(-4)}`;
+                        newAxes.push({
+                          id: uniqueId,
+                          label: 'Dimensi Baru',
+                          defaultValue: 5
+                        });
+                        handleUpdateRadar({ axes: newAxes });
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px]"
+                    >
+                      + Tambah Sumbu
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {(interactiveRadar.axes || []).map((axis: any, idx: number) => (
+                      <div key={idx} className="p-3 rounded-xl border border-slate-100 dark:border-zinc-850 bg-white dark:bg-zinc-900/50 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-black text-rose-500 uppercase">Sumbu #{idx + 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newAxes = (interactiveRadar.axes || []).filter((_: any, i: number) => i !== idx);
+                              handleUpdateRadar({ axes: newAxes });
+                            }}
+                            className="text-[10px] font-bold text-red-500 hover:text-red-700 hover:underline"
+                          >
+                            Hapus
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-12 gap-2">
+                          <div className="col-span-4">
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">ID Sumbu (Unik)</label>
+                            <input
+                              type="text"
+                              value={axis.id || ''}
+                              onChange={(e) => {
+                                const newAxes = [...interactiveRadar.axes];
+                                newAxes[idx] = { ...axis, id: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') };
+                                handleUpdateRadar({ axes: newAxes });
+                              }}
+                              placeholder="Cth: kesabaran"
+                              className="w-full px-2 py-1 rounded-lg border text-[10px] font-mono"
+                            />
+                          </div>
+                          <div className="col-span-5">
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Nama Label Sumbu</label>
+                            <input
+                              type="text"
+                              value={axis.label || ''}
+                              onChange={(e) => {
+                                const newAxes = [...interactiveRadar.axes];
+                                newAxes[idx] = { ...axis, label: e.target.value };
+                                handleUpdateRadar({ axes: newAxes });
+                              }}
+                              placeholder="Cth: Kesabaran"
+                              className="w-full px-2 py-1 rounded-lg border text-[10px] font-bold"
+                            />
+                          </div>
+                          <div className="col-span-3">
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Nilai Awal (1-10)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="10"
+                              value={axis.defaultValue ?? 5}
+                              onChange={(e) => {
+                                const newAxes = [...interactiveRadar.axes];
+                                newAxes[idx] = { ...axis, defaultValue: parseInt(e.target.value) || 5 };
+                                handleUpdateRadar({ axes: newAxes });
+                              }}
+                              className="w-full px-2 py-1 rounded-lg border text-[10px]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* PROFILING ENGINE RESULTS (PROFILES) */}
+                <div className="space-y-4 pt-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-dashed border-slate-100 dark:border-slate-800">
+                    <h5 className="font-extrabold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider">Hasil Profiling & Rekomendasi Pintar</h5>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newProfiles = [...(interactiveRadar.profiles || [])];
+                        newProfiles.push({
+                          profileName: 'Profil Baru',
+                          minScores: {},
+                          description: 'Penjelasan umum profil di sini...',
+                          primaryStrength: 'Kekuatan utama...',
+                          criticalWeakness: 'Area perbaikan...',
+                          actionSteps: ['Saran tindakan 1'],
+                          cardThemeHex: '#FFF9F2'
+                        });
+                        handleUpdateRadar({ profiles: newProfiles });
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px]"
+                    >
+                      + Tambah Profil Baru
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {(interactiveRadar.profiles || []).map((profile: any, pIdx: number) => (
+                      <div key={pIdx} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900 space-y-3 shadow-2xs">
+                        <div className="flex justify-between items-center pb-2 border-b border-slate-150">
+                          <span className="text-[11px] font-black text-rose-500 uppercase">Profil Hasil #{pIdx + 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newProfiles = (interactiveRadar.profiles || []).filter((_: any, i: number) => i !== pIdx);
+                              handleUpdateRadar({ profiles: newProfiles });
+                            }}
+                            className="text-[10px] font-bold text-red-500 hover:text-red-700 hover:underline"
+                          >
+                            Hapus Profil Ini
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Nama Profil</label>
+                            <input
+                              type="text"
+                              value={profile.profileName || ''}
+                              onChange={(e) => {
+                                const newProfiles = [...interactiveRadar.profiles];
+                                newProfiles[pIdx] = { ...profile, profileName: e.target.value };
+                                handleUpdateRadar({ profiles: newProfiles });
+                              }}
+                              placeholder="Cth: Orang Tua Seimbang & Suportif"
+                              className="w-full px-2.5 py-1.5 rounded-lg border text-xs font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Warna Latar Belakang Kartu (HEX)</label>
+                            <input
+                              type="text"
+                              value={profile.cardThemeHex || '#FFF9F2'}
+                              onChange={(e) => {
+                                const newProfiles = [...interactiveRadar.profiles];
+                                newProfiles[pIdx] = { ...profile, cardThemeHex: e.target.value };
+                                handleUpdateRadar({ profiles: newProfiles });
+                              }}
+                              placeholder="Cth: #FFF9F2"
+                              className="w-full px-2.5 py-1.5 rounded-lg border text-xs font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Deskripsi Lengkap Profil</label>
+                          <textarea
+                            rows={2}
+                            value={profile.description || ''}
+                            onChange={(e) => {
+                              const newProfiles = [...interactiveRadar.profiles];
+                              newProfiles[pIdx] = { ...profile, description: e.target.value };
+                              handleUpdateRadar({ profiles: newProfiles });
+                            }}
+                            placeholder="Tuliskan analisis profil di sini..."
+                            className="w-full p-2.5 rounded-lg border text-[11px]"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[9px] text-emerald-600 dark:text-emerald-400 font-bold mb-0.5">💪 Kekuatan Utama</label>
+                            <input
+                              type="text"
+                              value={profile.primaryStrength || ''}
+                              onChange={(e) => {
+                                const newProfiles = [...interactiveRadar.profiles];
+                                newProfiles[pIdx] = { ...profile, primaryStrength: e.target.value };
+                                handleUpdateRadar({ profiles: newProfiles });
+                              }}
+                              placeholder="Kekuatan utama profil ini..."
+                              className="w-full px-2.5 py-1.5 rounded-lg border text-[11px]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-rose-600 dark:text-rose-400 font-bold mb-0.5">⚠️ Area Perbaikan</label>
+                            <input
+                              type="text"
+                              value={profile.criticalWeakness || ''}
+                              onChange={(e) => {
+                                const newProfiles = [...interactiveRadar.profiles];
+                                newProfiles[pIdx] = { ...profile, criticalWeakness: e.target.value };
+                                handleUpdateRadar({ profiles: newProfiles });
+                              }}
+                              placeholder="Kelemahan atau area perbaikan..."
+                              className="w-full px-2.5 py-1.5 rounded-lg border text-[11px]"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Minimum required scores list for matching */}
+                        <div className="bg-slate-50 dark:bg-slate-800/30 p-3 rounded-lg space-y-2">
+                          <label className="block text-[9px] text-slate-500 font-black uppercase tracking-wider mb-1">
+                            Syarat Minimum Skor Sumbu Untuk Profil Ini
+                          </label>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {(interactiveRadar.axes || []).map((axis: any) => {
+                              const currentMin = profile.minScores?.[axis.id] ?? 1;
+                              return (
+                                <div key={axis.id} className="space-y-0.5">
+                                  <label className="block text-[8px] text-slate-400 font-bold truncate">
+                                    Min {axis.label}
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="10"
+                                    value={currentMin}
+                                    onChange={(e) => {
+                                      const newProfiles = [...interactiveRadar.profiles];
+                                      const minScores = { ...(profile.minScores || {}) };
+                                      minScores[axis.id] = parseInt(e.target.value) || 1;
+                                      newProfiles[pIdx] = { ...profile, minScores };
+                                      handleUpdateRadar({ profiles: newProfiles });
+                                    }}
+                                    className="w-full px-2 py-1 rounded-md border text-[10px]"
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] text-amber-600 dark:text-amber-400 font-bold mb-0.5">
+                            Saran Praktis Tindakan Nyata (Satu Per Baris)
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={Array.isArray(profile.actionSteps) ? profile.actionSteps.join('\n') : ''}
+                            onChange={(e) => {
+                              const newProfiles = [...interactiveRadar.profiles];
+                              newProfiles[pIdx] = {
+                                ...profile,
+                                actionSteps: e.target.value.split('\n').map((v: string) => v.trim()).filter((v: string) => v !== '')
+                              };
+                              handleUpdateRadar({ profiles: newProfiles });
+                            }}
+                            placeholder="Cth: Kurangi waktu gawai anak&#10;Gunakan sanksi logis"
+                            className="w-full p-2.5 rounded-lg border text-[11px] font-mono leading-relaxed"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* INTERACTIVE FORM PANEL: QUIZ */}
+            {postType === 'interactive_quiz' && interactiveQuiz && (
+              <div className="p-5 rounded-2xl border border-rose-100 dark:border-slate-800 bg-rose-500/[0.02] dark:bg-slate-900/50 space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-base">🎓</span>
+                  <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200">Pengaturan Kuis IQ & Wawasan Ringan</h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Judul Kuis / Widget</label>
+                    <input
+                      type="text"
+                      value={interactiveQuiz.widgetTitle || ''}
+                      onChange={(e) => handleUpdateQuiz({ widgetTitle: e.target.value })}
+                      placeholder="Cth: Uji Potensi Kognitif & Logika Psikologis"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Deskripsi Singkat / Petunjuk</label>
+                    <input
+                      type="text"
+                      value={interactiveQuiz.widgetDescription || ''}
+                      onChange={(e) => handleUpdateQuiz({ widgetDescription: e.target.value })}
+                      placeholder="Cth: Asah daya analisis, logika, dan berpikir deduktif..."
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Skor Dasar (Base Score)</label>
+                    <input
+                      type="number"
+                      value={interactiveQuiz.baseScore ?? 80}
+                      onChange={(e) => handleUpdateQuiz({ baseScore: parseInt(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Poin per Jawaban Benar</label>
+                    <input
+                      type="number"
+                      value={interactiveQuiz.pointsPerCorrect ?? 15}
+                      onChange={(e) => handleUpdateQuiz({ pointsPerCorrect: parseInt(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* QUESTIONS DEFINITION */}
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center justify-between pb-2 border-b border-dashed border-slate-100 dark:border-slate-800">
+                    <h5 className="font-extrabold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider">Daftar Soal Pilihan Ganda ({ (interactiveQuiz.questions || []).length } Soal)</h5>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newQuestions = [...(interactiveQuiz.questions || [])];
+                        newQuestions.push({
+                          id: `q_${Date.now().toString().slice(-4)}`,
+                          question: 'Pertanyaan baru?',
+                          category: 'Umum',
+                          options: [
+                            { text: 'Opsi A', isCorrect: true },
+                            { text: 'Opsi B', isCorrect: false },
+                            { text: 'Opsi C', isCorrect: false },
+                            { text: 'Opsi D', isCorrect: false }
+                          ]
+                        });
+                        handleUpdateQuiz({ questions: newQuestions });
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px]"
+                    >
+                      + Tambah Soal
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {(interactiveQuiz.questions || []).map((q: any, qIdx: number) => (
+                      <div key={qIdx} className="p-4 rounded-xl border border-slate-200 dark:border-zinc-850 bg-white dark:bg-zinc-900/40 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-black text-indigo-500 uppercase">Pertanyaan #{qIdx + 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newQuestions = (interactiveQuiz.questions || []).filter((_: any, i: number) => i !== qIdx);
+                              handleUpdateQuiz({ questions: newQuestions });
+                            }}
+                            className="text-[10px] font-bold text-red-500 hover:text-red-700 hover:underline"
+                          >
+                            Hapus Soal
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="md:col-span-2">
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Teks Pertanyaan</label>
+                            <input
+                              type="text"
+                              value={q.question || ''}
+                              onChange={(e) => {
+                                const newQuestions = [...interactiveQuiz.questions];
+                                newQuestions[qIdx] = { ...q, question: e.target.value };
+                                handleUpdateQuiz({ questions: newQuestions });
+                              }}
+                              className="w-full px-2 py-1.5 rounded-lg border text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Kategori / Sub-Topik</label>
+                            <input
+                              type="text"
+                              value={q.category || ''}
+                              onChange={(e) => {
+                                const newQuestions = [...interactiveQuiz.questions];
+                                newQuestions[qIdx] = { ...q, category: e.target.value };
+                                handleUpdateQuiz({ questions: newQuestions });
+                              }}
+                              className="w-full px-2 py-1.5 rounded-lg border text-xs"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Options editor (4 options) */}
+                        <div className="space-y-1.5">
+                          <label className="block text-[9px] text-slate-400 font-black uppercase mb-1">Pilihan Jawaban (Pilih Bulatan untuk Jawaban Benar)</label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {(q.options || []).map((opt: any, oIdx: number) => (
+                              <div key={oIdx} className="flex items-center gap-2 p-2 rounded-lg border border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/30">
+                                <input
+                                  type="radio"
+                                  name={`correct_radio_${qIdx}`}
+                                  checked={!!opt.isCorrect}
+                                  onChange={() => {
+                                    const newQuestions = [...interactiveQuiz.questions];
+                                    const newOpts = q.options.map((o: any, oi: number) => ({
+                                      ...o,
+                                      isCorrect: oi === oIdx
+                                    }));
+                                    newQuestions[qIdx] = { ...q, options: newOpts };
+                                    handleUpdateQuiz({ questions: newQuestions });
+                                  }}
+                                  className="accent-indigo-600"
+                                />
+                                <span className="text-[10px] font-bold text-slate-400">{String.fromCharCode(65 + oIdx)}</span>
+                                <input
+                                  type="text"
+                                  value={opt.text || ''}
+                                  onChange={(e) => {
+                                    const newQuestions = [...interactiveQuiz.questions];
+                                    const newOpts = [...q.options];
+                                    newOpts[oIdx] = { ...opt, text: e.target.value };
+                                    newQuestions[qIdx] = { ...q, options: newOpts };
+                                    handleUpdateQuiz({ questions: newQuestions });
+                                  }}
+                                  className="w-full px-2 py-1 bg-white dark:bg-zinc-900 border text-[11px] rounded"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* ------------------------------------------------------------- */}
             {/* PROFESSIONAL WYSIWYG MARKDOWN TOOLBAR */}
