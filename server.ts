@@ -2099,6 +2099,14 @@ app.get('/baca/:slug', (req, res, next) => {
   const post = mockPosts.find((p) => p.slug === slug && p.status === 'published');
 
   if (!post) {
+    const acceptHeader = (req.headers['accept'] as string) || '';
+    if (negotiateContent(acceptHeader) === 'markdown') {
+      res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+      res.setHeader('x-markdown-tokens', '20');
+      res.setHeader('Vary', 'Accept');
+      res.setHeader('Cache-Control', 'no-cache');
+      return res.status(404).send('# 404 Tidak Ditemukan\n\nArtikel yang Anda cari tidak tersedia atau telah dipindahkan.');
+    }
     return next(); // Pass to SPA fallback if not matching mock post
   }
 
@@ -2491,8 +2499,9 @@ async function startServer() {
         let template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
         template = await vite.transformIndexHtml(url, template);
         res.setHeader('Vary', 'Accept');
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.setHeader('Link', '</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"');
-        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+        res.status(200).send(template);
       } catch (e) {
         vite.ssrFixStacktrace(e as Error);
         next(e);
@@ -2521,8 +2530,9 @@ async function startServer() {
       }
 
       res.setHeader('Vary', 'Accept');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Link', '</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"');
-      res.sendFile(path.join(distPath, 'index.html'));
+      res.status(200).sendFile(path.join(distPath, 'index.html'));
     });
   }
 

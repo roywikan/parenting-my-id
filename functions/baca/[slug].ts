@@ -517,6 +517,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         status: 404,
         headers: {
           'Content-Type': 'text/markdown; charset=utf-8',
+          'x-markdown-tokens': '20',
           'Vary': 'Accept',
           'Cache-Control': 'no-cache',
         },
