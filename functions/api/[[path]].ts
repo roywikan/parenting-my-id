@@ -381,6 +381,58 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     }
   };
 
+  // Helper to ensure posts table schema compatibility (supporting interactive model fields and revisions)
+  const syncAndPreparePostsTable = async (db: any): Promise<Set<string>> => {
+    try {
+      await db.prepare(`
+        CREATE TABLE IF NOT EXISTS posts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          slug TEXT UNIQUE NOT NULL,
+          content_markdown TEXT NOT NULL,
+          excerpt TEXT,
+          featured_image TEXT,
+          category TEXT,
+          read_time_minutes INTEGER DEFAULT 5,
+          author_id INTEGER,
+          co_author_ids TEXT,
+          revisions TEXT,
+          status TEXT DEFAULT 'draft',
+          rejection_reason TEXT,
+          meta_title TEXT,
+          meta_description TEXT,
+          tags TEXT,
+          views INTEGER DEFAULT 0,
+          created_at TEXT,
+          updated_at TEXT
+        )
+      `).run();
+
+      const missingCols = [
+        'rejection_reason TEXT',
+        'revisions TEXT',
+        'post_type TEXT DEFAULT \'article\'',
+        'interactive_configurator TEXT',
+        'interactive_showcase TEXT',
+        'interactive_radar TEXT',
+        'interactive_quiz TEXT',
+        'created_at TEXT',
+        'updated_at TEXT'
+      ];
+      for (const colDef of missingCols) {
+        try {
+          await db.prepare(`ALTER TABLE posts ADD COLUMN ${colDef}`).run();
+        } catch {}
+      }
+
+      const colInfo = await db.prepare('PRAGMA table_info(posts)').all();
+      return new Set<string>((colInfo?.results || []).map((c: any) => c.name));
+    } catch (err) {
+      console.error('Error preparing posts table in D1:', err);
+      return new Set<string>(['id', 'title', 'slug', 'content_markdown', 'status']);
+    }
+  };
+
   // Security: Authenticate Bearer or session token (Stateless HMAC-SHA256 JWT, zero D1 query load)
   const authenticateRequest = async (allowedRoles?: string[]): Promise<{ user?: any; errorResponse?: Response }> => {
     const authHeader = request.headers.get('Authorization') || request.headers.get('x-session-token') || '';
@@ -923,12 +975,14 @@ Sitemap: ${siteUrl}/sitemap.xml
     if (path === '/api/posts' && method === 'GET') {
       if (env.DB) {
         try {
+          await syncAndPreparePostsTable(env.DB);
           const { results } = await env.DB.prepare(`
             SELECT 
               p.id, p.title, p.slug, p.content_markdown as contentMarkdown, p.excerpt, 
               p.featured_image as featuredImage, p.category, p.read_time_minutes as readTimeMinutes, 
-              p.author_id as authorId, p.co_author_ids as coAuthorIds, p.status, p.rejection_reason as rejectionReason, 
+              p.author_id as authorId, p.co_author_ids as coAuthorIds, p.revisions, p.status, p.rejection_reason as rejectionReason, 
               p.meta_title as metaTitle, p.meta_description as metaDescription, p.tags, p.views, 
+              p.post_type as postType, p.interactive_configurator as interactiveConfigurator, p.interactive_showcase as interactiveShowcase, p.interactive_radar as interactiveRadar, p.interactive_quiz as interactiveQuiz,
               p.created_at as createdAt, p.updated_at as updatedAt,
               u.name as authorName, u.avatar as authorAvatar, u.role as authorRole
             FROM posts p
@@ -937,7 +991,76 @@ Sitemap: ${siteUrl}/sitemap.xml
           `).all();
 
           if (results) {
-            return jsonResponse(results);
+            const parsedResults = results.map((post: any) => {
+              const mapped = { ...post };
+              
+              // Handle postType defaults
+              if (!mapped.postType) {
+                mapped.postType = 'article';
+              }
+
+              // Parse coAuthorIds
+              if (typeof mapped.coAuthorIds === 'string') {
+                try {
+                  mapped.coAuthorIds = JSON.parse(mapped.coAuthorIds);
+                } catch {
+                  mapped.coAuthorIds = [];
+                }
+              } else if (!mapped.coAuthorIds) {
+                mapped.coAuthorIds = [];
+              }
+
+              // Parse revisions
+              if (typeof mapped.revisions === 'string') {
+                try {
+                  mapped.revisions = JSON.parse(mapped.revisions);
+                } catch {
+                  mapped.revisions = [];
+                }
+              } else if (!mapped.revisions) {
+                mapped.revisions = [];
+              }
+
+              // Parse interactiveConfigurator
+              if (typeof mapped.interactiveConfigurator === 'string') {
+                try {
+                  mapped.interactiveConfigurator = JSON.parse(mapped.interactiveConfigurator);
+                } catch {
+                  mapped.interactiveConfigurator = null;
+                }
+              }
+
+              // Parse interactiveShowcase
+              if (typeof mapped.interactiveShowcase === 'string') {
+                try {
+                  mapped.interactiveShowcase = JSON.parse(mapped.interactiveShowcase);
+                } catch {
+                  mapped.interactiveShowcase = null;
+                }
+              }
+
+              // Parse interactiveRadar
+              if (typeof mapped.interactiveRadar === 'string') {
+                try {
+                  mapped.interactiveRadar = JSON.parse(mapped.interactiveRadar);
+                } catch {
+                  mapped.interactiveRadar = null;
+                }
+              }
+
+              // Parse interactiveQuiz
+              if (typeof mapped.interactiveQuiz === 'string') {
+                try {
+                  mapped.interactiveQuiz = JSON.parse(mapped.interactiveQuiz);
+                } catch {
+                  mapped.interactiveQuiz = null;
+                }
+              }
+
+              return mapped;
+            });
+
+            return jsonResponse(parsedResults);
           }
         } catch (e) {
           console.error('Error fetching posts from D1:', e);
@@ -1000,7 +1123,11 @@ Sitemap: ${siteUrl}/sitemap.xml
       if (auth.errorResponse) return auth.errorResponse;
 
       const body = await request.json() as any;
-      const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, status, rejectionReason, metaTitle, metaDescription, tags } = body;
+      const { 
+        id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, 
+        authorId, coAuthorIds, status, rejectionReason, metaTitle, metaDescription, tags,
+        postType, interactiveConfigurator, interactiveShowcase, interactiveRadar, interactiveQuiz 
+      } = body;
 
       if (!title || !contentMarkdown) {
         return jsonResponse({ error: 'Judul dan konten markdown wajib diisi.' }, 400);
@@ -1019,20 +1146,80 @@ Sitemap: ${siteUrl}/sitemap.xml
       const coAuthorsStr = Array.isArray(coAuthorIds) ? JSON.stringify(coAuthorIds) : null;
       const now = new Date().toISOString();
 
+      const postTypeVal = postType || 'article';
+      const interactiveConfiguratorStr = interactiveConfigurator ? JSON.stringify(interactiveConfigurator) : null;
+      const interactiveShowcaseStr = interactiveShowcase ? JSON.stringify(interactiveShowcase) : null;
+      const interactiveRadarStr = interactiveRadar ? JSON.stringify(interactiveRadar) : null;
+      const interactiveQuizStr = interactiveQuiz ? JSON.stringify(interactiveQuiz) : null;
+
       const numId = id ? Number(id) : null;
       const validNumId = numId && !isNaN(numId) ? numId : null;
       const strId = id ? String(id) : null;
 
       if (env.DB) {
         try {
+          await syncAndPreparePostsTable(env.DB);
+
+          // Get existing revisions
+          let existingRevisionsStr = '[]';
+          let existingPost: any = null;
+          if (validNumId || strId || generatedSlug) {
+            try {
+              existingPost = await env.DB.prepare(`
+                SELECT title, content_markdown as contentMarkdown, excerpt, revisions FROM posts 
+                WHERE (id IS NOT NULL AND (id = ? OR id = ?)) OR slug = ?
+              `).bind(validNumId || -1, strId || '', generatedSlug).first();
+              if (existingPost) {
+                existingRevisionsStr = existingPost.revisions || '[]';
+              }
+            } catch (e) {
+              console.error('Error fetching existing post for revisions:', e);
+            }
+          }
+
+          let updatedRevisionsStr = existingRevisionsStr;
+          if (existingPost) {
+            try {
+              let revisionsArr = [];
+              try {
+                revisionsArr = JSON.parse(existingRevisionsStr);
+                if (!Array.isArray(revisionsArr)) revisionsArr = [];
+              } catch {
+                revisionsArr = [];
+              }
+
+              const updaterName = auth.user?.name || 'Kontributor';
+              const newRevision = {
+                id: `rev-${Date.now()}`,
+                timestamp: now,
+                title: existingPost.title,
+                contentMarkdown: existingPost.contentMarkdown,
+                excerpt: existingPost.excerpt,
+                updatedByName: updaterName,
+              };
+
+              updatedRevisionsStr = JSON.stringify([newRevision, ...revisionsArr].slice(0, 3));
+            } catch (revErr) {
+              console.error('Error constructing revisions:', revErr);
+            }
+          }
+
           if (validNumId || strId || generatedSlug) {
             const updateRes = await env.DB.prepare(`
               UPDATE posts SET 
                 title = ?, slug = ?, content_markdown = ?, excerpt = ?, featured_image = ?,
                 category = ?, read_time_minutes = ?, status = ?, rejection_reason = ?, meta_title = ?, meta_description = ?,
-                tags = ?, co_author_ids = ?, updated_at = ?
+                tags = ?, co_author_ids = ?, revisions = ?, post_type = ?,
+                interactive_configurator = ?, interactive_showcase = ?, interactive_radar = ?, interactive_quiz = ?,
+                updated_at = ?
               WHERE (id IS NOT NULL AND (id = ? OR id = ?)) OR slug = ?
-            `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, postStatus, rejReason, mTitle, mDesc, tagList, coAuthorsStr, now, validNumId || -1, strId || '', generatedSlug).run();
+            `).bind(
+              title, generatedSlug, contentMarkdown, postExcerpt, image, 
+              cat, readMin, postStatus, rejReason, mTitle, mDesc, 
+              tagList, coAuthorsStr, updatedRevisionsStr, postTypeVal,
+              interactiveConfiguratorStr, interactiveShowcaseStr, interactiveRadarStr, interactiveQuizStr,
+              now, validNumId || -1, strId || '', generatedSlug
+            ).run();
 
             if (updateRes.meta?.changes && updateRes.meta.changes > 0) {
               syncStaticFilesToGitHub(env, context.waitUntil ? context.waitUntil.bind(context) : undefined);
@@ -1044,6 +1231,12 @@ Sitemap: ${siteUrl}/sitemap.xml
                   slug: generatedSlug,
                   status: postStatus,
                   rejectionReason: rejReason,
+                  revisions: JSON.parse(updatedRevisionsStr),
+                  postType: postTypeVal,
+                  interactiveConfigurator,
+                  interactiveShowcase,
+                  interactiveRadar,
+                  interactiveQuiz,
                   updatedAt: now
                 }
               });
@@ -1052,9 +1245,21 @@ Sitemap: ${siteUrl}/sitemap.xml
 
           // Fallback to INSERT if new post or ID/Slug not found in D1
           const insertResult = await env.DB.prepare(`
-            INSERT INTO posts (title, slug, content_markdown, excerpt, featured_image, category, read_time_minutes, author_id, co_author_ids, status, rejection_reason, meta_title, meta_description, tags, views, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
-          `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, authorId || 1, coAuthorsStr, postStatus, rejReason, mTitle, mDesc, tagList, now, now).run();
+            INSERT INTO posts (
+              title, slug, content_markdown, excerpt, featured_image, 
+              category, read_time_minutes, author_id, co_author_ids, revisions, status, 
+              rejection_reason, meta_title, meta_description, tags, views, 
+              post_type, interactive_configurator, interactive_showcase, interactive_radar, interactive_quiz,
+              created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(
+            title, generatedSlug, contentMarkdown, postExcerpt, image, 
+            cat, readMin, authorId || 1, coAuthorsStr, '[]', postStatus, 
+            rejReason, mTitle, mDesc, tagList, 
+            postTypeVal, interactiveConfiguratorStr, interactiveShowcaseStr, interactiveRadarStr, interactiveQuizStr,
+            now, now
+          ).run();
 
           const newId = insertResult.meta?.last_row_id || validNumId || id || Date.now();
 
@@ -1073,12 +1278,18 @@ Sitemap: ${siteUrl}/sitemap.xml
               readTimeMinutes: readMin,
               authorId: authorId || 1,
               coAuthorIds: coAuthorIds || [],
+              revisions: [],
               status: postStatus,
               rejectionReason: rejReason,
               metaTitle: mTitle,
               metaDescription: mDesc,
               tags: tagList,
               views: 0,
+              postType: postTypeVal,
+              interactiveConfigurator,
+              interactiveShowcase,
+              interactiveRadar,
+              interactiveQuiz,
               createdAt: now,
               updatedAt: now
             }
@@ -1095,9 +1306,17 @@ Sitemap: ${siteUrl}/sitemap.xml
                   UPDATE posts SET 
                     title = ?, slug = ?, content_markdown = ?, excerpt = ?, featured_image = ?,
                     category = ?, read_time_minutes = ?, status = ?, rejection_reason = ?, meta_title = ?, meta_description = ?,
-                    tags = ?, co_author_ids = ?, updated_at = ?
+                    tags = ?, co_author_ids = ?, revisions = ?, post_type = ?,
+                    interactive_configurator = ?, interactive_showcase = ?, interactive_radar = ?, interactive_quiz = ?,
+                    updated_at = ?
                   WHERE (id IS NOT NULL AND (id = ? OR id = ?)) OR slug = ?
-                `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, safeStatus, rejReason, mTitle, mDesc, tagList, coAuthorsStr, now, validNumId || -1, strId || '', generatedSlug).run();
+                `).bind(
+                  title, generatedSlug, contentMarkdown, postExcerpt, image, 
+                  cat, readMin, safeStatus, rejReason, mTitle, mDesc, 
+                  tagList, coAuthorsStr, updatedRevisionsStr, postTypeVal,
+                  interactiveConfiguratorStr, interactiveShowcaseStr, interactiveRadarStr, interactiveQuizStr,
+                  now, validNumId || -1, strId || '', generatedSlug
+                ).run();
 
                 if (updateRes.meta?.changes && updateRes.meta.changes > 0) {
                   syncStaticFilesToGitHub(env, context.waitUntil ? context.waitUntil.bind(context) : undefined);
@@ -1109,6 +1328,12 @@ Sitemap: ${siteUrl}/sitemap.xml
                       slug: generatedSlug,
                       status: postStatus,
                       rejectionReason: rejReason,
+                      revisions: JSON.parse(updatedRevisionsStr),
+                      postType: postTypeVal,
+                      interactiveConfigurator,
+                      interactiveShowcase,
+                      interactiveRadar,
+                      interactiveQuiz,
                       updatedAt: now
                     }
                   });
@@ -1116,9 +1341,21 @@ Sitemap: ${siteUrl}/sitemap.xml
               }
 
               const insertResult = await env.DB.prepare(`
-                INSERT INTO posts (title, slug, content_markdown, excerpt, featured_image, category, read_time_minutes, author_id, co_author_ids, status, rejection_reason, meta_title, meta_description, tags, views, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
-              `).bind(title, generatedSlug, contentMarkdown, postExcerpt, image, cat, readMin, authorId || 1, coAuthorsStr, safeStatus, rejReason, mTitle, mDesc, tagList, now, now).run();
+                INSERT INTO posts (
+                  title, slug, content_markdown, excerpt, featured_image, 
+                  category, read_time_minutes, author_id, co_author_ids, revisions, status, 
+                  rejection_reason, meta_title, meta_description, tags, views, 
+                  post_type, interactive_configurator, interactive_showcase, interactive_radar, interactive_quiz,
+                  created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)
+              `).bind(
+                title, generatedSlug, contentMarkdown, postExcerpt, image, 
+                cat, readMin, authorId || 1, coAuthorsStr, '[]', safeStatus, 
+                rejReason, mTitle, mDesc, tagList, 
+                postTypeVal, interactiveConfiguratorStr, interactiveShowcaseStr, interactiveRadarStr, interactiveQuizStr,
+                now, now
+              ).run();
 
               const newId = insertResult.meta?.last_row_id || validNumId || id || Date.now();
               syncStaticFilesToGitHub(env, context.waitUntil ? context.waitUntil.bind(context) : undefined);
@@ -1129,6 +1366,7 @@ Sitemap: ${siteUrl}/sitemap.xml
                   id: typeof newId === 'number' ? newId : Number(newId),
                   slug: generatedSlug,
                   status: postStatus,
+                  revisions: [],
                   updatedAt: now
                 }
               });
