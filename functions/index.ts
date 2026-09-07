@@ -14,18 +14,16 @@ function escapeHtml(unsafe: any): string {
     .replace(/'/g, '&apos;');
 }
 
-/**
- * RFC 9110 Content Negotiation helper honoring q-values and media type specificity.
- * Supported media representations:
- * - HTML: 'text/html', 'application/xhtml+xml', 'text/*', '*/*'
- * - Markdown: 'text/markdown', 'text/x-markdown', 'text/*', '*/*'
- *
- * Rules:
- * 1. Calculate highest-precedence quality weight (q-value) for each supported representation.
- * 2. More specific media ranges (exact type/subtype) override wildcards (text/*, */*).
- * 3. If q(markdown) > 0 and q(markdown) > q(html), serve Markdown.
- * 4. Otherwise (higher q for HTML, equal q, unsupported probe, or defaults), serve HTML.
- */
+// RFC 9110 Content Negotiation helper honoring q-values and media type specificity.
+// Supported media representations:
+// - HTML: 'text/html', 'application/xhtml+xml', 'text/*', '*/*'
+// - Markdown: 'text/markdown', 'text/x-markdown', 'text/*', '*/*'
+//
+// Rules:
+// 1. Calculate highest-precedence quality weight (q-value) for each supported representation.
+// 2. More specific media ranges (exact type/subtype) override wildcards.
+// 3. If q(markdown) > 0 and q(markdown) > q(html), serve Markdown.
+// 4. Otherwise (higher q for HTML, equal q, unsupported probe, or defaults), serve HTML.
 function negotiateContent(acceptHeader: string | null | undefined): 'markdown' | 'html' {
   if (!acceptHeader || typeof acceptHeader !== 'string') return 'html';
 
