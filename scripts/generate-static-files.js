@@ -220,12 +220,14 @@ ${articleLinks}
 /**
  * Generate llms-full.txt string containing full markdown content of published posts
  */
-export function generateLlmsFullTxt(posts) {
+export function generateLlmsFullTxt(posts, customSiteUrl, customSiteName) {
+  const activeSiteUrl = customSiteUrl || SITE_URL;
+  const activeSiteName = customSiteName || siteName;
   const publishedPosts = (posts || []).filter((p) => p.status === 'published');
 
   const fullArticles = publishedPosts.map((p) => {
-    const url = `${SITE_URL}/baca/${p.slug}`;
-    const author = p.authorName || `Tim Redaksi ${siteName}`;
+    const url = `${activeSiteUrl}/baca/${p.slug}`;
+    const author = p.authorName || `Tim Redaksi ${activeSiteName}`;
     const category = p.category || 'Umum';
     const date = p.updatedAt || p.createdAt || new Date().toISOString();
     return `---
@@ -242,7 +244,7 @@ ${p.contentMarkdown || ''}
 `;
   }).join('\n\n');
 
-  return `# Arsip Lengkap Artikel ${siteName} (LLMs Full Text)
+  return `# Arsip Lengkap Artikel ${activeSiteName} (LLMs Full Text)
 
 Dokumen ini memuat kumpulan artikel lengkap dalam format Markdown untuk Large Language Models (LLMs).
 

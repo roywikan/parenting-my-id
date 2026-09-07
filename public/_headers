@@ -7,6 +7,16 @@
   Access-Control-Allow-Origin: *
   Link: </.well-known/oauth-protected-resource>; rel="service-desc"; type="application/json", </.well-known/oauth-authorization-server>; rel="oauth-authorization-server"; type="application/json"
 
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
+  Access-Control-Allow-Origin: *
+  Link: </.well-known/api-catalog>; rel="api-catalog", </llms-full.txt>; rel="alternate"; type="text/plain", </auth.md>; rel="describedby"; type="text/markdown"
+
+/llms-full.txt
+  Content-Type: text/plain; charset=utf-8
+  Access-Control-Allow-Origin: *
+  Link: </.well-known/api-catalog>; rel="api-catalog", </llms.txt>; rel="alternate"; type="text/plain", </auth.md>; rel="describedby"; type="text/markdown"
+
 /.well-known/oauth-protected-resource
   Content-Type: application/json; charset=utf-8
   Access-Control-Allow-Origin: *

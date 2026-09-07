@@ -86,6 +86,8 @@ ${articlesList}
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      'Access-Control-Allow-Origin': '*',
+      'Link': `</.well-known/api-catalog>; rel="api-catalog", </llms-full.txt>; rel="alternate"; type="text/plain", </auth.md>; rel="describedby"; type="text/markdown"`,
     },
   });
 };

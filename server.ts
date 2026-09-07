@@ -2074,11 +2074,23 @@ app.get('/llms.txt', (req, res) => {
 });
 
 app.get('/llms-full.txt', (req, res) => {
-  const content = generateLlmsFullTxt(mockPosts);
+  const activeSiteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+  let activeSiteName = 'Portal Informasi';
+  try {
+    const configPath = path.join(process.cwd(), 'public', 'site_config.json');
+    if (fs.existsSync(configPath)) {
+      const parsed = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      activeSiteName = parsed.site_name || parsed.seo_meta_title || activeSiteName;
+    }
+  } catch (e) {}
+
+  const content = generateLlmsFullTxt(mockPosts, activeSiteUrl, activeSiteName);
 
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Link', `</.well-known/api-catalog>; rel="api-catalog", </llms.txt>; rel="alternate"; type="text/plain", </auth.md>; rel="describedby"; type="text/markdown"`);
   res.status(200).send(content);
 });
 
