@@ -2096,6 +2096,62 @@ app.get('/baca/:slug', (req, res, next) => {
   }
 });
 
+// RFC 9727 API Catalog Endpoint for AI Agent Discovery
+app.get('/.well-known/api-catalog', (req, res) => {
+  res.setHeader('Content-Type', 'application/linkset+json; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  const catalog = {
+    linkset: [
+      {
+        anchor: '/',
+        'service-desc': [
+          {
+            href: '/api/posts',
+            type: 'application/json',
+          },
+        ],
+        'service-doc': [
+          {
+            href: '/llms.txt',
+            type: 'text/plain',
+          },
+        ],
+        describedby: [
+          {
+            href: '/llms.txt',
+            type: 'text/plain',
+          },
+          {
+            href: '/llms-full.txt',
+            type: 'text/plain',
+          },
+        ],
+        alternate: [
+          {
+            href: '/feed.xml',
+            type: 'application/rss+xml',
+          },
+          {
+            href: '/sitemap.xml',
+            type: 'application/xml',
+          },
+        ],
+      },
+      {
+        anchor: '/api/posts',
+        'service-doc': [
+          {
+            href: '/llms.txt',
+            type: 'text/plain',
+          },
+        ],
+      },
+    ],
+  };
+  return res.send(JSON.stringify(catalog, null, 2));
+});
+
 // START EXPRESS + VITE SERVER
 async function startServer() {
   // Ensure static llms.txt and sitemap.xml are generated on server boot
@@ -2127,6 +2183,7 @@ if (isStaticOrApi) {
       try {
         let template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
         template = await vite.transformIndexHtml(url, template);
+        res.setHeader('Link', '</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"');
         res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
       } catch (e) {
         vite.ssrFixStacktrace(e as Error);
@@ -2150,6 +2207,7 @@ if (isStaticOrApi) {
 if (isStaticOrApi) {
   return next();
 }
+      res.setHeader('Link', '</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"');
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

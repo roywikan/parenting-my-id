@@ -95,6 +95,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'public, max-age=60',
+      'Link': '</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"',
     },
   });
 };

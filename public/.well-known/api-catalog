@@ -1,0 +1,48 @@
+{
+  "linkset": [
+    {
+      "anchor": "/",
+      "service-desc": [
+        {
+          "href": "/api/posts",
+          "type": "application/json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "/llms.txt",
+          "type": "text/plain"
+        }
+      ],
+      "describedby": [
+        {
+          "href": "/llms.txt",
+          "type": "text/plain"
+        },
+        {
+          "href": "/llms-full.txt",
+          "type": "text/plain"
+        }
+      ],
+      "alternate": [
+        {
+          "href": "/feed.xml",
+          "type": "application/rss+xml"
+        },
+        {
+          "href": "/sitemap.xml",
+          "type": "application/xml"
+        }
+      ]
+    },
+    {
+      "anchor": "/api/posts",
+      "service-doc": [
+        {
+          "href": "/llms.txt",
+          "type": "text/plain"
+        }
+      ]
+    }
+  ]
+}
