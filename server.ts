@@ -1984,6 +1984,43 @@ app.get('/baca/:slug', (req, res, next) => {
     const pageDesc = post.metaDescription || post.excerpt;
     const canonicalUrl = `${siteUrl}/baca/${post.slug}`;
 
+    // Check Accept: text/markdown header for AI Agents (Markdown for Agents)
+    const acceptHeader = (req.headers['accept'] || '').toLowerCase();
+    if (acceptHeader.includes('text/markdown')) {
+      const pubDate = new Date(post.createdAt).toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+      const mdLines: string[] = [
+        `# ${post.title}`,
+        '',
+        `> ${post.excerpt || ''}`,
+        '',
+        `- **Kategori:** ${post.category || 'Umum'}`,
+        `- **Penulis:** ${post.authorName || 'Tim Redaksi'}`,
+        `- **Waktu Baca:** ${post.readTimeMinutes || 5} menit`,
+        `- **Tanggal:** ${pubDate}`,
+        `- **URL Sumber:** ${canonicalUrl}`,
+        '',
+      ];
+      if (post.featuredImage) {
+        mdLines.push(`![${post.title}](${post.featuredImage})\n`);
+      }
+      mdLines.push(post.contentMarkdown || '');
+      mdLines.push('', '---', `*Sumber Artikel: [${siteName}](${siteUrl})*`);
+
+      const markdownText = mdLines.join('\n');
+      const tokenCount = Math.max(1, Math.ceil(markdownText.length / 4));
+
+      res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+      res.setHeader('x-markdown-tokens', tokenCount.toString());
+      res.setHeader('Vary', 'Accept');
+      res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+      res.setHeader('Link', `</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", <${canonicalUrl}>; rel="canonical"`);
+      return res.status(200).send(markdownText);
+    }
+
     const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 50, 'webp');
     const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700], 50, 'webp');
 
@@ -2089,6 +2126,8 @@ app.get('/baca/:slug', (req, res, next) => {
     htmlTemplate = htmlTemplate.replace(/<div id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
 
     res.header('Content-Type', 'text/html; charset=utf-8');
+    res.header('Vary', 'Accept');
+    res.header('Link', `</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", <${canonicalUrl}>; rel="canonical"`);
     return res.send(htmlTemplate);
   } catch (e) {
     console.error('Error pre-rendering HTML:', e);
@@ -2152,6 +2191,62 @@ app.get('/.well-known/api-catalog', (req, res) => {
   return res.send(JSON.stringify(catalog, null, 2));
 });
 
+function handleMarkdownNegotiation(req: express.Request, res: express.Response): boolean {
+  const acceptHeader = (req.headers['accept'] || '').toLowerCase();
+  if (!acceptHeader.includes('text/markdown')) {
+    return false;
+  }
+
+  const siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+  let siteName = 'Blog Engine';
+  let siteDescription = 'Portal berita & informasi terpercaya.';
+  try {
+    const configPath = path.join(process.cwd(), 'public', 'site_config.json');
+    if (fs.existsSync(configPath)) {
+      const fileData = fs.readFileSync(configPath, 'utf-8');
+      const parsed = JSON.parse(fileData);
+      siteName = parsed.site_name || siteName;
+      siteDescription = parsed.site_description || siteDescription;
+    }
+  } catch (e) {
+    // fallback
+  }
+
+  const mdLines: string[] = [
+    `# ${siteName}`,
+    '',
+    `> ${siteDescription}`,
+    '',
+    '## Navigasi & Sumber Daya Mesin',
+    `- **Katalog API:** ${siteUrl}/.well-known/api-catalog`,
+    `- **Dokumentasi Lengkap LLM:** ${siteUrl}/llms-full.txt`,
+    `- **Ringkasan Singkat LLM:** ${siteUrl}/llms.txt`,
+    `- **Umpan RSS:** ${siteUrl}/feed.xml`,
+    `- **Peta Situs XML:** ${siteUrl}/sitemap.xml`,
+    '',
+    '## Artikel Terbaru',
+  ];
+
+  for (const p of mockPosts.slice(0, 15)) {
+    mdLines.push(
+      `- [${p.title}](${siteUrl}/baca/${p.slug}) - *${p.category || 'Umum'}* (${p.readTimeMinutes || 5} menit baca)\n  ${p.excerpt || ''}`
+    );
+  }
+
+  mdLines.push('', '---', `*Konten disajikan secara otomatis dalam format Markdown untuk agen AI (RFC 8288 & Markdown for Agents).*`);
+
+  const markdownText = mdLines.join('\n');
+  const tokenCount = Math.max(1, Math.ceil(markdownText.length / 4));
+
+  res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+  res.setHeader('x-markdown-tokens', tokenCount.toString());
+  res.setHeader('Vary', 'Accept');
+  res.setHeader('Cache-Control', 'public, max-age=60');
+  res.setHeader('Link', '</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"');
+  res.status(200).send(markdownText);
+  return true;
+}
+
 // START EXPRESS + VITE SERVER
 async function startServer() {
   // Ensure static llms.txt and sitemap.xml are generated on server boot
@@ -2177,12 +2272,18 @@ async function startServer() {
                       url.includes('llms.txt') || 
                       url.includes('favicon.ico') || 
                       url.includes('/uploads/');
-if (isStaticOrApi) {
-  return next();
-}
+      if (isStaticOrApi) {
+        return next();
+      }
+
+      if (handleMarkdownNegotiation(req, res)) {
+        return;
+      }
+
       try {
         let template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
         template = await vite.transformIndexHtml(url, template);
+        res.setHeader('Vary', 'Accept');
         res.setHeader('Link', '</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"');
         res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
       } catch (e) {
@@ -2204,9 +2305,15 @@ if (isStaticOrApi) {
                       url.includes('llms.txt') || 
                       url.includes('favicon.ico') || 
                       url.includes('/uploads/');
-if (isStaticOrApi) {
-  return next();
-}
+      if (isStaticOrApi) {
+        return next();
+      }
+
+      if (handleMarkdownNegotiation(req, res)) {
+        return;
+      }
+
+      res.setHeader('Vary', 'Accept');
       res.setHeader('Link', '</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"');
       res.sendFile(path.join(distPath, 'index.html'));
     });

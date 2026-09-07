@@ -443,6 +443,18 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   // IF POST NOT FOUND (404 Page)
   if (!post) {
+    const acceptHeader = (request.headers.get('Accept') || '').toLowerCase();
+    if (acceptHeader.includes('text/markdown')) {
+      return new Response('# 404 Tidak Ditemukan\n\nArtikel yang Anda cari tidak tersedia atau telah dipindahkan.', {
+        status: 404,
+        headers: {
+          'Content-Type': 'text/markdown; charset=utf-8',
+          'Vary': 'Accept',
+          'Cache-Control': 'no-cache',
+        },
+      });
+    }
+
     const notFoundHtml = `
       <div class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div class="text-center max-w-md bg-white p-8 rounded-3xl shadow-lg border border-slate-200">
@@ -463,6 +475,52 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Vary': 'Accept',
+      },
+    });
+  }
+
+  // MARKDOWN CONTENT NEGOTIATION FOR AGENTS (RFC 8288 & Markdown for Agents)
+  const acceptHeader = (request.headers.get('Accept') || '').toLowerCase();
+  if (acceptHeader.includes('text/markdown')) {
+    const canonicalUrl = `${siteUrl}/baca/${post.slug}`;
+    const pubDateFormatted = new Date(post.createdAt).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+
+    const mdLines: string[] = [
+      `# ${post.title}`,
+      '',
+      `> ${post.excerpt || ''}`,
+      '',
+      `- **Kategori:** ${post.category || 'Umum'}`,
+      `- **Penulis:** ${post.authorName || 'Tim Redaksi'}`,
+      `- **Waktu Baca:** ${post.readTimeMinutes || 5} menit`,
+      `- **Tanggal:** ${pubDateFormatted}`,
+      `- **URL Sumber:** ${canonicalUrl}`,
+      '',
+    ];
+
+    if (post.featuredImage) {
+      mdLines.push(`![${post.title}](${post.featuredImage})\n`);
+    }
+
+    mdLines.push(post.contentMarkdown || '');
+    mdLines.push('', '---', `*Sumber Artikel: [${siteName}](${siteUrl})*`);
+
+    const markdownBody = mdLines.join('\n');
+    const tokenCount = Math.max(1, Math.ceil(markdownBody.length / 4));
+
+    return new Response(markdownBody, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/markdown; charset=utf-8',
+        'x-markdown-tokens': tokenCount.toString(),
+        'Vary': 'Accept',
+        'Cache-Control': 'public, max-age=3600, s-maxage=86400',
+        'Link': `</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", <${canonicalUrl}>; rel="canonical"`,
       },
     });
   }
@@ -711,12 +769,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     finalHtml = finalHtml.replace('</head>', `${seoHeadTags}</head>`);
   }
 
-  // Optimize CSS loading (non-blocking style loading with preload fallback)
-  finalHtml = finalHtml.replace(
-    /<link rel="stylesheet"([^>]*?)href="(\/assets\/[^"]+\.css)"([^>]*?)>/gi,
-    '<link rel="preload" href="$2" as="style" onload="this.onload=null;this.rel=\'stylesheet\'"><noscript><link rel="stylesheet" href="$2"></noscript>'
-  );
-
   // Inject pre-rendered static HTML into <div id="root">
   const initialDataJson = JSON.stringify({ post, autolinks, siteConfig }).replace(/</g, '\\u003c');
   const initialDataScript = `<script>window.__INITIAL_DATA__=${initialDataJson};</script>`;
@@ -727,6 +779,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'public, max-age=3600, s-maxage=86400',
+      'Vary': 'Accept',
+      'Link': `</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", <${canonicalUrl}>; rel="canonical"`,
     },
   });
 };

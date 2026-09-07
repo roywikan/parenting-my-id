@@ -50,6 +50,63 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const siteUrl = (env.SITE_URL || url.origin).replace(/\/$/, '');
   const featuredImage = siteConfig?.site_logo || 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&h=630&q=80&fm=webp';
 
+  // MARKDOWN CONTENT NEGOTIATION FOR AGENTS (RFC 8288 & Markdown for Agents)
+  const acceptHeader = (request.headers.get('Accept') || '').toLowerCase();
+  if (acceptHeader.includes('text/markdown')) {
+    let recentPosts: any[] = [];
+    if (env.DB) {
+      try {
+        const postsRes = await env.DB.prepare(
+          "SELECT title, slug, excerpt, category, read_time_minutes as readTimeMinutes FROM posts WHERE status = 'published' ORDER BY published_at DESC LIMIT 15"
+        ).all();
+        recentPosts = postsRes.results || [];
+      } catch (e) {
+        console.error('Failed to fetch posts for markdown homepage:', e);
+      }
+    }
+
+    const mdLines: string[] = [
+      `# ${siteName}`,
+      '',
+      `> ${siteDesc}`,
+      '',
+      '## Navigasi & Sumber Daya Mesin',
+      `- **Katalog API:** ${siteUrl}/.well-known/api-catalog`,
+      `- **Dokumentasi Lengkap LLM:** ${siteUrl}/llms-full.txt`,
+      `- **Ringkasan Singkat LLM:** ${siteUrl}/llms.txt`,
+      `- **Umpan RSS:** ${siteUrl}/feed.xml`,
+      `- **Peta Situs XML:** ${siteUrl}/sitemap.xml`,
+      '',
+      '## Artikel Terbaru',
+    ];
+
+    if (recentPosts.length > 0) {
+      for (const p of recentPosts) {
+        mdLines.push(
+          `- [${p.title}](${siteUrl}/baca/${p.slug}) - *${p.category || 'Umum'}* (${p.readTimeMinutes || 5} menit baca)\n  ${p.excerpt || ''}`
+        );
+      }
+    } else {
+      mdLines.push('- Konten artikel sedang dimuat dari sistem basis data.');
+    }
+
+    mdLines.push('', '---', `*Konten disajikan secara otomatis dalam format Markdown untuk agen AI (RFC 8288 & Markdown for Agents).*`);
+
+    const markdownText = mdLines.join('\n');
+    const tokenCount = Math.max(1, Math.ceil(markdownText.length / 4));
+
+    return new Response(markdownText, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/markdown; charset=utf-8',
+        'x-markdown-tokens': tokenCount.toString(),
+        'Vary': 'Accept',
+        'Cache-Control': 'public, max-age=60',
+        'Link': '</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"',
+      },
+    });
+  }
+
   // 3. Get static index.html from Cloudflare Pages Asset storage
   let htmlTemplate = '';
   try {
@@ -95,6 +152,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'public, max-age=60',
+      'Vary': 'Accept',
       'Link': '</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"',
     },
   });
