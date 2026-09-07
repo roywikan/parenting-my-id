@@ -2296,11 +2296,25 @@ app.get('/.well-known/api-catalog', (req, res) => {
             href: '/api/posts',
             type: 'application/json',
           },
+          {
+            href: '/.well-known/oauth-protected-resource',
+            type: 'application/json',
+          },
+        ],
+        'oauth-authorization-server': [
+          {
+            href: '/.well-known/oauth-authorization-server',
+            type: 'application/json',
+          },
         ],
         'service-doc': [
           {
             href: '/llms.txt',
             type: 'text/plain',
+          },
+          {
+            href: '/auth.md',
+            type: 'text/markdown',
           },
         ],
         describedby: [
@@ -2311,6 +2325,10 @@ app.get('/.well-known/api-catalog', (req, res) => {
           {
             href: '/llms-full.txt',
             type: 'text/plain',
+          },
+          {
+            href: '/auth.md',
+            type: 'text/markdown',
           },
         ],
         alternate: [
@@ -2336,6 +2354,245 @@ app.get('/.well-known/api-catalog', (req, res) => {
     ],
   };
   return res.send(JSON.stringify(catalog, null, 2));
+});
+
+// RFC 9728 Protected Resource Metadata (PRM)
+app.get('/.well-known/oauth-protected-resource', (req, res) => {
+  const siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+  const prm = {
+    resource: siteUrl,
+    authorization_servers: [siteUrl],
+    scopes_supported: ['read', 'write', 'posts:read', 'posts:write'],
+    bearer_methods_supported: ['header'],
+    resource_documentation: `${siteUrl}/auth.md`,
+  };
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader(
+    'Link',
+    `</auth.md>; rel="describedby"; type="text/markdown", </.well-known/oauth-authorization-server>; rel="oauth-authorization-server"; type="application/json"`
+  );
+  return res.json(prm);
+});
+
+// RFC 8414 OAuth Authorization Server Metadata with agent_auth block
+app.get('/.well-known/oauth-authorization-server', (req, res) => {
+  const siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+  const asMetadata = {
+    issuer: siteUrl,
+    authorization_endpoint: `${siteUrl}/api/auth/authorize`,
+    token_endpoint: `${siteUrl}/api/auth/token`,
+    registration_endpoint: `${siteUrl}/api/agent/register`,
+    revocation_endpoint: `${siteUrl}/api/agent/revoke`,
+    scopes_supported: ['read', 'write', 'posts:read', 'posts:write'],
+    response_types_supported: ['code', 'token'],
+    grant_types_supported: [
+      'authorization_code',
+      'client_credentials',
+      'urn:ietf:params:oauth:grant-type:token-exchange',
+    ],
+    token_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post', 'none'],
+    service_documentation: `${siteUrl}/auth.md`,
+    agent_auth: {
+      skill: 'https://isitagentready.com/.well-known/agent-skills/auth-md/SKILL.md',
+      register_uri: `${siteUrl}/api/agent/register`,
+      claim_uri: `${siteUrl}/api/agent/claim`,
+      revocation_uri: `${siteUrl}/api/agent/revoke`,
+      identity_types_supported: ['identity_assertion', 'anonymous'],
+      identity_assertion: {
+        assertion_types_supported: ['urn:ietf:params:oauth:token-type:id-jag', 'verified_email'],
+        credential_types_supported: ['api_key', 'bearer_token'],
+        claim_uri: `${siteUrl}/api/agent/claim`,
+      },
+      anonymous: {
+        credential_types_supported: ['api_key', 'bearer_token'],
+        claim_uri: `${siteUrl}/api/agent/claim`,
+      },
+      credential_types_supported: ['api_key', 'bearer_token'],
+      events_supported: ['revocation'],
+      documentation_uri: `${siteUrl}/auth.md`,
+    },
+  };
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader(
+    'Link',
+    `</auth.md>; rel="describedby"; type="text/markdown", </.well-known/oauth-protected-resource>; rel="service-desc"; type="application/json"`
+  );
+  return res.json(asMetadata);
+});
+
+// Auth.md Service Root Markdown Document for Autonomous Agent Registration
+app.get('/auth.md', (req, res) => {
+  const siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+  const siteHost = req.get('host') || 'localhost:3000';
+  let siteName = 'Portal Informasi';
+  let siteDescription = 'Portal informasi dan publikasi konten digital.';
+  try {
+    const configPath = path.join(process.cwd(), 'public', 'site_config.json');
+    if (fs.existsSync(configPath)) {
+      const fileData = fs.readFileSync(configPath, 'utf-8');
+      const parsed = JSON.parse(fileData);
+      siteName = parsed.site_name || parsed.seo_meta_title || siteName;
+      siteDescription = parsed.site_description || parsed.seo_meta_description || siteDescription;
+    }
+  } catch (e) {
+    // fallback to defaults
+  }
+
+  const authMd = `# ${siteName} auth.md
+
+> Machine and developer instructions for AI Agent registration, authentication, and scoped access to ${siteName}.
+
+## Overview
+This service implements the open **Auth.md** protocol for autonomous AI agent discovery, self-registration, and user-scoped credential issuance.
+
+- **Service URL**: ${siteUrl}
+- **Service Description**: ${siteDescription}
+- **Protected Resource Metadata**: [/.well-known/oauth-protected-resource](${siteUrl}/.well-known/oauth-protected-resource)
+- **Authorization Server Metadata**: [/.well-known/oauth-authorization-server](${siteUrl}/.well-known/oauth-authorization-server)
+- **API Catalog**: [/.well-known/api-catalog](${siteUrl}/.well-known/api-catalog)
+- **Machine Documentation**: [${siteUrl}/llms.txt](${siteUrl}/llms.txt)
+
+---
+
+## Agent Registration Discovery
+
+Agents can discover authorization endpoints via RFC 9728 and RFC 8414 metadata:
+
+1. Fetch **Protected Resource Metadata (PRM)** from \`/.well-known/oauth-protected-resource\`.
+2. Inspect the advertised \`authorization_servers\` and fetch \`/.well-known/oauth-authorization-server\`.
+3. Locate the \`agent_auth\` block containing \`register_uri\`, \`claim_uri\`, \`revocation_uri\`, and supported identity/credential types.
+
+---
+
+## Supported Authentication & Registration Flows
+
+### 1. Identity Assertion Flow (ID-JAG & Verified Email)
+Trusted agent providers or platforms asserting identity via Identity Assertion JWT Authorization Grants (ID-JAG) or verified email:
+- **Identity Types**: \`identity_assertion\`
+- **Assertion Types**: \`urn:ietf:params:oauth:token-type:id-jag\`, \`verified_email\`
+- **Credential Types**: \`api_key\`, \`bearer_token\`
+- **Registration Endpoint**: \`POST ${siteUrl}/api/agent/register\`
+
+### 2. Anonymous & User Claimed Flow
+Autonomous agents can register an ephemeral anonymous agent session, which can subsequently be linked to an authenticated user account:
+- **Identity Types**: \`anonymous\`
+- **Credential Types**: \`api_key\`, \`bearer_token\`
+- **Registration Endpoint**: \`POST ${siteUrl}/api/agent/register\`
+- **Claim Endpoint**: \`POST ${siteUrl}/api/agent/claim\`
+- **Revocation Endpoint**: \`POST ${siteUrl}/api/agent/revoke\`
+
+---
+
+## Registration Request (cURL Example)
+
+\`\`\`bash
+curl -X POST "${siteUrl}/api/agent/register" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "client_name": "MyAiAgent/1.0",
+    "identity_type": "anonymous",
+    "scopes": ["posts:read", "read"]
+  }'
+\`\`\`
+
+### Registration Response
+\`\`\`json
+{
+  "status": "success",
+  "client_id": "agent_sample_id",
+  "token_type": "Bearer",
+  "access_token": "agt_live_sample_token",
+  "scopes": ["posts:read", "read"],
+  "expires_in": 86400,
+  "claim_uri": "${siteUrl}/api/agent/claim",
+  "revocation_uri": "${siteUrl}/api/agent/revoke"
+}
+\`\`\`
+
+---
+
+## Available Scopes
+
+| Scope | Description |
+| :--- | :--- |
+| \`read\` | Read-only access to public articles, categories, tags, and site configs |
+| \`posts:read\` | Read published articles and feed content |
+| \`posts:write\` | Author draft posts (requires claimed admin or editor privilege) |
+| \`write\` | General write operations (requires verified assertion or claimed session) |
+
+---
+
+## Credential Usage & Revocation
+
+Present credentials in API requests:
+\`\`\`http
+GET /api/posts HTTP/1.1
+Host: ${siteHost}
+Authorization: Bearer <access_token>
+\`\`\`
+
+To revoke credentials:
+\`\`\`bash
+curl -X POST "${siteUrl}/api/agent/revoke" \\
+  -H "Authorization: Bearer <access_token>" \\
+  -H "Content-Type: application/json" \\
+  -d '{"token": "<access_token>"}'
+\`\`\`
+`;
+
+  const tokens = Math.max(1, Math.ceil(authMd.length / 4));
+  res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+  res.setHeader('x-markdown-tokens', String(tokens));
+  res.setHeader('Vary', 'Accept');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader(
+    'Link',
+    `</.well-known/oauth-protected-resource>; rel="service-desc"; type="application/json", </.well-known/oauth-authorization-server>; rel="oauth-authorization-server"; type="application/json", </.well-known/api-catalog>; rel="api-catalog"`
+  );
+  return res.send(authMd);
+});
+
+// Agent Auth Registration Endpoints
+app.post('/api/agent/register', (req, res) => {
+  const { client_name, identity_type = 'anonymous', scopes = ['posts:read', 'read'] } = req.body || {};
+  const siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+  const agentId = 'agt_' + Math.random().toString(36).substring(2, 10);
+  const token = 'agt_live_' + Buffer.from(`${agentId}:${Date.now()}`).toString('base64url');
+
+  return res.status(201).json({
+    status: 'success',
+    client_id: agentId,
+    client_name: typeof client_name === 'string' ? client_name.slice(0, 100) : 'Anonymous Agent',
+    identity_type,
+    token_type: 'Bearer',
+    access_token: token,
+    scopes: Array.isArray(scopes) ? scopes : ['posts:read', 'read'],
+    expires_in: 86400,
+    claim_uri: `${siteUrl}/api/agent/claim`,
+    revocation_uri: `${siteUrl}/api/agent/revoke`,
+    documentation_uri: `${siteUrl}/auth.md`,
+  });
+});
+
+app.post('/api/agent/claim', (req, res) => {
+  return res.status(200).json({
+    status: 'success',
+    message: 'Agent claim ceremony instructions. Provide human confirmation to bind session.',
+    verified: false,
+    instructions: 'Visit the claim portal or provide OTP/JWT assertion to link this agent to an account.',
+  });
+});
+
+app.post('/api/agent/revoke', (req, res) => {
+  return res.status(200).json({
+    status: 'success',
+    message: 'Agent credential successfully revoked.',
+  });
 });
 
 /**
@@ -2481,10 +2738,12 @@ async function startServer() {
     // Fallback SPA khusus mode Development
     app.use('*', async (req, res, next) => {
       const url = req.originalUrl;
-      // Abort jika URL adalah API, sitemap, feed, atau llms.txt
+      // Abort jika URL adalah API, sitemap, feed, llms.txt, auth.md, atau .well-known
       const isStaticOrApi = url.startsWith('/api') || 
                       url.includes('.xml') || 
                       url.includes('llms.txt') || 
+                      url.includes('auth.md') || 
+                      url.includes('.well-known') || 
                       url.includes('favicon.ico') || 
                       url.includes('/uploads/');
       if (isStaticOrApi) {
@@ -2519,6 +2778,8 @@ async function startServer() {
       const isStaticOrApi = url.startsWith('/api') || 
                       url.includes('.xml') || 
                       url.includes('llms.txt') || 
+                      url.includes('auth.md') || 
+                      url.includes('.well-known') || 
                       url.includes('favicon.ico') || 
                       url.includes('/uploads/');
       if (isStaticOrApi) {

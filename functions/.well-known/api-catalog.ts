@@ -11,12 +11,26 @@ export const onRequest: PagesFunction<Env> = async () => {
           {
             "href": "/api/posts",
             "type": "application/json"
+          },
+          {
+            "href": "/.well-known/oauth-protected-resource",
+            "type": "application/json"
+          }
+        ],
+        "oauth-authorization-server": [
+          {
+            "href": "/.well-known/oauth-authorization-server",
+            "type": "application/json"
           }
         ],
         "service-doc": [
           {
             "href": "/llms.txt",
             "type": "text/plain"
+          },
+          {
+            "href": "/auth.md",
+            "type": "text/markdown"
           }
         ],
         "describedby": [
@@ -27,6 +41,10 @@ export const onRequest: PagesFunction<Env> = async () => {
           {
             "href": "/llms-full.txt",
             "type": "text/plain"
+          },
+          {
+            "href": "/auth.md",
+            "type": "text/markdown"
           }
         ],
         "alternate": [

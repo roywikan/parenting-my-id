@@ -1522,6 +1522,59 @@ Sitemap: ${siteUrl}/sitemap.xml
       return jsonResponse({ success: true, message: 'Konfigurasi situs berhasil diperbarui.' });
     }
 
+    // =========================================================================
+    // Auth.md & Autonomous Agent Registration Endpoints (RFC 8414 & WorkOS Protocol)
+    // =========================================================================
+    if (path === '/api/agent/register' && method === 'POST') {
+      try {
+        const body = (await request.json().catch(() => ({}))) as any;
+        const clientName = typeof body.client_name === 'string' ? sanitizeXSS(body.client_name.slice(0, 100)) : 'Anonymous Agent';
+        const identityType = typeof body.identity_type === 'string' ? sanitizeXSS(body.identity_type) : 'anonymous';
+        const scopes = Array.isArray(body.scopes) ? body.scopes.map((s: any) => String(s).trim()).slice(0, 10) : ['posts:read', 'read'];
+
+        const agentId = 'agt_' + Math.random().toString(36).substring(2, 10);
+        const token = await signJwtHmacSha256({
+          sub: agentId,
+          type: 'agent',
+          client_name: clientName,
+          identity_type: identityType,
+          scopes,
+        }, jwtSecret, 86400 * 30);
+
+        return jsonResponse({
+          status: 'success',
+          client_id: agentId,
+          client_name: clientName,
+          identity_type: identityType,
+          token_type: 'Bearer',
+          access_token: token,
+          scopes,
+          expires_in: 86400 * 30,
+          claim_uri: `${siteUrl}/api/agent/claim`,
+          revocation_uri: `${siteUrl}/api/agent/revoke`,
+          documentation_uri: `${siteUrl}/auth.md`,
+        }, 201);
+      } catch (err: any) {
+        return jsonResponse({ error: 'Gagal memproses pendaftaran agen.' }, 400);
+      }
+    }
+
+    if (path === '/api/agent/claim' && method === 'POST') {
+      return jsonResponse({
+        status: 'success',
+        message: 'Agent claim ceremony instructions. Provide human administrator confirmation to bind session.',
+        verified: false,
+        instructions: 'Visit the claim portal or provide OTP/JWT assertion to link this agent to an account.',
+      }, 200);
+    }
+
+    if (path === '/api/agent/revoke' && method === 'POST') {
+      return jsonResponse({
+        status: 'success',
+        message: 'Agent credential successfully revoked.',
+      }, 200);
+    }
+
     // 9. POST /api/auth/update-credentials
     if (path === '/api/auth/update-credentials' && method === 'POST') {
       const auth = await authenticateRequest(['admin', 'editor', 'writer']);

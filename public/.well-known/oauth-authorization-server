@@ -1,0 +1,64 @@
+{
+  "issuer": "/",
+  "authorization_endpoint": "/api/auth/authorize",
+  "token_endpoint": "/api/auth/token",
+  "registration_endpoint": "/api/agent/register",
+  "revocation_endpoint": "/api/agent/revoke",
+  "scopes_supported": [
+    "read",
+    "write",
+    "posts:read",
+    "posts:write"
+  ],
+  "response_types_supported": [
+    "code",
+    "token"
+  ],
+  "grant_types_supported": [
+    "authorization_code",
+    "client_credentials",
+    "urn:ietf:params:oauth:grant-type:token-exchange"
+  ],
+  "token_endpoint_auth_methods_supported": [
+    "client_secret_basic",
+    "client_secret_post",
+    "none"
+  ],
+  "service_documentation": "/auth.md",
+  "agent_auth": {
+    "skill": "https://isitagentready.com/.well-known/agent-skills/auth-md/SKILL.md",
+    "register_uri": "/api/agent/register",
+    "claim_uri": "/api/agent/claim",
+    "revocation_uri": "/api/agent/revoke",
+    "identity_types_supported": [
+      "identity_assertion",
+      "anonymous"
+    ],
+    "identity_assertion": {
+      "assertion_types_supported": [
+        "urn:ietf:params:oauth:token-type:id-jag",
+        "verified_email"
+      ],
+      "credential_types_supported": [
+        "api_key",
+        "bearer_token"
+      ],
+      "claim_uri": "/api/agent/claim"
+    },
+    "anonymous": {
+      "credential_types_supported": [
+        "api_key",
+        "bearer_token"
+      ],
+      "claim_uri": "/api/agent/claim"
+    },
+    "credential_types_supported": [
+      "api_key",
+      "bearer_token"
+    ],
+    "events_supported": [
+      "revocation"
+    ],
+    "documentation_uri": "/auth.md"
+  }
+}
