@@ -312,6 +312,70 @@ export interface Post {
   views: number;
   createdAt: string;
   updatedAt: string;
+  postType?: 'article' | 'interactive_configurator' | 'interactive_showcase' | 'interactive_radar' | 'interactive_quiz';
+  interactiveConfigurator?: InteractiveConfiguratorData;
+  interactiveShowcase?: InteractiveShowcaseData;
+  interactiveRadar?: RadarWidgetConfig;
+  interactiveQuiz?: QuizWidgetConfig;
+}
+
+export interface InteractiveRecommendation {
+  judul: string;
+  deskripsi: string;
+  langkah_implementasi: string[];
+  tips_tambahan: string;
+  visual_hex_color: string;
+}
+
+export interface InteractiveConfiguratorData {
+  criterion1Name: string;
+  criterion1Options: string[];
+  criterion2Name: string;
+  criterion2Options: string[];
+  criterion3Name: string;
+  criterion3Options: string[];
+  recommendations: Record<string, InteractiveRecommendation>; // Key format: "option1_option2_option3"
+}
+
+export interface CorePillar {
+  id?: string;
+  title: string;
+  icon: string; // Lucide icon name
+  desc: string; // Short desc for left tab
+  longDesc: string; // Long desc for right panel
+  content?: string; // Backwards compatibility content
+  challenge: string; // Daily tactical challenge
+  tips: string[]; // List of practical tips
+  challengeTitle?: string;
+  footnote?: string;
+  methodology?: string;
+}
+
+export interface InteractiveShowcaseData {
+  pillars: CorePillar[];
+}
+
+export interface RadarAxis {
+  id: string;          // e.g. 'axis_1', 'kesabaran'
+  label: string;       // e.g. 'Kesabaran'
+  defaultValue: number; // Scale 1 - 10
+}
+
+export interface RadarProfileResult {
+  profileName: string;         // Profiling title
+  minScores?: Record<string, number>; // Minimum score boundaries for each axis (key: axis.id, value: minimum score)
+  description: string;         // Analysis text
+  primaryStrength: string;     // Key strength
+  criticalWeakness: string;    // Key weakness
+  actionSteps: string[];       // Action recommendations
+  cardThemeHex?: string;       // Custom pastel background
+}
+
+export interface RadarWidgetConfig {
+  widgetTitle: string;         // Main title
+  widgetDescription: string;   // Short description
+  axes: RadarAxis[];           // 5-6 dimensions
+  profiles: RadarProfileResult[]; // Logic mapping for profiling results
 }
 
 export interface AutoLink {
@@ -352,4 +416,24 @@ export interface DatabaseDumpOptions {
   insertMode: 'INSERT OR REPLACE INTO' | 'INSERT INTO';
   addDropTable: boolean;
   format: 'sql' | 'json';
+}
+
+export interface QuizOption {
+  text: string;
+  isCorrect: boolean;
+}
+
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  options: QuizOption[];
+  category: string;
+}
+
+export interface QuizWidgetConfig {
+  widgetTitle: string;
+  widgetDescription: string;
+  baseScore: number;
+  pointsPerCorrect: number;
+  questions: QuizQuestion[];
 }

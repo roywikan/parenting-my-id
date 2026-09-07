@@ -11,6 +11,103 @@ import AdSlot from '../components/AdSlot';
 import { CusdisComments } from '../components/CusdisComments';
 import { optimizeUnsplashUrl, getUnsplashSrcSet, getOptimizedAvatarUrl } from '../lib/imageUtils';
 import { parseAndRenderReferences } from '../lib/referenceParser';
+import * as LucideIcons from 'lucide-react';
+import InteractiveShowcase from '../components/InteractiveShowcase';
+import InteractiveRadar from '../components/InteractiveRadar';
+import InteractiveQuiz from '../components/InteractiveQuiz';
+
+function DynamicPillarIcon({ name, className }: { name: string; className?: string }) {
+  const IconComponent = (LucideIcons as any)[name] || LucideIcons.Heart;
+  return <IconComponent className={className} />;
+}
+
+interface Criterion {
+  id: string;
+  name: string;
+  placeholder?: string;
+  options: string[];
+}
+
+interface Recommendation {
+  title: string;
+  category?: string;
+  recommendation: string;
+  [key: string]: any;
+}
+
+function ConfiguratorViewer({ criteria = [], recommendations = [] }: { criteria: Criterion[]; recommendations: Recommendation[] }) {
+  const [selections, setSelections] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setSelections({});
+  }, [criteria]);
+
+  const matchedRecommendation = useMemo(() => {
+    const allSelected = criteria.every(crit => !!selections[crit.id]);
+    if (!allSelected) return null;
+
+    return recommendations.find((rec) => {
+      return criteria.every(crit => {
+        const selectedVal = selections[crit.id];
+        const recVal = rec[crit.id];
+        return !recVal || recVal === selectedVal;
+      });
+    });
+  }, [selections, criteria, recommendations]);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {criteria.map((crit) => (
+          <div key={crit.id} className="space-y-1.5">
+            <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              {crit.name}
+            </label>
+            <select
+              value={selections[crit.id] || ''}
+              onChange={(e) => setSelections({ ...selections, [crit.id]: e.target.value })}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-850 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer"
+            >
+              <option value="">{crit.placeholder || 'Pilih...'}</option>
+              {crit.options.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+          </div>
+        ))}
+      </div>
+
+      <div className="pt-2">
+        {matchedRecommendation ? (
+          <div className="p-5 sm:p-6 rounded-2xl border border-rose-200 dark:border-rose-950/40 bg-rose-500/[0.01] dark:bg-rose-500/[0.02] space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-black text-[10px] uppercase tracking-wider">
+                {matchedRecommendation.category || 'Rekomendasi'}
+              </span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md flex items-center gap-1">
+                <LucideIcons.CheckCircle2 className="w-3.5 h-3.5" /> Hasil Sesuai Kriteria
+              </span>
+            </div>
+            <h4 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
+              {matchedRecommendation.title}
+            </h4>
+            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+              {matchedRecommendation.recommendation}
+            </p>
+          </div>
+        ) : (
+          <div className="p-6 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+              💡 Silakan pilih seluruh kriteria di atas untuk menampilkan rekomendasi dan solusi asuhan secara real-time.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 
 interface ArticleDetailViewProps {
   slug: string;
@@ -613,6 +710,43 @@ export default function ArticleDetailView({
         enableAdsense={siteConfig?.enable_adsense}
         slotLabel="IN-ARTICLE MIDDLE (HIGH CTR)"
       />
+
+      {/* DETECT INTERACTIVE CONFIGURATOR / SHOWCASE POST TYPE */}
+      {post.postType === 'interactive_configurator' && post.interactiveConfigurator && (
+        <div className="bg-slate-50 dark:bg-slate-900/40 p-5 sm:p-7 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs text-slate-800 dark:text-slate-100 space-y-6">
+          <div className="space-y-1 pb-4 border-b border-slate-200 dark:border-slate-800">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-200 font-extrabold text-[10px] uppercase tracking-wider">
+              Widget Interaktif
+            </div>
+            <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
+              {post.interactiveConfigurator.title}
+            </h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+              {post.interactiveConfigurator.description}
+            </p>
+          </div>
+          <ConfiguratorViewer 
+            criteria={post.interactiveConfigurator.criteria} 
+            recommendations={post.interactiveConfigurator.recommendations} 
+          />
+        </div>
+      )}
+
+      {post.postType === 'interactive_showcase' && post.interactiveShowcase && (
+        <InteractiveShowcase 
+          pillars={post.interactiveShowcase.pillars}
+          title={post.interactiveShowcase.title}
+          subtitle={post.interactiveShowcase.description}
+        />
+      )}
+
+      {post.postType === 'interactive_radar' && post.interactiveRadar && (
+        <InteractiveRadar config={post.interactiveRadar} />
+      )}
+
+      {post.postType === 'interactive_quiz' && post.interactiveQuiz && (
+        <InteractiveQuiz config={post.interactiveQuiz} />
+      )}
 
       {/* ARTICLE CONTENT BODY WITH AUTO-LINKING */}
       <div
