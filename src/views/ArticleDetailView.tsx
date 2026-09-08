@@ -785,6 +785,25 @@ export default function ArticleDetailView({
         dangerouslySetInnerHTML={{ __html: parsedHtml }}
       />
 
+      {/* PENGATURAN DISCLAIMER (E-E-A-T COMPLIANT) */}
+      {post.disclaimerType && post.disclaimerType !== 'none' && (
+        <div id="article-disclaimer-box" className="my-8 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/80 flex items-start gap-3 shadow-sm max-w-3xl mx-auto">
+          <LucideIcons.AlertCircle className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+              Catatan Penegasan & Disclaimer
+            </span>
+            <p className="text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed">
+              {post.disclaimerType === 'medical_psychology' && "Hasil evaluasi interaktif dan informasi dalam artikel ini dirancang sebagai instrumen refleksi diri dan edukasi mandiri. Konten ini tidak menggantikan diagnosis, pemeriksaan medis, atau konsultasi resmi dengan psikolog klinis, dokter, atau tenaga ahli kesehatan terlisensi."}
+              {post.disclaimerType === 'financial' && "Seluruh informasi keuangan, tips investasi, dan kalkulasi di dalam artikel ini bersifat edukatif saja dan tidak boleh ditafsirkan sebagai nasihat keuangan resmi atau ajakan berinvestasi. Hubungi penasihat keuangan bersertifikasi sebelum mengambil keputusan."}
+              {post.disclaimerType === 'legal' && "Konten ini dipublikasikan untuk tujuan informasi umum dan bantuan pembelajaran mandiri. Informasi hukum di sini tidak membentuk hubungan penasihat-klien dan bukan merupakan konsultasi hukum formal resmi. Hubungi penasihat hukum profesional jika Anda memerlukan bantuan khusus."}
+              {post.disclaimerType === 'academic' && "Naskah, kisi-kisi soal, naskah ujian, atau materi tes yang disajikan di halaman ini disiapkan untuk simulasi pendidikan dan latihan mandiri saja. Kelulusan, penilaian akhir, atau evaluasi akademik formal sepenuhnya mengikuti keputusan resmi dari institusi penyelenggara terkait."}
+              {post.disclaimerType === 'custom' && post.customDisclaimerText}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* CUSTOM BANNER: END OF EACH ARTICLE/POST */}
       {siteConfig?.ad_banner_article_end_code && (
         <AdSlot

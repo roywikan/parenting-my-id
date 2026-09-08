@@ -70,6 +70,10 @@ interface RichPostEditorProps {
   setInteractiveHabitSimulator?: (val: any) => void;
   interactiveQaColumn?: any;
   setInteractiveQaColumn?: (val: any) => void;
+  disclaimerType?: 'none' | 'medical_psychology' | 'financial' | 'legal' | 'academic' | 'custom';
+  setDisclaimerType?: (val: 'none' | 'medical_psychology' | 'financial' | 'legal' | 'academic' | 'custom') => void;
+  customDisclaimerText?: string;
+  setCustomDisclaimerText?: (val: string) => void;
 }
 
 export default function RichPostEditor({
@@ -129,6 +133,10 @@ export default function RichPostEditor({
   setInteractiveHabitSimulator,
   interactiveQaColumn,
   setInteractiveQaColumn,
+  disclaimerType = 'none',
+  setDisclaimerType,
+  customDisclaimerText = '',
+  setCustomDisclaimerText,
 }: RichPostEditorProps) {
   // Rejection modal state
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -4045,6 +4053,50 @@ export default function RichPostEditor({
                 placeholder="pola asuh, balita, gizi anak"
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
               />
+            </div>
+
+            {/* PENGATURAN DISCLAIMER (E-E-A-T COMPLIANT) */}
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800/50">
+              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                Disclaimer Penegasan Konten (E-E-A-T)
+              </label>
+              <select
+                value={disclaimerType}
+                onChange={(e) => setDisclaimerType && setDisclaimerType(e.target.value as any)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs bg-white dark:bg-slate-900"
+              >
+                <option value="none">Tanpa Disclaimer (Default)</option>
+                <option value="medical_psychology">Kesehatan / Medis / Psikologi</option>
+                <option value="financial">Keuangan / Investasi / Tips Finansial</option>
+                <option value="legal">Hukum / Peraturan / Legalitas</option>
+                <option value="academic">Akademik / Ujian / Pendidikan</option>
+                <option value="custom">Kustom (Tulis Teks Sendiri)</option>
+              </select>
+
+              {disclaimerType === 'custom' && (
+                <div className="mt-2">
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                    Isi Teks Disclaimer Kustom
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={customDisclaimerText}
+                    onChange={(e) => setCustomDisclaimerText && setCustomDisclaimerText(e.target.value)}
+                    placeholder="Tuliskan catatan disclaimer hukum/medis/akademis kustom Anda di sini..."
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900"
+                  />
+                </div>
+              )}
+
+              {disclaimerType !== 'none' && disclaimerType !== 'custom' && (
+                <div className="mt-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 leading-relaxed">
+                  <span className="font-semibold block mb-0.5 text-slate-600 dark:text-slate-400">Pratinjau Disclaimer:</span>
+                  {disclaimerType === 'medical_psychology' && "Hasil evaluasi interaktif dan informasi dalam artikel ini dirancang sebagai instrumen refleksi diri dan edukasi mandiri. Konten ini tidak menggantikan diagnosis, pemeriksaan medis, atau konsultasi resmi dengan psikolog klinis, dokter, atau tenaga ahli kesehatan terlisensi."}
+                  {disclaimerType === 'financial' && "Seluruh informasi keuangan, tips investasi, dan kalkulasi di dalam artikel ini bersifat edukatif saja dan tidak boleh ditafsirkan sebagai nasihat keuangan resmi atau ajakan berinvestasi. Hubungi penasihat keuangan bersertifikasi sebelum mengambil keputusan."}
+                  {disclaimerType === 'legal' && "Konten ini dipublikasikan untuk tujuan informasi umum dan bantuan pembelajaran mandiri. Informasi hukum di sini tidak membentuk hubungan penasihat-klien dan bukan merupakan konsultasi hukum formal resmi. Hubungi penasihat hukum profesional jika Anda memerlukan bantuan khusus."}
+                  {disclaimerType === 'academic' && "Naskah, kisi-kisi soal, naskah ujian, atau materi tes yang disajikan di halaman ini disiapkan untuk simulasi pendidikan dan latihan mandiri saja. Kelulusan, penilaian akhir, atau evaluasi akademik formal sepenuhnya mengikuti keputusan resmi dari institusi penyelenggara terkait."}
+                </div>
+              )}
             </div>
 
           </div>
