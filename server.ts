@@ -1018,7 +1018,7 @@ app.delete('/api/users/:id', requireAuth(['admin']), (req, res) => {
 
 // POST Create or Update Post (With Multi-Author, Auto-Save Draft & Revision History max 3 - Protected)
 app.post('/api/posts', requireAuth(['admin', 'editor', 'writer']), (req, res) => {
-  const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, co_writers, status, rejectionReason, metaTitle, metaDescription, tags, postType, interactiveConfigurator, interactiveShowcase, interactiveRadar, interactiveQuiz } = req.body;
+  const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, co_writers, status, rejectionReason, metaTitle, metaDescription, tags, postType, interactiveConfigurator, interactiveShowcase, interactiveRadar, interactiveQuiz, interactiveTimelineSlider, interactiveBattleCard, interactiveQuizRouter, interactiveHabitSimulator, interactiveQaColumn } = req.body;
 
   if (!title || !contentMarkdown) {
     return res.status(400).json({ error: 'Judul dan konten markdown wajib diisi.' });
@@ -1089,6 +1089,11 @@ app.post('/api/posts', requireAuth(['admin', 'editor', 'writer']), (req, res) =>
         interactiveShowcase: interactiveShowcase !== undefined ? interactiveShowcase : existingPost.interactiveShowcase,
         interactiveRadar: interactiveRadar !== undefined ? interactiveRadar : existingPost.interactiveRadar,
         interactiveQuiz: interactiveQuiz !== undefined ? interactiveQuiz : existingPost.interactiveQuiz,
+        interactiveTimelineSlider: interactiveTimelineSlider !== undefined ? interactiveTimelineSlider : existingPost.interactiveTimelineSlider,
+        interactiveBattleCard: interactiveBattleCard !== undefined ? interactiveBattleCard : existingPost.interactiveBattleCard,
+        interactiveQuizRouter: interactiveQuizRouter !== undefined ? interactiveQuizRouter : existingPost.interactiveQuizRouter,
+        interactiveHabitSimulator: interactiveHabitSimulator !== undefined ? interactiveHabitSimulator : existingPost.interactiveHabitSimulator,
+        interactiveQaColumn: interactiveQaColumn !== undefined ? interactiveQaColumn : existingPost.interactiveQaColumn,
         updatedAt: new Date().toISOString(),
       };
 
@@ -1136,6 +1141,11 @@ app.post('/api/posts', requireAuth(['admin', 'editor', 'writer']), (req, res) =>
     interactiveShowcase: interactiveShowcase || null,
     interactiveRadar: interactiveRadar || null,
     interactiveQuiz: interactiveQuiz || null,
+    interactiveTimelineSlider: interactiveTimelineSlider || null,
+    interactiveBattleCard: interactiveBattleCard || null,
+    interactiveQuizRouter: interactiveQuizRouter || null,
+    interactiveHabitSimulator: interactiveHabitSimulator || null,
+    interactiveQaColumn: interactiveQaColumn || null,
     views: 0,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

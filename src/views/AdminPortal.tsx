@@ -233,11 +233,16 @@ export default function AdminPortal({
   const [editorTags, setEditorTags] = useState('parenting, anak, keluarga');
   const [editorAuthorId, setEditorAuthorId] = useState<number>(currentUser?.id || 1);
   const [editorCoAuthorIds, setEditorCoAuthorIds] = useState<number[]>([]);
-  const [editorPostType, setEditorPostType] = useState<'article' | 'interactive_configurator' | 'interactive_showcase' | 'interactive_radar' | 'interactive_quiz'>('article');
+  const [editorPostType, setEditorPostType] = useState<'article' | 'interactive_configurator' | 'interactive_showcase' | 'interactive_radar' | 'interactive_quiz' | 'interactive_timeline_slider' | 'interactive_battle_card' | 'interactive_quiz_router' | 'interactive_habit_simulator' | 'interactive_qa_column'>('article');
   const [editorInteractiveConfigurator, setEditorInteractiveConfigurator] = useState<any>(null);
   const [editorInteractiveShowcase, setEditorInteractiveShowcase] = useState<any>(null);
   const [editorInteractiveRadar, setEditorInteractiveRadar] = useState<any>(null);
   const [editorInteractiveQuiz, setEditorInteractiveQuiz] = useState<any>(null);
+  const [editorInteractiveTimelineSlider, setEditorInteractiveTimelineSlider] = useState<any>(null);
+  const [editorInteractiveBattleCard, setEditorInteractiveBattleCard] = useState<any>(null);
+  const [editorInteractiveQuizRouter, setEditorInteractiveQuizRouter] = useState<any>(null);
+  const [editorInteractiveHabitSimulator, setEditorInteractiveHabitSimulator] = useState<any>(null);
+  const [editorInteractiveQaColumn, setEditorInteractiveQaColumn] = useState<any>(null);
 
   // Auto-Save Draft Status Indicator
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'dirty'>('saved');
@@ -1334,6 +1339,11 @@ export default function AdminPortal({
     setEditorInteractiveShowcase(post.interactiveShowcase || null);
     setEditorInteractiveRadar(post.interactiveRadar || null);
     setEditorInteractiveQuiz(post.interactiveQuiz || null);
+    setEditorInteractiveTimelineSlider(post.interactiveTimelineSlider || null);
+    setEditorInteractiveBattleCard(post.interactiveBattleCard || null);
+    setEditorInteractiveQuizRouter(post.interactiveQuizRouter || null);
+    setEditorInteractiveHabitSimulator(post.interactiveHabitSimulator || null);
+    setEditorInteractiveQaColumn(post.interactiveQaColumn || null);
     setActiveTab('editor');
     setAutoSaveStatus('saved');
   };
@@ -1358,6 +1368,11 @@ export default function AdminPortal({
     setEditorInteractiveShowcase(null);
     setEditorInteractiveRadar(null);
     setEditorInteractiveQuiz(null);
+    setEditorInteractiveTimelineSlider(null);
+    setEditorInteractiveBattleCard(null);
+    setEditorInteractiveQuizRouter(null);
+    setEditorInteractiveHabitSimulator(null);
+    setEditorInteractiveQaColumn(null);
     setActiveTab('editor');
     setAutoSaveStatus('saved');
   };
@@ -1404,6 +1419,11 @@ export default function AdminPortal({
           interactiveShowcase: editorInteractiveShowcase,
           interactiveRadar: editorInteractiveRadar,
           interactiveQuiz: editorInteractiveQuiz,
+          interactiveTimelineSlider: editorInteractiveTimelineSlider,
+          interactiveBattleCard: editorInteractiveBattleCard,
+          interactiveQuizRouter: editorInteractiveQuizRouter,
+          interactiveHabitSimulator: editorInteractiveHabitSimulator,
+          interactiveQaColumn: editorInteractiveQaColumn,
         });
 
         if (saved && saved.id && !editingPostId) {
@@ -1419,7 +1439,7 @@ export default function AdminPortal({
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
-  }, [editorTitle, editorMarkdown, editorExcerpt, editorCategory, editorImage, editorAuthorId, editorCoAuthorIds, editorPostType, editorInteractiveConfigurator, editorInteractiveShowcase, editorInteractiveRadar, editorInteractiveQuiz, currentUser, editingPostId]);
+  }, [editorTitle, editorMarkdown, editorExcerpt, editorCategory, editorImage, editorAuthorId, editorCoAuthorIds, editorPostType, editorInteractiveConfigurator, editorInteractiveShowcase, editorInteractiveRadar, editorInteractiveQuiz, editorInteractiveTimelineSlider, editorInteractiveBattleCard, editorInteractiveQuizRouter, editorInteractiveHabitSimulator, editorInteractiveQaColumn, currentUser, editingPostId]);
 
   // Insert Markdown formatting toolbar
   const insertToolbar = (prefix: string, suffix: string = '') => {
@@ -1541,6 +1561,11 @@ export default function AdminPortal({
         interactiveShowcase: editorInteractiveShowcase,
         interactiveRadar: editorInteractiveRadar,
         interactiveQuiz: editorInteractiveQuiz,
+        interactiveTimelineSlider: editorInteractiveTimelineSlider,
+        interactiveBattleCard: editorInteractiveBattleCard,
+        interactiveQuizRouter: editorInteractiveQuizRouter,
+        interactiveHabitSimulator: editorInteractiveHabitSimulator,
+        interactiveQaColumn: editorInteractiveQaColumn,
       });
 
       if (saved && saved.id) {
@@ -2288,6 +2313,16 @@ export default function AdminPortal({
           setInteractiveRadar={setEditorInteractiveRadar}
           interactiveQuiz={editorInteractiveQuiz}
           setInteractiveQuiz={setEditorInteractiveQuiz}
+          interactiveTimelineSlider={editorInteractiveTimelineSlider}
+          setInteractiveTimelineSlider={setEditorInteractiveTimelineSlider}
+          interactiveBattleCard={editorInteractiveBattleCard}
+          setInteractiveBattleCard={setEditorInteractiveBattleCard}
+          interactiveQuizRouter={editorInteractiveQuizRouter}
+          setInteractiveQuizRouter={setEditorInteractiveQuizRouter}
+          interactiveHabitSimulator={editorInteractiveHabitSimulator}
+          setInteractiveHabitSimulator={setEditorInteractiveHabitSimulator}
+          interactiveQaColumn={editorInteractiveQaColumn}
+          setInteractiveQaColumn={setEditorInteractiveQaColumn}
         />
       )}
 

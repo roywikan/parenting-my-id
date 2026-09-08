@@ -15,6 +15,11 @@ import * as LucideIcons from 'lucide-react';
 import InteractiveShowcase from '../components/InteractiveShowcase';
 import InteractiveRadar from '../components/InteractiveRadar';
 import InteractiveQuiz from '../components/InteractiveQuiz';
+import InteractiveTimelineSlider from '../components/InteractiveTimelineSlider';
+import InteractiveBattleCard from '../components/InteractiveBattleCard';
+import InteractiveQuizRouter from '../components/InteractiveQuizRouter';
+import InteractiveHabitSimulator from '../components/InteractiveHabitSimulator';
+import InteractiveQAColumn from '../components/InteractiveQAColumn';
 
 function DynamicPillarIcon({ name, className }: { name: string; className?: string }) {
   const IconComponent = (LucideIcons as any)[name] || LucideIcons.Heart;
@@ -746,6 +751,30 @@ export default function ArticleDetailView({
 
       {post.postType === 'interactive_quiz' && post.interactiveQuiz && (
         <InteractiveQuiz config={post.interactiveQuiz} />
+      )}
+
+      {post.postType === 'interactive_timeline_slider' && post.interactiveTimelineSlider && (
+        <InteractiveTimelineSlider 
+          data={post.interactiveTimelineSlider}
+          title={post.title}
+          excerpt={post.excerpt}
+        />
+      )}
+
+      {post.postType === 'interactive_battle_card' && post.interactiveBattleCard && (
+        <InteractiveBattleCard config={post.interactiveBattleCard} />
+      )}
+
+      {post.postType === 'interactive_quiz_router' && post.interactiveQuizRouter && (
+        <InteractiveQuizRouter config={post.interactiveQuizRouter} />
+      )}
+
+      {post.postType === 'interactive_habit_simulator' && post.interactiveHabitSimulator && (
+        <InteractiveHabitSimulator config={post.interactiveHabitSimulator} />
+      )}
+
+      {post.postType === 'interactive_qa_column' && post.interactiveQaColumn && (
+        <InteractiveQAColumn config={post.interactiveQaColumn} />
       )}
 
       {/* ARTICLE CONTENT BODY WITH AUTO-LINKING */}
