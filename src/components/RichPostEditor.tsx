@@ -50,8 +50,8 @@ interface RichPostEditorProps {
   currentStatus?: PostStatus;
   rejectionReason?: string;
   currentLoggedInUserId?: number;
-  postType?: 'article' | 'interactive_configurator' | 'interactive_showcase' | 'interactive_radar' | 'interactive_quiz';
-  setPostType?: (val: 'article' | 'interactive_configurator' | 'interactive_showcase' | 'interactive_radar' | 'interactive_quiz') => void;
+  postType?: 'article' | 'interactive_configurator' | 'interactive_showcase' | 'interactive_radar' | 'interactive_quiz' | 'interactive_timeline_slider' | 'interactive_battle_card' | 'interactive_quiz_router' | 'interactive_habit_simulator' | 'interactive_qa_column';
+  setPostType?: (val: 'article' | 'interactive_configurator' | 'interactive_showcase' | 'interactive_radar' | 'interactive_quiz' | 'interactive_timeline_slider' | 'interactive_battle_card' | 'interactive_quiz_router' | 'interactive_habit_simulator' | 'interactive_qa_column') => void;
   interactiveConfigurator?: any;
   setInteractiveConfigurator?: (val: any) => void;
   interactiveShowcase?: any;
@@ -60,6 +60,16 @@ interface RichPostEditorProps {
   setInteractiveRadar?: (val: any) => void;
   interactiveQuiz?: any;
   setInteractiveQuiz?: (val: any) => void;
+  interactiveTimelineSlider?: any;
+  setInteractiveTimelineSlider?: (val: any) => void;
+  interactiveBattleCard?: any;
+  setInteractiveBattleCard?: (val: any) => void;
+  interactiveQuizRouter?: any;
+  setInteractiveQuizRouter?: (val: any) => void;
+  interactiveHabitSimulator?: any;
+  setInteractiveHabitSimulator?: (val: any) => void;
+  interactiveQaColumn?: any;
+  setInteractiveQaColumn?: (val: any) => void;
 }
 
 export default function RichPostEditor({
@@ -109,6 +119,16 @@ export default function RichPostEditor({
   setInteractiveRadar,
   interactiveQuiz,
   setInteractiveQuiz,
+  interactiveTimelineSlider,
+  setInteractiveTimelineSlider,
+  interactiveBattleCard,
+  setInteractiveBattleCard,
+  interactiveQuizRouter,
+  setInteractiveQuizRouter,
+  interactiveHabitSimulator,
+  setInteractiveHabitSimulator,
+  interactiveQaColumn,
+  setInteractiveQaColumn,
 }: RichPostEditorProps) {
   // Rejection modal state
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -201,6 +221,51 @@ export default function RichPostEditor({
     if (setInteractiveQuiz) {
       setInteractiveQuiz({
         ...interactiveQuiz,
+        ...updates
+      });
+    }
+  };
+
+  const handleUpdateTimelineSlider = (updates: any) => {
+    if (setInteractiveTimelineSlider) {
+      setInteractiveTimelineSlider({
+        ...interactiveTimelineSlider,
+        ...updates
+      });
+    }
+  };
+
+  const handleUpdateBattleCard = (updates: any) => {
+    if (setInteractiveBattleCard) {
+      setInteractiveBattleCard({
+        ...interactiveBattleCard,
+        ...updates
+      });
+    }
+  };
+
+  const handleUpdateQuizRouter = (updates: any) => {
+    if (setInteractiveQuizRouter) {
+      setInteractiveQuizRouter({
+        ...interactiveQuizRouter,
+        ...updates
+      });
+    }
+  };
+
+  const handleUpdateHabitSimulator = (updates: any) => {
+    if (setInteractiveHabitSimulator) {
+      setInteractiveHabitSimulator({
+        ...interactiveHabitSimulator,
+        ...updates
+      });
+    }
+  };
+
+  const handleUpdateQAColumn = (updates: any) => {
+    if (setInteractiveQaColumn) {
+      setInteractiveQaColumn({
+        ...interactiveQaColumn,
         ...updates
       });
     }
@@ -781,6 +846,7 @@ export default function RichPostEditor({
                         {postType === 'interactive_showcase' && '🏛️ Showcase Pilar'}
                         {postType === 'interactive_radar' && '🕸️ Roda Radar Profiling'}
                         {postType === 'interactive_quiz' && '🎓 Kuis IQ & Wawasan'}
+                        {postType === 'interactive_timeline_slider' && '🎚️ Slider Skenario Waktu'}
                       </strong>
                     </span>
                     <button
@@ -1059,6 +1125,334 @@ export default function RichPostEditor({
                       >
                         <div className="font-bold text-xs">🎓 Kuis IQ & Wawasan Ringan</div>
                         <div className="text-[10px] opacity-75 mt-0.5">Komponen uji pemahaman bertingkat dengan kalkulasi skor otomatis.</div>
+                      </button>
+
+                      {/* Slider Skenario Waktu */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPostType('interactive_timeline_slider');
+                          setShowAllFormats(false);
+                          if (!interactiveTimelineSlider) {
+                            setInteractiveTimelineSlider({
+                              widgetTitle: 'Siklus Energi & Emosi Anak Sehari-hari',
+                              widgetDescription: 'Geser slider di bawah ini untuk melihat bagaimana fluktuasi hormon biologis dan tingkat energi buah hati Anda berganti secara dinamis dari jam ke jam sepanjang hari.',
+                              phases: [
+                                {
+                                  id: 'phase_1',
+                                  label: 'Pagi Hari',
+                                  timeLabel: '07:00 Pagi',
+                                  fase: 'Pagi Hari (Kebasahan & Bangun Tanpa Drama)',
+                                  kondisi_biologis_anak: 'Kadar kortisol (stres) anak alami kenaikan bertahap untuk membangunkan tubuh secara alami. Gula darah masih rendah.',
+                                  tantangan_orang_tua: 'Anak merasa lemas, sering merengek, atau enggan beranjak dari tempat tidur.',
+                                  visual_hex_color: '#FFFDF5',
+                                  langkah_transisi_damai: [
+                                    'Lakukan kontak fisik lembut: usapan di punggung atau pelukan hangat selama 2-3 menit sebelum mengajaknya bangun.',
+                                    'Gunakan cahaya alami: buka tirai jendela kamar secara bertahap agar tubuhnya merespon sinyal pagi hari.',
+                                    'Nyalakan musik instrumental ceria ber-volume rendah untuk menstimulasi mood positif.'
+                                  ]
+                                },
+                                {
+                                  id: 'phase_2',
+                                  label: 'Siang Hari',
+                                  timeLabel: '12:00 Siang',
+                                  fase: 'Siang Hari (Jam Rawan Jam Bosan & Screen-Time)',
+                                  kondisi_biologis_anak: 'Kadar gula darah mulai turun setelah energi pagi terkuras habis. Anak merasa lapar sekaligus lelah secara kognitif. Ini adalah puncak rawan kecanduan gadget (screen-time) demi mencari stimulan instan.',
+                                  tantangan_orang_tua: 'Anak merengek meminta HP sambil berbaring lemas atau menolak makan siang sehat.',
+                                  visual_hex_color: '#F9FBF9',
+                                  langkah_transisi_damai: [
+                                    'Sajikan potongan buah apel atau semangka dingin sebagai hidangan pembuka yang menyegarkan tubuh.',
+                                    'Sediakan mainan sensorik mandiri (lego, playdough) di jangkauan pandangan mata anak.',
+                                    'Terapkan ritual transisi tenang sebelum makan: cuci tangan bersama sambil menyanyi lagu lucu.'
+                                  ]
+                                },
+                                {
+                                  id: 'phase_3',
+                                  label: 'Sore Hari',
+                                  timeLabel: '17:00 Sore',
+                                  fase: 'Sore Hari (Mandi & Persiapan Makan Malam)',
+                                  kondisi_biologis_anak: 'Kadar kortisol (stres) anak mulai naik karena kelelahan setelah beraktivitas seharian, sementara gula darah mulai menurun. Ini adalah "jam rawan" tantrum.',
+                                  tantangan_orang_tua: 'Menghadapi anak yang menolak mandi atau merengek meminta camilan manis sebelum makan malam.',
+                                  visual_hex_color: '#FFF5F5',
+                                  langkah_transisi_damai: [
+                                    'Gunakan metode jembatan: "10 menit lagi kita balapan bebek di bak mandi yuk!", daripada langsung menyeret anak ke kamar mandi.',
+                                    'Tawarkan pilihan terbatas yang terkontrol: "Mau mandi pakai sabun stroberi atau sabun melon harianmu?"',
+                                    'Sediakan potongan buah kecil di meja sebagai pengganjal lapar yang aman sebelum makan malam utama.'
+                                  ]
+                                },
+                                {
+                                  id: 'phase_4',
+                                  label: 'Malam Hari',
+                                  timeLabel: '20:00 Malam',
+                                  fase: 'Malam Hari (Ritual Tenang Sebelum Tidur)',
+                                  kondisi_biologis_anak: 'Melatonin (hormon tidur) mulai diproduksi oleh kelenjar pineal seiring meredupnya cahaya sekitar. Suhu tubuh inti mulai menurun.',
+                                  tantangan_orang_tua: 'Anak tiba-tiba aktif (second wind) atau menolak tidur karena masih ingin bermain.',
+                                  visual_hex_color: '#F5F7FF',
+                                  langkah_transisi_damai: [
+                                    'Redupkan seluruh lampu rumah 1 jam sebelum tidur untuk memicu produksi melatonin secara maksimal.',
+                                    'Bacakan 1 dongeng fabel favorit dengan intonasi suara yang lambat, berat, dan tenang.',
+                                    'Lakukan teknik pernapasan balon bersama: tarik napas dalam dan hembuskan perlahan seolah meniup balon besar.'
+                                  ]
+                                }
+                              ]
+                            });
+                          }
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          postType === 'interactive_timeline_slider'
+                            ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                            : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="font-bold text-xs">🎚️ Slider Skenario Waktu</div>
+                        <div className="text-[10px] opacity-75 mt-0.5">Slider garis waktu horizontal untuk transisi fase dinamis.</div>
+                      </button>
+
+                      {/* Kartu Duel Komparasi */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPostType('interactive_battle_card');
+                          setShowAllFormats(false);
+                          if (!interactiveBattleCard) {
+                            setInteractiveBattleCard({
+                              widgetTitle: 'Susu Formula vs Air Susu Ibu (ASI): Analisis Objektif',
+                              widgetDescription: 'Temukan perbandingan komparatif, ilmiah, dan objektif antara asupan ASI dan susu formula untuk tumbuh kembang anak.',
+                              comparisonCriteria: ['Kandungan Nutrisi', 'Kemudahan Pemberian', 'Sistem Imunitas', 'Biaya Bulanan'],
+                              optionA: {
+                                name: 'Air Susu Ibu (ASI)',
+                                badge: 'Standar Emas',
+                                image: 'https://images.unsplash.com/photo-1594824813573-246434e33963?w=600&fit=crop&q=80',
+                                summary: 'Nutrisi alami terlengkap yang diproduksi secara biologis oleh ibu, mengandung antibodi aktif yang tidak dapat ditiru oleh teknologi mana pun.',
+                                strengths: [
+                                  'Mengandung antibodi imunoglobulin aktif untuk kekebalan tubuh anak.',
+                                  'Mudah dicerna dan meminimalkan risiko kembung atau sembelit.',
+                                  'Mendukung bounding psikologis intim antara ibu dan buah hati.'
+                                ],
+                                weaknesses: [
+                                  'Sangat bergantung pada kesehatan fisik, stres, dan nutrisi makanan ibu.',
+                                  'Ibu harus selalu hadir secara fisik atau melakukan pompa ASI terjadwal.'
+                                ],
+                                bestFor: 'Sistem imun protektif & nutrisi biologis murni jangka panjang.',
+                                rating: 5
+                              },
+                              optionB: {
+                                name: 'Susu Formula (Sufor)',
+                                badge: 'Alternatif Praktis',
+                                image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&fit=crop&q=80',
+                                summary: 'Asupan nutrisi alternatif hasil rekayasa ilmiah modern yang dirancang menyerupai ASI untuk menunjang kebutuhan gizi harian anak.',
+                                strengths: [
+                                  'Dapat diberikan oleh siapa saja (ayah, pengasuh, kakek-nenek).',
+                                  'Memudahkan pemantauan takaran presisi volume susu yang dikonsumsi anak.',
+                                  'Ibu tidak terikat waktu pompa atau pembatasan diet konsumsi harian.'
+                                ],
+                                weaknesses: [
+                                  'Tidak mengandung antibodi hidup pelindung infeksi.',
+                                  'Membutuhkan sterilisasi botol ekstra & pengeluaran biaya rutin.'
+                                ],
+                                bestFor: 'Ibu bekerja, kondisi medis khusus, atau pembagian peran pengasuhan fleksibel.',
+                                rating: 4
+                              },
+                              verdictTitle: 'Keputusan Pengasuhan Cerdas',
+                              verdictContent: 'ASI tetap merupakan asupan standar emas biologis utama untuk bayi 0-6 bulan. Namun, jika ada hambatan medis, susu formula modern adalah alternatif yang sangat aman dan mampu menopang tumbuh kembang fisik anak secara optimal tanpa mengurangi rasa cinta kasih ibu.'
+                            });
+                          }
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          postType === 'interactive_battle_card'
+                            ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                            : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="font-bold text-xs">⚔️ Kartu Duel Komparasi</div>
+                        <div className="text-[10px] opacity-75 mt-0.5">Komparasi visual dua opsi atau pilar perbandingan pro & kontra.</div>
+                      </button>
+
+                      {/* Quiz Penentu Keputusan */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPostType('interactive_quiz_router');
+                          setShowAllFormats(false);
+                          if (!interactiveQuizRouter) {
+                            setInteractiveQuizRouter({
+                              widgetTitle: 'Evaluasi Gaya Pengasuhan (Parenting Style) Anda',
+                              widgetDescription: 'Jawab 3 pertanyaan skenario harian berikut untuk memetakan jenis gaya pengasuhan dominan Anda dan temukan rekomendasi perbaikannya.',
+                              questions: [
+                                {
+                                  id: 'q1',
+                                  text: 'Bagaimana reaksi pertama Anda saat anak tidak sengaja menumpahkan segelas jus di karpet ruang tamu?',
+                                  options: [
+                                    { text: 'Marah seketika, menghukum anak, atau menyuruhnya masuk kamar.', targetOutcomeId: 'authoritarian' },
+                                    { text: 'Menarik napas dalam, memvalidasi perasaannya, lalu mengajaknya membersihkan bersama.', targetOutcomeId: 'authoritative' },
+                                    { text: 'Membiarkannya begitu saja atau langsung membersihkannya sendiri tanpa mengajak anak bicara.', targetOutcomeId: 'permissive' }
+                                  ]
+                                },
+                                {
+                                  id: 'q2',
+                                  text: 'Bagaimana cara Anda membuat batasan aturan terkait screen-time (penggunaan HP/gadget) di rumah?',
+                                  options: [
+                                    { text: 'Membuat kesepakatan waktu bersama anak dengan konsekuensi logis yang jelas.', targetOutcomeId: 'authoritative' },
+                                    { text: 'Melarang keras tanpa kompromi, mengunci HP, dan mengancam jika anak melanggar.', targetOutcomeId: 'authoritarian' },
+                                    { text: 'Bebas kapan saja anak mau, asal anak tidak menangis atau mengganggu aktivitas Anda.', targetOutcomeId: 'permissive' }
+                                  ]
+                                },
+                                {
+                                  id: 'q3',
+                                  text: 'Saat anak menolak makan sayur pada jam makan malam, apa tindakan yang paling sering Anda lakukan?',
+                                  options: [
+                                    { text: 'Menyuapinya dengan paksa atau mengancam tidak akan membelikan mainan.', targetOutcomeId: 'authoritarian' },
+                                    { text: 'Tahu diri dan membiarkannya makan camilan manis kesukaannya agar perutnya terisi.', targetOutcomeId: 'permissive' },
+                                    { text: 'Menghormati rasa kenyangnya, tapi tidak menyediakan camilan lain sampai jadwal makan berikutnya.', targetOutcomeId: 'authoritative' }
+                                  ]
+                                }
+                              ],
+                              outcomes: [
+                                {
+                                  id: 'authoritative',
+                                  title: 'Gaya Demokratis (Authoritative Parenting)',
+                                  description: 'Gaya pengasuhan paling ideal. Anda mampu memberikan batasan aturan yang tegas namun diimbangi dengan kehangatan emosi, komunikasi dua arah, dan validasi perasaan anak.',
+                                  actionSteps: [
+                                    'Pertahankan konsistensi kesepakatan konsekuensi di setiap situasi harian.',
+                                    'Terus luangkan waktu 15 menit deep-talk dengan anak sebelum tidur malam.',
+                                    'Apresiasi usaha positif anak, bukan sekadar menuntut hasil akhir sempurna.'
+                                  ],
+                                  badgeColor: '#10b981'
+                                },
+                                {
+                                  id: 'authoritarian',
+                                  title: 'Gaya Otoriter (Authoritarian Parenting)',
+                                  description: 'Pengasuhan berfokus pada kepatuhan mutlak, hukuman fisik/verbal, dan minim kehangatan emosional. Anak rentan tumbuh menjadi pribadi yang cemas atau pemberontak di luar rumah.',
+                                  actionSteps: [
+                                    'Mulai kurangi intonasi suara keras dan ganti dengan kontak mata sejajar.',
+                                    'Belajarlah memvalidasi emosi kecewa/sedih anak sebelum menuntut penjelasan.',
+                                    'Berikan anak ruang untuk memilih pilihan sederhana (misal warna baju harian).'
+                                  ],
+                                  badgeColor: '#ef4444'
+                                },
+                                {
+                                  id: 'permissive',
+                                  title: 'Gaya Permisif (Permissive Parenting)',
+                                  description: 'Sangat hangat dan penuh kasih sayang, namun minim batasan aturan atau kedisiplinan. Anak rentan tumbuh menjadi pribadi yang egois, sulit beradaptasi di sekolah, atau kecanduan gadget.',
+                                  actionSteps: [
+                                    'Buat jadwal rutinitas harian terstruktur (tidur, makan, belajar) bersama anak.',
+                                    'Belajarlah mengatakan \'Tidak\' dengan ramah dan konsisten tanpa rasa bersalah.',
+                                    'Terapkan konsekuensi logis saat kesepakatan aturan bersama dilanggar anak.'
+                                  ],
+                                  badgeColor: '#f59e0b'
+                                }
+                              ]
+                            });
+                          }
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          postType === 'interactive_quiz_router'
+                            ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                            : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="font-bold text-xs">🌳 Quiz Penentu Keputusan</div>
+                        <div className="text-[10px] opacity-75 mt-0.5">Quiz diagnostik bertingkat untuk mencocokkan hasil rekomendasi profil secara instan.</div>
+                      </button>
+
+                      {/* Simulasi Kebiasaan */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPostType('interactive_habit_simulator');
+                          setShowAllFormats(false);
+                          if (!interactiveHabitSimulator) {
+                            setInteractiveHabitSimulator({
+                              widgetTitle: 'Simulasi Pembentukan Kebiasaan Membaca Buku pada Anak',
+                              widgetDescription: 'Eksperimen pembentukan rutinitas membaca harian. Toggle kebiasaan sehat/buruk di bawah ini dan geser jumlah hari untuk mensimulasikan akumulasi dampaknya bagi kecerdasan kognitif anak.',
+                              baselineScore: 50,
+                              habits: [
+                                {
+                                  id: 'habit_1',
+                                  label: 'Membaca Buku Dongeng 10 Menit',
+                                  impactScore: 1.5,
+                                  cue: 'Buku dongeng diletakkan di atas bantal tidur anak',
+                                  response: 'Membacakan dongeng sebelum mematikan lampu kamar',
+                                  reward: 'Anak tertidur dengan mood bahagia dan imajinasi kaya'
+                                },
+                                {
+                                  id: 'habit_2',
+                                  label: 'Screen-Time Gadget di Tempat Tidur',
+                                  impactScore: -2,
+                                  cue: 'HP di-charge di samping kasur anak',
+                                  response: 'Anak bermain game/sosmed 1 jam sebelum tidur malam',
+                                  reward: 'Stimulasi dopamin instan tapi memicu insomnia & kelelahan'
+                                },
+                                {
+                                  id: 'habit_3',
+                                  label: 'Deep Talk / Refleksi Harian 5 Menit',
+                                  impactScore: 1,
+                                  cue: 'Mandi sore & memakai minyak telon hangat',
+                                  response: 'Mengobrol tentang momen paling berkesan hari ini',
+                                  reward: 'Anak merasa dicintai, didengar, dan melatih kosakata baru'
+                                }
+                              ],
+                              habitTips: [
+                                'Jadikan buku terlihat mencolok (Visual Cue) dengan menaruhnya di area bermain utama anak.',
+                                'Gunakan metode tumpuk habit: \'Setelah menyikat gigi malam (habit lama), kita akan langsung membaca 1 halaman buku bersama (habit baru)\'.',
+                                'Fokus pada konsistensi durasi pendek (10 menit) terlebih dahulu, bukan tebalnya halaman buku.',
+                                'Kurangi hambatan lingkungan dengan menjauhkan gadget dan mematikan TV 1 jam sebelum jam tidur malam anak.'
+                              ]
+                            });
+                          }
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          postType === 'interactive_habit_simulator'
+                            ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                            : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="font-bold text-xs">⚡ Simulasi Kebiasaan</div>
+                        <div className="text-[10px] opacity-75 mt-0.5">Simulator perilaku pembentukan kebiasaan harian dengan akumulasi skor.</div>
+                      </button>
+
+                      {/* Kolom Tanya Jawab / Advice Column */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPostType('interactive_qa_column');
+                          setShowAllFormats(false);
+                          if (!interactiveQaColumn) {
+                            setInteractiveQaColumn({
+                              widgetTitle: 'Kolom Tanya Jawab Klinis: Konsultasi Pola Asuh & Emosi',
+                              widgetDescription: 'Tanyakan kecemasan Anda secara anonim. Tim psikolog klinis kami mengulas permasalahan Anda dengan kacamata klinis teruji.',
+                              buttonText: 'Kirim Masalah Anda (Anonim)',
+                              submissionPlaceholder: 'Tuliskan konflik anak, kecemasan hubungan pasutri, atau kelelahan mental pengasuhan yang Anda hadapi secara mendetail di sini...',
+                              cases: [
+                                {
+                                  id: 'case_1',
+                                  category: 'Komunikasi Anak',
+                                  title: 'Anak Suka Menjawab dengan Kasar',
+                                  senderAgeGender: 'Ibu (34 tahun)',
+                                  questionText: 'Anak saya yang berumur 6 tahun belakangan ini sering sekali menjawab ucapan saya dengan nada ketus dan berteriak "Bukan urusan Ibu!". Bagaimana saya merespons ini tanpa ikut emosi?',
+                                  expertName: 'Aisyah Siregar, M.Psi., Psikolog',
+                                  expertTitle: 'Psikolog Klinis Anak & Keluarga',
+                                  expertAvatar: '',
+                                  analysisMarkdown: 'Sikap menantang pada usia 6 tahun sering kali merupakan tanda pencarian otonomi atau ekspresi ketidakmampuan meregulasi emosi frustrasi. Saat anak berteriak kasar, ia sedang mengetes batas kendali. Merespons dengan amarah hanya akan memvalidasi bahwa "teriakan" adalah bentuk komunikasi yang sah.',
+                                  adviceSteps: [
+                                    'Lakukan jeda napas 5 detik sebelum merespons agar emosi Anda stabil.',
+                                    'Validasi emosi anak dengan tenang: "Ibu dengar kamu sedang kesal, tapi berbicara kasar tidak diperbolehkan."',
+                                    'Diskusikan konsekuensi secara konsisten saat suasana hati anak sudah kembali tenang.',
+                                    'Berikan pujian yang tulus saat anak mampu mengekspresikan penolakan dengan sopan.'
+                                  ]
+                                }
+                              ]
+                            });
+                          }
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          postType === 'interactive_qa_column'
+                            ? 'border-rose-500 bg-rose-500/5 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
+                            : 'border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="font-bold text-xs">💬 Kolom Tanya Jawab Ahli</div>
+                        <div className="text-[10px] opacity-75 mt-0.5">Analisis klinis masalah & dilema pembaca oleh psikolog klinis berlisensi.</div>
                       </button>
                     </div>
                   </>
@@ -1952,6 +2346,1115 @@ export default function RichPostEditor({
                           </div>
                         </div>
 
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* INTERACTIVE FORM PANEL: TIMELINE SLIDER */}
+            {postType === 'interactive_timeline_slider' && interactiveTimelineSlider && (
+              <div className="p-5 rounded-2xl border border-rose-100 dark:border-slate-800 bg-rose-500/[0.02] dark:bg-slate-900/50 space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-base">🎚️</span>
+                  <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200">Pengaturan Slider Skenario Waktu</h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Judul Slider / Widget</label>
+                    <input
+                      type="text"
+                      value={interactiveTimelineSlider.widgetTitle || ''}
+                      onChange={(e) => handleUpdateTimelineSlider({ widgetTitle: e.target.value })}
+                      placeholder="Cth: Siklus Energi & Emosi Anak Sehari-hari"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Deskripsi Petunjuk Penggunaan</label>
+                    <input
+                      type="text"
+                      value={interactiveTimelineSlider.widgetDescription || ''}
+                      onChange={(e) => handleUpdateTimelineSlider({ widgetDescription: e.target.value })}
+                      placeholder="Cth: Geser slider di bawah ini untuk melihat..."
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* PHASES LIST DEFINITION */}
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center justify-between pb-2 border-b border-dashed border-slate-100 dark:border-slate-800">
+                    <h5 className="font-extrabold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Daftar Fase Skenario ({ (interactiveTimelineSlider.phases || []).length } Fase)
+                    </h5>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newPhases = [...(interactiveTimelineSlider.phases || [])];
+                        const uniqueId = `phase_${Date.now().toString().slice(-4)}`;
+                        newPhases.push({
+                          id: uniqueId,
+                          label: 'Fase Baru',
+                          timeLabel: '12:00 Baru',
+                          fase: 'Detail Fase Baru (Ganti di sini)',
+                          kondisi_biologis_anak: 'Penjelasan kondisi biologis/situasional detail...',
+                          tantangan_orang_tua: 'Penjelasan tantangan yang dihadapi...',
+                          visual_hex_color: '#fffbeb',
+                          langkah_transisi_damai: [
+                            'Langkah praktis pertama Anda',
+                            'Langkah praktis kedua Anda'
+                          ]
+                        });
+                        handleUpdateTimelineSlider({ phases: newPhases });
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px]"
+                    >
+                      + Tambah Fase
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {(interactiveTimelineSlider.phases || []).map((phase: any, pIdx: number) => (
+                      <div key={pIdx} className="p-4 rounded-xl border border-slate-200 dark:border-zinc-850 bg-white dark:bg-zinc-900/50 space-y-3 relative">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newPhases = (interactiveTimelineSlider.phases || []).filter((_: any, i: number) => i !== pIdx);
+                            handleUpdateTimelineSlider({ phases: newPhases });
+                          }}
+                          className="absolute top-3 right-3 text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-all"
+                          title="Hapus Fase Ini"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="col-span-1">
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Label Singkat Tab</label>
+                            <input
+                              type="text"
+                              value={phase.label || ''}
+                              onChange={(e) => {
+                                const newPhases = [...interactiveTimelineSlider.phases];
+                                newPhases[pIdx] = { ...phase, label: e.target.value };
+                                handleUpdateTimelineSlider({ phases: newPhases });
+                              }}
+                              placeholder="Cth: Pagi Hari"
+                              className="w-full px-2 py-1 border text-[11px] rounded"
+                            />
+                          </div>
+
+                          <div className="col-span-1">
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Label Jam / Waktu</label>
+                            <input
+                              type="text"
+                              value={phase.timeLabel || ''}
+                              onChange={(e) => {
+                                const newPhases = [...interactiveTimelineSlider.phases];
+                                newPhases[pIdx] = { ...phase, timeLabel: e.target.value };
+                                handleUpdateTimelineSlider({ phases: newPhases });
+                              }}
+                              placeholder="Cth: 07:00 Pagi"
+                              className="w-full px-2 py-1 border text-[11px] rounded"
+                            />
+                          </div>
+
+                          <div className="col-span-1">
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Warna Pastel Hex</label>
+                            <input
+                              type="text"
+                              value={phase.visual_hex_color || ''}
+                              onChange={(e) => {
+                                const newPhases = [...interactiveTimelineSlider.phases];
+                                newPhases[pIdx] = { ...phase, visual_hex_color: e.target.value };
+                                handleUpdateTimelineSlider({ phases: newPhases });
+                              }}
+                              placeholder="Cth: #FFFDF5"
+                              className="w-full px-2 py-1 border text-[11px] rounded font-mono"
+                            />
+                          </div>
+
+                          <div className="col-span-1">
+                            <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Judul Detail Fase</label>
+                            <input
+                              type="text"
+                              value={phase.fase || ''}
+                              onChange={(e) => {
+                                const newPhases = [...interactiveTimelineSlider.phases];
+                                newPhases[pIdx] = { ...phase, fase: e.target.value };
+                                handleUpdateTimelineSlider({ phases: newPhases });
+                              }}
+                              placeholder="Cth: Pagi Hari (Bangun)"
+                              className="w-full px-2 py-1 border text-[11px] rounded"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Kondisi Tubuh / Biologis</label>
+                          <textarea
+                            rows={2}
+                            value={phase.kondisi_biologis_anak || ''}
+                            onChange={(e) => {
+                              const newPhases = [...interactiveTimelineSlider.phases];
+                              newPhases[pIdx] = { ...phase, kondisi_biologis_anak: e.target.value };
+                              handleUpdateTimelineSlider({ phases: newPhases });
+                            }}
+                            placeholder="Tuliskan fluktuasi hormon biologis atau kondisi situasional detail..."
+                            className="w-full p-2 border text-[11px] leading-relaxed rounded text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Tantangan Utama</label>
+                          <input
+                            type="text"
+                            value={phase.tantangan_orang_tua || ''}
+                            onChange={(e) => {
+                              const newPhases = [...interactiveTimelineSlider.phases];
+                              newPhases[pIdx] = { ...phase, tantangan_orang_tua: e.target.value };
+                              handleUpdateTimelineSlider({ phases: newPhases });
+                            }}
+                            placeholder="Tantangan spesifik..."
+                            className="w-full px-2.5 py-1.5 border text-[11px] rounded text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Langkah Transisi Praktis (Satu Per Baris)</label>
+                          <textarea
+                            rows={3}
+                            value={Array.isArray(phase.langkah_transisi_damai) ? phase.langkah_transisi_damai.join('\n') : ''}
+                            onChange={(e) => {
+                              const newPhases = [...interactiveTimelineSlider.phases];
+                              newPhases[pIdx] = { 
+                                ...phase, 
+                                langkah_transisi_damai: e.target.value.split('\n').map((v: string) => v.trim()).filter((v: string) => v !== '') 
+                              };
+                              handleUpdateTimelineSlider({ phases: newPhases });
+                            }}
+                            placeholder="Cth: Lakukan kontak fisik lembut&#10;Gunakan cahaya alami"
+                            className="w-full p-2.5 border text-[11px] font-mono leading-relaxed rounded text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* INTERACTIVE FORM PANEL: BATTLE CARD */}
+            {postType === 'interactive_battle_card' && interactiveBattleCard && (
+              <div className="p-5 rounded-3xl border border-[#f2ece0] dark:border-zinc-800 bg-[#faf9f6]/30 dark:bg-zinc-900/10 space-y-5">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-zinc-800">
+                  <span className="text-base">⚔️</span>
+                  <h4 className="font-serif font-black text-xs text-slate-800 dark:text-slate-200">Pengaturan Kartu Duel Komparasi (Battle Card)</h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Judul Komparasi</label>
+                    <input
+                      type="text"
+                      value={interactiveBattleCard.widgetTitle || ''}
+                      onChange={(e) => handleUpdateBattleCard({ widgetTitle: e.target.value })}
+                      placeholder="Cth: Susu Formula vs ASI"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs font-bold bg-white dark:bg-zinc-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Deskripsi Ringkas</label>
+                    <input
+                      type="text"
+                      value={interactiveBattleCard.widgetDescription || ''}
+                      onChange={(e) => handleUpdateBattleCard({ widgetDescription: e.target.value })}
+                      placeholder="Cth: Temukan perbandingan komparatif..."
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs bg-white dark:bg-zinc-900"
+                    />
+                  </div>
+                </div>
+
+                {/* Comparison Criteria */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Metrik Perbandingan (Satu Per Baris)</label>
+                  <textarea
+                    rows={3}
+                    value={Array.isArray(interactiveBattleCard.comparisonCriteria) ? interactiveBattleCard.comparisonCriteria.join('\n') : ''}
+                    onChange={(e) => {
+                      const criteria = e.target.value.split('\n').map(c => c.trim()).filter(c => c !== '');
+                      handleUpdateBattleCard({ comparisonCriteria: criteria });
+                    }}
+                    placeholder="Kandungan Nutrisi&#10;Kemudahan Pemberian&#10;Sistem Imunitas"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs font-mono bg-white dark:bg-zinc-900"
+                  />
+                </div>
+
+                {/* Option A & B Forms */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Option A */}
+                  <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-850 space-y-3">
+                    <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-full block w-max">
+                      Opsi Utama (A)
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400">Nama Opsi</label>
+                        <input
+                          type="text"
+                          value={interactiveBattleCard.optionA?.name || ''}
+                          onChange={(e) => handleUpdateBattleCard({
+                            optionA: { ...(interactiveBattleCard.optionA || {}), name: e.target.value }
+                          })}
+                          className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400">Badge Singkat</label>
+                        <input
+                          type="text"
+                          value={interactiveBattleCard.optionA?.badge || ''}
+                          onChange={(e) => handleUpdateBattleCard({
+                            optionA: { ...(interactiveBattleCard.optionA || {}), badge: e.target.value }
+                          })}
+                          className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400">URL Gambar (Opsional)</label>
+                      <input
+                        type="text"
+                        value={interactiveBattleCard.optionA?.image || ''}
+                        onChange={(e) => handleUpdateBattleCard({
+                          optionA: { ...(interactiveBattleCard.optionA || {}), image: e.target.value }
+                        })}
+                        className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400">Deskripsi Singkat</label>
+                      <textarea
+                        rows={2}
+                        value={interactiveBattleCard.optionA?.summary || ''}
+                        onChange={(e) => handleUpdateBattleCard({
+                          optionA: { ...(interactiveBattleCard.optionA || {}), summary: e.target.value }
+                        })}
+                        className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-1">Daftar Kelebihan / Pros (Satu Per Baris)</label>
+                      <textarea
+                        rows={3}
+                        value={Array.isArray(interactiveBattleCard.optionA?.strengths) ? interactiveBattleCard.optionA.strengths.join('\n') : ''}
+                        onChange={(e) => {
+                          const strengths = e.target.value.split('\n').map(s => s.trim()).filter(s => s !== '');
+                          handleUpdateBattleCard({
+                            optionA: { ...(interactiveBattleCard.optionA || {}), strengths }
+                          });
+                        }}
+                        className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">Daftar Kekurangan / Cons (Satu Per Baris)</label>
+                      <textarea
+                        rows={3}
+                        value={Array.isArray(interactiveBattleCard.optionA?.weaknesses) ? interactiveBattleCard.optionA.weaknesses.join('\n') : ''}
+                        onChange={(e) => {
+                          const weaknesses = e.target.value.split('\n').map(w => w.trim()).filter(w => w !== '');
+                          handleUpdateBattleCard({
+                            optionA: { ...(interactiveBattleCard.optionA || {}), weaknesses }
+                          });
+                        }}
+                        className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950 font-mono"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400">Cocok Untuk</label>
+                        <input
+                          type="text"
+                          value={interactiveBattleCard.optionA?.bestFor || ''}
+                          onChange={(e) => handleUpdateBattleCard({
+                            optionA: { ...(interactiveBattleCard.optionA || {}), bestFor: e.target.value }
+                          })}
+                          className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400">Rating (1-5)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={interactiveBattleCard.optionA?.rating || 5}
+                          onChange={(e) => handleUpdateBattleCard({
+                            optionA: { ...(interactiveBattleCard.optionA || {}), rating: parseInt(e.target.value) || 5 }
+                          })}
+                          className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Option B */}
+                  <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-850 space-y-3">
+                    <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-full block w-max">
+                      Opsi Pembanding (B)
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400">Nama Opsi</label>
+                        <input
+                          type="text"
+                          value={interactiveBattleCard.optionB?.name || ''}
+                          onChange={(e) => handleUpdateBattleCard({
+                            optionB: { ...(interactiveBattleCard.optionB || {}), name: e.target.value }
+                          })}
+                          className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400">Badge Singkat</label>
+                        <input
+                          type="text"
+                          value={interactiveBattleCard.optionB?.badge || ''}
+                          onChange={(e) => handleUpdateBattleCard({
+                            optionB: { ...(interactiveBattleCard.optionB || {}), badge: e.target.value }
+                          })}
+                          className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400">URL Gambar (Opsional)</label>
+                      <input
+                        type="text"
+                        value={interactiveBattleCard.optionB?.image || ''}
+                        onChange={(e) => handleUpdateBattleCard({
+                          optionB: { ...(interactiveBattleCard.optionB || {}), image: e.target.value }
+                        })}
+                        className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400">Deskripsi Singkat</label>
+                      <textarea
+                        rows={2}
+                        value={interactiveBattleCard.optionB?.summary || ''}
+                        onChange={(e) => handleUpdateBattleCard({
+                          optionB: { ...(interactiveBattleCard.optionB || {}), summary: e.target.value }
+                        })}
+                        className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Daftar Kelebihan / Pros (Satu Per Baris)</label>
+                      <textarea
+                        rows={3}
+                        value={Array.isArray(interactiveBattleCard.optionB?.strengths) ? interactiveBattleCard.optionB.strengths.join('\n') : ''}
+                        onChange={(e) => {
+                          const strengths = e.target.value.split('\n').map(s => s.trim()).filter(s => s !== '');
+                          handleUpdateBattleCard({
+                            optionB: { ...(interactiveBattleCard.optionB || {}), strengths }
+                          });
+                        }}
+                        className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">Daftar Kekurangan / Cons (Satu Per Baris)</label>
+                      <textarea
+                        rows={3}
+                        value={Array.isArray(interactiveBattleCard.optionB?.weaknesses) ? interactiveBattleCard.optionB.weaknesses.join('\n') : ''}
+                        onChange={(e) => {
+                          const weaknesses = e.target.value.split('\n').map(w => w.trim()).filter(w => w !== '');
+                          handleUpdateBattleCard({
+                            optionB: { ...(interactiveBattleCard.optionB || {}), weaknesses }
+                          });
+                        }}
+                        className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950 font-mono"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400">Cocok Untuk</label>
+                        <input
+                          type="text"
+                          value={interactiveBattleCard.optionB?.bestFor || ''}
+                          onChange={(e) => handleUpdateBattleCard({
+                            optionB: { ...(interactiveBattleCard.optionB || {}), bestFor: e.target.value }
+                          })}
+                          className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400">Rating (1-5)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={interactiveBattleCard.optionB?.rating || 4}
+                          onChange={(e) => handleUpdateBattleCard({
+                            optionB: { ...(interactiveBattleCard.optionB || {}), rating: parseInt(e.target.value) || 4 }
+                          })}
+                          className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Verdict Summary Panel */}
+                <div className="p-4 rounded-2xl bg-rose-50/20 dark:bg-rose-950/10 border border-rose-100 dark:border-rose-950/40 space-y-3">
+                  <div className="font-bold text-xs text-rose-800 dark:text-rose-400">Rekomendasi Verdict & Keputusan Tim Medis</div>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-bold mb-0.5">Judul Verdict</label>
+                      <input
+                        type="text"
+                        value={interactiveBattleCard.verdictTitle || ''}
+                        onChange={(e) => handleUpdateBattleCard({ verdictTitle: e.target.value })}
+                        className="w-full px-2.5 py-1.5 border text-xs rounded bg-white dark:bg-zinc-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-bold mb-0.5">Isi Keputusan / Rekomendasi Medis</label>
+                      <textarea
+                        rows={3}
+                        value={interactiveBattleCard.verdictContent || ''}
+                        onChange={(e) => handleUpdateBattleCard({ verdictContent: e.target.value })}
+                        className="w-full p-2.5 border text-xs rounded bg-white dark:bg-zinc-900"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* INTERACTIVE FORM PANEL: QUIZ ROUTER */}
+            {postType === 'interactive_quiz_router' && interactiveQuizRouter && (
+              <div className="p-5 rounded-3xl border border-[#f2ece0] dark:border-zinc-800 bg-[#faf9f6]/30 dark:bg-zinc-900/10 space-y-5">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-zinc-800">
+                  <span className="text-base">🌳</span>
+                  <h4 className="font-serif font-black text-xs text-slate-800 dark:text-slate-200">Pengaturan Quiz Penentu Keputusan (Quiz Router)</h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Judul Kuis</label>
+                    <input
+                      type="text"
+                      value={interactiveQuizRouter.widgetTitle || ''}
+                      onChange={(e) => handleUpdateQuizRouter({ widgetTitle: e.target.value })}
+                      placeholder="Cth: Evaluasi Parenting Style Anda"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs font-bold bg-white dark:bg-zinc-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Deskripsi Petunjuk</label>
+                    <input
+                      type="text"
+                      value={interactiveQuizRouter.widgetDescription || ''}
+                      onChange={(e) => handleUpdateQuizRouter({ widgetDescription: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs bg-white dark:bg-zinc-900"
+                    />
+                  </div>
+                </div>
+
+                {/* Questions List */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between pb-1 border-b border-dashed">
+                    <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Pertanyaan Evaluasi ({ (interactiveQuizRouter.questions || []).length })</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newQ = [...(interactiveQuizRouter.questions || [])];
+                        newQ.push({
+                          id: `q${Date.now().toString().slice(-4)}`,
+                          text: 'Pertanyaan baru?',
+                          options: [
+                            { text: 'Pilihan opsi A', targetOutcomeId: 'authoritative' },
+                            { text: 'Pilihan opsi B', targetOutcomeId: 'authoritarian' },
+                            { text: 'Pilihan opsi C', targetOutcomeId: 'permissive' }
+                          ]
+                        });
+                        handleUpdateQuizRouter({ questions: newQ });
+                      }}
+                      className="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-700 text-white font-bold text-[9px]"
+                    >
+                      + Tambah Pertanyaan
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {(interactiveQuizRouter.questions || []).map((q: any, qIdx: number) => (
+                      <div key={q.id || qIdx} className="p-4 rounded-xl border bg-white dark:bg-zinc-900 space-y-3 relative">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newQ = (interactiveQuizRouter.questions || []).filter((_: any, i: number) => i !== qIdx);
+                            handleUpdateQuizRouter({ questions: newQ });
+                          }}
+                          className="absolute top-3 right-3 text-red-500 hover:text-red-700 font-bold text-xs"
+                        >
+                          Hapus
+                        </button>
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold mb-0.5">Pertanyaan {qIdx + 1}</label>
+                          <input
+                            type="text"
+                            value={q.text || ''}
+                            onChange={(e) => {
+                              const newQ = [...interactiveQuizRouter.questions];
+                              newQ[qIdx] = { ...q, text: e.target.value };
+                              handleUpdateQuizRouter({ questions: newQ });
+                            }}
+                            className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                          />
+                        </div>
+
+                        {/* Options editor */}
+                        <div className="space-y-1">
+                          <label className="block text-[9px] text-slate-400 font-bold">Pilihan Jawaban & Hasil Penargetan Profil</label>
+                          <div className="space-y-1.5">
+                            {(q.options || []).map((opt: any, oIdx: number) => (
+                              <div key={oIdx} className="grid grid-cols-3 gap-2 items-center">
+                                <div className="col-span-2">
+                                  <input
+                                    type="text"
+                                    value={opt.text || ''}
+                                    onChange={(e) => {
+                                      const newQ = [...interactiveQuizRouter.questions];
+                                      const newOpts = [...q.options];
+                                      newOpts[oIdx] = { ...opt, text: e.target.value };
+                                      newQ[qIdx] = { ...q, options: newOpts };
+                                      handleUpdateQuizRouter({ questions: newQ });
+                                    }}
+                                    placeholder={`Pilihan ${oIdx + 1}`}
+                                    className="w-full px-2 py-1 border text-[11px] rounded bg-white dark:bg-zinc-950"
+                                  />
+                                </div>
+                                <div className="col-span-1">
+                                  <select
+                                    value={opt.targetOutcomeId || ''}
+                                    onChange={(e) => {
+                                      const newQ = [...interactiveQuizRouter.questions];
+                                      const newOpts = [...q.options];
+                                      newOpts[oIdx] = { ...opt, targetOutcomeId: e.target.value };
+                                      newQ[qIdx] = { ...q, options: newOpts };
+                                      handleUpdateQuizRouter({ questions: newQ });
+                                    }}
+                                    className="w-full px-2 py-1 border text-[11px] rounded bg-white dark:bg-zinc-950 font-bold text-slate-700"
+                                  >
+                                    {(interactiveQuizRouter.outcomes || []).map((out: any) => (
+                                      <option key={out.id} value={out.id}>{out.id}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Outcomes Definition */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between pb-1 border-b border-dashed">
+                    <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Profil Hasil Diagnosis ({ (interactiveQuizRouter.outcomes || []).length })</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    {(interactiveQuizRouter.outcomes || []).map((out: any, oIdx: number) => (
+                      <div key={out.id || oIdx} className="p-4 rounded-xl border bg-white dark:bg-zinc-900 space-y-3">
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold">ID Profil (Kunci Penargetan)</label>
+                            <input
+                              type="text"
+                              value={out.id || ''}
+                              disabled
+                              className="w-full px-2 py-1 border text-xs rounded bg-slate-50 dark:bg-zinc-950/40 text-slate-400 cursor-not-allowed font-mono"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold">Nama Profil</label>
+                            <input
+                              type="text"
+                              value={out.title || ''}
+                              onChange={(e) => {
+                                const newOut = [...interactiveQuizRouter.outcomes];
+                                newOut[oIdx] = { ...out, title: e.target.value };
+                                handleUpdateQuizRouter({ outcomes: newOut });
+                              }}
+                              className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950 font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold">Warna Aksen Hex</label>
+                            <input
+                              type="text"
+                              value={out.badgeColor || '#10b981'}
+                              onChange={(e) => {
+                                const newOut = [...interactiveQuizRouter.outcomes];
+                                newOut[oIdx] = { ...out, badgeColor: e.target.value };
+                                handleUpdateQuizRouter({ outcomes: newOut });
+                              }}
+                              className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950 font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold">Penjelasan Diagnostik</label>
+                          <textarea
+                            rows={2}
+                            value={out.description || ''}
+                            onChange={(e) => {
+                              const newOut = [...interactiveQuizRouter.outcomes];
+                              newOut[oIdx] = { ...out, description: e.target.value };
+                              handleUpdateQuizRouter({ outcomes: newOut });
+                            }}
+                            className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold">Langkah Tindakan Nyata (Satu Per Baris)</label>
+                          <textarea
+                            rows={3}
+                            value={Array.isArray(out.actionSteps) ? out.actionSteps.join('\n') : ''}
+                            onChange={(e) => {
+                              const steps = e.target.value.split('\n').map(s => s.trim()).filter(s => s !== '');
+                              const newOut = [...interactiveQuizRouter.outcomes];
+                              newOut[oIdx] = { ...out, actionSteps: steps };
+                              handleUpdateQuizRouter({ outcomes: newOut });
+                            }}
+                            className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950 font-mono"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* INTERACTIVE FORM PANEL: HABIT SIMULATOR */}
+            {postType === 'interactive_habit_simulator' && interactiveHabitSimulator && (
+              <div className="p-5 rounded-3xl border border-[#f2ece0] dark:border-zinc-800 bg-[#faf9f6]/30 dark:bg-zinc-900/10 space-y-5">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-zinc-800">
+                  <span className="text-base">⚡</span>
+                  <h4 className="font-serif font-black text-xs text-slate-800 dark:text-slate-200">Pengaturan Simulator Kebiasaan (Habit Simulator)</h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="col-span-1">
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Judul Simulator</label>
+                    <input
+                      type="text"
+                      value={interactiveHabitSimulator.widgetTitle || ''}
+                      onChange={(e) => handleUpdateHabitSimulator({ widgetTitle: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs font-bold bg-white dark:bg-zinc-900"
+                    />
+                  </div>
+                  <div className="col-span-1">
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Deskripsi Petunjuk</label>
+                    <input
+                      type="text"
+                      value={interactiveHabitSimulator.widgetDescription || ''}
+                      onChange={(e) => handleUpdateHabitSimulator({ widgetDescription: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs bg-white dark:bg-zinc-900"
+                    />
+                  </div>
+                  <div className="col-span-1">
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Skor Awal Baseline (0-100)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={interactiveHabitSimulator.baselineScore || 50}
+                      onChange={(e) => handleUpdateHabitSimulator({ baselineScore: parseInt(e.target.value) || 50 })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs bg-white dark:bg-zinc-900"
+                    />
+                  </div>
+                </div>
+
+                {/* Habits List */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between pb-1 border-b border-dashed">
+                    <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Daftar Kebiasaan ({ (interactiveHabitSimulator.habits || []).length })</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newH = [...(interactiveHabitSimulator.habits || [])];
+                        newH.push({
+                          id: `habit_${Date.now().toString().slice(-4)}`,
+                          label: 'Kebiasaan Baru',
+                          impactScore: 1,
+                          cue: 'Pemicu kebiasaan',
+                          response: 'Tindakan yang diambil',
+                          reward: 'Reward positif yang didapat'
+                        });
+                        handleUpdateHabitSimulator({ habits: newH });
+                      }}
+                      className="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-700 text-white font-bold text-[9px]"
+                    >
+                      + Tambah Kebiasaan
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {(interactiveHabitSimulator.habits || []).map((habit: any, hIdx: number) => (
+                      <div key={habit.id || hIdx} className="p-4 rounded-xl border bg-white dark:bg-zinc-900 space-y-3 relative">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newH = (interactiveHabitSimulator.habits || []).filter((_: any, i: number) => i !== hIdx);
+                            handleUpdateHabitSimulator({ habits: newH });
+                          }}
+                          className="absolute top-3 right-3 text-red-500 hover:text-red-700 font-bold text-xs"
+                        >
+                          Hapus
+                        </button>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold">Nama Kebiasaan</label>
+                            <input
+                              type="text"
+                              value={habit.label || ''}
+                              onChange={(e) => {
+                                const newH = [...interactiveHabitSimulator.habits];
+                                newH[hIdx] = { ...habit, label: e.target.value };
+                                handleUpdateHabitSimulator({ habits: newH });
+                              }}
+                              className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950 font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold">Dampak Skor harian</label>
+                            <input
+                              type="number"
+                              step="0.5"
+                              value={habit.impactScore || 0}
+                              onChange={(e) => {
+                                const newH = [...interactiveHabitSimulator.habits];
+                                newH[hIdx] = { ...habit, impactScore: parseFloat(e.target.value) || 0 };
+                                handleUpdateHabitSimulator({ habits: newH });
+                              }}
+                              className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <label className="block text-[8px] text-slate-400 font-bold">Cue / Pemicu</label>
+                            <input
+                              type="text"
+                              value={habit.cue || ''}
+                              onChange={(e) => {
+                                const newH = [...interactiveHabitSimulator.habits];
+                                newH[hIdx] = { ...habit, cue: e.target.value };
+                                handleUpdateHabitSimulator({ habits: newH });
+                              }}
+                              className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[8px] text-slate-400 font-bold">Response / Rutinitas</label>
+                            <input
+                              type="text"
+                              value={habit.response || ''}
+                              onChange={(e) => {
+                                const newH = [...interactiveHabitSimulator.habits];
+                                newH[hIdx] = { ...habit, response: e.target.value };
+                                handleUpdateHabitSimulator({ habits: newH });
+                              }}
+                              className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[8px] text-slate-400 font-bold">Reward / Hadiah</label>
+                            <input
+                              type="text"
+                              value={habit.reward || ''}
+                              onChange={(e) => {
+                                const newH = [...interactiveHabitSimulator.habits];
+                                newH[hIdx] = { ...habit, reward: e.target.value };
+                                handleUpdateHabitSimulator({ habits: newH });
+                              }}
+                              className="w-full px-2 py-1 border text-xs rounded bg-white dark:bg-zinc-950"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Habit tips list */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Tips Skenario Pembentukan Habit (Satu Per Baris)</label>
+                  <textarea
+                    rows={4}
+                    value={Array.isArray(interactiveHabitSimulator.habitTips) ? interactiveHabitSimulator.habitTips.join('\n') : ''}
+                    onChange={(e) => {
+                      const tips = e.target.value.split('\n').map(t => t.trim()).filter(t => t !== '');
+                      handleUpdateHabitSimulator({ habitTips: tips });
+                    }}
+                    placeholder="Tuliskan saran pembentukan habit..."
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs font-mono bg-white dark:bg-zinc-900"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* INTERACTIVE FORM PANEL: CLINICAL Q&A ADVICE COLUMN */}
+            {postType === 'interactive_qa_column' && interactiveQaColumn && (
+              <div className="p-5 rounded-2xl border border-rose-100 dark:border-slate-800 bg-rose-500/[0.02] dark:bg-slate-900/50 space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-base">💬</span>
+                  <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200">Pengaturan Widget Kolom Tanya Jawab & Konsultasi Ahli</h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Judul Widget</label>
+                    <input
+                      type="text"
+                      value={interactiveQaColumn.widgetTitle || ''}
+                      onChange={(e) => handleUpdateQAColumn({ widgetTitle: e.target.value })}
+                      placeholder="e.g., Kolom Tanya Jawab Klinis: Konsultasi Pola Asuh & Emosi"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs bg-white dark:bg-zinc-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Deskripsi Pendek Widget</label>
+                    <input
+                      type="text"
+                      value={interactiveQaColumn.widgetDescription || ''}
+                      onChange={(e) => handleUpdateQAColumn({ widgetDescription: e.target.value })}
+                      placeholder="e.g., Tanyakan kecemasan Anda secara anonim. Tim psikolog klinis kami mengulas permasalahan Anda..."
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs bg-white dark:bg-zinc-900"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Label Tombol Submit Curhat</label>
+                    <input
+                      type="text"
+                      value={interactiveQaColumn.buttonText || ''}
+                      onChange={(e) => handleUpdateQAColumn({ buttonText: e.target.value })}
+                      placeholder="e.g., Kirim Masalah Anda (Anonim)"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs bg-white dark:bg-zinc-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1">Placeholder Formulir Submit Curhat</label>
+                    <input
+                      type="text"
+                      value={interactiveQaColumn.submissionPlaceholder || ''}
+                      onChange={(e) => handleUpdateQAColumn({ submissionPlaceholder: e.target.value })}
+                      placeholder="e.g., Tuliskan konflik anak atau kecemasan hubungan pasutri..."
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs bg-white dark:bg-zinc-900"
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Daftar Kasus Tanya Jawab ({ (interactiveQaColumn.cases || []).length })</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newCases = [...(interactiveQaColumn.cases || [])];
+                        newCases.push({
+                          id: `case_${Date.now()}`,
+                          category: 'Kesehatan Mental Ibu',
+                          title: 'Keluhan Baru Editor',
+                          senderAgeGender: 'Ibu (30 tahun) - Anonim',
+                          questionText: 'Tuliskan keluh kesah pembaca di sini...',
+                          expertName: 'Aisyah Siregar, M.Psi., Psikolog',
+                          expertTitle: 'Psikolog Klinis Anak & Keluarga',
+                          expertAvatar: '',
+                          analysisMarkdown: 'Tuliskan analisis psikologis/penilaian klinis mendalam di sini...',
+                          adviceSteps: [
+                            'Rencana aksi atau saran praktis langkah 1.',
+                            'Rencana aksi atau saran praktis langkah 2.'
+                          ]
+                        });
+                        handleUpdateQAColumn({ cases: newCases });
+                      }}
+                      className="text-[10px] font-bold text-rose-600 dark:text-rose-400 hover:underline"
+                    >
+                      + Tambah Kasus Tanya Jawab
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {(interactiveQaColumn.cases || []).map((qaCase: any, cIdx: number) => (
+                      <div key={qaCase.id || cIdx} className="p-4 rounded-xl border border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-950/20 space-y-3 relative">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newCases = (interactiveQaColumn.cases || []).filter((_: any, i: number) => i !== cIdx);
+                            handleUpdateQAColumn({ cases: newCases });
+                          }}
+                          className="absolute top-2 right-2 text-rose-500 hover:text-rose-700 text-xs font-bold"
+                          title="Hapus Kasus"
+                        >
+                          Hapus
+                        </button>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold">Kategori Kasus</label>
+                            <input
+                              type="text"
+                              value={qaCase.category || ''}
+                              onChange={(e) => {
+                                const newCases = [...interactiveQaColumn.cases];
+                                newCases[cIdx] = { ...qaCase, category: e.target.value };
+                                handleUpdateQAColumn({ cases: newCases });
+                              }}
+                              className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold">Judul Singkat Kasus</label>
+                            <input
+                              type="text"
+                              value={qaCase.title || ''}
+                              onChange={(e) => {
+                                const newCases = [...interactiveQaColumn.cases];
+                                newCases[cIdx] = { ...qaCase, title: e.target.value };
+                                handleUpdateQAColumn({ cases: newCases });
+                              }}
+                              className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold">Usia & Gender Pengirim</label>
+                            <input
+                              type="text"
+                              value={qaCase.senderAgeGender || ''}
+                              onChange={(e) => {
+                                const newCases = [...interactiveQaColumn.cases];
+                                newCases[cIdx] = { ...qaCase, senderAgeGender: e.target.value };
+                                handleUpdateQAColumn({ cases: newCases });
+                              }}
+                              className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold">Dilema & Pertanyaan Pengirim</label>
+                          <textarea
+                            rows={3}
+                            value={qaCase.questionText || ''}
+                            onChange={(e) => {
+                              const newCases = [...interactiveQaColumn.cases];
+                              newCases[cIdx] = { ...qaCase, questionText: e.target.value };
+                              handleUpdateQAColumn({ cases: newCases });
+                            }}
+                            className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold">Nama Psikolog / Ahli</label>
+                            <input
+                              type="text"
+                              value={qaCase.expertName || ''}
+                              onChange={(e) => {
+                                const newCases = [...interactiveQaColumn.cases];
+                                newCases[cIdx] = { ...qaCase, expertName: e.target.value };
+                                handleUpdateQAColumn({ cases: newCases });
+                              }}
+                              className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold">Gelar / Kredensial Ahli</label>
+                            <input
+                              type="text"
+                              value={qaCase.expertTitle || ''}
+                              onChange={(e) => {
+                                const newCases = [...interactiveQaColumn.cases];
+                                newCases[cIdx] = { ...qaCase, expertTitle: e.target.value };
+                                handleUpdateQAColumn({ cases: newCases });
+                              }}
+                              className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] text-slate-400 font-bold">URL Foto Profil Ahli (Opsional)</label>
+                            <input
+                              type="text"
+                              value={qaCase.expertAvatar || ''}
+                              onChange={(e) => {
+                                const newCases = [...interactiveQaColumn.cases];
+                                newCases[cIdx] = { ...qaCase, expertAvatar: e.target.value };
+                                handleUpdateQAColumn({ cases: newCases });
+                              }}
+                              className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold">Analisis Mendalam Psikolog (Markdown/Teks Bebas)</label>
+                          <textarea
+                            rows={4}
+                            value={qaCase.analysisMarkdown || ''}
+                            onChange={(e) => {
+                              const newCases = [...interactiveQaColumn.cases];
+                              newCases[cIdx] = { ...qaCase, analysisMarkdown: e.target.value };
+                              handleUpdateQAColumn({ cases: newCases });
+                            }}
+                            className="w-full p-2 border text-xs rounded bg-white dark:bg-zinc-950"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] text-slate-400 font-bold">Saran Praktis & Rencana Aksi (Satu Per Baris)</label>
+                          <textarea
+                            rows={3}
+                            value={Array.isArray(qaCase.adviceSteps) ? qaCase.adviceSteps.join('\n') : ''}
+                            onChange={(e) => {
+                              const steps = e.target.value.split('\n').map(s => s.trim()).filter(s => s !== '');
+                              const newCases = [...interactiveQaColumn.cases];
+                              newCases[cIdx] = { ...qaCase, adviceSteps: steps };
+                              handleUpdateQAColumn({ newCases: newCases });
+                            }}
+                            placeholder="Lakukan mediasi sebelum tidur malam..."
+                            className="w-full p-2 border text-xs rounded font-mono bg-white dark:bg-zinc-950"
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>

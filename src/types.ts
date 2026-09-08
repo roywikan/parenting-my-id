@@ -312,11 +312,97 @@ export interface Post {
   views: number;
   createdAt: string;
   updatedAt: string;
-  postType?: 'article' | 'interactive_configurator' | 'interactive_showcase' | 'interactive_radar' | 'interactive_quiz';
+  postType?: 'article' | 'interactive_configurator' | 'interactive_showcase' | 'interactive_radar' | 'interactive_quiz' | 'interactive_timeline_slider' | 'interactive_battle_card' | 'interactive_quiz_router' | 'interactive_habit_simulator' | 'interactive_qa_column';
   interactiveConfigurator?: InteractiveConfiguratorData;
   interactiveShowcase?: InteractiveShowcaseData;
   interactiveRadar?: RadarWidgetConfig;
   interactiveQuiz?: QuizWidgetConfig;
+  interactiveTimelineSlider?: TimelineSliderWidgetData;
+  interactiveBattleCard?: BattleCardWidgetData;
+  interactiveQuizRouter?: QuizRouterWidgetData;
+  interactiveHabitSimulator?: HabitSimulatorWidgetData;
+  interactiveQaColumn?: InteractiveQAColumnData;
+}
+
+export interface BattleOption {
+  name: string;
+  badge: string;
+  image: string;
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  bestFor: string;
+  rating: number; // 0-5
+}
+
+export interface BattleCardWidgetData {
+  widgetTitle: string;
+  widgetDescription: string;
+  comparisonCriteria: string[];
+  optionA: BattleOption;
+  optionB: BattleOption;
+  verdictTitle: string;
+  verdictContent: string;
+}
+
+export interface QuizRouterOutcome {
+  id: string;
+  title: string;
+  description: string;
+  actionSteps: string[];
+  badgeColor: string;
+}
+
+export interface QuizRouterOption {
+  text: string;
+  targetOutcomeId: string;
+}
+
+export interface QuizRouterQuestion {
+  id: string;
+  text: string;
+  options: QuizRouterOption[];
+}
+
+export interface QuizRouterWidgetData {
+  widgetTitle: string;
+  widgetDescription: string;
+  questions: QuizRouterQuestion[];
+  outcomes: QuizRouterOutcome[];
+}
+
+export interface HabitTask {
+  id: string;
+  label: string;
+  impactScore: number; // positive or negative
+  cue: string;
+  response: string;
+  reward: string;
+}
+
+export interface HabitSimulatorWidgetData {
+  widgetTitle: string;
+  widgetDescription: string;
+  baselineScore: number;
+  habits: HabitTask[];
+  habitTips: string[];
+}
+
+export interface TimelinePhase {
+  id: string;
+  label: string;
+  timeLabel: string;
+  fase: string;
+  kondisi_biologis_anak: string;
+  tantangan_orang_tua: string;
+  visual_hex_color: string;
+  langkah_transisi_damai: string[];
+}
+
+export interface TimelineSliderWidgetData {
+  widgetTitle: string;
+  widgetDescription: string;
+  phases: TimelinePhase[];
 }
 
 export interface InteractiveRecommendation {
@@ -436,4 +522,26 @@ export interface QuizWidgetConfig {
   baseScore: number;
   pointsPerCorrect: number;
   questions: QuizQuestion[];
+}
+
+export interface QAColumnCase {
+  id: string;
+  category: string;
+  title: string;
+  senderAgeGender?: string;
+  questionText: string;
+  expertName: string;
+  expertTitle: string;
+  expertAvatar?: string;
+  analysisMarkdown: string;
+  adviceSteps: string[];
+  createdAt?: string;
+}
+
+export interface InteractiveQAColumnData {
+  widgetTitle: string;
+  widgetDescription: string;
+  buttonText: string;
+  cases: QAColumnCase[];
+  submissionPlaceholder?: string;
 }
