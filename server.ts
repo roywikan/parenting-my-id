@@ -1018,7 +1018,7 @@ app.delete('/api/users/:id', requireAuth(['admin']), (req, res) => {
 
 // POST Create or Update Post (With Multi-Author, Auto-Save Draft & Revision History max 3 - Protected)
 app.post('/api/posts', requireAuth(['admin', 'editor', 'writer']), (req, res) => {
-  const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, co_writers, status, rejectionReason, metaTitle, metaDescription, tags, postType, interactiveConfigurator, interactiveShowcase, interactiveRadar, interactiveQuiz, interactiveTimelineSlider, interactiveBattleCard, interactiveQuizRouter, interactiveHabitSimulator, interactiveQaColumn } = req.body;
+  const { id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, authorId, coAuthorIds, co_writers, status, rejectionReason, metaTitle, metaDescription, tags, postType, interactiveConfigurator, interactiveShowcase, interactiveRadar, interactiveQuiz, interactiveTimelineSlider, interactiveBattleCard, interactiveQuizRouter, interactiveHabitSimulator, interactiveQaColumn, disclaimerType, customDisclaimerText } = req.body;
 
   if (!title || !contentMarkdown) {
     return res.status(400).json({ error: 'Judul dan konten markdown wajib diisi.' });
@@ -1094,6 +1094,8 @@ app.post('/api/posts', requireAuth(['admin', 'editor', 'writer']), (req, res) =>
         interactiveQuizRouter: interactiveQuizRouter !== undefined ? interactiveQuizRouter : existingPost.interactiveQuizRouter,
         interactiveHabitSimulator: interactiveHabitSimulator !== undefined ? interactiveHabitSimulator : existingPost.interactiveHabitSimulator,
         interactiveQaColumn: interactiveQaColumn !== undefined ? interactiveQaColumn : existingPost.interactiveQaColumn,
+        disclaimerType: disclaimerType !== undefined ? disclaimerType : existingPost.disclaimerType,
+        customDisclaimerText: customDisclaimerText !== undefined ? customDisclaimerText : existingPost.customDisclaimerText,
         updatedAt: new Date().toISOString(),
       };
 
@@ -1146,6 +1148,8 @@ app.post('/api/posts', requireAuth(['admin', 'editor', 'writer']), (req, res) =>
     interactiveQuizRouter: interactiveQuizRouter || null,
     interactiveHabitSimulator: interactiveHabitSimulator || null,
     interactiveQaColumn: interactiveQaColumn || null,
+    disclaimerType: disclaimerType || 'none',
+    customDisclaimerText: customDisclaimerText || null,
     views: 0,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

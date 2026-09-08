@@ -243,6 +243,8 @@ export default function AdminPortal({
   const [editorInteractiveQuizRouter, setEditorInteractiveQuizRouter] = useState<any>(null);
   const [editorInteractiveHabitSimulator, setEditorInteractiveHabitSimulator] = useState<any>(null);
   const [editorInteractiveQaColumn, setEditorInteractiveQaColumn] = useState<any>(null);
+  const [editorDisclaimerType, setEditorDisclaimerType] = useState<'none' | 'medical_psychology' | 'financial' | 'legal' | 'academic' | 'custom'>('none');
+  const [editorCustomDisclaimerText, setEditorCustomDisclaimerText] = useState('');
 
   // Auto-Save Draft Status Indicator
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'dirty'>('saved');
@@ -1344,6 +1346,8 @@ export default function AdminPortal({
     setEditorInteractiveQuizRouter(post.interactiveQuizRouter || null);
     setEditorInteractiveHabitSimulator(post.interactiveHabitSimulator || null);
     setEditorInteractiveQaColumn(post.interactiveQaColumn || null);
+    setEditorDisclaimerType(post.disclaimerType || 'none');
+    setEditorCustomDisclaimerText(post.customDisclaimerText || '');
     setActiveTab('editor');
     setAutoSaveStatus('saved');
   };
@@ -1373,6 +1377,8 @@ export default function AdminPortal({
     setEditorInteractiveQuizRouter(null);
     setEditorInteractiveHabitSimulator(null);
     setEditorInteractiveQaColumn(null);
+    setEditorDisclaimerType('none');
+    setEditorCustomDisclaimerText('');
     setActiveTab('editor');
     setAutoSaveStatus('saved');
   };
@@ -1424,6 +1430,8 @@ export default function AdminPortal({
           interactiveQuizRouter: editorInteractiveQuizRouter,
           interactiveHabitSimulator: editorInteractiveHabitSimulator,
           interactiveQaColumn: editorInteractiveQaColumn,
+          disclaimerType: editorDisclaimerType,
+          customDisclaimerText: editorCustomDisclaimerText,
         });
 
         if (saved && saved.id && !editingPostId) {
@@ -1439,7 +1447,7 @@ export default function AdminPortal({
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
-  }, [editorTitle, editorMarkdown, editorExcerpt, editorCategory, editorImage, editorAuthorId, editorCoAuthorIds, editorPostType, editorInteractiveConfigurator, editorInteractiveShowcase, editorInteractiveRadar, editorInteractiveQuiz, editorInteractiveTimelineSlider, editorInteractiveBattleCard, editorInteractiveQuizRouter, editorInteractiveHabitSimulator, editorInteractiveQaColumn, currentUser, editingPostId]);
+  }, [editorTitle, editorMarkdown, editorExcerpt, editorCategory, editorImage, editorAuthorId, editorCoAuthorIds, editorPostType, editorInteractiveConfigurator, editorInteractiveShowcase, editorInteractiveRadar, editorInteractiveQuiz, editorInteractiveTimelineSlider, editorInteractiveBattleCard, editorInteractiveQuizRouter, editorInteractiveHabitSimulator, editorInteractiveQaColumn, editorDisclaimerType, editorCustomDisclaimerText, currentUser, editingPostId]);
 
   // Insert Markdown formatting toolbar
   const insertToolbar = (prefix: string, suffix: string = '') => {
@@ -1566,6 +1574,8 @@ export default function AdminPortal({
         interactiveQuizRouter: editorInteractiveQuizRouter,
         interactiveHabitSimulator: editorInteractiveHabitSimulator,
         interactiveQaColumn: editorInteractiveQaColumn,
+        disclaimerType: editorDisclaimerType,
+        customDisclaimerText: editorCustomDisclaimerText,
       });
 
       if (saved && saved.id) {
@@ -2323,6 +2333,10 @@ export default function AdminPortal({
           setInteractiveHabitSimulator={setEditorInteractiveHabitSimulator}
           interactiveQaColumn={editorInteractiveQaColumn}
           setInteractiveQaColumn={setEditorInteractiveQaColumn}
+          disclaimerType={editorDisclaimerType}
+          setDisclaimerType={setEditorDisclaimerType}
+          customDisclaimerText={editorCustomDisclaimerText}
+          setCustomDisclaimerText={setEditorCustomDisclaimerText}
         />
       )}
 

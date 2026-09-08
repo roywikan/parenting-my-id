@@ -421,6 +421,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         'interactive_quiz_router TEXT',
         'interactive_habit_simulator TEXT',
         'interactive_qa_column TEXT',
+        'disclaimer_type TEXT DEFAULT \'none\'',
+        'custom_disclaimer_text TEXT',
         'created_at TEXT',
         'updated_at TEXT'
       ];
@@ -989,6 +991,7 @@ Sitemap: ${siteUrl}/sitemap.xml
               p.meta_title as metaTitle, p.meta_description as metaDescription, p.tags, p.views, 
               p.post_type as postType, p.interactive_configurator as interactiveConfigurator, p.interactive_showcase as interactiveShowcase, p.interactive_radar as interactiveRadar, p.interactive_quiz as interactiveQuiz,
               p.interactive_timeline_slider as interactiveTimelineSlider, p.interactive_battle_card as interactiveBattleCard, p.interactive_quiz_router as interactiveQuizRouter, p.interactive_habit_simulator as interactiveHabitSimulator, p.interactive_qa_column as interactiveQaColumn,
+              p.disclaimer_type as disclaimerType, p.custom_disclaimer_text as customDisclaimerText,
               p.created_at as createdAt, p.updated_at as updatedAt,
               u.name as authorName, u.avatar as authorAvatar, u.role as authorRole
             FROM posts p
@@ -1178,7 +1181,8 @@ Sitemap: ${siteUrl}/sitemap.xml
         id, title, slug, contentMarkdown, excerpt, featuredImage, category, readTimeMinutes, 
         authorId, coAuthorIds, status, rejectionReason, metaTitle, metaDescription, tags,
         postType, interactiveConfigurator, interactiveShowcase, interactiveRadar, interactiveQuiz,
-        interactiveTimelineSlider, interactiveBattleCard, interactiveQuizRouter, interactiveHabitSimulator, interactiveQaColumn
+        interactiveTimelineSlider, interactiveBattleCard, interactiveQuizRouter, interactiveHabitSimulator, interactiveQaColumn,
+        disclaimerType, customDisclaimerText
       } = body;
 
       if (!title || !contentMarkdown) {
@@ -1208,6 +1212,8 @@ Sitemap: ${siteUrl}/sitemap.xml
       const interactiveQuizRouterStr = interactiveQuizRouter ? JSON.stringify(interactiveQuizRouter) : null;
       const interactiveHabitSimulatorStr = interactiveHabitSimulator ? JSON.stringify(interactiveHabitSimulator) : null;
       const interactiveQaColumnStr = interactiveQaColumn ? JSON.stringify(interactiveQaColumn) : null;
+      const disclaimerTypeVal = disclaimerType || 'none';
+      const customDisclaimerTextVal = customDisclaimerText || null;
 
       const numId = id ? Number(id) : null;
       const validNumId = numId && !isNaN(numId) ? numId : null;
@@ -1269,6 +1275,7 @@ Sitemap: ${siteUrl}/sitemap.xml
                 tags = ?, co_author_ids = ?, revisions = ?, post_type = ?,
                 interactive_configurator = ?, interactive_showcase = ?, interactive_radar = ?, interactive_quiz = ?,
                 interactive_timeline_slider = ?, interactive_battle_card = ?, interactive_quiz_router = ?, interactive_habit_simulator = ?, interactive_qa_column = ?,
+                disclaimer_type = ?, custom_disclaimer_text = ?,
                 updated_at = ?
               WHERE (id IS NOT NULL AND (id = ? OR id = ?)) OR slug = ?
             `).bind(
@@ -1277,6 +1284,7 @@ Sitemap: ${siteUrl}/sitemap.xml
               tagList, coAuthorsStr, updatedRevisionsStr, postTypeVal,
               interactiveConfiguratorStr, interactiveShowcaseStr, interactiveRadarStr, interactiveQuizStr,
               interactiveTimelineSliderStr, interactiveBattleCardStr, interactiveQuizRouterStr, interactiveHabitSimulatorStr, interactiveQaColumnStr,
+              disclaimerTypeVal, customDisclaimerTextVal,
               now, validNumId || -1, strId || '', generatedSlug
             ).run();
 
@@ -1301,6 +1309,8 @@ Sitemap: ${siteUrl}/sitemap.xml
                   interactiveQuizRouter,
                   interactiveHabitSimulator,
                   interactiveQaColumn,
+                  disclaimerType: disclaimerTypeVal,
+                  customDisclaimerText: customDisclaimerTextVal,
                   updatedAt: now
                 }
               });
@@ -1315,15 +1325,17 @@ Sitemap: ${siteUrl}/sitemap.xml
               rejection_reason, meta_title, meta_description, tags, views, 
               post_type, interactive_configurator, interactive_showcase, interactive_radar, interactive_quiz,
               interactive_timeline_slider, interactive_battle_card, interactive_quiz_router, interactive_habit_simulator, interactive_qa_column,
+              disclaimer_type, custom_disclaimer_text,
               created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `).bind(
             title, generatedSlug, contentMarkdown, postExcerpt, image, 
             cat, readMin, authorId || 1, coAuthorsStr, '[]', postStatus, 
             rejReason, mTitle, mDesc, tagList, 
             postTypeVal, interactiveConfiguratorStr, interactiveShowcaseStr, interactiveRadarStr, interactiveQuizStr,
             interactiveTimelineSliderStr, interactiveBattleCardStr, interactiveQuizRouterStr, interactiveHabitSimulatorStr, interactiveQaColumnStr,
+            disclaimerTypeVal, customDisclaimerTextVal,
             now, now
           ).run();
 
@@ -1361,6 +1373,8 @@ Sitemap: ${siteUrl}/sitemap.xml
               interactiveQuizRouter,
               interactiveHabitSimulator,
               interactiveQaColumn,
+              disclaimerType: disclaimerTypeVal,
+              customDisclaimerText: customDisclaimerTextVal,
               createdAt: now,
               updatedAt: now
             }

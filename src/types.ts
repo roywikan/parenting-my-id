@@ -322,6 +322,8 @@ export interface Post {
   interactiveQuizRouter?: QuizRouterWidgetData;
   interactiveHabitSimulator?: HabitSimulatorWidgetData;
   interactiveQaColumn?: InteractiveQAColumnData;
+  disclaimerType?: 'none' | 'medical_psychology' | 'financial' | 'legal' | 'academic' | 'custom';
+  customDisclaimerText?: string;
 }
 
 export interface BattleOption {
