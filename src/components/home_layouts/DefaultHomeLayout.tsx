@@ -1,3 +1,4 @@
+import { useState, useMemo, useEffect } from 'react';
 import { Post, AutoLink, SiteConfig } from '../../types';
 import { Search, Clock, Eye, Sparkles, ArrowRight, BookOpen, Zap } from 'lucide-react';
 import AdSlot from '../AdSlot';
@@ -41,8 +42,32 @@ export default function DefaultHomeLayout({
   const heroCtaText = siteConfig?.hero_cta_text || 'Jelajahi Artikel';
   const heroCtaLink = siteConfig?.hero_cta_link || '#artikel-terbaru';
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = siteConfig?.posts_per_page || 9;
+
+  // Reset pagination when filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery]);
+
   const featuredPost = filteredPosts[0];
   const regularPosts = filteredPosts.length > 0 ? (selectedCategory === 'Semua' && !searchQuery ? filteredPosts.slice(1) : filteredPosts) : [];
+
+  const totalPages = Math.ceil(regularPosts.length / postsPerPage);
+
+  const paginatedRegularPosts = useMemo(() => {
+    const start = (currentPage - 1) * postsPerPage;
+    return regularPosts.slice(start, start + postsPerPage);
+  }, [regularPosts, currentPage, postsPerPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Smooth scroll to the top of articles section
+    const element = document.getElementById('artikel-terbaru');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
     <div className="space-y-10">
@@ -275,69 +300,108 @@ export default function DefaultHomeLayout({
 
         {/* ARTICLES LIST CARDS */}
         {regularPosts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {regularPosts.map((post) => (
-              <article
-                key={post.id}
-                onClick={() => onSelectPost(post.slug)}
-                className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-lg transition-colors duration-300 flex flex-col justify-between"
-              >
-                <div className="space-y-4">
-                  <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
-                    <img
-                      src={optimizeUnsplashUrl(post.featuredImage, 400, 50)}
-                      srcSet={getUnsplashSrcSet(post.featuredImage, [300, 400], 50)}
-                      sizes="(max-width: 768px) 100vw, 400px"
-                      alt={post.title}
-                      width={400}
-                      height={225}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-rose-700/90 text-white text-[10px] font-bold backdrop-blur-xs">
-                      {post.category}
-                    </span>
-                  </div>
-
-                  <div className="p-5 space-y-3">
-                    <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                      <Clock className="w-3 h-3 text-slate-400" />
-                      <span>{post.readTimeMinutes} menit baca</span>
-                      <span>•</span>
-                      <Eye className="w-3 h-3 text-slate-400" />
-                      <span>{post.views} pembaca</span>
+          <div className="space-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedRegularPosts.map((post) => (
+                <article
+                  key={post.id}
+                  onClick={() => onSelectPost(post.slug)}
+                  className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-lg transition-colors duration-300 flex flex-col justify-between"
+                >
+                  <div className="space-y-4">
+                    <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                      <img
+                        src={optimizeUnsplashUrl(post.featuredImage, 400, 50)}
+                        srcSet={getUnsplashSrcSet(post.featuredImage, [300, 400], 50)}
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        alt={post.title}
+                        width={400}
+                        height={225}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-rose-700/90 text-white text-[10px] font-bold backdrop-blur-xs">
+                        {post.category}
+                      </span>
                     </div>
 
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors line-clamp-2">
-                      {post.title}
-                    </h3>
+                    <div className="p-5 space-y-3">
+                      <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        <span>{post.readTimeMinutes} menit baca</span>
+                        <span>•</span>
+                        <Eye className="w-3 h-3 text-slate-400" />
+                        <span>{post.views} pembaca</span>
+                      </div>
 
-                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                      {post.excerpt}
-                    </p>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors line-clamp-2">
+                        {post.title}
+                      </h3>
+
+                      <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                        {post.excerpt}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="p-5 pt-0 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800/60 mt-4 pt-3">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={getOptimizedAvatarUrl(post.authorAvatar, 40, 40)}
-                      alt={post.authorName}
-                      width={24}
-                      height={24}
-                      className="w-6 h-6 rounded-full object-cover border border-rose-200 shrink-0"
-                    />
-                    <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
-                      {post.authorName}
+                  <div className="p-5 pt-0 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800/60 mt-4 pt-3">
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={getOptimizedAvatarUrl(post.authorAvatar, 40, 40)}
+                        alt={post.authorName}
+                        width={24}
+                        height={24}
+                        className="w-6 h-6 rounded-full object-cover border border-rose-200 shrink-0"
+                      />
+                      <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                        {post.authorName}
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold text-rose-600 dark:text-rose-400 group-hover:translate-x-1 transition-transform flex items-center gap-1 shrink-0 whitespace-nowrap">
+                      Baca <span>→</span>
                     </span>
                   </div>
-                  <span className="text-xs font-bold text-rose-600 dark:text-rose-400 group-hover:translate-x-1 transition-transform flex items-center gap-1 shrink-0 whitespace-nowrap">
-                    Baca <span>→</span>
-                  </span>
+                </article>
+              ))}
+            </div>
+
+            {/* ELEGANT HOMEPAGE PAGINATION CONTROLS */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-6">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                  className="px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-black transition-colors disabled:opacity-40"
+                >
+                  ← Sebelumnya
+                </button>
+
+                <div className="flex items-center gap-1.5">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-black transition-all ${
+                        currentPage === page
+                          ? 'bg-rose-700 text-white shadow-sm shadow-rose-500/20 scale-105'
+                          : 'border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
                 </div>
-              </article>
-            ))}
+
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                  className="px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-black transition-colors disabled:opacity-40"
+                >
+                  Berikutnya →
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-8">
