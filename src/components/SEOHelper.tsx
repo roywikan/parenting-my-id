@@ -131,8 +131,35 @@ export default function SEOHelper({
       script.textContent = JSON.stringify(jsonObj, null, 2);
     };
 
+    // A1. Enhanced Author Entity for E-E-A-T Authority
+    const authorSchema = {
+      '@type': 'Person',
+      'name': authorName,
+      'jobTitle': authorRole,
+      'image': image ? optimizeUnsplashUrl(image, 120, 75, 'webp') : undefined,
+      'description': 'Penulis berdedikasi menyajikan panduan berkualitas tinggi dan edukasi praktis berbasis riset ilmiah.',
+      'url': `${currentOrigin}/#penulis`,
+      'worksFor': {
+        '@type': 'Organization',
+        'name': siteName,
+        'url': currentOrigin,
+      }
+    };
+
+    // A2. UGC Comments list retrieved from static SSR Hydration data
+    const ssrComments = (window as any).__INITIAL_DATA__?.comments || [];
+    const blogComments = Array.isArray(ssrComments) ? ssrComments.map((c: any) => ({
+      '@type': 'Comment',
+      'author': {
+        '@type': 'Person',
+        'name': c.user_name || 'Pembaca'
+      },
+      'text': c.content || '',
+      'dateCreated': c.created_at || datePublished || new Date().toISOString()
+    })) : [];
+
     // A. Article Schema
-    const articleSchema = {
+    const articleSchema: Record<string, any> = {
       '@context': 'https://schema.org',
       '@type': 'BlogPosting',
       'mainEntityOfPage': {
@@ -144,11 +171,7 @@ export default function SEOHelper({
       'image': [image],
       'datePublished': datePublished || new Date().toISOString(),
       'dateModified': dateModified || datePublished || new Date().toISOString(),
-      'author': {
-        '@type': 'Person',
-        'name': authorName,
-        'jobTitle': authorRole,
-      },
+      'author': authorSchema,
       'publisher': {
         '@type': 'Organization',
         'name': siteName,
@@ -161,6 +184,11 @@ export default function SEOHelper({
       'keywords': keywords.join(', '),
       'inLanguage': 'id-ID',
     };
+
+    if (blogComments.length > 0) {
+      articleSchema.comment = blogComments;
+    }
+
     injectJsonLd('jsonld-article-schema', articleSchema);
 
     // B. BreadcrumbList Schema
@@ -178,7 +206,7 @@ export default function SEOHelper({
           '@type': 'ListItem',
           'position': 2,
           'name': category,
-          'item': `${currentOrigin}/#${encodeURIComponent(category.toLowerCase())}`,
+          'item': `${currentOrigin}/?kategori=${encodeURIComponent(category)}`,
         },
         {
           '@type': 'ListItem',
@@ -190,20 +218,36 @@ export default function SEOHelper({
     };
     injectJsonLd('jsonld-breadcrumb-schema', breadcrumbSchema);
 
-    // C. Auto FAQ Schema (Parses Q&A headings from markdown)
+    // C. Auto FAQ Schema (Parses Q&A headings and their immediate text from markdown)
     if (contentMarkdown) {
       const faqItems: { question: string; answer: string }[] = [];
-      const headingMatches = contentMarkdown.match(/^(##|###)\s+(.*?\?)/gm);
-      if (headingMatches && headingMatches.length > 0) {
-        headingMatches.forEach((match) => {
-          const questionText = match.replace(/^(##|###)\s+/, '').trim();
-          if (questionText) {
-            faqItems.push({
-              question: questionText,
-              answer: `Penjelasan mengenai ${questionText} disajikan secara ringkas dan praktis dalam artikel ini.`,
-            });
-          }
-        });
+      const mdFaqRegex = /^(?:##|###)\s+([^?\n]+\?)\s*\n+([^#\n]+)/gm;
+      let mdMatch;
+      while ((mdMatch = mdFaqRegex.exec(contentMarkdown)) !== null && faqItems.length < 5) {
+        const question = mdMatch[1].trim();
+        const answer = mdMatch[2].trim();
+        if (question && answer && answer.length > 15) {
+          faqItems.push({
+            question,
+            answer: answer.replace(/[*_`#]/g, '').slice(0, 300).trim()
+          });
+        }
+      }
+
+      // Fallback to older matching if regex doesn't match paragraphs
+      if (faqItems.length === 0) {
+        const headingMatches = contentMarkdown.match(/^(##|###)\s+(.*?\?)/gm);
+        if (headingMatches && headingMatches.length > 0) {
+          headingMatches.forEach((match) => {
+            const questionText = match.replace(/^(##|###)\s+/, '').trim();
+            if (questionText) {
+              faqItems.push({
+                question: questionText,
+                answer: `Penjelasan mengenai ${questionText} disajikan secara ringkas dan praktis dalam artikel ini.`,
+              });
+            }
+          });
+        }
       }
 
       if (faqItems.length > 0) {
