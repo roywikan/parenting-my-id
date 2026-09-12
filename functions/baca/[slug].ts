@@ -845,7 +845,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         </div>
 
         <!-- SEO COMMENTS STATIC INJECTION -->
-        \${commentsHtml}
+        ${commentsHtml}
       </main>
 
       <!-- FOOTER -->
