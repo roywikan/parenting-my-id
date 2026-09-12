@@ -663,7 +663,41 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const datePub = formatIsoWithTimezone(post.createdAt);
   const dateMod = formatIsoWithTimezone(post.updatedAt || post.createdAt);
 
-  const schemaArticle = {
+  const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 50, 'webp');
+  const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700], 50, 'webp');
+  const avatarImageSrc = optimizeUnsplashUrl(post.authorAvatar, 80, 50, 'webp');
+  const ogImageSrc = optimizeUnsplashUrl(post.featuredImage, 1200, 50, 'webp', 630);
+
+  // 1. Enhanced Author Entity for E-E-A-T Authority
+  const authorJobTitle = post.authorRole === 'admin' ? 'Psikolog Anak & Tim Redaksi Utama' : 'Penulis Konten Kesehatan';
+  const authorBio = 'Penulis berdedikasi menyajikan panduan berkualitas tinggi dan edukasi praktis berbasis riset ilmiah.';
+
+  const authorSchema = {
+    '@type': 'Person',
+    'name': post.authorName || 'Dr. Ratna Sari, M.Psi',
+    'jobTitle': authorJobTitle,
+    'image': avatarImageSrc,
+    'description': authorBio,
+    'url': `${siteUrl}/#penulis`,
+    'worksFor': {
+      '@type': 'Organization',
+      'name': siteName,
+      'url': siteUrl
+    }
+  };
+
+  // 2. Structured Comments for BlogPosting schema
+  const blogComments = (seoComments || []).map(comment => ({
+    '@type': 'Comment',
+    'author': {
+      '@type': 'Person',
+      'name': comment.user_name || 'Pembaca'
+    },
+    'text': comment.content || '',
+    'dateCreated': formatIsoWithTimezone(comment.created_at || post.createdAt)
+  }));
+
+  const schemaArticle: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     'mainEntityOfPage': {
@@ -675,11 +709,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     'image': [post.featuredImage],
     'datePublished': datePub,
     'dateModified': dateMod,
-    'author': {
-      '@type': 'Person',
-      'name': post.authorName || 'Dr. Ratna Sari, M.Psi',
-      'url': `${siteUrl}/#penulis`,
-    },
+    'author': authorSchema,
     'publisher': {
       '@type': 'Organization',
       'name': siteName,
@@ -692,6 +722,36 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     'articleSection': post.category,
     'keywords': post.tags,
   };
+
+  // Add comments list to JSON-LD if comments are approved/exist
+  if (blogComments.length > 0) {
+    schemaArticle.comment = blogComments;
+  }
+
+  // 3. Dynamic Q&A & FAQPage Extraction from parsedHtml for Rich Search snippets
+  const faqList: any[] = [];
+  const faqRegex = /<(h[23]) id="([^"]+)">([^<]+\?)<\/h\1>[\s\S]*?<p>(.*?)<\/p>/gi;
+  let faqMatch;
+  while ((faqMatch = faqRegex.exec(parsedHtml)) !== null && faqList.length < 5) {
+    const question = faqMatch[3].replace(/<[^>]+>/g, '').trim();
+    const answer = faqMatch[4].replace(/<[^>]+>/g, '').trim();
+    if (question && answer) {
+      faqList.push({
+        '@type': 'Question',
+        'name': question,
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': answer
+        }
+      });
+    }
+  }
+
+  const schemaFAQ = faqList.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    'mainEntity': faqList
+  } : null;
 
   const schemaBreadcrumb = {
     '@context': 'https://schema.org',
@@ -717,12 +777,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       },
     ],
   };
-
-  // Image Optimization for SSR HTML
-  const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 50, 'webp');
-  const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700], 50, 'webp');
-  const avatarImageSrc = optimizeUnsplashUrl(post.authorAvatar, 80, 50, 'webp');
-  const ogImageSrc = optimizeUnsplashUrl(post.featuredImage, 1200, 50, 'webp', 630);
 
   // Render comments section for SEO (max 20 comments, max 1000 words total)
   let commentsHtml = '';
@@ -901,6 +955,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <!-- Schema.org JSON-LD -->
     <script type="application/ld+json">${JSON.stringify(schemaArticle)}</script>
     <script type="application/ld+json">${JSON.stringify(schemaBreadcrumb)}</script>
+    ${schemaFAQ ? `<script type="application/ld+json">${JSON.stringify(schemaFAQ)}</script>` : ''}
   `;
 
   // Strip any pre-existing static preloads and generic SEO description/OpenGraph tags to prevent duplicates or crawler fallback
@@ -918,7 +973,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   // Inject pre-rendered static HTML into <div id="root">
-  const initialDataJson = JSON.stringify({ post, autolinks, siteConfig }).replace(/</g, '\\u003c');
+  const initialDataJson = JSON.stringify({ post, autolinks, siteConfig, comments: seoComments }).replace(/</g, '\\u003c');
   const initialDataScript = `<script>window.__INITIAL_DATA__=${initialDataJson};</script>`;
   finalHtml = finalHtml.replace(/<div id="root"><\/div>/i, `${initialDataScript}<div id="root">${preRenderedBody}</div>`);
 
