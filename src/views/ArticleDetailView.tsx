@@ -346,12 +346,24 @@ export default function ArticleDetailView({
 
     // Inject id attributes into <h2> and <h3> tags for TOC scrolling, and build tocItems
     rawHtml = rawHtml.replace(/<(h[23])>(.*?)<\/\1>/gi, (match, tag, content) => {
-      const cleanText = content.replace(/<[^>]+>/g, '').trim();
+      let cleanText = content.replace(/<[^>]+>/g, '').trim();
 
       // Safety check: headings must be reasonable in length (e.g. <= 120 chars)
       if (!cleanText || cleanText.length > 120) {
         return match;
       }
+
+      // Decode HTML entities (such as &quot; and &#39;) to actual quotes/symbols for TOC rendering
+      cleanText = cleanText
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&rsquo;/g, "'")
+        .replace(/&lsquo;/g, "'")
+        .replace(/&ldquo;/g, '"')
+        .replace(/&rdquo;/g, '"');
 
       const level = tag.toLowerCase() === 'h2' ? 2 : 3;
       const id = cleanText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
