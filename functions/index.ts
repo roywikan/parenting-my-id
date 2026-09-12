@@ -94,8 +94,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const url = new URL(request.url);
 
   let siteConfig: Record<string, any> | undefined = undefined;
+  let totalPostsCount = 0;
+  let publishedPosts: any[] = [];
+  let autolinks: any[] = [];
 
-  // 1. Fetch site configurations from Cloudflare D1
+  const urlPage = parseInt(url.searchParams.get('page') || '1', 10);
+  const page = isNaN(urlPage) || urlPage < 1 ? 1 : urlPage;
+
+  // 1. Fetch site configurations, posts count, autolinks, and posts from Cloudflare D1
   if (env.DB) {
     try {
       const configRes = await env.DB.prepare('SELECT key, value FROM configs').all();
@@ -112,6 +118,22 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           }
         }
       }
+
+      // Count total published posts
+      const countRes = await env.DB.prepare("SELECT COUNT(*) as count FROM posts WHERE status = 'published'").first();
+      totalPostsCount = countRes?.count || 0;
+
+      // Fetch autolinks
+      const autolinksRes = await env.DB.prepare("SELECT * FROM autolinks ORDER BY created_at DESC").all();
+      autolinks = autolinksRes.results || [];
+
+      // Fetch paginated posts
+      const postsPerPage = siteConfig?.posts_per_page || 9;
+      const offset = (page - 1) * postsPerPage;
+      const postsRes = await env.DB.prepare(
+        "SELECT title, slug, excerpt, category, read_time_minutes, views, featured_image, author_name, author_avatar, published_at FROM posts WHERE status = 'published' ORDER BY published_at DESC LIMIT ? OFFSET ?"
+      ).bind(postsPerPage, offset).all();
+      publishedPosts = postsRes.results || [];
     } catch (e) {
       console.error('D1 error in homepage pre-render:', e);
     }
@@ -128,18 +150,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   // MARKDOWN CONTENT NEGOTIATION FOR AGENTS (RFC 8288, RFC 9110 & Markdown for Agents)
   const acceptHeader = request.headers.get('Accept') || '';
   if (negotiateContent(acceptHeader) === 'markdown') {
-    let recentPosts: any[] = [];
-    if (env.DB) {
-      try {
-        const postsRes = await env.DB.prepare(
-          "SELECT title, slug, excerpt, category, read_time_minutes as readTimeMinutes FROM posts WHERE status = 'published' ORDER BY published_at DESC LIMIT 15"
-        ).all();
-        recentPosts = postsRes.results || [];
-      } catch (e) {
-        console.error('Failed to fetch posts for markdown homepage:', e);
-      }
-    }
-
     const mdLines: string[] = [
       `# ${siteName}`,
       '',
@@ -155,10 +165,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       '## Artikel Terbaru',
     ];
 
-    if (recentPosts.length > 0) {
-      for (const p of recentPosts) {
+    if (publishedPosts.length > 0) {
+      for (const p of publishedPosts) {
         mdLines.push(
-          `- [${p.title}](${siteUrl}/baca/${p.slug}) - *${p.category || 'Umum'}* (${p.readTimeMinutes || 5} menit baca)\n  ${p.excerpt || ''}`
+          `- [${p.title}](${siteUrl}/baca/${p.slug}) - *${p.category || 'Umum'}* (${p.read_time_minutes || 5} menit baca)\n  ${p.excerpt || ''}`
         );
       }
     } else {
@@ -221,6 +231,185 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     html = html.replace(/<title>.*?<\/title>/i, seoHeadTags);
   } else {
     html = html.replace('</head>', `${seoHeadTags}</head>`);
+  }
+
+  // 6. Build Static HTML Content for `#root` to deliver ultimate crawlers pre-rendering (SEO Kelas Dunia)
+  const showHero = siteConfig?.show_hero_section !== false;
+  const heroTitle = siteConfig?.hero_title || 'Panduan Pengasuhan Anak Terpercaya';
+  const heroSubtitle = siteConfig?.hero_subtitle || 'Temukan artikel, tips nutrisi, dan edukasi tumbuh kembang anak untuk orang tua modern.';
+  const heroCtaText = siteConfig?.hero_cta_text || 'Jelajahi Artikel';
+  const heroCtaLink = siteConfig?.hero_cta_link || '#artikel-terbaru';
+
+  let heroHtml = '';
+  if (showHero) {
+    heroHtml = `
+      <section class="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-500/15 relative overflow-hidden my-8 max-w-7xl mx-auto">
+        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div class="space-y-3 max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-rose-100 border border-white/20">
+              <span>Cloudflare D1 Edge Architecture • TTFB &lt; 20ms</span>
+            </div>
+            <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">${escapeHtml(heroTitle)}</h1>
+            <p class="text-rose-100 text-sm sm:text-base leading-relaxed">${escapeHtml(heroSubtitle)}</p>
+            <div class="pt-2">
+              <a href="${heroCtaLink}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-rose-900 font-black text-xs shadow-lg hover:bg-rose-50 transition-transform">${escapeHtml(heroCtaText)}</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  let autolinksHtml = '';
+  if (autolinks.length > 0) {
+    autolinksHtml = `
+      <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 max-w-7xl mx-auto my-6">
+        <div class="flex items-center gap-1.5 text-xs font-black text-rose-800 shrink-0 uppercase tracking-wide">
+          <span>Topik Trending:</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          ${autolinks.map(l => `
+            <a href="${escapeHtml(l.targetUrl)}" class="px-3 py-1 rounded-lg bg-white border border-rose-300 text-xs text-slate-800 hover:border-rose-500 transition-colors font-bold inline-flex items-center gap-1">
+              #${escapeHtml(l.keyword)}
+            </a>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // Slicing Featured Post on Page 1
+  let featuredPostHtml = '';
+  let displayPosts = publishedPosts;
+  if (page === 1 && publishedPosts.length > 0) {
+    const featured = publishedPosts[0];
+    displayPosts = publishedPosts.slice(1);
+    
+    featuredPostHtml = `
+      <section class="group cursor-pointer rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-sm my-8 max-w-7xl mx-auto">
+        <a href="/baca/${escapeHtml(featured.slug)}" class="block grid grid-cols-1 lg:grid-cols-12 gap-0">
+          <div class="lg:col-span-7 relative aspect-[16/9] lg:aspect-auto h-64 sm:h-72 lg:h-[420px] w-full overflow-hidden bg-slate-100">
+            <img src="${escapeHtml(featured.featured_image)}" alt="${escapeHtml(featured.title)}" class="w-full h-full object-cover" loading="eager" />
+            <div class="absolute top-4 left-4">
+              <span class="inline-flex items-center px-3 py-1 rounded-full bg-rose-800 text-white text-xs font-black shadow-md uppercase">
+                UTAMA • ${escapeHtml(featured.category)}
+              </span>
+            </div>
+          </div>
+          <div class="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="flex items-center gap-3 text-xs text-slate-700 font-semibold">
+                <span>${featured.read_time_minutes || 5} menit baca</span>
+                <span>•</span>
+                <span>${featured.views || 0} pembaca</span>
+              </div>
+              <h2 class="text-xl sm:text-2xl font-bold text-slate-900 hover:text-rose-700 transition-colors leading-snug">${escapeHtml(featured.title)}</h2>
+              <p class="text-slate-700 text-sm leading-relaxed">${escapeHtml(featured.excerpt)}</p>
+            </div>
+            <div class="pt-6 border-t border-slate-100 flex items-center justify-between gap-3 mt-4">
+              <div class="flex items-center gap-3">
+                <img src="${escapeHtml(featured.author_avatar || 'https://ui-avatars.com/api/?name=U')}" alt="${escapeHtml(featured.author_name)}" class="w-9 h-9 rounded-full object-cover border border-rose-300 shrink-0" />
+                <div>
+                  <div class="text-xs font-bold text-slate-900">${escapeHtml(featured.author_name)}</div>
+                  <div class="text-[10px] text-slate-500">Tim Redaksi</div>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1 text-xs font-black text-rose-800">Baca Selengkapnya &rarr;</span>
+            </div>
+          </div>
+        </a>
+      </section>
+    `;
+  }
+
+  let postsGridHtml = '';
+  if (displayPosts.length > 0) {
+    postsGridHtml = `
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto my-8">
+        ${displayPosts.map(p => `
+          <article class="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 bg-white hover:shadow-lg transition-all duration-300 flex flex-col justify-between">
+            <a href="/baca/${escapeHtml(p.slug)}" class="block">
+              <div class="relative aspect-[16/9] w-full overflow-hidden bg-slate-100">
+                <img src="${escapeHtml(p.featured_image)}" alt="${escapeHtml(p.title)}" class="w-full h-full object-cover" loading="lazy" />
+                <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-rose-700 text-white text-[10px] font-bold">
+                  ${escapeHtml(p.category)}
+                </span>
+              </div>
+              <div class="p-5 space-y-3">
+                <div class="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
+                  <span>${p.read_time_minutes || 5} menit baca</span>
+                  <span>•</span>
+                  <span>${p.views || 0} pembaca</span>
+                </div>
+                <h3 class="text-base font-bold text-slate-900 hover:text-rose-600 transition-colors line-clamp-2">${escapeHtml(p.title)}</h3>
+                <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">${escapeHtml(p.excerpt)}</p>
+              </div>
+            </a>
+            <div class="p-5 pt-0 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 mt-4 pt-3">
+              <div class="flex items-center gap-2">
+                <img src="${escapeHtml(p.author_avatar || 'https://ui-avatars.com/api/?name=U')}" alt="${escapeHtml(p.author_name)}" class="w-6 h-6 rounded-full object-cover border border-rose-200 shrink-0" />
+                <span class="text-xs text-slate-700 font-medium">${escapeHtml(p.author_name)}</span>
+              </div>
+              <a href="/baca/${escapeHtml(p.slug)}" class="text-xs font-bold text-rose-600 hover:underline">Baca &rarr;</a>
+            </div>
+          </article>
+        `).join('')}
+      </div>
+    `;
+  } else {
+    postsGridHtml = `
+      <div class="p-8 text-center bg-white rounded-3xl border border-slate-200 space-y-3 my-8 max-w-7xl mx-auto">
+        <h3 class="text-base font-bold text-slate-800">Tidak ada artikel yang sesuai</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto">Silakan hubungi administrator atau kunjungi kategori lain.</p>
+      </div>
+    `;
+  }
+
+  // Pre-rendered Pagination HTML
+  let paginationHtml = '';
+  const postsPerPage = siteConfig?.posts_per_page || 9;
+  const totalPages = Math.ceil(totalPostsCount / postsPerPage);
+  if (totalPages > 1) {
+    paginationHtml = `
+      <div class="flex items-center justify-between border-t border-slate-100 pt-6 my-8 max-w-7xl mx-auto">
+        <a href="${page > 1 ? `/?page=${page - 1}` : '#'}" class="px-4 py-2 rounded-2xl border border-slate-200 text-xs font-black transition-colors ${page === 1 ? 'opacity-40 pointer-events-none' : 'hover:bg-slate-50'}">
+          &larr; Sebelumnya
+        </a>
+        <div class="flex items-center gap-1.5">
+          ${Array.from({ length: totalPages }, (_, i) => i + 1).map(p => `
+            <a href="/?page=${p}" class="w-9 h-9 flex items-center justify-center rounded-xl text-xs font-black transition-all ${page === p ? 'bg-rose-700 text-white' : 'border border-slate-200 hover:bg-slate-50 text-slate-700'}">
+              ${p}
+            </a>
+          `).join('')}
+        </div>
+        <a href="${page < totalPages ? `/?page=${page + 1}` : '#'}" class="px-4 py-2 rounded-2xl border border-slate-200 text-xs font-black transition-colors ${page === totalPages ? 'opacity-40 pointer-events-none' : 'hover:bg-slate-50'}">
+          Berikutnya &rarr;
+        </a>
+      </div>
+    `;
+  }
+
+  const preRenderedHtml = `
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+      <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-lg font-black text-rose-600">${escapeHtml(siteName)}</span>
+        </div>
+      </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 py-6">
+      ${heroHtml}
+      ${autolinksHtml}
+      ${featuredPostHtml}
+      <h2 class="text-xl font-extrabold text-slate-900 border-b border-slate-100 pb-3 max-w-7xl mx-auto" id="artikel-terbaru">Artikel Terbaru</h2>
+      ${postsGridHtml}
+      ${paginationHtml}
+    </main>
+  `;
+
+  // Inject Static Pre-rendered Content into `#root`
+  if (html.includes('<div id="root">')) {
+    html = html.replace(/<div\s+id="root"[^>]*>([\s\S]*?)<\/div>/i, `<div id="root">${preRenderedHtml}</div>`);
   }
 
   return new Response(html, {
