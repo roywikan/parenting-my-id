@@ -705,13 +705,27 @@ app.post('/api/comments', async (req, res) => {
     return res.status(400).json({ error: 'Data skema komentar tidak valid.' });
   }
 
-  const { post_slug, postId, user_name, author, user_email, content, turnstileToken, website_hp } = req.body;
+  const { post_slug, postId, user_name, author, user_email, content, turnstileToken, website_hp, parent_id } = req.body;
 
   if (website_hp) {
     return res.status(400).json({ error: 'Permintaan ditolak: Spam terdeteksi.' });
   }
 
-  if (turnstileToken !== 'BYPASS_DISABLED') {
+  let isTurnstileEnabled = true;
+  try {
+    const configPath = path.join(process.cwd(), 'public', 'site_config.json');
+    if (fs.existsSync(configPath)) {
+      const fileData = fs.readFileSync(configPath, 'utf-8');
+      const parsed = JSON.parse(fileData);
+      if (parsed.enable_comment_turnstile === false || parsed.enable_comment_turnstile === 'false') {
+        isTurnstileEnabled = false;
+      }
+    }
+  } catch (e) {
+    console.error('Error loading config for Turnstile check:', e);
+  }
+
+  if (isTurnstileEnabled) {
     const isValidTurnstile = await verifyTurnstileToken(turnstileToken);
     if (!isValidTurnstile) {
       return res.status(400).json({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi.' });
@@ -760,6 +774,7 @@ app.post('/api/comments', async (req, res) => {
     user_avatar: `https://ui-avatars.com/api/?name=${avatarName}&background=f43f5e&color=fff`,
     content: cleanContent,
     status: 'pending',
+    parent_id: parent_id ? Number(parent_id) : null,
     created_at: new Date().toISOString(),
   };
 
@@ -1335,6 +1350,7 @@ CREATE TABLE IF NOT EXISTS comments (
   user_avatar TEXT,
   content TEXT NOT NULL,
   status TEXT DEFAULT 'approved',
+  parent_id INTEGER DEFAULT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -1435,6 +1451,7 @@ app.post('/api/database/dump', requireAuth(['admin']), (req, res) => {
   user_avatar TEXT,
   content TEXT NOT NULL,
   status TEXT DEFAULT 'approved',
+  parent_id INTEGER DEFAULT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );`,
       login_attempts: `CREATE TABLE IF NOT EXISTS login_attempts (
@@ -1610,26 +1627,51 @@ BEGIN TRANSACTION;
 
 // Helper to verify Cloudflare Turnstile Captcha
 const verifyTurnstileToken = async (token?: string): Promise<boolean> => {
-  const secretKey = process.env.TURNSTILE_SECRET_KEY || '1x00000000000000000000000000000000UNIFIED';
-  if (!token) return false;
+  const secretKey = process.env.TURNSTILE_SECRET_KEY;
+  
+  // If TURNSTILE_SECRET_KEY is not configured in environment, allow bypass for local dev
+  if (!secretKey) {
+    console.warn('[Turnstile] TURNSTILE_SECRET_KEY is missing, allowing token bypass for local development/testing.');
+    return true;
+  }
+
+  // If using the official dummy test keys, always pass
+  if (secretKey === '1x00000000000000000000000000000000UNIFIED' || secretKey.startsWith('1x00000000')) {
+    return true;
+  }
+
+  if (!token) {
+    console.error('[Turnstile] Token verification failed: No token provided.');
+    return false;
+  }
 
   try {
+    const formData = new URLSearchParams();
+    formData.append('secret', secretKey);
+    formData.append('response', token);
+
     const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `secret=${encodeURIComponent(secretKey)}&response=${encodeURIComponent(token)}`,
+      body: formData.toString(),
     });
+
     if (res.ok) {
       const data = await res.json() as any;
-      return !!data.success;
+      if (data.success) {
+        return true;
+      } else {
+        console.warn('[Turnstile] Siteverify validation failed:', data['error-codes']);
+        return false;
+      }
+    } else {
+      console.error('[Turnstile] Cloudflare siteverify HTTP error:', res.status);
     }
   } catch (err) {
     console.error('Turnstile verification error:', err);
   }
 
-  // Fallback to true if we are in testing environment/using unified pass key
-  //return secretKey === '1x00000000000000000000000000000000UNIFIED';
-  return true;//bypass sementara
+  return false; // Fail secure in production if a real secretKey is set
 };
 
 // In-memory rate limiting store for login attempts (Anti Brute Force)

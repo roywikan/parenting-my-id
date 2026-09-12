@@ -544,24 +544,51 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   // Helper to verify Cloudflare Turnstile Captcha
   const verifyTurnstileTokenEdge = async (token?: string): Promise<boolean> => {
-    const secretKey = (env as any).TURNSTILE_SECRET_KEY || '1x00000000000000000000000000000000UNIFIED';
-    if (!token) return false;
+    const secretKey = (env as any).TURNSTILE_SECRET_KEY;
+    
+    // If TURNSTILE_SECRET_KEY is not configured in environment, allow bypass for local dev
+    if (!secretKey) {
+      console.warn('[Turnstile] TURNSTILE_SECRET_KEY is missing in Edge env, allowing token bypass.');
+      return true;
+    }
+
+    // If using the official dummy test keys, always pass
+    if (secretKey === '1x00000000000000000000000000000000UNIFIED' || secretKey.startsWith('1x00000000')) {
+      return true;
+    }
+
+    if (!token) {
+      console.error('[Turnstile] Token verification failed on edge: No token provided.');
+      return false;
+    }
 
     try {
+      const formData = new URLSearchParams();
+      formData.append('secret', secretKey);
+      formData.append('response', token);
+
       const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `secret=${encodeURIComponent(secretKey)}&response=${encodeURIComponent(token)}`,
+        body: formData.toString(),
       });
+
       if (res.ok) {
         const data = await res.json() as any;
-        return !!data.success;
+        if (data.success) {
+          return true;
+        } else {
+          console.warn('[Turnstile] Siteverify validation failed on edge:', data['error-codes']);
+          return false;
+        }
+      } else {
+        console.error('[Turnstile] Cloudflare siteverify HTTP error on edge:', res.status);
       }
     } catch (err) {
       console.error('Turnstile verification error on edge:', err);
     }
 
-    return secretKey === '1x00000000000000000000000000000000UNIFIED';
+    return false; // Fail secure in production if a real secretKey is set
   };
 
   // Slug generator with collision avoidance
@@ -2583,9 +2610,16 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
               user_avatar TEXT NOT NULL,
               content TEXT NOT NULL,
               status TEXT DEFAULT 'pending',
+              parent_id INTEGER DEFAULT NULL,
               created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
           `).run();
+
+          try {
+            await env.DB.prepare("ALTER TABLE comments ADD COLUMN parent_id INTEGER DEFAULT NULL").run();
+          } catch (alterErr) {
+            // Ignored if column already exists
+          }
 
           const postSlug = url.searchParams.get('post_slug');
           const statusParam = url.searchParams.get('status');
@@ -2629,14 +2663,26 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
     if (path === '/api/comments' && method === 'POST') {
       try {
         const body = await request.json() as any;
-        const { post_slug, user_name, user_email, content, turnstileToken, website_hp } = body;
+        const { post_slug, user_name, user_email, content, turnstileToken, website_hp, parent_id } = body;
 
         // Anti-spam honeypot detection
         if (website_hp) {
           return jsonResponse({ error: 'Permintaan ditolak: Spam terdeteksi.' }, 400);
         }
 
-        if (turnstileToken !== 'BYPASS_DISABLED') {
+        let isTurnstileEnabled = true;
+        if (env.DB) {
+          try {
+            const configVal = await env.DB.prepare("SELECT value FROM configs WHERE key = 'enable_comment_turnstile'").first<string>('value');
+            if (configVal === 'false') {
+              isTurnstileEnabled = false;
+            }
+          } catch (e) {
+            console.error('Error checking enable_comment_turnstile on edge:', e);
+          }
+        }
+
+        if (isTurnstileEnabled) {
           const isValidTurnstile = await verifyTurnstileTokenEdge(turnstileToken);
           if (!isValidTurnstile) {
             return jsonResponse({ error: 'Verifikasi keamanan Turnstile gagal atau kedaluwarsa. Silakan coba lagi.' }, 400);
@@ -2658,6 +2704,8 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
         const avatarName = encodeURIComponent(sanitizedName);
         const avatar = `https://ui-avatars.com/api/?name=${avatarName}&background=f43f5e&color=fff`;
 
+        const targetParentId = parent_id ? Number(parent_id) : null;
+
         if (env.DB) {
           await env.DB.prepare(`
             CREATE TABLE IF NOT EXISTS comments (
@@ -2668,19 +2716,27 @@ Berdasarkan judul artikel: "${title}" dan isi: "${(content || '').slice(0, 500)}
               user_avatar TEXT NOT NULL,
               content TEXT NOT NULL,
               status TEXT DEFAULT 'pending',
+              parent_id INTEGER DEFAULT NULL,
               created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
           `).run();
 
+          try {
+            await env.DB.prepare("ALTER TABLE comments ADD COLUMN parent_id INTEGER DEFAULT NULL").run();
+          } catch (alterErr) {
+            // Safe ignore if column already exists
+          }
+
           await env.DB.prepare(`
-            INSERT INTO comments (post_slug, user_name, user_email, user_avatar, content, status)
-            VALUES (?, ?, ?, ?, ?, 'pending')
+            INSERT INTO comments (post_slug, user_name, user_email, user_avatar, content, status, parent_id)
+            VALUES (?, ?, ?, ?, ?, 'pending', ?)
           `).bind(
             post_slug,
             sanitizedName,
             sanitizedEmail,
             avatar,
-            sanitizedContent
+            sanitizedContent,
+            targetParentId
           ).run();
         }
 

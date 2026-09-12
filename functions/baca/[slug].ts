@@ -426,6 +426,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   let post: Post | null = null;
   let autolinks: AutoLink[] = INITIAL_AUTOLINKS;
   let siteConfig: Record<string, any> | undefined = undefined;
+  let seoComments: any[] = [];
 
   // 1. Fetch from D1 database if bound
   if (env.DB) {
@@ -487,6 +488,22 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           }
         }
       } catch {}
+
+      // Fetch approved comments for SEO static rendering (max 20)
+      try {
+        const commentsRes = await env.DB.prepare(`
+          SELECT user_name, content, created_at 
+          FROM comments 
+          WHERE post_slug = ? AND status = 'approved' 
+          ORDER BY created_at DESC 
+          LIMIT 20
+        `).bind(slug).all();
+        if (commentsRes.results && commentsRes.results.length > 0) {
+          seoComments = commentsRes.results;
+        }
+      } catch (commentErr) {
+        console.error('Failed to fetch SEO comments from DB:', commentErr);
+      }
     } catch (e) {
       console.error('D1 error in /baca/[slug]:', e);
     }
@@ -694,6 +711,52 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const avatarImageSrc = optimizeUnsplashUrl(post.authorAvatar, 80, 50, 'webp');
   const ogImageSrc = optimizeUnsplashUrl(post.featuredImage, 1200, 50, 'webp', 630);
 
+  // Render comments section for SEO (max 20 comments, max 1000 words total)
+  let commentsHtml = '';
+  if (seoComments && seoComments.length > 0) {
+    let totalWordCount = 0;
+    const maxWords = 1000;
+    const commentItems: string[] = [];
+
+    for (const comment of seoComments) {
+      const authorName = escapeHtml(comment.user_name || 'Pembaca');
+      const commentContent = escapeHtml(comment.content || '');
+      const words = commentContent.split(/\s+/).filter(Boolean);
+      
+      if (totalWordCount + words.length > maxWords) {
+        const allowedWordCount = maxWords - totalWordCount;
+        if (allowedWordCount > 0) {
+          const contentSnippet = words.slice(0, allowedWordCount).join(' ') + '...';
+          commentItems.push(`
+            <li class="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+              <p class="font-extrabold text-slate-800 text-xs mb-1">${authorName}</p>
+              <p class="text-slate-600 text-xs leading-relaxed font-medium">${contentSnippet}</p>
+            </li>
+          `);
+          totalWordCount = maxWords;
+        }
+        break;
+      } else {
+        commentItems.push(`
+          <li class="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+            <p class="font-extrabold text-slate-800 text-xs mb-1">${authorName}</p>
+            <p class="text-slate-600 text-xs leading-relaxed font-medium">${commentContent}</p>
+          </li>
+        `);
+        totalWordCount += words.length;
+      }
+    }
+
+    commentsHtml = `
+      <div class="mt-12 pt-8 border-t border-slate-200 space-y-4">
+        <h3 class="text-sm font-extrabold text-slate-900 tracking-tight uppercase">Komentar Pilihan Pembaca:</h3>
+        <ul class="space-y-4">
+          ${commentItems.join('\n')}
+        </ul>
+      </div>
+    `;
+  }
+
   // Static HTML Content to inject into <div id="root">
   const preRenderedBody = `
     <div class="min-h-screen bg-slate-50 text-slate-900 font-sans">
@@ -780,6 +843,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             <p class="text-xs text-slate-700 leading-relaxed font-medium">Penulis berdedikasi menyajikan panduan berkualitas tinggi dan edukasi praktis berbasis riset ilmiah.</p>
           </div>
         </div>
+
+        <!-- SEO COMMENTS STATIC INJECTION -->
+        \${commentsHtml}
       </main>
 
       <!-- FOOTER -->
