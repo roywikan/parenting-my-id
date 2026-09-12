@@ -26,6 +26,309 @@ declare global {
   }
 }
 
+export interface CommentNode {
+  id: number;
+  post_slug: string;
+  user_name: string;
+  user_email?: string;
+  user_avatar?: string;
+  content: string;
+  status: string;
+  parent_id: number | null;
+  created_at: string;
+  replies: CommentNode[];
+}
+
+export const buildCommentTree = (comments: any[]): CommentNode[] => {
+  const map: { [key: number]: CommentNode } = {};
+  const roots: CommentNode[] = [];
+
+  comments.forEach((c) => {
+    map[c.id] = { ...c, replies: [] };
+  });
+
+  comments.forEach((c) => {
+    const node = map[c.id];
+    if (c.parent_id) {
+      const parent = map[c.parent_id];
+      if (parent) {
+        parent.replies.push(node);
+      } else {
+        roots.push(node);
+      }
+    } else {
+      roots.push(node);
+    }
+  });
+
+  roots.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  const sortRepliesRecursively = (node: CommentNode) => {
+    node.replies.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    node.replies.forEach(sortRepliesRecursively);
+  };
+
+  roots.forEach(sortRepliesRecursively);
+
+  return roots;
+};
+
+interface ReplyFormProps {
+  parentId: number;
+  postSlug: string;
+  onSuccess: () => void;
+  onCancel: () => void;
+  turnstileSiteKey?: string;
+  enableTurnstile?: boolean;
+}
+
+const CommentReplyForm: React.FC<ReplyFormProps> = ({
+  parentId,
+  postSlug,
+  onSuccess,
+  onCancel,
+  turnstileSiteKey,
+  enableTurnstile = true,
+}) => {
+  const [replyName, setReplyName] = useState('');
+  const [replyEmail, setReplyEmail] = useState('');
+  const [replyContent, setReplyContent] = useState('');
+  const [replyHoneypot, setReplyHoneypot] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [replyToken, setReplyToken] = useState('');
+  const [turnstileLoadFailed, setTurnstileLoadFailed] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (replyHoneypot.trim()) {
+      setErrorMsg('Pengiriman spam terdeteksi.');
+      return;
+    }
+    if (!replyName.trim() || !replyContent.trim()) {
+      setErrorMsg('Nama dan isi komentar wajib diisi.');
+      return;
+    }
+    if (enableTurnstile !== false && !turnstileLoadFailed && !replyToken) {
+      setErrorMsg('Harap selesaikan verifikasi keamanan Turnstile.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          post_slug: postSlug,
+          user_name: replyName.trim(),
+          user_email: replyEmail.trim(),
+          content: replyContent.trim(),
+          parent_id: parentId,
+          turnstileToken: replyToken || 'BYPASS_DISABLED',
+          website_hp: replyHoneypot,
+        }),
+      });
+
+      const data = await res.json() as any;
+      if (res.ok && data.success) {
+        onSuccess();
+      } else {
+        setErrorMsg(data.error || 'Gagal mengirim balasan.');
+      }
+    } catch (err) {
+      setErrorMsg('Terjadi kesalahan koneksi.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3 text-xs">
+      <div className="font-extrabold text-slate-800 dark:text-slate-200">Balas Komentar:</div>
+      {errorMsg && (
+        <div className="p-2 rounded-xl bg-rose-50 text-rose-800 border border-rose-200">
+          {errorMsg}
+        </div>
+      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <input
+          type="text"
+          required
+          value={replyName}
+          onChange={(e) => setReplyName(e.target.value)}
+          placeholder="Nama Anda *"
+          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 outline-none"
+        />
+        <input
+          type="email"
+          value={replyEmail}
+          onChange={(e) => setReplyEmail(e.target.value)}
+          placeholder="Email (Opsional)"
+          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 outline-none"
+        />
+      </div>
+      <textarea
+        required
+        rows={2}
+        value={replyContent}
+        onChange={(e) => setReplyContent(e.target.value)}
+        placeholder="Tulis balasan Anda..."
+        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 outline-none resize-none"
+      />
+      
+      {/* Honeypot */}
+      <input
+        type="text"
+        value={replyHoneypot}
+        onChange={(e) => setReplyHoneypot(e.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        className="hidden opacity-0 pointer-events-none absolute -left-[9999px]"
+        aria-hidden="true"
+      />
+
+      {enableTurnstile !== false && (
+        <div className="scale-90 origin-left">
+          <TurnstileWidget
+            siteKey={turnstileSiteKey}
+            onVerify={(token) => {
+              setReplyToken(token);
+              setErrorMsg('');
+            }}
+            onExpire={() => setReplyToken('')}
+            onError={(err) => {
+              console.warn('Reply Turnstile load notice:', err);
+              setTurnstileLoadFailed(true);
+            }}
+          />
+        </div>
+      )}
+
+      <div className="flex items-center justify-end gap-2 pt-1">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold transition-colors"
+        >
+          Batal
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-extrabold transition-colors disabled:opacity-50"
+        >
+          {isSubmitting ? 'Mengirim...' : 'Kirim Balasan'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const CommentItem: React.FC<{
+  comment: CommentNode;
+  depth: number;
+  pageId: string;
+  turnstileSiteKey?: string;
+  enableTurnstile?: boolean;
+  onReplySuccess: () => void;
+  activeReplyId: number | null;
+  setActiveReplyId: (id: number | null) => void;
+}> = ({
+  comment,
+  depth,
+  pageId,
+  turnstileSiteKey,
+  enableTurnstile,
+  onReplySuccess,
+  activeReplyId,
+  setActiveReplyId,
+}) => {
+  const isCapped = depth >= 3;
+  
+  return (
+    <div className={`p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 space-y-2.5 ${depth > 0 && depth <= 3 ? 'ml-4 sm:ml-6 pl-4 sm:pl-6 border-l-2 border-rose-200/80 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40' : ''}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <img
+            src={comment.user_avatar ? getOptimizedAvatarUrl(comment.user_avatar, 80) : `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user_name || 'U')}`}
+            alt={comment.user_name}
+            className="w-8 h-8 rounded-full object-cover border border-slate-200"
+          />
+          <div>
+            <div className="font-extrabold text-xs text-slate-900 dark:text-white">
+              {comment.user_name}
+            </div>
+            <div className="text-[10px] text-slate-400">
+              {new Date(comment.created_at).toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </div>
+          </div>
+        </div>
+
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-semibold">
+          ✓ Disetujui
+        </span>
+      </div>
+
+      <p className="text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 leading-relaxed font-medium">
+        {comment.content}
+      </p>
+
+      <div className="flex flex-col">
+        <div className="flex items-center justify-end">
+          <button
+            onClick={() => setActiveReplyId(activeReplyId === comment.id ? null : comment.id)}
+            className="text-[11px] font-black text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 self-end py-1 px-2 rounded-lg bg-rose-50 dark:bg-rose-950/40"
+          >
+            <span>💬</span>
+            <span>Balas</span>
+          </button>
+        </div>
+
+        {activeReplyId === comment.id && (
+          <CommentReplyForm
+            parentId={comment.id}
+            postSlug={pageId}
+            onSuccess={() => {
+              setActiveReplyId(null);
+              onReplySuccess();
+            }}
+            onCancel={() => setActiveReplyId(null)}
+            turnstileSiteKey={turnstileSiteKey}
+            enableTurnstile={enableTurnstile}
+          />
+        )}
+      </div>
+
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="mt-4 space-y-4">
+          {comment.replies.map((reply) => (
+            <CommentItem
+              key={reply.id}
+              comment={reply}
+              depth={isCapped ? depth : depth + 1}
+              pageId={pageId}
+              turnstileSiteKey={turnstileSiteKey}
+              enableTurnstile={enableTurnstile}
+              onReplySuccess={onReplySuccess}
+              activeReplyId={activeReplyId}
+              setActiveReplyId={setActiveReplyId}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const CusdisComments: React.FC<CusdisCommentsProps> = ({
   pageId,
   pageUrl,
@@ -67,6 +370,8 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
   // Native Approved Comments State
   const [nativeComments, setNativeComments] = useState<any[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [activeReplyId, setActiveReplyId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch Approved Native Comments
   const fetchApprovedComments = async () => {
@@ -444,48 +749,68 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
                   Jadilah pembaca pertama yang memberikan tanggapan pada artikel ini!
                 </p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {nativeComments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 space-y-2.5"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={comment.user_avatar ? getOptimizedAvatarUrl(comment.user_avatar, 80) : `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user_name || 'U')}`}
-                          alt={comment.user_name}
-                          className="w-8 h-8 rounded-full object-cover border border-slate-200"
-                        />
-                        <div>
-                          <div className="font-extrabold text-xs text-slate-900 dark:text-white">
-                            {comment.user_name}
-                          </div>
-                          <div className="text-[10px] text-slate-400">
-                            {new Date(comment.created_at).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </div>
-                        </div>
+            ) : (() => {
+              const roots = buildCommentTree(nativeComments);
+              const COMMENTS_PER_PAGE = 5;
+              const totalPages = Math.ceil(roots.length / COMMENTS_PER_PAGE);
+              const paginatedRoots = roots.slice((currentPage - 1) * COMMENTS_PER_PAGE, currentPage * COMMENTS_PER_PAGE);
+
+              return (
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    {paginatedRoots.map((comment) => (
+                      <CommentItem
+                        key={comment.id}
+                        comment={comment}
+                        depth={0}
+                        pageId={pageId}
+                        turnstileSiteKey={turnstileSiteKey}
+                        enableTurnstile={enableTurnstile}
+                        onReplySuccess={fetchApprovedComments}
+                        activeReplyId={activeReplyId}
+                        setActiveReplyId={setActiveReplyId}
+                      />
+                    ))}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 mt-6">
+                      <button
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-colors disabled:opacity-40"
+                      >
+                        ← Sebelumnya
+                      </button>
+
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-bold transition-colors ${
+                              currentPage === page
+                                ? 'bg-rose-600 text-white shadow-xs'
+                                : 'border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
                       </div>
 
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-semibold">
-                        ✓ Disetujui
-                      </span>
+                      <button
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-colors disabled:opacity-40"
+                      >
+                        Berikutnya →
+                      </button>
                     </div>
-
-                    <p className="text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 leading-relaxed font-medium">
-                      {comment.content}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
