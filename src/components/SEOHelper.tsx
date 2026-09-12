@@ -131,6 +131,72 @@ export default function SEOHelper({
       script.textContent = JSON.stringify(jsonObj, null, 2);
     };
 
+    if (type === 'website' || articleData?.type === 'website') {
+      // Remove stale article schemas
+      const articleScript = document.getElementById('jsonld-article-schema');
+      if (articleScript) articleScript.remove();
+      const breadcrumbScript = document.getElementById('jsonld-breadcrumb-schema');
+      if (breadcrumbScript) breadcrumbScript.remove();
+      const faqScript = document.getElementById('jsonld-faq-schema');
+      if (faqScript) faqScript.remove();
+
+      // 1. WebSite Schema
+      const websiteSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        'name': title,
+        'url': currentOrigin || effectiveCanonicalUrl || '/',
+        'potentialAction': {
+          '@type': 'SearchAction',
+          'target': {
+            '@type': 'EntryPoint',
+            'urlTemplate': `${currentOrigin || ''}/?q={search_term_string}`
+          },
+          'query-input': 'required name=search_term_string'
+        }
+      };
+      injectJsonLd('jsonld-website-schema', websiteSchema);
+
+      // 2. Organization Schema
+      const organizationSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        'name': siteName,
+        'url': currentOrigin || effectiveCanonicalUrl || '/',
+        'logo': {
+          '@type': 'ImageObject',
+          'url': siteLogo || `${currentOrigin}/favicon.ico`
+        }
+      };
+      injectJsonLd('jsonld-organization-schema', organizationSchema);
+
+      // 3. ItemList Schema for home page post listings
+      const ssrPosts = (window as any).__INITIAL_DATA__?.posts || [];
+      if (ssrPosts && ssrPosts.length > 0) {
+        const itemListSchema = {
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          'numberOfItems': ssrPosts.length,
+          'itemListElement': ssrPosts.map((p: any, index: number) => ({
+            '@type': 'ListItem',
+            'position': index + 1,
+            'url': `${currentOrigin}/baca/${p.slug}`,
+            'name': p.title
+          }))
+        };
+        injectJsonLd('jsonld-itemlist-schema', itemListSchema);
+      }
+      return;
+    }
+
+    // Remove stale homepage schemas
+    const websiteScript = document.getElementById('jsonld-website-schema');
+    if (websiteScript) websiteScript.remove();
+    const organizationScript = document.getElementById('jsonld-organization-schema');
+    if (organizationScript) organizationScript.remove();
+    const itemlistScript = document.getElementById('jsonld-itemlist-schema');
+    if (itemlistScript) itemlistScript.remove();
+
     // A1. Enhanced Author Entity for E-E-A-T Authority
     const authorSchema = {
       '@type': 'Person',

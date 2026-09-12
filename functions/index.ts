@@ -219,6 +219,44 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     .replace(/<meta[^>]*name="twitter:[^>]*>/gi, '');
 
   // 5. Build Unified Head SEO HTML Injection
+  const websiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    'name': siteName,
+    'url': `${siteUrl}/`,
+    'potentialAction': {
+      '@type': 'SearchAction',
+      'target': {
+        '@type': 'EntryPoint',
+        'urlTemplate': `${siteUrl}/?q={search_term_string}`
+      },
+      'query-input': 'required name=search_term_string'
+    }
+  };
+
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    'name': siteName,
+    'url': `${siteUrl}/`,
+    'logo': {
+      '@type': 'ImageObject',
+      'url': siteConfig?.site_logo || `${siteUrl}/favicon.ico`
+    }
+  };
+
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    'numberOfItems': publishedPosts.length,
+    'itemListElement': publishedPosts.map((p, index) => ({
+      '@type': 'ListItem',
+      'position': index + 1,
+      'url': `${siteUrl}/baca/${p.slug}`,
+      'name': p.title
+    }))
+  };
+
   const seoHeadTags = `
     <title>${escapeHtml(seoTitle)}</title>
     <meta name="description" content="${escapeHtml(seoDesc)}" />
@@ -233,6 +271,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <meta name="twitter:title" content="${escapeHtml(seoTitle)}" />
     <meta name="twitter:description" content="${escapeHtml(seoDesc)}" />
     <meta name="twitter:image" content="${escapeHtml(featuredImage)}" />
+    <script type="application/ld+json" id="jsonld-website-schema">${JSON.stringify(websiteSchema)}</script>
+    <script type="application/ld+json" id="jsonld-organization-schema">${JSON.stringify(organizationSchema)}</script>
+    <script type="application/ld+json" id="jsonld-itemlist-schema">${JSON.stringify(itemListSchema)}</script>
   `;
 
   // Replace <title> and inject SEO tags into <head>
@@ -417,8 +458,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   `;
 
   // Inject Static Pre-rendered Content into `#root`
+  const initialDataJson = JSON.stringify({ posts: publishedPosts, autolinks, siteConfig, totalPostsCount }).replace(/</g, '\\u003c');
+  const initialDataScript = `<script>window.__INITIAL_DATA__=${initialDataJson};</script>`;
+
   if (html.includes('<div id="root">')) {
-    html = html.replace(/<div\s+id="root"[^>]*>([\s\S]*?)<\/div>/i, `<div id="root">${preRenderedHtml}</div>`);
+    html = html.replace(/<div\s+id="root"[^>]*>([\s\S]*?)<\/div>/i, `${initialDataScript}<div id="root">${preRenderedHtml}</div>`);
   }
 
   return new Response(html, {
