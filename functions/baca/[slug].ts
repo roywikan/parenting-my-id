@@ -616,8 +616,21 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   // Inject IDs into H2 and H3 tags for TOC anchors
   parsedHtml = parsedHtml.replace(/<(h[23])>(.*?)<\/\1>/gi, (match, tag, content) => {
-    const cleanText = content.replace(/<[^>]+>/g, '').trim();
+    let cleanText = content.replace(/<[^>]+>/g, '').trim();
     if (!cleanText || cleanText.length > 120) return match;
+
+    // Decode HTML entities (such as &quot; and &#39;) to actual quotes/symbols for clean ID generation
+    cleanText = cleanText
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&rsquo;/g, "'")
+      .replace(/&lsquo;/g, "'")
+      .replace(/&ldquo;/g, '"')
+      .replace(/&rdquo;/g, '"');
+
     const id = cleanText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     return `<${tag} id="${id}">${content}</${tag}>`;
   });
