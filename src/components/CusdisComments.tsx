@@ -778,16 +778,17 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
                   </div>
 
                   {totalPages > 1 && (
-                    <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 mt-6">
+                    <div className="site-pagination-container flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 mt-6">
                       <button
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-colors disabled:opacity-40"
+                        className="btn-pagination-prev px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-colors disabled:opacity-40"
                       >
-                        ← Sebelumnya
+                        <span className="arrow">←</span>
+                        <span className="text ml-1">Sebelumnya</span>
                       </button>
 
-                      <div className="flex items-center gap-1">
+                      <div className="pagination-numbers flex items-center gap-1">
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                           <button
                             key={page}
@@ -806,9 +807,10 @@ export const CusdisComments: React.FC<CusdisCommentsProps> = ({
                       <button
                         disabled={currentPage === totalPages}
                         onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-colors disabled:opacity-40"
+                        className="btn-pagination-next px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-colors disabled:opacity-40"
                       >
-                        Berikutnya →
+                        <span className="text mr-1">Berikutnya</span>
+                        <span className="arrow">→</span>
                       </button>
                     </div>
                   )}
