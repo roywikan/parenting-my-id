@@ -62,10 +62,16 @@ export default function DefaultHomeLayout({
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // Smooth scroll to the top of articles section
+    // Smooth scroll to the top of articles section with offset for sticky header
     const element = document.getElementById('artikel-terbaru');
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const headerOffset = 90; // sticky header height (64px) + comfortable spacing (26px)
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
     }
   };
 
