@@ -28,7 +28,7 @@ html {
 
 /* Reserve and prevent font shift during load */
 * {
-  font-display: swap;
+  font-display: optional;
 }
 
 /* HIGH READABILITY & EYE COMFORT TYPOGRAPHY FOR MOBILE / PARENTS */
