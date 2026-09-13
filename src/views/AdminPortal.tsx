@@ -392,7 +392,7 @@ export default function AdminPortal({
 
   const [cfgSeoMetaTitle, setCfgSeoMetaTitle] = useState(siteConfig?.seo_meta_title || 'Portal Berita & Edukasi Informasi Terpercaya');
   const [cfgSeoMetaDesc, setCfgSeoMetaDesc] = useState(siteConfig?.seo_meta_description || 'Portal informasi & panduan pengasuhan anak modern.');
-  const [cfgSeoDefaultOgImage, setCfgSeoDefaultOgImage] = useState(siteConfig?.seo_default_og_image || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=1200&h=630');
+  const [cfgSeoDefaultOgImage, setCfgSeoDefaultOgImage] = useState(siteConfig?.seo_default_og_image || 'https://images.unsplash.com/photo-1572044162444-ad60f128bdea?q=15&w=400&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
 
   const [cfgShowHeroSection, setCfgShowHeroSection] = useState(siteConfig?.show_hero_section ?? true);
   const [cfgHeroTitle, setCfgHeroTitle] = useState(siteConfig?.hero_title || 'Panduan Pengasuhan Anak Terpercaya');
@@ -567,15 +567,15 @@ export default function AdminPortal({
 
   useEffect(() => {
     if (siteConfig) {
-      setCfgHomepageDisplayMode(siteConfig.homepage_display_mode || 'default');
-      setCfgActiveThemePreset(siteConfig.active_theme_preset || DEFAULT_SITE_CONFIG.active_theme_preset || 'corp-blue');
-      setCfgSiteName(siteConfig.site_name || DEFAULT_SITE_CONFIG.site_name);
-      setCfgTechBadgeHero(siteConfig.tech_badge_hero || 'Cloudflare D1 Edge Architecture');
-      setCfgTechBadgePages(siteConfig.tech_badge_pages || 'Cloudflare Pages Edge');
-      setCfgTechBadgeDatabase(siteConfig.tech_badge_database || 'Cloudflare D1 SQLite');
-      setCfgTechBadgeStorage(siteConfig.tech_badge_storage || 'GitHub REST Storage');
-      setCfgSiteTagline(siteConfig.site_tagline || DEFAULT_SITE_CONFIG.site_tagline);
-      setCfgSiteDescription(siteConfig.site_description || DEFAULT_SITE_CONFIG.site_description);
+      setCfgHomepageDisplayMode(siteConfig.homepage_display_mode ?? 'default');
+      setCfgActiveThemePreset(siteConfig.active_theme_preset ?? DEFAULT_SITE_CONFIG.active_theme_preset ?? 'corp-blue');
+      setCfgSiteName(siteConfig.site_name ?? DEFAULT_SITE_CONFIG.site_name ?? '');
+      setCfgTechBadgeHero(siteConfig.tech_badge_hero ?? 'Cloudflare D1 Edge Architecture');
+      setCfgTechBadgePages(siteConfig.tech_badge_pages ?? 'Cloudflare Pages Edge');
+      setCfgTechBadgeDatabase(siteConfig.tech_badge_database ?? 'Cloudflare D1 SQLite');
+      setCfgTechBadgeStorage(siteConfig.tech_badge_storage ?? 'GitHub REST Storage');
+      setCfgSiteTagline(siteConfig.site_tagline ?? DEFAULT_SITE_CONFIG.site_tagline ?? '');
+      setCfgSiteDescription(siteConfig.site_description ?? DEFAULT_SITE_CONFIG.site_description ?? '');
       setCfgSiteLogoUrl(siteConfig.site_logo_url || '');
       setCfgSiteLogoIcon(siteConfig.site_logo_icon || 'Heart');
       setCfgSiteFaviconUrl(siteConfig.site_favicon_url || '/favicon.ico');
@@ -617,15 +617,15 @@ export default function AdminPortal({
       setCfgAdsenseSidebar(siteConfig.adsense_sidebar || '');
       setCfgAdsenseStickyFooter(siteConfig.adsense_sticky_footer || '');
 
-      setCfgSeoMetaTitle(siteConfig.seo_meta_title || DEFAULT_SITE_CONFIG.seo_meta_title);
-      setCfgSeoMetaDesc(siteConfig.seo_meta_description || DEFAULT_SITE_CONFIG.seo_meta_description);
-      setCfgSeoDefaultOgImage(siteConfig.seo_default_og_image || DEFAULT_SITE_CONFIG.seo_default_og_image);
+      setCfgSeoMetaTitle(siteConfig.seo_meta_title ?? DEFAULT_SITE_CONFIG.seo_meta_title ?? '');
+      setCfgSeoMetaDesc(siteConfig.seo_meta_description ?? DEFAULT_SITE_CONFIG.seo_meta_description ?? '');
+      setCfgSeoDefaultOgImage(siteConfig.seo_default_og_image ?? DEFAULT_SITE_CONFIG.seo_default_og_image ?? '');
 
       setCfgShowHeroSection(siteConfig.show_hero_section ?? true);
-      setCfgHeroTitle(siteConfig.hero_title || DEFAULT_SITE_CONFIG.hero_title);
-      setCfgHeroSubtitle(siteConfig.hero_subtitle || DEFAULT_SITE_CONFIG.hero_subtitle);
-      setCfgHeroCtaText(siteConfig.hero_cta_text || DEFAULT_SITE_CONFIG.hero_cta_text);
-      setCfgHeroCtaLink(siteConfig.hero_cta_link || DEFAULT_SITE_CONFIG.hero_cta_link);
+      setCfgHeroTitle(siteConfig.hero_title ?? DEFAULT_SITE_CONFIG.hero_title ?? '');
+      setCfgHeroSubtitle(siteConfig.hero_subtitle ?? DEFAULT_SITE_CONFIG.hero_subtitle ?? '');
+      setCfgHeroCtaText(siteConfig.hero_cta_text ?? DEFAULT_SITE_CONFIG.hero_cta_text ?? '');
+      setCfgHeroCtaLink(siteConfig.hero_cta_link ?? DEFAULT_SITE_CONFIG.hero_cta_link ?? '');
 
       setCfgShowPerformanceBox(siteConfig.show_performance_box ?? true);
       setCfgMetric1Show((siteConfig.metric_1_show ?? siteConfig.metric1_show) !== false);

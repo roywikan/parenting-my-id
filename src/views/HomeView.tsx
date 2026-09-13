@@ -50,7 +50,7 @@ export default function HomeView({
   const metaDesc = isFilteredCategory
     ? `Kumpulan artikel, tips, dan panduan seputar ${activeCategory} untuk orang tua modern.`
     : siteConfig?.seo_meta_description || 'Portal artikel parenting modern, panduan pola asuh, nutrisi balita, dan pencegahan stunting. Cepat, akurat, dan terpercaya.';
-  const ogImage = siteConfig?.seo_default_og_image || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1200&h=630';
+  const ogImage = siteConfig?.seo_default_og_image || 'https://images.unsplash.com/photo-1572044162444-ad60f128bdea?q=15&w=400&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
   const publishedPosts = useMemo(() => {
     return posts.filter((p) => p.status === 'published');
