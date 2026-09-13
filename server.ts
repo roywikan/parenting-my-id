@@ -19,43 +19,72 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3000;
 
-function optimizeUnsplashUrl(
-  url?: string | null,
-  targetWidth = 600,
-  quality = 50,
-  format = 'webp',
-  targetHeight?: number
-): string {
-  if (!url) return '';
-  if (!url.includes('unsplash.com')) return url;
-  try {
-    const parsed = new URL(url);
-    parsed.searchParams.set('w', targetWidth.toString());
-    parsed.searchParams.set('q', quality.toString());
-    parsed.searchParams.set('auto', 'format');
-    parsed.searchParams.set('fit', 'crop');
-    parsed.searchParams.set('fm', format);
-    if (targetHeight) {
-      parsed.searchParams.set('h', targetHeight.toString());
-    } else {
-      parsed.searchParams.delete('h');
-    }
-    return parsed.toString();
-  } catch {
-    return url;
-  }
+function isUnsplashUrl(url: string | undefined | null): boolean {
+  if (!url) return false;
+  return url.includes('unsplash.com');
 }
 
-function getUnsplashSrcSet(
-  url?: string | null,
-  widths = [400, 700],
-  quality = 50,
+function isCloudinaryUrl(url: string | undefined | null): boolean {
+  if (!url) return false;
+  return url.includes('res.cloudinary.com') || url.includes('cloudinary.com');
+}
+
+function getOptimizedImageUrl(
+  url: string | undefined | null,
+  width = 1200,
+  quality = 55,
   format = 'webp'
 ): string {
-  if (!url || !url.includes('unsplash.com')) return '';
+  if (!url) return '';
+  if (isUnsplashUrl(url)) {
+    try {
+      const parsed = new URL(url);
+      parsed.searchParams.set('w', width.toString());
+      parsed.searchParams.set('q', quality.toString());
+      parsed.searchParams.set('auto', 'format');
+      parsed.searchParams.set('fit', 'crop');
+      parsed.searchParams.set('fm', format);
+      return parsed.toString();
+    } catch {
+      return url;
+    }
+  }
+  if (isCloudinaryUrl(url)) {
+    const marker = url.includes('/image/upload/') ? '/image/upload/' : '/upload/';
+    const markerIdx = url.indexOf(marker);
+    if (markerIdx === -1) return url;
+    const prefix = url.substring(0, markerIdx + marker.length);
+    let rest = url.substring(markerIdx + marker.length).replace(/^(w_\d+|h_\d+|f_\w+|q_[^/]+|c_\w+)(,[\w_:]+)*\//, '');
+    return `${prefix}w_${width},c_limit,f_auto,q_auto:low/${rest}`;
+  }
+  return url;
+}
+
+function getResponsiveSrcSet(
+  url: string | undefined | null,
+  widths = [400, 750, 1200],
+  quality = 55
+): string {
+  if (!url || (!isUnsplashUrl(url) && !isCloudinaryUrl(url))) return '';
   return widths
-    .map((w) => `${optimizeUnsplashUrl(url, w, quality, format)} ${w}w`)
+    .map((w) => `${getOptimizedImageUrl(url, w, quality)} ${w}w`)
     .join(', ');
+}
+
+function injectSpaPreload(htmlTemplate: string, posts: any[]): string {
+  const featuredPost = posts.find((p) => p.status === 'published' || !p.status);
+  if (featuredPost && featuredPost.featuredImage) {
+    const heroImageSrc = getOptimizedImageUrl(featuredPost.featuredImage, 1200, 55, 'webp');
+    const heroSrcSet = getResponsiveSrcSet(featuredPost.featuredImage, [400, 750, 1200], 55);
+    const preloadTag = `<link rel="preload" as="image" href="${heroImageSrc}" imagesrcset="${heroSrcSet}" imagesizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px" fetchpriority="high" />`;
+    
+    // Remove any hardcoded preload as image tag
+    let html = htmlTemplate.replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '');
+    // Insert new preload tag right before </head>
+    html = html.replace(/<\/head>/i, `${preloadTag}\n</head>`);
+    return html;
+  }
+  return htmlTemplate;
 }
 
 app.use(express.json({ limit: '10mb' }));
@@ -2246,8 +2275,8 @@ app.get('/baca/:slug', (req, res, next) => {
       return res.status(200).send(markdownText);
     }
 
-    const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 50, 'webp');
-    const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700], 50, 'webp');
+    const heroImageSrc = getOptimizedImageUrl(post.featuredImage, 1200, 55, 'webp');
+    const heroSrcSet = getResponsiveSrcSet(post.featuredImage, [400, 750, 1200], 55);
 
     // Convert Markdown to sanitized HTML using marked
     let rawHtml = '';
@@ -2285,7 +2314,7 @@ app.get('/baca/:slug', (req, res, next) => {
           <span class="inline-block px-3 py-1 bg-rose-100 text-rose-700 font-bold text-xs rounded-full mb-3">${post.category}</span>
           <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-4">${post.title}</h1>
           <p class="text-slate-600 italic border-l-4 border-rose-500 pl-3 py-1 mb-6">${post.excerpt}</p>
-          <img src="${heroImageSrc}" ${heroSrcSet ? `srcset="${heroSrcSet}"` : ''} sizes="(max-width: 1024px) 100vw, 700px" alt="${post.title}" width="700" height="394" fetchpriority="high" decoding="async" class="w-full max-h-[450px] object-cover rounded-2xl mb-8 border border-slate-200" />
+          <img src="${heroImageSrc}" ${heroSrcSet ? `srcset="${heroSrcSet}"` : ''} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px" alt="${post.title}" width="1200" height="675" fetchpriority="high" loading="eager" decoding="async" class="w-full max-h-[450px] object-cover rounded-2xl mb-8 border border-slate-200" />
           <article class="prose prose-rose max-w-none text-slate-800 leading-relaxed">
             ${bodyHtml}
           </article>
@@ -2330,7 +2359,7 @@ app.get('/baca/:slug', (req, res, next) => {
       <title>${pageTitle}</title>
       <meta name="description" content="${pageDesc}" />
       <link rel="canonical" href="${canonicalUrl}" />
-      ${post.featuredImage ? `<link rel="preload" as="image" href="${heroImageSrc}" ${heroSrcSet ? `imagesrcset="${heroSrcSet}" imagesizes="(max-width: 1024px) 100vw, 700px"` : ''} fetchpriority="high" />` : ''}
+      ${post.featuredImage ? `<link rel="preload" as="image" href="${heroImageSrc}" ${heroSrcSet ? `imagesrcset="${heroSrcSet}" imagesizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px"` : ''} fetchpriority="high" />` : ''}
       <meta property="og:title" content="${pageTitle}" />
       <meta property="og:description" content="${pageDesc}" />
       <meta property="og:image" content="${heroImageSrc}" />
@@ -2835,6 +2864,7 @@ async function startServer() {
       try {
         let template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
         template = await vite.transformIndexHtml(url, template);
+        template = injectSpaPreload(template, mockPosts);
         res.setHeader('Vary', 'Accept');
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.setHeader('Link', '</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"');
@@ -2868,10 +2898,12 @@ async function startServer() {
         return;
       }
 
+      let htmlTemplate = fs.readFileSync(path.join(distPath, 'index.html'), 'utf-8');
+      htmlTemplate = injectSpaPreload(htmlTemplate, mockPosts);
       res.setHeader('Vary', 'Accept');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Link', '</.well-known/api-catalog>; rel="api-catalog", </api/posts>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"');
-      res.status(200).sendFile(path.join(distPath, 'index.html'));
+      res.status(200).send(htmlTemplate);
     });
   }
 
