@@ -71,7 +71,67 @@ function getResponsiveSrcSet(
     .join(', ');
 }
 
+function injectSiteConfigToHtml(htmlTemplate: string): string {
+  let config: any = {};
+  try {
+    const configPath = path.join(process.cwd(), 'public', 'site_config.json');
+    if (fs.existsSync(configPath)) {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    }
+  } catch (err) {
+    // fallback
+  }
+
+  const siteName = config.site_name || 'Blog Engine';
+  const siteDescription = config.site_description || 'Portal berita & informasi terpercaya.';
+  const techBadgeHero = config.tech_badge_hero || 'Cloudflare D1 Edge Architecture • TTFB &lt; 20ms';
+  const headerBadgeText = config.header_badge_text || 'Cloudflare D1 Edge Engine';
+
+  let html = htmlTemplate;
+
+  // Replace hardcoded title tag
+  html = html.replace(/<title>.*?<\/title>/i, `<title>${siteName}</title>`);
+  
+  // Replace description meta tag
+  html = html.replace(/<meta\s+name="description"\s+content=".*?"\s*\/?>/i, `<meta name="description" content="${siteDescription}" />`);
+  
+  // Replace OpenGraph title
+  html = html.replace(/<meta\s+property="og:title"\s+content=".*?"\s*\/?>/i, `<meta property="og:title" content="${siteName}" />`);
+  
+  // Replace OpenGraph description
+  html = html.replace(/<meta\s+property="og:description"\s+content=".*?"\s*\/?>/i, `<meta property="og:description" content="${siteDescription}" />`);
+
+  // Inject a lightweight semantic SEO/UX skeleton with dynamic wording directly inside <div id="root">
+  // so that both crawlers (Googlebot) and view-source view immediate configured state.
+  const rootDivSearch = '<div id="root"></div>';
+  if (html.includes(rootDivSearch)) {
+    const skeleton = `<div id="root">
+  <header class="bg-white border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="font-black text-xl text-slate-900">${siteName}</span>
+        <span class="text-xs bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full font-bold">${headerBadgeText}</span>
+      </div>
+    </div>
+  </header>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800">${techBadgeHero}</span>
+      <h1 class="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight mt-4">${siteName}</h1>
+      <p class="text-lg text-slate-600 mt-6">${siteDescription}</p>
+    </div>
+  </main>
+</div>`;
+    html = html.replace(rootDivSearch, skeleton);
+  }
+
+  return html;
+}
+
 function injectSpaPreload(htmlTemplate: string, posts: any[]): string {
+  // First dynamically update dynamic site branding configuration
+  let html = injectSiteConfigToHtml(htmlTemplate);
+
   const featuredPost = posts.find((p) => p.status === 'published' || !p.status);
   if (featuredPost && featuredPost.featuredImage) {
     const heroImageSrc = getOptimizedImageUrl(featuredPost.featuredImage, 1200, 55, 'webp');
@@ -79,12 +139,11 @@ function injectSpaPreload(htmlTemplate: string, posts: any[]): string {
     const preloadTag = `<link rel="preload" as="image" href="${heroImageSrc}" imagesrcset="${heroSrcSet}" imagesizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px" fetchpriority="high" />`;
     
     // Remove any hardcoded preload as image tag
-    let html = htmlTemplate.replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '');
+    html = html.replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '');
     // Insert new preload tag right before </head>
     html = html.replace(/<\/head>/i, `${preloadTag}\n</head>`);
-    return html;
   }
-  return htmlTemplate;
+  return html;
 }
 
 app.use(express.json({ limit: '10mb' }));
