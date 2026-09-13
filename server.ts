@@ -84,7 +84,7 @@ function injectSiteConfigToHtml(htmlTemplate: string): string {
 
   const siteName = config.site_name || 'Blog Engine';
   const siteDescription = config.site_description || 'Portal berita & informasi terpercaya.';
-  const techBadgeHero = config.tech_badge_hero || 'Cloudflare D1 Edge Architecture • TTFB &lt; 20ms';
+  const techBadgeHero = config.tech_badge_hero || 'Cloudflare D1 Edge Architecture';
   const headerBadgeText = config.header_badge_text || 'Cloudflare D1 Edge Engine';
 
   let html = htmlTemplate;
