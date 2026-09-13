@@ -14,6 +14,161 @@ function escapeHtml(unsafe: any): string {
     .replace(/'/g, '&apos;');
 }
 
+function isUnsplashUrl(url?: string | null): boolean {
+  if (!url) return false;
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return (
+      hostname === 'images.unsplash.com' ||
+      hostname === 'plus.unsplash.com' ||
+      hostname.endsWith('.unsplash.com')
+    );
+  } catch {
+    return url.includes('unsplash.com');
+  }
+}
+
+function isCloudinaryUrl(url?: string | null): boolean {
+  if (!url) return false;
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return hostname === 'res.cloudinary.com' || hostname.endsWith('.cloudinary.com');
+  } catch {
+    return url.includes('res.cloudinary.com') || url.includes('cloudinary.com');
+  }
+}
+
+function optimizeUnsplashUrl(
+  url?: string | null,
+  targetWidth = 600,
+  quality = 55,
+  format = 'webp',
+  targetHeight?: number
+): string {
+  if (!url) return '';
+  if (!isUnsplashUrl(url)) return url;
+  try {
+    const parsed = new URL(url);
+    const constrainedW = Math.min(Math.max(Math.round(targetWidth), 32), 1200);
+    parsed.searchParams.set('w', constrainedW.toString());
+    parsed.searchParams.set('q', Math.min(Math.max(quality, 50), 65).toString());
+    parsed.searchParams.set('auto', 'format');
+    parsed.searchParams.set('fit', 'crop');
+    parsed.searchParams.set('fm', format);
+    if (targetHeight) {
+      const constrainedH = Math.min(Math.max(Math.round(targetHeight), 32), 900);
+      parsed.searchParams.set('h', constrainedH.toString());
+    } else {
+      parsed.searchParams.delete('h');
+    }
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+function optimizeCloudinaryUrl(
+  url?: string | null,
+  targetWidth = 600,
+  targetHeight?: number,
+  crop = 'limit'
+): string {
+  if (!url) return '';
+  if (!isCloudinaryUrl(url)) return url;
+
+  const constrainedWidth = Math.min(Math.max(Math.round(targetWidth), 32), 1200);
+  const marker = url.includes('/image/upload/') ? '/image/upload/' : '/upload/';
+  const markerIdx = url.indexOf(marker);
+  if (markerIdx === -1) return url;
+
+  const prefix = url.substring(0, markerIdx + marker.length);
+  let rest = url.substring(markerIdx + marker.length);
+
+  const segments = rest.split('/');
+  if (
+    segments.length > 1 &&
+    (segments[0].includes('w_') ||
+      segments[0].includes('h_') ||
+      segments[0].includes('f_') ||
+      segments[0].includes('q_') ||
+      segments[0].includes('c_'))
+  ) {
+    segments.shift();
+    rest = segments.join('/');
+  }
+
+  const transforms: string[] = [`w_${constrainedWidth}`];
+  if (targetHeight) {
+    transforms.push(`h_${Math.min(Math.max(Math.round(targetHeight), 32), 900)}`);
+  }
+  if (crop) transforms.push(`c_${crop}`);
+  transforms.push('f_auto', 'q_auto:low');
+
+  return `${prefix}${transforms.join(',')}/${rest}`;
+}
+
+function getOptimizedImageUrl(
+  url?: string | null,
+  targetWidth = 600,
+  targetHeight?: number,
+  quality = 55
+): string {
+  if (!url) return '';
+  if (isUnsplashUrl(url)) {
+    return optimizeUnsplashUrl(url, targetWidth, quality, 'webp', targetHeight);
+  }
+  if (isCloudinaryUrl(url)) {
+    return optimizeCloudinaryUrl(url, targetWidth, targetHeight, targetHeight ? 'fill' : 'limit');
+  }
+  return url;
+}
+
+function getResponsiveSrcSet(
+  url?: string | null,
+  widths = [400, 750, 1200],
+  quality = 55
+): string {
+  if (!url) return '';
+  if (isUnsplashUrl(url)) {
+    return widths
+      .map((w) => `${optimizeUnsplashUrl(url, w, quality, 'webp')} ${w}w`)
+      .join(', ');
+  }
+  if (isCloudinaryUrl(url)) {
+    return widths
+      .map((w) => `${optimizeCloudinaryUrl(url, w, undefined, 'limit')} ${w}w`)
+      .join(', ');
+  }
+  return '';
+}
+
+function getOptimizedAvatarUrl(
+  url?: string | null,
+  targetSize = 40,
+  quality = 60
+): string {
+  if (!url) return 'https://ui-avatars.com/api/?name=U&size=80';
+  // Strictly capped at max w=100 (Rule 3)
+  const cappedW = Math.min(Math.max(Math.round(targetSize * 1.5), 32), 100);
+
+  if (isUnsplashUrl(url)) {
+    return optimizeUnsplashUrl(url, cappedW, quality, 'webp', cappedW);
+  }
+  if (isCloudinaryUrl(url)) {
+    return optimizeCloudinaryUrl(url, cappedW, cappedW, 'fill');
+  }
+  if (url.includes('ui-avatars.com')) {
+    try {
+      const parsed = new URL(url);
+      parsed.searchParams.set('size', cappedW.toString());
+      return parsed.toString();
+    } catch {
+      return url;
+    }
+  }
+  return url;
+}
+
 // RFC 9110 Content Negotiation helper honoring q-values and media type specificity.
 // Supported media representations:
 // - HTML: 'text/html', 'application/xhtml+xml', 'text/*', '*/*'
@@ -335,11 +490,15 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const featured = publishedPosts[0];
     displayPosts = publishedPosts.slice(1);
     
+    const featuredImgSrc = getOptimizedImageUrl(featured.featuredImage, 1200, 675, 55);
+    const featuredSrcSet = getResponsiveSrcSet(featured.featuredImage, [400, 750, 1200], 55);
+    const featuredAvatarSrc = getOptimizedAvatarUrl(featured.authorAvatar, 36, 60);
+
     featuredPostHtml = `
       <section class="group cursor-pointer rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-sm my-8 max-w-7xl mx-auto">
         <a href="/baca/${escapeHtml(featured.slug)}" class="block grid grid-cols-1 lg:grid-cols-12 gap-0">
           <div class="lg:col-span-7 relative aspect-[16/9] lg:aspect-auto h-64 sm:h-72 lg:h-[420px] w-full overflow-hidden bg-slate-100">
-            <img src="${escapeHtml(featured.featuredImage)}" alt="${escapeHtml(featured.title)}" class="w-full h-full object-cover" loading="eager" />
+            <img src="${featuredImgSrc}" ${featuredSrcSet ? `srcset="${featuredSrcSet}"` : ''} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px" alt="${escapeHtml(featured.title)}" width="1200" height="675" class="w-full h-full object-cover" loading="eager" fetchpriority="high" decoding="async" />
             <div class="absolute top-4 left-4">
               <span class="inline-flex items-center px-3 py-1 rounded-full bg-rose-800 text-white text-xs font-black shadow-md uppercase">
                 UTAMA • ${escapeHtml(featured.category)}
@@ -358,7 +517,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             </div>
             <div class="pt-6 border-t border-slate-100 flex items-center justify-between gap-3 mt-4">
               <div class="flex items-center gap-3">
-                <img src="${escapeHtml(featured.authorAvatar || 'https://ui-avatars.com/api/?name=U')}" alt="${escapeHtml(featured.authorName)}" class="w-9 h-9 rounded-full object-cover border border-rose-300 shrink-0" />
+                <img src="${featuredAvatarSrc}" alt="${escapeHtml(featured.authorName)}" width="36" height="36" loading="lazy" decoding="async" class="w-9 h-9 rounded-full object-cover border border-rose-300 shrink-0" />
                 <div>
                   <div class="text-xs font-bold text-slate-900">${escapeHtml(featured.authorName)}</div>
                   <div class="text-[10px] text-slate-500">Tim Redaksi</div>
@@ -376,11 +535,15 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   if (displayPosts.length > 0) {
     postsGridHtml = `
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto my-8">
-        ${displayPosts.map(p => `
+        ${displayPosts.map(p => {
+          const pImgSrc = getOptimizedImageUrl(p.featuredImage, 400, 225, 55);
+          const pSrcSet = getResponsiveSrcSet(p.featuredImage, [400, 750], 55);
+          const pAvatarSrc = getOptimizedAvatarUrl(p.authorAvatar, 24, 60);
+          return `
           <article class="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 bg-white hover:shadow-lg transition-all duration-300 flex flex-col justify-between">
             <a href="/baca/${escapeHtml(p.slug)}" class="block">
               <div class="relative aspect-[16/9] w-full overflow-hidden bg-slate-100">
-                <img src="${escapeHtml(p.featuredImage)}" alt="${escapeHtml(p.title)}" class="w-full h-full object-cover" loading="lazy" />
+                <img src="${pImgSrc}" ${pSrcSet ? `srcset="${pSrcSet}"` : ''} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px" alt="${escapeHtml(p.title)}" width="400" height="225" class="w-full h-full object-cover" loading="lazy" decoding="async" />
                 <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-rose-700 text-white text-[10px] font-bold">
                   ${escapeHtml(p.category)}
                 </span>
@@ -397,13 +560,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             </a>
             <div class="p-5 pt-0 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 mt-4 pt-3">
               <div class="flex items-center gap-2">
-                <img src="${escapeHtml(p.authorAvatar || 'https://ui-avatars.com/api/?name=U')}" alt="${escapeHtml(p.authorName)}" class="w-6 h-6 rounded-full object-cover border border-rose-200 shrink-0" />
+                <img src="${pAvatarSrc}" alt="${escapeHtml(p.authorName)}" width="24" height="24" loading="lazy" decoding="async" class="w-6 h-6 rounded-full object-cover border border-rose-200 shrink-0" />
                 <span class="text-xs text-slate-700 font-medium">${escapeHtml(p.authorName)}</span>
               </div>
               <a href="/baca/${escapeHtml(p.slug)}" class="text-xs font-bold text-rose-600 hover:underline">Baca &rarr;</a>
             </div>
           </article>
-        `).join('')}
+        `;}).join('')}
       </div>
     `;
   } else {

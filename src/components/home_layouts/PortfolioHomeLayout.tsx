@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Sparkles, Eye, ArrowRight, ExternalLink, Award, CheckCircle2, BookOpen } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
-import { optimizeUnsplashUrl } from '../../lib/imageUtils';
+import { getOptimizedImageUrl, getResponsiveSrcSet } from '../../lib/imageUtils';
 
 interface LayoutProps {
   posts: Post[];
@@ -122,8 +122,14 @@ export default function PortfolioHomeLayout({ posts, onSelectPost, siteConfig }:
           >
             <div className="aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
               <img
-                src={item.image}
+                src={getOptimizedImageUrl(item.image, { width: 600, quality: 60 })}
+                srcSet={getResponsiveSrcSet(item.image, [400, 750, 1000], 60)}
+                sizes="(max-width: 768px) 100vw, 50vw"
                 alt={item.title}
+                width={600}
+                height={375}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute top-4 left-4 flex gap-2">
@@ -169,8 +175,14 @@ export default function PortfolioHomeLayout({ posts, onSelectPost, siteConfig }:
             >
               <div className="aspect-[16/9] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
-                  src={optimizeUnsplashUrl(post.featuredImage, 400, 50)}
+                  src={getOptimizedImageUrl(post.featuredImage, { width: 400, quality: 55 })}
+                  srcSet={getResponsiveSrcSet(post.featuredImage, [400, 750], 55)}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                   alt={post.title}
+                  width={400}
+                  height={225}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                 />
               </div>

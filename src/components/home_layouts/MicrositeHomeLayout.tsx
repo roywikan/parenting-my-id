@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Share2, Check, BookOpen, MessageCircle, Download, ExternalLink, Headphones, ShoppingBag, Sparkles, Heart } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
-import { optimizeUnsplashUrl, getOptimizedAvatarUrl } from '../../lib/imageUtils';
+import { getOptimizedImageUrl, getResponsiveSrcSet, getOptimizedAvatarUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
   posts: Post[];
@@ -70,10 +70,11 @@ export default function MicrositeHomeLayout({ posts, onSelectPost, siteConfig }:
 
         <div className="relative inline-block">
           <img
-            src={siteConfig?.site_logo_url || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&h=200&fit=crop&q=80'}
+            src={getOptimizedAvatarUrl(siteConfig?.site_logo_url || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&h=200&fit=crop&q=80', 96, 60)}
             alt="Profile Avatar"
             width={96}
             height={96}
+            loading="eager"
             fetchPriority="high"
             decoding="async"
             className="w-24 h-24 rounded-full object-cover mx-auto border-4 border-rose-500 shadow-md"
@@ -86,7 +87,7 @@ export default function MicrositeHomeLayout({ posts, onSelectPost, siteConfig }:
         <div className="space-y-1">
           <div className="flex items-center justify-center gap-1.5">
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-              {siteConfig?.microsite_title || siteConfig?.site_name || 'Parenting.my.id Official Hub'}
+              {siteConfig?.microsite_title || siteConfig?.site_name || 'Official Portal Hub'}
             </h1>
             <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase">
               Official
@@ -166,8 +167,14 @@ export default function MicrositeHomeLayout({ posts, onSelectPost, siteConfig }:
               className="cursor-pointer group p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-md transition-colors flex items-center gap-3.5"
             >
               <img
-                src={optimizeUnsplashUrl(post.featuredImage, 150, 40)}
+                src={getOptimizedImageUrl(post.featuredImage, { width: 150, quality: 50 })}
+                srcSet={getResponsiveSrcSet(post.featuredImage, [150, 300], 50)}
+                sizes="64px"
                 alt={post.title}
+                width={64}
+                height={64}
+                loading="lazy"
+                decoding="async"
                 className="w-16 h-16 rounded-xl object-cover shrink-0"
               />
               <div className="flex-1 min-w-0">

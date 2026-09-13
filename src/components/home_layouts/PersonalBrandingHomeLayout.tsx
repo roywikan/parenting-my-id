@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Award, BookOpen, Calendar, CheckCircle2, MessageCircle, Sparkles, Star, ArrowRight, ShieldCheck, Mail } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
-import { optimizeUnsplashUrl, getOptimizedAvatarUrl } from '../../lib/imageUtils';
+import { getOptimizedImageUrl, getResponsiveSrcSet, getOptimizedAvatarUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
   posts: Post[];
@@ -35,10 +35,13 @@ export default function PersonalBrandingHomeLayout({ posts, onSelectPost, siteCo
           <div className="lg:col-span-5 relative text-center">
             <div className="relative inline-block">
               <img
-                src={siteConfig?.doctor_avatar_url || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=600&h=600&fit=crop&q=80'}
+                src={getOptimizedImageUrl(siteConfig?.doctor_avatar_url || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2', { width: 320, height: 320, quality: 60 })}
+                srcSet={getResponsiveSrcSet(siteConfig?.doctor_avatar_url || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2', [256, 320, 480], 60)}
+                sizes="(max-width: 640px) 256px, 320px"
                 alt={siteConfig?.doctor_name || 'Pakar'}
                 width={320}
                 height={320}
+                loading="eager"
                 fetchPriority="high"
                 decoding="async"
                 className="w-64 h-64 sm:w-80 sm:h-80 rounded-3xl object-cover shadow-2xl border-4 border-rose-500/80 mx-auto"
@@ -190,8 +193,14 @@ export default function PersonalBrandingHomeLayout({ posts, onSelectPost, siteCo
             >
               <div className="aspect-[16/9] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
-                  src={optimizeUnsplashUrl(post.featuredImage, 400, 50)}
+                  src={getOptimizedImageUrl(post.featuredImage, { width: 400, quality: 55 })}
+                  srcSet={getResponsiveSrcSet(post.featuredImage, [400, 750], 55)}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                   alt={post.title}
+                  width={400}
+                  height={225}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                 />
               </div>

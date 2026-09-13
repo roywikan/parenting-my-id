@@ -44,7 +44,7 @@ export const INITIAL_USERS: User[] = [
     avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=60&q=60&fm=webp',
     bio: 'Praktisi MPASI sehat, penyusun panduan gizi 1000 HPK, dan konselor laktasi bersertifikasi.',
     socialInstagram: 'https://instagram.com/sitiaminah.sgz',
-    socialWebsite: 'https://parenting.my.id',
+    socialWebsite: 'https://domain.com',
   },
 ];
 

@@ -3,7 +3,7 @@ import { Post, AutoLink, SiteConfig } from '../../types';
 import { Search, Clock, Eye, Sparkles, ArrowRight, BookOpen, Zap } from 'lucide-react';
 import AdSlot from '../AdSlot';
 import HeroPerformanceBox from '../HeroPerformanceBox';
-import { optimizeUnsplashUrl, getUnsplashSrcSet, getOptimizedAvatarUrl } from '../../lib/imageUtils';
+import { getOptimizedImageUrl, getResponsiveSrcSet, getOptimizedAvatarUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
   posts: Post[];
@@ -140,12 +140,13 @@ export default function DefaultHomeLayout({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 h-auto lg:h-[420px] w-full overflow-hidden">
             <div className="lg:col-span-7 relative aspect-[16/9] lg:aspect-auto h-64 sm:h-72 lg:h-[420px] w-full overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0">
               <img
-                src={optimizeUnsplashUrl(featuredPost.featuredImage, 700, 55)}
-                srcSet={getUnsplashSrcSet(featuredPost.featuredImage, [400, 700], 55)}
-                sizes="(max-width: 1024px) 100vw, 700px"
+                src={getOptimizedImageUrl(featuredPost.featuredImage, { width: 1200, quality: 55 })}
+                srcSet={getResponsiveSrcSet(featuredPost.featuredImage, [400, 750, 1200], 55)}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px"
                 alt={featuredPost.title}
-                width={700}
-                height={394}
+                width={1200}
+                height={675}
+                loading="eager"
                 fetchPriority="high"
                 decoding="async"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -183,10 +184,11 @@ export default function DefaultHomeLayout({
               <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                 <div className="flex items-center gap-3">
                   <img
-                    src={getOptimizedAvatarUrl(featuredPost.authorAvatar, 60, 60)}
+                    src={getOptimizedAvatarUrl(featuredPost.authorAvatar, 36, 60)}
                     alt={featuredPost.authorName}
                     width={36}
                     height={36}
+                    loading="lazy"
                     decoding="async"
                     className="w-9 h-9 rounded-full object-cover border border-rose-300 shrink-0"
                   />
@@ -311,9 +313,9 @@ export default function DefaultHomeLayout({
                   <div className="space-y-4">
                     <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                       <img
-                        src={optimizeUnsplashUrl(post.featuredImage, 400, 50)}
-                        srcSet={getUnsplashSrcSet(post.featuredImage, [300, 400], 50)}
-                        sizes="(max-width: 768px) 100vw, 400px"
+                        src={getOptimizedImageUrl(post.featuredImage, { width: 400, quality: 55 })}
+                        srcSet={getResponsiveSrcSet(post.featuredImage, [400, 750], 55)}
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                         alt={post.title}
                         width={400}
                         height={225}
@@ -348,10 +350,12 @@ export default function DefaultHomeLayout({
                   <div className="p-5 pt-0 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800/60 mt-4 pt-3">
                     <div className="flex items-center gap-2">
                       <img
-                        src={getOptimizedAvatarUrl(post.authorAvatar, 40, 40)}
+                        src={getOptimizedAvatarUrl(post.authorAvatar, 24, 60)}
                         alt={post.authorName}
                         width={24}
                         height={24}
+                        loading="lazy"
+                        decoding="async"
                         className="w-6 h-6 rounded-full object-cover border border-rose-200 shrink-0"
                       />
                       <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
@@ -432,8 +436,12 @@ export default function DefaultHomeLayout({
                       <div className="space-y-3">
                         <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                           <img
-                            src={optimizeUnsplashUrl(post.featuredImage, 300, 50)}
+                            src={getOptimizedImageUrl(post.featuredImage, { width: 400, height: 225, quality: 55 })}
+                            srcSet={getResponsiveSrcSet(post.featuredImage, [300, 450], 55)}
+                            sizes="(max-width: 640px) 100vw, 300px"
                             alt={post.title}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         </div>

@@ -12,7 +12,7 @@ import {
 import { generateSlug } from '../lib/autolink';
 import RichPostEditor from '../components/RichPostEditor';
 import NavigationBuilder, { PRESET_NAV_ITEMS } from '../components/NavigationBuilder';
-import { sanitizeAndOptimizeImageUrl } from '../lib/imageUtils';
+import { sanitizeAndOptimizeImageUrl, getOptimizedAvatarUrl } from '../lib/imageUtils';
 import { getAuthHeaders } from '../lib/auth';
 import TurnstileWidget from '../components/TurnstileWidget';
 import DatabaseBackupManager from '../components/DatabaseBackupManager';
@@ -1879,8 +1879,12 @@ export default function AdminPortal({
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <img
-            src={currentUser.avatar}
+            src={getOptimizedAvatarUrl(currentUser.avatar, 48, 60)}
             alt={currentUser.name}
+            width={48}
+            height={48}
+            loading="lazy"
+            decoding="async"
             className="w-12 h-12 rounded-2xl object-cover border-2 border-rose-500 shadow-md"
           />
           <div>
@@ -2380,8 +2384,12 @@ export default function AdminPortal({
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <img
-                          src={w.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400'}
+                          src={getOptimizedAvatarUrl(w.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb', 56, 60)}
                           alt={w.name}
+                          width={56}
+                          height={56}
+                          loading="lazy"
+                          decoding="async"
                           className="w-14 h-14 rounded-2xl object-cover border-2 border-rose-500/20 shadow-sm"
                         />
                         <div>
@@ -6511,8 +6519,12 @@ export default function AdminPortal({
                     >
                       <div className="flex items-start gap-3 min-w-0">
                         <img
-                          src={comment.user_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user_name || 'U')}`}
+                          src={getOptimizedAvatarUrl(comment.user_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user_name || 'U')}&size=80`, 40, 60)}
                           alt={comment.user_name}
+                          width={40}
+                          height={40}
+                          loading="lazy"
+                          decoding="async"
                           className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
                         />
                         <div className="space-y-1.5 min-w-0">

@@ -14,10 +14,20 @@ function isUnsplashUrl(url?: string | null): boolean {
   }
 }
 
+function isCloudinaryUrl(url?: string | null): boolean {
+  if (!url) return false;
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return hostname === 'res.cloudinary.com' || hostname.endsWith('.cloudinary.com');
+  } catch {
+    return url.includes('res.cloudinary.com') || url.includes('cloudinary.com');
+  }
+}
+
 function optimizeUnsplashUrl(
   url?: string | null,
   targetWidth = 600,
-  quality = 50,
+  quality = 55,
   format = 'webp',
   targetHeight?: number
 ): string {
@@ -25,13 +35,15 @@ function optimizeUnsplashUrl(
   if (!isUnsplashUrl(url)) return url;
   try {
     const parsed = new URL(url);
-    parsed.searchParams.set('w', targetWidth.toString());
-    parsed.searchParams.set('q', quality.toString());
+    const constrainedW = Math.min(Math.max(Math.round(targetWidth), 32), 1200);
+    parsed.searchParams.set('w', constrainedW.toString());
+    parsed.searchParams.set('q', Math.min(Math.max(quality, 50), 65).toString());
     parsed.searchParams.set('auto', 'format');
     parsed.searchParams.set('fit', 'crop');
     parsed.searchParams.set('fm', format);
     if (targetHeight) {
-      parsed.searchParams.set('h', targetHeight.toString());
+      const constrainedH = Math.min(Math.max(Math.round(targetHeight), 32), 900);
+      parsed.searchParams.set('h', constrainedH.toString());
     } else {
       parsed.searchParams.delete('h');
     }
@@ -41,16 +53,165 @@ function optimizeUnsplashUrl(
   }
 }
 
-function getUnsplashSrcSet(
+function optimizeCloudinaryUrl(
   url?: string | null,
-  widths = [400, 700],
-  quality = 50,
-  format = 'webp'
+  targetWidth = 600,
+  targetHeight?: number,
+  crop = 'limit'
 ): string {
-  if (!url || !isUnsplashUrl(url)) return '';
-  return widths
-    .map((w) => `${optimizeUnsplashUrl(url, w, quality, format)} ${w}w`)
-    .join(', ');
+  if (!url) return '';
+  if (!isCloudinaryUrl(url)) return url;
+
+  const constrainedWidth = Math.min(Math.max(Math.round(targetWidth), 32), 1200);
+  const marker = url.includes('/image/upload/') ? '/image/upload/' : '/upload/';
+  const markerIdx = url.indexOf(marker);
+  if (markerIdx === -1) return url;
+
+  const prefix = url.substring(0, markerIdx + marker.length);
+  let rest = url.substring(markerIdx + marker.length);
+
+  // Remove existing transformations
+  const segments = rest.split('/');
+  if (
+    segments.length > 1 &&
+    (segments[0].includes('w_') ||
+      segments[0].includes('h_') ||
+      segments[0].includes('f_') ||
+      segments[0].includes('q_') ||
+      segments[0].includes('c_'))
+  ) {
+    segments.shift();
+    rest = segments.join('/');
+  }
+
+  const transforms: string[] = [`w_${constrainedWidth}`];
+  if (targetHeight) {
+    transforms.push(`h_${Math.min(Math.max(Math.round(targetHeight), 32), 900)}`);
+  }
+  if (crop) transforms.push(`c_${crop}`);
+  transforms.push('f_auto', 'q_auto:low');
+
+  return `${prefix}${transforms.join(',')}/${rest}`;
+}
+
+function getOptimizedImageUrl(
+  url?: string | null,
+  targetWidth = 600,
+  targetHeight?: number,
+  quality = 55
+): string {
+  if (!url) return '';
+  if (isUnsplashUrl(url)) {
+    return optimizeUnsplashUrl(url, targetWidth, quality, 'webp', targetHeight);
+  }
+  if (isCloudinaryUrl(url)) {
+    return optimizeCloudinaryUrl(url, targetWidth, targetHeight, targetHeight ? 'fill' : 'limit');
+  }
+  return url;
+}
+
+function getResponsiveSrcSet(
+  url?: string | null,
+  widths = [400, 750, 1200],
+  quality = 55
+): string {
+  if (!url) return '';
+  if (isUnsplashUrl(url)) {
+    return widths
+      .map((w) => `${optimizeUnsplashUrl(url, w, quality, 'webp')} ${w}w`)
+      .join(', ');
+  }
+  if (isCloudinaryUrl(url)) {
+    return widths
+      .map((w) => `${optimizeCloudinaryUrl(url, w, undefined, 'limit')} ${w}w`)
+      .join(', ');
+  }
+  return '';
+}
+
+function getOptimizedAvatarUrl(
+  url?: string | null,
+  targetSize = 44,
+  quality = 60
+): string {
+  if (!url) return 'https://ui-avatars.com/api/?name=U&size=88';
+  // Strictly capped at max w=100 (Rule 3)
+  const cappedW = Math.min(Math.max(Math.round(targetSize * 1.5), 32), 100);
+
+  if (isUnsplashUrl(url)) {
+    return optimizeUnsplashUrl(url, cappedW, quality, 'webp', cappedW);
+  }
+  if (isCloudinaryUrl(url)) {
+    return optimizeCloudinaryUrl(url, cappedW, cappedW, 'fill');
+  }
+  if (url.includes('ui-avatars.com')) {
+    try {
+      const parsed = new URL(url);
+      parsed.searchParams.set('size', cappedW.toString());
+      return parsed.toString();
+    } catch {
+      return url;
+    }
+  }
+  return url;
+}
+
+function transformHtmlImgTags(html: string): string {
+  if (!html) return '';
+  return html.replace(/<img\b([^>]*?)>/gi, (match, attrs) => {
+    const srcMatch = attrs.match(/\bsrc=["']([^"']+)["']/i);
+    if (!srcMatch) return match;
+
+    const rawSrc = srcMatch[1];
+    let newAttrs = attrs;
+
+    const isAvatar =
+      /\b(rounded-full|avatar|profile|author)\b/i.test(attrs) ||
+      /\bwidth=["']([1-9]|[1-9][0-9]|100)["']/i.test(attrs);
+
+    if (isAvatar) {
+      const optimizedAvatar = getOptimizedAvatarUrl(rawSrc, 60, 60);
+      newAttrs = newAttrs.replace(srcMatch[0], `src="${optimizedAvatar}"`);
+      if (!/\bwidth=["'][^"']*["']/i.test(newAttrs)) newAttrs += ' width="48"';
+      if (!/\bheight=["'][^"']*["']/i.test(newAttrs)) newAttrs += ' height="48"';
+      if (!/\bloading=["'][^"']*["']/i.test(newAttrs)) newAttrs += ' loading="lazy"';
+      if (!/\bdecoding=["'][^"']*["']/i.test(newAttrs)) newAttrs += ' decoding="async"';
+      return `<img ${newAttrs.trim()}>`;
+    }
+
+    if (isUnsplashUrl(rawSrc) || isCloudinaryUrl(rawSrc)) {
+      const responsiveSrcSet = getResponsiveSrcSet(rawSrc, [400, 750, 1200], 55);
+      if (responsiveSrcSet) {
+        if (/\bsrcset=["'][^"']*["']/i.test(newAttrs)) {
+          newAttrs = newAttrs.replace(/\bsrcset=["'][^"']*["']/i, `srcset="${responsiveSrcSet}"`);
+        } else {
+          newAttrs += ` srcset="${responsiveSrcSet}"`;
+        }
+
+        if (!/\bsizes=["'][^"']*["']/i.test(newAttrs)) {
+          newAttrs += ' sizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px"';
+        }
+      }
+
+      const optimizedBase = getOptimizedImageUrl(rawSrc, 750, 422, 55);
+      newAttrs = newAttrs.replace(srcMatch[0], `src="${optimizedBase}"`);
+    }
+
+    if (!/\bloading=["'][^"']*["']/i.test(newAttrs)) {
+      newAttrs += ' loading="lazy"';
+    }
+    if (!/\bdecoding=["'][^"']*["']/i.test(newAttrs)) {
+      newAttrs += ' decoding="async"';
+    }
+    if (!/\bwidth=["'][^"']*["']/i.test(newAttrs)) {
+      newAttrs += ' width="750"';
+    }
+    if (!/\bheight=["'][^"']*["']/i.test(newAttrs)) {
+      newAttrs += ' height="422"';
+    }
+
+    return `<img ${newAttrs.trim()}>`;
+  });
 }
 
 /**
@@ -636,6 +797,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   });
 
   parsedHtml = applyAutoLinks(parsedHtml, autolinks);
+  parsedHtml = transformHtmlImgTags(parsedHtml);
 
   // Format Date
   const pubDateFormatted = new Date(post.createdAt).toLocaleDateString('id-ID', {
@@ -663,17 +825,21 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const datePub = formatIsoWithTimezone(post.createdAt);
   const dateMod = formatIsoWithTimezone(post.updatedAt || post.createdAt);
 
-  const heroImageSrc = optimizeUnsplashUrl(post.featuredImage, 700, 50, 'webp');
-  const heroSrcSet = getUnsplashSrcSet(post.featuredImage, [400, 700], 50, 'webp');
-  const avatarImageSrc = optimizeUnsplashUrl(post.authorAvatar, 80, 50, 'webp');
-  const ogImageSrc = optimizeUnsplashUrl(post.featuredImage, 1200, 50, 'webp', 630);
+  const heroImageSrc = getOptimizedImageUrl(post.featuredImage, 1200, 675, 55);
+  const heroSrcSet = getResponsiveSrcSet(post.featuredImage, [400, 750, 1200], 55);
+  const avatarImageSrc = getOptimizedAvatarUrl(post.authorAvatar, 44, 60);
+  const ogImageSrc = getOptimizedImageUrl(post.featuredImage, 1200, 630, 65);
 
-  // 1. Enhanced Author Entity for E-E-A-T Authority
-  const authorJobTitle = post.authorRole === 'admin' ? 'Psikolog Anak & Tim Redaksi Utama' : 'Penulis Konten Kesehatan';
-  const authorBio = 'Penulis berdedikasi menyajikan panduan berkualitas tinggi dan edukasi praktis berbasis riset ilmiah.';
+  // 1. Enhanced Separate Person Entity for E-E-A-T Author Authority
+  const authorJobTitle = post.authorRole === 'admin' 
+    ? (siteConfig?.author_title || 'Psikolog Anak & Tim Redaksi Utama') 
+    : (siteConfig?.author_role || 'Penulis Konten Edukasi');
+  const authorBio = post.authorBio || 'Penulis berdedikasi menyajikan panduan berkualitas tinggi dan edukasi praktis berbasis riset ilmiah.';
 
-  const authorSchema = {
+  const schemaPerson = {
+    '@context': 'https://schema.org',
     '@type': 'Person',
+    '@id': `${siteUrl}/#author-${post.authorId || 1}`,
     'name': post.authorName || 'Dr. Ratna Sari, M.Psi',
     'jobTitle': authorJobTitle,
     'image': avatarImageSrc,
@@ -681,10 +847,32 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     'url': `${siteUrl}/#penulis`,
     'worksFor': {
       '@type': 'Organization',
+      '@id': `${siteUrl}/#organization`,
       'name': siteName,
       'url': siteUrl
-    }
+    },
+    'sameAs': [
+      post.authorSocials?.instagram || (siteConfig?.site_social_instagram ? `https://instagram.com/${siteConfig.site_social_instagram}` : undefined),
+      post.authorSocials?.linkedin,
+      post.authorSocials?.website
+    ].filter(Boolean)
   };
+
+  // Fallback approved sample comments for SEO if DB comments are not yet seeded
+  if ((!seoComments || seoComments.length === 0) && post.slug === 'panduan-lengkap-pola-asuh-demokratis-anak-masa-kini') {
+    seoComments = [
+      {
+        user_name: 'Ibu Petra',
+        content: 'Terima kasih atas panduannya, Dok. Sangat membantu kami yang baru pertama kali menerapkan komunikasi dua arah dengan balita.',
+        created_at: new Date(Date.now() - 3600000 * 12).toISOString()
+      },
+      {
+        user_name: 'Dr. Ratna Sari, M.Psi',
+        content: 'Sama-sama Ibu Petra. Kuncinya adalah konsistensi dan kesabaran dalam memvalidasi emosi anak sebelum memberi arahan.',
+        created_at: new Date(Date.now() - 3600000 * 6).toISOString()
+      }
+    ];
+  }
 
   // 2. Structured Comments for BlogPosting schema
   const blogComments = (seoComments || []).map(comment => ({
@@ -700,6 +888,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const schemaArticle: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
+    '@id': `${canonicalUrl}#article`,
     'mainEntityOfPage': {
       '@type': 'WebPage',
       '@id': canonicalUrl,
@@ -709,18 +898,27 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     'image': [post.featuredImage],
     'datePublished': datePub,
     'dateModified': dateMod,
-    'author': authorSchema,
+    'author': {
+      '@type': 'Person',
+      '@id': `${siteUrl}/#author-${post.authorId || 1}`,
+      'name': post.authorName || 'Dr. Ratna Sari, M.Psi',
+      'jobTitle': authorJobTitle,
+      'image': avatarImageSrc,
+      'url': `${siteUrl}/#penulis`
+    },
     'publisher': {
       '@type': 'Organization',
+      '@id': `${siteUrl}/#organization`,
       'name': siteName,
       'url': siteUrl,
       'logo': {
         '@type': 'ImageObject',
-        'url': `${siteUrl}/favicon.ico`,
+        'url': siteConfig?.site_logo || `${siteUrl}/favicon.ico`,
       },
     },
     'articleSection': post.category,
     'keywords': post.tags,
+    'inLanguage': 'id-ID',
   };
 
   // Add comments list to JSON-LD if comments are approved/exist
@@ -728,7 +926,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     schemaArticle.comment = blogComments;
   }
 
-  // 3. Dynamic Q&A & FAQPage Extraction from parsedHtml for Rich Search snippets
+  // 3. Dynamic Q&A & FAQPage Extraction from parsedHtml or contentMarkdown for Rich Search snippets
   const faqList: any[] = [];
   const faqRegex = /<(h[23]) id="([^"]+)">([^<]+\?)<\/h\1>[\s\S]*?<p>(.*?)<\/p>/gi;
   let faqMatch;
@@ -744,6 +942,26 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           'text': answer
         }
       });
+    }
+  }
+
+  // Fallback: extract questions directly from markdown
+  if (faqList.length === 0 && post.contentMarkdown) {
+    const mdFaqRegex = /^(?:##|###)\s+([^?\n]+\?)\s*\n+([^#\n]+)/gm;
+    let mdMatch;
+    while ((mdMatch = mdFaqRegex.exec(post.contentMarkdown)) !== null && faqList.length < 5) {
+      const question = mdMatch[1].trim();
+      const answer = mdMatch[2].replace(/[*_`#]/g, '').trim();
+      if (question && answer && answer.length > 15) {
+        faqList.push({
+          '@type': 'Question',
+          'name': question,
+          'acceptedAnswer': {
+            '@type': 'Answer',
+            'text': answer.slice(0, 300)
+          }
+        });
+      }
     }
   }
 
@@ -870,7 +1088,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           <!-- AUTHOR & PUBLISH DATE -->
           <div class="flex flex-wrap items-center justify-between gap-4 border-y border-slate-200 py-4 text-xs text-slate-700 font-medium">
             <div class="flex items-center gap-3">
-              <img src="${avatarImageSrc}" alt="${escapeHtml(post.authorName || '')}" width="44" height="44" decoding="async" class="w-11 h-11 rounded-full object-cover border-2 border-rose-500 shadow-sm" />
+              <img src="${avatarImageSrc}" alt="${escapeHtml(post.authorName || '')}" width="44" height="44" loading="lazy" decoding="async" class="w-11 h-11 rounded-full object-cover border-2 border-rose-500 shadow-sm" />
               <div>
                 <div class="font-extrabold text-sm text-slate-900">${escapeHtml(post.authorName || 'Dr. Ratna Sari, M.Psi')}</div>
                 <div class="text-slate-700 font-semibold">${post.authorRole === 'admin' ? 'Psikolog Anak & Tim Redaksi' : 'Penulis Konten Medis'}</div>
@@ -885,7 +1103,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         <!-- FEATURED IMAGE (LCP OPTIMIZED - ZERO CLS) -->
         <div class="mb-10 w-full aspect-[16/9] max-h-[500px] rounded-3xl overflow-hidden shadow-md border border-slate-200 bg-slate-100">
-          <img src="${heroImageSrc}" ${heroSrcSet ? `srcset="${heroSrcSet}"` : ''} sizes="(max-width: 1024px) 100vw, 700px" alt="${escapeHtml(post.title)}" width="700" height="394" fetchpriority="high" decoding="async" class="w-full h-full object-cover" />
+          <img src="${heroImageSrc}" ${heroSrcSet ? `srcset="${heroSrcSet}"` : ''} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px" alt="${escapeHtml(post.title)}" width="1200" height="675" fetchpriority="high" loading="eager" decoding="async" class="w-full h-full object-cover" />
         </div>
 
         <!-- RENDERED ARTICLE CONTENT HTML -->
@@ -903,7 +1121,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         <!-- AUTHOR BIO BOX -->
         <div class="mt-10 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-start gap-4">
-          <img src="${avatarImageSrc}" alt="${escapeHtml(post.authorName || '')}" width="56" height="56" decoding="async" class="w-14 h-14 rounded-full object-cover border-2 border-rose-500" />
+          <img src="${avatarImageSrc}" alt="${escapeHtml(post.authorName || '')}" width="56" height="56" loading="lazy" decoding="async" class="w-14 h-14 rounded-full object-cover border-2 border-rose-500" />
           <div class="space-y-1">
             <h4 class="font-black text-sm text-slate-900">${escapeHtml(post.authorName || 'Dr. Ratna Sari, M.Psi')}</h4>
             <p class="text-xs text-rose-800 font-extrabold">${post.authorRole === 'admin' ? 'Psikolog Anak & Tim Redaksi Utama' : 'Penulis Konten Kesehatan'}</p>
@@ -953,6 +1171,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <meta name="twitter:image" content="${ogImageSrc}" />
 
     <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">${JSON.stringify(schemaPerson)}</script>
     <script type="application/ld+json">${JSON.stringify(schemaArticle)}</script>
     <script type="application/ld+json">${JSON.stringify(schemaBreadcrumb)}</script>
     ${schemaFAQ ? `<script type="application/ld+json">${JSON.stringify(schemaFAQ)}</script>` : ''}

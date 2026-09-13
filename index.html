@@ -6,7 +6,9 @@
     <link 
       rel="preload" 
       as="image" 
-      href="https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=700&q=80" 
+      href="https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=55&fm=webp" 
+      imagesrcset="https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=400&q=50&fm=webp 400w, https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=750&q=55&fm=webp 750w, https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=55&fm=webp 1200w"
+      imagesizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px"
       fetchpriority="high"
     />
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
@@ -15,6 +17,67 @@
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
     <link rel="preconnect" href="https://plus.unsplash.com" crossorigin />
     <link rel="dns-prefetch" href="https://plus.unsplash.com" />
+    <script>
+      (function() {
+        function opt(img) {
+          if (!img || img.dataset.imgAutoOptimized) return;
+          var src = img.getAttribute('src');
+          if (!src || src.indexOf('data:') === 0 || src.indexOf('blob:') === 0) return;
+          var w = Math.max(window.innerWidth || 0, (window.screen && window.screen.width) || 0);
+          var isMob = w <= 640;
+          var isTab = w > 640 && w <= 1024;
+          var isAv = (img.className && (img.className.indexOf('rounded-full') !== -1 || img.className.indexOf('avatar') !== -1 || img.className.indexOf('profile') !== -1)) || (img.getAttribute('width') && parseInt(img.getAttribute('width'), 10) <= 100);
+          var isLcp = img.getAttribute('loading') === 'eager' || img.getAttribute('fetchpriority') === 'high';
+          if (!img.getAttribute('loading')) img.setAttribute('loading', isLcp ? 'eager' : 'lazy');
+          if (!img.getAttribute('decoding')) img.setAttribute('decoding', 'async');
+          if (src.indexOf('images.unsplash.com') !== -1 || src.indexOf('plus.unsplash.com') !== -1) {
+            var base = src.split('?')[0];
+            if (isAv) {
+              img.src = base + '?auto=format&fit=crop&w=100&h=100&q=60&fm=webp';
+              if (!img.getAttribute('width')) img.setAttribute('width', '40');
+              if (!img.getAttribute('height')) img.setAttribute('height', '40');
+            } else {
+              if (!img.getAttribute('srcset')) {
+                img.setAttribute('srcset', base + '?auto=format&fit=crop&w=400&q=50&fm=webp 400w, ' + base + '?auto=format&fit=crop&w=750&q=55&fm=webp 750w, ' + base + '?auto=format&fit=crop&w=1200&q=55&fm=webp 1200w');
+              }
+              if (!img.getAttribute('sizes')) img.setAttribute('sizes', '(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px');
+              var optW = isMob ? 400 : (isTab ? 750 : 1200);
+              var optQ = isMob ? 50 : 55;
+              img.src = base + '?auto=format&fit=crop&w=' + optW + '&q=' + optQ + '&fm=webp';
+              if (!img.getAttribute('width')) img.setAttribute('width', isLcp ? '1200' : '400');
+              if (!img.getAttribute('height')) img.setAttribute('height', isLcp ? '675' : '225');
+            }
+            img.dataset.imgAutoOptimized = 'true';
+          } else if (src.indexOf('res.cloudinary.com') !== -1 || src.indexOf('/upload/') !== -1) {
+            var marker = src.indexOf('/image/upload/') !== -1 ? '/image/upload/' : '/upload/';
+            var idx = src.indexOf(marker);
+            if (idx !== -1) {
+              var pfx = src.substring(0, idx + marker.length);
+              var rest = src.substring(idx + marker.length).replace(/^(w_\d+|h_\d+|f_\w+|q_[^/]+|c_\w+)(,[\w_:]+)*\//, '');
+              if (isAv) {
+                img.src = pfx + 'w_100,h_100,c_fill,f_auto,q_auto:low/' + rest;
+                if (!img.getAttribute('width')) img.setAttribute('width', '40');
+                if (!img.getAttribute('height')) img.setAttribute('height', '40');
+              } else {
+                if (!img.getAttribute('srcset')) {
+                  img.setAttribute('srcset', pfx + 'w_400,c_limit,f_auto,q_auto:low/' + rest + ' 400w, ' + pfx + 'w_800,c_limit,f_auto,q_auto:low/' + rest + ' 800w, ' + pfx + 'w_1200,c_limit,f_auto,q_auto:low/' + rest + ' 1200w');
+                }
+                if (!img.getAttribute('sizes')) img.setAttribute('sizes', '(max-width: 640px) 100vw, (max-width: 1024px) 800px, 1200px');
+                var optCw = isMob ? 400 : (isTab ? 800 : 1200);
+                img.src = pfx + 'w_' + optCw + ',c_limit,f_auto,q_auto:low/' + rest;
+                if (!img.getAttribute('width')) img.setAttribute('width', isLcp ? '1200' : '400');
+                if (!img.getAttribute('height')) img.setAttribute('height', isLcp ? '675' : '225');
+              }
+              img.dataset.imgAutoOptimized = 'true';
+            }
+          }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+          var imgs = document.getElementsByTagName('img');
+          for (var i = 0; i < imgs.length; i++) opt(imgs[i]);
+        });
+      })();
+    </script>
     <title>Parenting.my.id - Modern Edge Blog Engine</title>
     <meta name="description" content="Sistem Blog Engine Cloudflare D1 &amp; GitHub CMS modern, ultra-cepat, dan SEO-friendly untuk parenting.my.id" />
     <meta property="og:title" content="Parenting.my.id - Modern Edge Blog Engine" />

@@ -2,6 +2,7 @@ import React, { useState, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { HelpCircle, Send, Heart, UserCheck, MessageSquare, Check, Sparkles, AlertCircle, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { InteractiveQAColumnData, QAColumnCase } from '../types';
+import { getOptimizedAvatarUrl } from '../lib/imageUtils';
 
 interface InteractiveQAColumnProps {
   config: InteractiveQAColumnData;
@@ -169,8 +170,12 @@ export default function InteractiveQAColumn({ config }: InteractiveQAColumnProps
                 <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-800 flex items-center justify-center text-amber-600 font-bold font-serif text-sm">
                   {activeCase.expertAvatar ? (
                     <img
-                      src={activeCase.expertAvatar}
+                      src={getOptimizedAvatarUrl(activeCase.expertAvatar, 40, 60)}
                       alt={activeCase.expertName}
+                      width={40}
+                      height={40}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full rounded-full object-cover"
                       referrerPolicy="no-referrer"
                     />
