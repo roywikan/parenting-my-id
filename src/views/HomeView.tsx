@@ -251,6 +251,7 @@ export default function HomeView({
           siteName: siteConfig?.site_name || 'Website',
           locale: 'id_ID',
         }}
+        posts={posts}
       />
       {renderLayout()}
     </div>
