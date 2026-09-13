@@ -266,23 +266,11 @@ export default function ArticleDetailView({
           const currentScrollY = window.scrollY;
           const docHeight = document.documentElement.scrollHeight - window.innerHeight;
 
-          // Check vertical midpoint based on overall scroll progress
+          // Check vertical midpoint based on overall scroll progress (zero Forced Reflow)
           if (docHeight > 0 && currentScrollY / docHeight >= 0.4) {
             recordView();
             isTicking = false;
             return;
-          }
-
-          // Check vertical midpoint based on article container element
-          if (articleContainerRef.current) {
-            const rect = articleContainerRef.current.getBoundingClientRect();
-            const articleMid = rect.top + currentScrollY + (rect.height * 0.45);
-            const viewportMarker = currentScrollY + (window.innerHeight * 0.65);
-            if (viewportMarker >= articleMid) {
-              recordView();
-              isTicking = false;
-              return;
-            }
           }
 
           // Upward scroll detection ("menggeser layar ke atas")

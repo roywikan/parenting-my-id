@@ -412,10 +412,20 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     }))
   };
 
+  let lcpPreloadTag = '';
+  if (publishedPosts && publishedPosts.length > 0) {
+    const featured = publishedPosts[0];
+    const featuredImgSrc = getOptimizedImageUrl(featured.featuredImage, 1200, 675, 55);
+    const featuredSrcSet = getResponsiveSrcSet(featured.featuredImage, [400, 750, 1200], 55);
+    lcpPreloadTag = `
+    <link rel="preload" as="image" href="${escapeHtml(featuredImgSrc)}" ${featuredSrcSet ? `imagesrcset="${escapeHtml(featuredSrcSet)}"` : ''} imagesizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px" fetchpriority="high" />`;
+  }
+
   const seoHeadTags = `
     <title>${escapeHtml(seoTitle)}</title>
     <meta name="description" content="${escapeHtml(seoDesc)}" />
     <link rel="canonical" href="${siteUrl}/" />
+    ${lcpPreloadTag}
     <meta property="og:site_name" content="${escapeHtml(siteName)}" />
     <meta property="og:title" content="${escapeHtml(seoTitle)}" />
     <meta property="og:description" content="${escapeHtml(seoDesc)}" />
