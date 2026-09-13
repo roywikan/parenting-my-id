@@ -317,6 +317,7 @@ export default function AdminPortal({
   const [cfgHeroBadgeText, setCfgHeroBadgeText] = useState(siteConfig?.hero_badge_text || 'Portal Nomor 1');
   const [cfgAutolinkTickerLabel, setCfgAutolinkTickerLabel] = useState(siteConfig?.autolink_ticker_label || 'Trending:');
   const [cfgFooterAutolinkLabel, setCfgFooterAutolinkLabel] = useState(siteConfig?.footer_autolink_label || 'Tautan Populer');
+  const [cfgReferenceHeadingLabel, setCfgReferenceHeadingLabel] = useState(siteConfig?.reference_heading_label || 'Referensi');
   const [cfgFooterBadge1, setCfgFooterBadge1] = useState(siteConfig?.footer_badge_1 || 'Aman & Terpercaya');
   const [cfgFooterBadge2, setCfgFooterBadge2] = useState(siteConfig?.footer_badge_2 || 'Diperbarui Rutin');
   const [cfgFooterBadge3, setCfgFooterBadge3] = useState(siteConfig?.footer_badge_3 || '100% Gratis');
@@ -702,6 +703,7 @@ export default function AdminPortal({
       setCfgHeroBadgeText(siteConfig.hero_badge_text || 'Portal Nomor 1');
       setCfgAutolinkTickerLabel(siteConfig.autolink_ticker_label || 'Topik Trending:');
       setCfgFooterAutolinkLabel(siteConfig.footer_autolink_label || 'Tautan Populer');
+      setCfgReferenceHeadingLabel(siteConfig.reference_heading_label || 'Referensi');
       setCfgFooterBadge1(siteConfig.footer_badge_1 || 'Aman & Terpercaya');
       setCfgFooterBadge2(siteConfig.footer_badge_2 || 'Diperbarui Rutin');
       setCfgFooterBadge3(siteConfig.footer_badge_3 || '100% Gratis');
@@ -807,6 +809,7 @@ export default function AdminPortal({
         hero_badge_text: cfgHeroBadgeText,
         autolink_ticker_label: cfgAutolinkTickerLabel,
         footer_autolink_label: cfgFooterAutolinkLabel,
+        reference_heading_label: cfgReferenceHeadingLabel,
         footer_badge_1: cfgFooterBadge1,
         footer_badge_2: cfgFooterBadge2,
         footer_badge_3: cfgFooterBadge3,
@@ -1082,6 +1085,7 @@ export default function AdminPortal({
         hero_badge_text: cfgHeroBadgeText,
         autolink_ticker_label: cfgAutolinkTickerLabel,
         footer_autolink_label: cfgFooterAutolinkLabel,
+        reference_heading_label: cfgReferenceHeadingLabel,
         footer_badge_1: cfgFooterBadge1,
         footer_badge_2: cfgFooterBadge2,
         footer_badge_3: cfgFooterBadge3,
@@ -5263,6 +5267,19 @@ export default function AdminPortal({
                   value={cfgAutolinkTickerLabel}
                   onChange={(e) => setCfgAutolinkTickerLabel(e.target.value)}
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Label Judul Referensi / Daftar Pustaka (reference_heading_label)
+                </label>
+                <input
+                  type="text"
+                  value={cfgReferenceHeadingLabel}
+                  onChange={(e) => setCfgReferenceHeadingLabel(e.target.value)}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-2 focus:ring-rose-500"
+                  placeholder="Contoh: Referensi, Referensi Ilmiah, Bibliography"
                 />
               </div>
 

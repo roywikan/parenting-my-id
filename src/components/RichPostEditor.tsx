@@ -534,7 +534,19 @@ export default function RichPostEditor({
 
     // Parse inline scientific references ([ref:...], [referensi:...], [jurnal:...])
     // Supports optional URL/DOI at the end with automatic bibliography generation
-    rawHtml = parseAndRenderReferences(rawHtml);
+    let refHeading = 'Referensi';
+    try {
+      const cachedConfig = typeof window !== 'undefined' ? localStorage.getItem('parenting_site_config') : null;
+      if (cachedConfig) {
+        const parsedConfig = JSON.parse(cachedConfig);
+        if (parsedConfig && parsedConfig.reference_heading_label) {
+          refHeading = parsedConfig.reference_heading_label;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not parse cached config for references heading:', e);
+    }
+    rawHtml = parseAndRenderReferences(rawHtml, refHeading);
 
     return applyAutoLinks(rawHtml, autolinks);
   }, [markdown, autolinks]);

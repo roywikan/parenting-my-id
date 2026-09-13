@@ -380,11 +380,11 @@ export default function ArticleDetailView({
 
     // Parse inline scientific references ([ref:...], [referensi:...], [jurnal:...])
     // Supports optional URL/DOI at the end with automatic bibliography generation
-    rawHtml = parseAndRenderReferences(rawHtml);
+    rawHtml = parseAndRenderReferences(rawHtml, siteConfig?.reference_heading_label);
 
     const finalHtml = applyAutoLinks(rawHtml, autolinks);
     return { parsedHtml: finalHtml, tocItems: items };
-  }, [post, autolinks]);
+  }, [post, autolinks, siteConfig?.reference_heading_label]);
 
   // Handle Autolink Clicks inside article body
   useEffect(() => {

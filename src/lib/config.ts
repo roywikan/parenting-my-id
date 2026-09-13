@@ -82,6 +82,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   hero_badge_text: 'Portal Nomor 1',
   autolink_ticker_label: 'Topik Trending:',
   footer_autolink_label: 'Tautan Populer',
+  reference_heading_label: 'Referensi',
   footer_badge_1: 'Aman & Terpercaya',
   footer_badge_2: 'Diperbarui Rutin',
   footer_badge_3: '100% Gratis',
