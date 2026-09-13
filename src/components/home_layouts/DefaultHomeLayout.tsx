@@ -63,16 +63,19 @@ export default function DefaultHomeLayout({
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     // Smooth scroll to the top of articles section with offset for sticky header
-    const element = document.getElementById('artikel-terbaru');
-    if (element) {
-      const headerOffset = 90; // sticky header height (64px) + comfortable spacing (26px)
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
+    // Wrapped in requestAnimationFrame to decouple DOM measurements from event thread and prevent Forced Reflow
+    requestAnimationFrame(() => {
+      const element = document.getElementById('artikel-terbaru');
+      if (element) {
+        const headerOffset = 90; // sticky header height (64px) + comfortable spacing (26px)
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    });
   };
 
   return (

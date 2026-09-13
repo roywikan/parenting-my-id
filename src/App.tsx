@@ -28,12 +28,17 @@ export default function App() {
       const p = initialSsrData.post;
       return [p, ...INITIAL_POSTS.filter((item) => item.slug !== p.slug)];
     }
+    if (initialSsrData?.posts && Array.isArray(initialSsrData.posts) && initialSsrData.posts.length > 0) {
+      return initialSsrData.posts;
+    }
     return INITIAL_POSTS;
   });
-  const [isPostsLoading, setIsPostsLoading] = useState<boolean>(!initialSsrData?.post);
+  const [isPostsLoading, setIsPostsLoading] = useState<boolean>(
+    !(initialSsrData?.post || (initialSsrData?.posts && initialSsrData.posts.length > 0))
+  );
   const [autolinks, setAutolinks] = useState<AutoLink[]>(() => initialSsrData?.autolinks || INITIAL_AUTOLINKS);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [siteConfig, setSiteConfig] = useState<SiteConfig | undefined>(undefined);
+  const [siteConfig, setSiteConfig] = useState<SiteConfig | undefined>(initialSsrData?.siteConfig);
   const [liveDraftConfig, setLiveDraftConfig] = useState<SiteConfig | undefined>(undefined);
 
   const effectiveConfig = liveDraftConfig || siteConfig;
