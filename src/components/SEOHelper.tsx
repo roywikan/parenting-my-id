@@ -302,19 +302,28 @@ export default function SEOHelper({
           '@type': 'ListItem',
           'position': 1,
           'name': 'Beranda',
-          'item': currentOrigin || '/',
+          'item': {
+            '@type': 'Thing',
+            '@id': currentOrigin || 'https://parenting.my.id',
+          },
         },
         {
           '@type': 'ListItem',
           'position': 2,
           'name': category,
-          'item': `${currentOrigin}/?kategori=${encodeURIComponent(category)}`,
+          'item': {
+            '@type': 'Thing',
+            '@id': `${currentOrigin}/?kategori=${encodeURIComponent(category)}`,
+          },
         },
         {
           '@type': 'ListItem',
           'position': 3,
           'name': title,
-          'item': effectiveCanonicalUrl,
+          'item': {
+            '@type': 'Thing',
+            '@id': effectiveCanonicalUrl,
+          },
         },
       ],
     };

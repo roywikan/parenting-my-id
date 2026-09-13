@@ -979,19 +979,28 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         '@type': 'ListItem',
         'position': 1,
         'name': 'Beranda',
-        'item': siteUrl,
+        'item': {
+          '@type': 'Thing',
+          '@id': siteUrl,
+        },
       },
       {
         '@type': 'ListItem',
         'position': 2,
         'name': post.category,
-        'item': `${siteUrl}/?kategori=${encodeURIComponent(post.category)}`,
+        'item': {
+          '@type': 'Thing',
+          '@id': `${siteUrl}/?kategori=${encodeURIComponent(post.category)}`,
+        },
       },
       {
         '@type': 'ListItem',
         'position': 3,
         'name': post.title,
-        'item': canonicalUrl,
+        'item': {
+          '@type': 'Thing',
+          '@id': canonicalUrl,
+        },
       },
     ],
   };
