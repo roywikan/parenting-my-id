@@ -105,12 +105,43 @@ export default function App() {
         document.documentElement.style.setProperty('--color-secondary', theme.colors.secondary);
         document.documentElement.style.setProperty('--font-sans', theme.fonts.sans);
         document.documentElement.style.setProperty('--font-heading', theme.fonts.heading);
+
+        // High-speed web font loader to eliminate FOUT/FOIT and prevent Layout Shifts
+        try {
+          const sansClean = theme.fonts.sans.replace(/"/g, '').split(',')[0].trim();
+          const headingClean = theme.fonts.heading.replace(/"/g, '').split(',')[0].trim();
+          const fontsToLoad = Array.from(new Set([sansClean, headingClean])).filter(f => 
+            !['sans-serif', 'serif', 'monospace', 'system-ui', '-apple-system', 'Helvetica Neue', 'Arial', 'Georgia'].includes(f)
+          );
+
+          if (fontsToLoad.length > 0) {
+            const fontParams = fontsToLoad.map(f => `family=${encodeURIComponent(f)}:wght@400;500;700;800;900`).join('&');
+            const fontUrl = `https://fonts.googleapis.com/css2?${fontParams}&display=swap`;
+            
+            let linkEl = document.getElementById('dynamic-google-fonts') as HTMLLinkElement | null;
+            if (!linkEl) {
+              linkEl = document.createElement('link');
+              linkEl.id = 'dynamic-google-fonts';
+              linkEl.rel = 'stylesheet';
+              document.head.appendChild(linkEl);
+            }
+            if (linkEl.href !== fontUrl) {
+              linkEl.href = fontUrl;
+            }
+          }
+        } catch (e) {
+          console.error('[FontLoader] Failed to inject dynamic fonts:', e);
+        }
       }
     } else {
       document.documentElement.style.removeProperty('--color-primary');
       document.documentElement.style.removeProperty('--color-secondary');
       document.documentElement.style.removeProperty('--font-sans');
       document.documentElement.style.removeProperty('--font-heading');
+      const linkEl = document.getElementById('dynamic-google-fonts');
+      if (linkEl) {
+        linkEl.remove();
+      }
     }
   }, [effectiveConfig?.active_theme_preset]);
 

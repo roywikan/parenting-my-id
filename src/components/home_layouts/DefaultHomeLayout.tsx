@@ -73,7 +73,7 @@ export default function DefaultHomeLayout({
     <div className="space-y-10">
       {/* HERO BANNER SECTION */}
       {showHero && (
-        <section className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-500/15 relative overflow-hidden">
+        <section className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-500/15 relative overflow-hidden min-h-[180px] sm:min-h-[220px] md:min-h-[240px] flex items-center">
           <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="space-y-3 max-w-2xl">
@@ -235,12 +235,13 @@ export default function DefaultHomeLayout({
             />
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none min-h-[44px] h-[44px]">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => onSelectCategory(cat)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-colors ${
+                style={{ contentVisibility: 'auto' }}
+                className={`h-[36px] px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-colors inline-flex items-center justify-center leading-none ${
                   selectedCategory === cat
                     ? 'bg-rose-700 text-white shadow-sm shadow-rose-500/20'
                     : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:border-rose-500'
