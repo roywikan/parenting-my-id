@@ -322,7 +322,7 @@ export default function AdminPortal({
   const [cfgFooterBadge3, setCfgFooterBadge3] = useState(siteConfig?.footer_badge_3 || '100% Gratis');
 
   // Tech Badges Config States
-  const [cfgTechBadgeHero, setCfgTechBadgeHero] = useState<string>(siteConfig?.tech_badge_hero || 'Cloudflare D1 Edge Architecture • TTFB < 20ms');
+  const [cfgTechBadgeHero, setCfgTechBadgeHero] = useState<string>(siteConfig?.tech_badge_hero || 'Cloudflare D1 Edge Architecture');
   const [cfgTechBadgePages, setCfgTechBadgePages] = useState<string>(siteConfig?.tech_badge_pages || 'Cloudflare Pages Edge');
   const [cfgTechBadgeDatabase, setCfgTechBadgeDatabase] = useState<string>(siteConfig?.tech_badge_database || 'Cloudflare D1 SQLite');
   const [cfgTechBadgeStorage, setCfgTechBadgeStorage] = useState<string>(siteConfig?.tech_badge_storage || 'GitHub REST Storage');
@@ -570,7 +570,7 @@ export default function AdminPortal({
       setCfgHomepageDisplayMode(siteConfig.homepage_display_mode || 'default');
       setCfgActiveThemePreset(siteConfig.active_theme_preset || DEFAULT_SITE_CONFIG.active_theme_preset || 'corp-blue');
       setCfgSiteName(siteConfig.site_name || DEFAULT_SITE_CONFIG.site_name);
-      setCfgTechBadgeHero(siteConfig.tech_badge_hero || 'Cloudflare D1 Edge Architecture • TTFB < 20ms');
+      setCfgTechBadgeHero(siteConfig.tech_badge_hero || 'Cloudflare D1 Edge Architecture');
       setCfgTechBadgePages(siteConfig.tech_badge_pages || 'Cloudflare Pages Edge');
       setCfgTechBadgeDatabase(siteConfig.tech_badge_database || 'Cloudflare D1 SQLite');
       setCfgTechBadgeStorage(siteConfig.tech_badge_storage || 'GitHub REST Storage');
@@ -3141,7 +3141,7 @@ export default function AdminPortal({
                     value={cfgTechBadgeHero}
                     onChange={(e) => setCfgTechBadgeHero(e.target.value)}
                     className="w-full px-3 py-2 text-xs font-medium border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 shadow-sm"
-                    placeholder="Contoh: Cloudflare D1 Edge Architecture • TTFB < 20ms"
+                    placeholder="Contoh: Cloudflare D1 Edge Architecture"
                   />
                 </div>
 
