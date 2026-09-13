@@ -112,30 +112,37 @@ export default function DefaultHomeLayout({
         </section>
       )}
 
-      {/* TRENDING TOPICS TICKER */}
-      {autolinks.length > 0 && (
-        <div className="bg-rose-50/70 dark:bg-slate-800/60 border border-rose-200 dark:border-slate-700/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 min-h-[60px]">
-          <div className="flex items-center gap-1.5 text-xs font-black text-rose-800 dark:text-rose-300 shrink-0 uppercase tracking-wide">
-            <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
-            <span>{siteConfig?.autolink_ticker_label || 'Topik Trending:'}</span>
-          </div>
-          <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-none min-h-[36px]">
-            {autolinks.map((link) => (
+      {/* TRENDING TOPICS TICKER (CLUSTERING & ZERO CLS RESERVATION) */}
+      <div className="bg-rose-50/70 dark:bg-slate-800/60 border border-rose-200 dark:border-slate-700/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 min-h-[108px] sm:min-h-[68px] h-[108px] sm:h-[68px] overflow-hidden">
+        <div className="flex items-center gap-1.5 text-xs font-black text-rose-800 dark:text-rose-300 shrink-0 uppercase tracking-wide">
+          <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+          <span>{siteConfig?.autolink_ticker_label || 'Topik Trending:'}</span>
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-none min-h-[40px] h-[40px] w-full">
+          {autolinks && autolinks.length > 0 ? (
+            autolinks.map((link) => (
               <button
                 key={link.id}
                 onClick={() => {
                   const targetSlug = link.targetUrl.split('/').pop() || '';
                   if (targetSlug) onSelectPost(targetSlug);
                 }}
-                className="h-[32px] px-3 py-1 rounded-lg bg-white dark:bg-slate-900 border border-rose-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 hover:border-rose-500 hover:text-rose-700 dark:hover:text-rose-300 transition-colors shadow-2xs font-bold inline-flex items-center gap-1 group shrink-0 whitespace-nowrap leading-none"
+                className="h-[32px] px-3 py-1 rounded-lg bg-white dark:bg-slate-900 border border-rose-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 hover:border-rose-500 hover:text-rose-700 dark:hover:text-rose-300 transition-colors shadow-2xs font-bold inline-flex items-center shrink-0 whitespace-nowrap gap-1 group leading-none"
               >
                 <span>#{link.keyword}</span>
                 <span className="text-[10px] text-rose-700 dark:text-rose-300 font-black group-hover:translate-x-0.5 transition-transform">↗</span>
               </button>
-            ))}
-          </div>
+            ))
+          ) : (
+            <>
+              <div className="h-[32px] w-24 rounded-lg bg-rose-200/50 dark:bg-slate-700/30 animate-pulse shrink-0" />
+              <div className="h-[32px] w-20 rounded-lg bg-rose-200/50 dark:bg-slate-700/30 animate-pulse shrink-0" />
+              <div className="h-[32px] w-28 rounded-lg bg-rose-200/50 dark:bg-slate-700/30 animate-pulse shrink-0" />
+              <div className="h-[32px] w-16 rounded-lg bg-rose-200/50 dark:bg-slate-700/30 animate-pulse shrink-0" />
+            </>
+          )}
         </div>
-      )}
+      </div>
 
       {/* FEATURED POST */}
       {featuredPost && !searchQuery && selectedCategory === 'Semua' && (
@@ -241,13 +248,13 @@ export default function DefaultHomeLayout({
             />
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none min-h-[44px] h-[44px]">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none min-h-[44px] h-[44px] shrink-0">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => onSelectCategory(cat)}
                 style={{ contentVisibility: 'auto' }}
-                className={`h-[36px] px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-colors inline-flex items-center justify-center leading-none ${
+                className={`h-[36px] px-3.5 py-2 rounded-xl text-xs font-black shrink-0 whitespace-nowrap transition-colors inline-flex items-center justify-center leading-none ${
                   selectedCategory === cat
                     ? 'bg-rose-700 text-white shadow-sm shadow-rose-500/20'
                     : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:border-rose-500'
