@@ -453,12 +453,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div class="space-y-3 max-w-2xl">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-rose-100 border border-white/20">
-              <span>\${escapeHtml(techBadgeHero)}</span>
+              <span>${escapeHtml(techBadgeHero)}</span>
             </div>
-            <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">\${escapeHtml(heroTitle)}</h1>
-            <p class="text-rose-100 text-sm sm:text-base leading-relaxed">\${escapeHtml(heroSubtitle)}</p>
+            <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">${escapeHtml(heroTitle)}</h1>
+            <p class="text-rose-100 text-sm sm:text-base leading-relaxed">${escapeHtml(heroSubtitle)}</p>
             <div class="pt-2">
-              <a href="\${heroCtaLink}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-rose-900 font-black text-xs shadow-lg hover:bg-rose-50 transition-transform">\${escapeHtml(heroCtaText)}</a>
+              <a href="${escapeHtml(heroCtaLink)}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-rose-900 font-black text-xs shadow-lg hover:bg-rose-50 transition-transform">${escapeHtml(heroCtaText)}</a>
             </div>
           </div>
         </div>
