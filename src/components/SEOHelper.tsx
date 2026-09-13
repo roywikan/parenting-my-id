@@ -19,6 +19,7 @@ interface SEOProps {
   siteLogo?: string;
   articleData?: any;
   comments?: Array<{ user_name?: string; content?: string; created_at?: string }>;
+  posts?: any[];
 }
 
 export default function SEOHelper({
@@ -39,6 +40,7 @@ export default function SEOHelper({
   siteLogo = '/favicon-32x32.png',
   articleData,
   comments,
+  posts,
 }: SEOProps) {
   const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
   const effectiveCanonicalUrl = canonicalUrl || (typeof window !== 'undefined' ? window.location.href : '');
@@ -177,7 +179,7 @@ export default function SEOHelper({
       injectJsonLd('jsonld-organization-schema', organizationSchema);
 
       // 3. ItemList Schema for home page post listings
-      const ssrPosts = (window as any).__INITIAL_DATA__?.posts || [];
+      const ssrPosts = posts || (window as any).__INITIAL_DATA__?.posts || [];
       if (ssrPosts && ssrPosts.length > 0) {
         const itemListSchema = {
           '@context': 'https://schema.org',
@@ -188,7 +190,8 @@ export default function SEOHelper({
             '@type': 'ListItem',
             'position': index + 1,
             'url': `${currentOrigin}/baca/${p.slug}`,
-            'name': p.title
+            'name': p.title,
+            'description': p.excerpt || p.metaDescription || p.description || ''
           }))
         };
         injectJsonLd('jsonld-itemlist-schema', itemListSchema);

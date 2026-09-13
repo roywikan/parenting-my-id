@@ -103,8 +103,8 @@ function injectSiteConfigToHtml(htmlTemplate: string): string {
 
   // Inject a lightweight semantic SEO/UX skeleton with dynamic wording directly inside <div id="root">
   // so that both crawlers (Googlebot) and view-source view immediate configured state.
-  const rootDivSearch = '<div id="root"></div>';
-  if (html.includes(rootDivSearch)) {
+  const rootDivRegex = /<div\s+id="root"><\/div>/i;
+  if (rootDivRegex.test(html)) {
     const skeleton = `<div id="root">
   <header class="bg-white border-b border-slate-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -122,7 +122,7 @@ function injectSiteConfigToHtml(htmlTemplate: string): string {
     </div>
   </main>
 </div>`;
-    html = html.replace(rootDivSearch, skeleton);
+    html = html.replace(rootDivRegex, skeleton);
   }
 
   return html;
@@ -2436,7 +2436,7 @@ app.get('/baca/:slug', (req, res, next) => {
     let htmlTemplate = fs.readFileSync(htmlFilePath, 'utf-8');
     htmlTemplate = htmlTemplate.replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '');
     htmlTemplate = htmlTemplate.replace(/<title>.*?<\/title>/i, seoTags);
-    htmlTemplate = htmlTemplate.replace(/<div id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
+    htmlTemplate = htmlTemplate.replace(/<div\s+id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
 
     res.header('Content-Type', 'text/html; charset=utf-8');
     res.header('Vary', 'Accept');
