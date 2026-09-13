@@ -168,3 +168,68 @@ div.relative {
   overflow: hidden;
 }
 
+/* RESPONSIVE PAGINATION AND AUTO-WRAP FOR LONG STUFF */
+
+/* 1. AUTO-WRAP LONG URLS & REFERENCES IN NON-FRONTPAGE CONTENT */
+.article-body,
+.article-body *,
+.prose,
+.prose *,
+#article-content-body,
+#article-content-body * {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important; /* Standard break */
+}
+
+/* Specifically force links, journal refs, and long citations to break if too long */
+.article-body a,
+.prose a,
+#article-content-body a,
+#daftar-referensi a,
+#daftar-referensi li {
+  word-break: break-all !important; /* Force ultra-long URLs to break nicely */
+}
+
+/* 2. RESPONSIVE SITE PAGINATION CONTROLS */
+.site-pagination-container {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.5rem !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Mobile responsive constraints for pagination at 480px and under */
+@media (max-width: 480px) {
+  .site-pagination-container {
+    justify-content: center !important;
+    gap: 0.375rem !important;
+  }
+
+  /* Hide the text label "Sebelumnya" and "Berikutnya", leaving only arrow symbol */
+  .site-pagination-container .btn-pagination-prev .text,
+  .site-pagination-container .btn-pagination-next .text {
+    display: none !important;
+  }
+
+  /* Reduce padding, font sizes, and sizes of pagination buttons on mobile */
+  .site-pagination-container button,
+  .site-pagination-container .pagination-numbers button {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    border-radius: 0.5rem !important;
+    min-width: 2rem !important;
+    height: 2rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Make sure spacing is clean inside numbers wrapper */
+  .site-pagination-container .pagination-numbers {
+    gap: 0.25rem !important;
+  }
+}
+
+

@@ -373,16 +373,17 @@ export default function DefaultHomeLayout({
 
             {/* ELEGANT HOMEPAGE PAGINATION CONTROLS */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-6">
+              <div className="site-pagination-container flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-6">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  className="px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-black transition-colors disabled:opacity-40"
+                  className="btn-pagination-prev px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-black transition-colors disabled:opacity-40"
                 >
-                  ← Sebelumnya
+                  <span className="arrow">←</span>
+                  <span className="text ml-1">Sebelumnya</span>
                 </button>
 
-                <div className="flex items-center gap-1.5">
+                <div className="pagination-numbers flex items-center gap-1.5">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <button
                       key={page}
@@ -401,9 +402,10 @@ export default function DefaultHomeLayout({
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  className="px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-black transition-colors disabled:opacity-40"
+                  className="btn-pagination-next px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-black transition-colors disabled:opacity-40"
                 >
-                  Berikutnya →
+                  <span className="text mr-1">Berikutnya</span>
+                  <span className="arrow">→</span>
                 </button>
               </div>
             )}
