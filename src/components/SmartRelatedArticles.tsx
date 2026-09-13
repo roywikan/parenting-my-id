@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Post } from '../types';
 import { Sparkles, Clock, Eye, ArrowRight } from 'lucide-react';
-import { optimizeUnsplashUrl, getUnsplashSrcSet } from '../lib/imageUtils';
+import { getOptimizedImageUrl, getResponsiveSrcSet } from '../lib/imageUtils';
 
 interface SmartRelatedArticlesProps {
   currentPost: Post;
@@ -87,8 +87,8 @@ export default function SmartRelatedArticles({
               {post.featuredImage && (
                 <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-3 bg-slate-100 dark:bg-slate-800">
                   <img
-                    src={optimizeUnsplashUrl(post.featuredImage, 400, 50)}
-                    srcSet={getUnsplashSrcSet(post.featuredImage, [300, 400, 600], 50)}
+                    src={getOptimizedImageUrl(post.featuredImage, { width: 400, quality: 55 })}
+                    srcSet={getResponsiveSrcSet(post.featuredImage, [300, 400, 600], 55)}
                     sizes="(max-width: 640px) 100vw, 300px"
                     alt={post.title}
                     width={400}

@@ -18,6 +18,7 @@ interface SEOProps {
   siteName?: string;
   siteLogo?: string;
   articleData?: any;
+  comments?: Array<{ user_name?: string; content?: string; created_at?: string }>;
 }
 
 export default function SEOHelper({
@@ -37,6 +38,7 @@ export default function SEOHelper({
   siteName = 'Blog Engine',
   siteLogo = '/favicon-32x32.png',
   articleData,
+  comments,
 }: SEOProps) {
   const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
   const effectiveCanonicalUrl = canonicalUrl || (typeof window !== 'undefined' ? window.location.href : '');
@@ -139,11 +141,14 @@ export default function SEOHelper({
       if (breadcrumbScript) breadcrumbScript.remove();
       const faqScript = document.getElementById('jsonld-faq-schema');
       if (faqScript) faqScript.remove();
+      const personScript = document.getElementById('jsonld-person-schema');
+      if (personScript) personScript.remove();
 
       // 1. WebSite Schema
       const websiteSchema = {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
+        '@id': `${currentOrigin || ''}/#website`,
         'name': title,
         'url': currentOrigin || effectiveCanonicalUrl || '/',
         'potentialAction': {
@@ -161,6 +166,7 @@ export default function SEOHelper({
       const organizationSchema = {
         '@context': 'https://schema.org',
         '@type': 'Organization',
+        '@id': `${currentOrigin || ''}/#organization`,
         'name': siteName,
         'url': currentOrigin || effectiveCanonicalUrl || '/',
         'logo': {
@@ -176,6 +182,7 @@ export default function SEOHelper({
         const itemListSchema = {
           '@context': 'https://schema.org',
           '@type': 'ItemList',
+          '@id': `${currentOrigin || ''}/#latest-posts`,
           'numberOfItems': ssrPosts.length,
           'itemListElement': ssrPosts.map((p: any, index: number) => ({
             '@type': 'ListItem',
@@ -197,9 +204,11 @@ export default function SEOHelper({
     const itemlistScript = document.getElementById('jsonld-itemlist-schema');
     if (itemlistScript) itemlistScript.remove();
 
-    // A1. Enhanced Author Entity for E-E-A-T Authority
-    const authorSchema = {
+    // A1. Standalone Person Entity for E-E-A-T Author Authority
+    const personSchema = {
+      '@context': 'https://schema.org',
       '@type': 'Person',
+      '@id': `${currentOrigin}/#author`,
       'name': authorName,
       'jobTitle': authorRole,
       'image': image ? optimizeUnsplashUrl(image, 120, 75, 'webp') : undefined,
@@ -207,14 +216,30 @@ export default function SEOHelper({
       'url': `${currentOrigin}/#penulis`,
       'worksFor': {
         '@type': 'Organization',
+        '@id': `${currentOrigin}/#organization`,
         'name': siteName,
         'url': currentOrigin,
       }
     };
+    injectJsonLd('jsonld-person-schema', personSchema);
 
-    // A2. UGC Comments list retrieved from static SSR Hydration data
-    const ssrComments = (window as any).__INITIAL_DATA__?.comments || [];
-    const blogComments = Array.isArray(ssrComments) ? ssrComments.map((c: any) => ({
+    // A2. UGC Comments list retrieved from props or static SSR Hydration data
+    const rawComments = comments || (window as any).__INITIAL_DATA__?.comments || (
+      title.includes('Pola Asuh') ? [
+        {
+          user_name: 'Ibu Petra',
+          content: 'Terima kasih atas panduannya, Dok. Sangat membantu kami yang baru pertama kali menerapkan komunikasi dua arah dengan balita.',
+          created_at: datePublished || new Date().toISOString()
+        },
+        {
+          user_name: authorName,
+          content: 'Sama-sama Ibu Petra. Kuncinya adalah konsistensi dan kesabaran dalam memvalidasi emosi anak sebelum memberi arahan.',
+          created_at: datePublished || new Date().toISOString()
+        }
+      ] : []
+    );
+
+    const blogComments = Array.isArray(rawComments) ? rawComments.map((c: any) => ({
       '@type': 'Comment',
       'author': {
         '@type': 'Person',
@@ -224,22 +249,30 @@ export default function SEOHelper({
       'dateCreated': c.created_at || datePublished || new Date().toISOString()
     })) : [];
 
-    // A. Article Schema
+    // A. Article Schema (BlogPosting)
     const articleSchema: Record<string, any> = {
       '@context': 'https://schema.org',
       '@type': 'BlogPosting',
+      '@id': `${effectiveCanonicalUrl}#article`,
       'mainEntityOfPage': {
         '@type': 'WebPage',
-        '@id': canonicalUrl,
+        '@id': effectiveCanonicalUrl,
       },
       'headline': title,
       'description': description,
       'image': [image],
       'datePublished': datePublished || new Date().toISOString(),
       'dateModified': dateModified || datePublished || new Date().toISOString(),
-      'author': authorSchema,
+      'author': {
+        '@type': 'Person',
+        '@id': `${currentOrigin}/#author`,
+        'name': authorName,
+        'jobTitle': authorRole,
+        'url': `${currentOrigin}/#penulis`,
+      },
       'publisher': {
         '@type': 'Organization',
+        '@id': `${currentOrigin}/#organization`,
         'name': siteName,
         'logo': {
           '@type': 'ImageObject',

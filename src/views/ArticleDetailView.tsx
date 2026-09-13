@@ -9,7 +9,7 @@ import AutoTableOfContents from '../components/AutoTableOfContents';
 import SmartRelatedArticles from '../components/SmartRelatedArticles';
 import AdSlot from '../components/AdSlot';
 import { CusdisComments } from '../components/CusdisComments';
-import { optimizeUnsplashUrl, getUnsplashSrcSet, getOptimizedAvatarUrl } from '../lib/imageUtils';
+import { getOptimizedImageUrl, getResponsiveSrcSet, getOptimizedAvatarUrl, transformHtmlImgTags } from '../lib/imageUtils';
 import { parseAndRenderReferences } from '../lib/referenceParser';
 import * as LucideIcons from 'lucide-react';
 import InteractiveShowcase from '../components/InteractiveShowcase';
@@ -336,8 +336,8 @@ export default function ArticleDetailView({
     const preparedMd = preprocessMarkdownLineBreaks(post.contentMarkdown);
     let rawHtml = marked.parse(preparedMd, { async: false, gfm: true, breaks: true }) as string;
 
-    // Inject loading="lazy" and decoding="async" into <img> tags
-    rawHtml = rawHtml.replace(/<img\s+/gi, '<img loading="lazy" decoding="async" ');
+    // Enhance all embedded <img> tags with responsive srcset, sizes, width, height, loading="lazy", decoding="async"
+    rawHtml = transformHtmlImgTags(rawHtml);
 
     // Render responsive videos
     rawHtml = renderResponsiveVideoEmbeds(rawHtml);
@@ -622,10 +622,11 @@ export default function ArticleDetailView({
             {/* Primary Author */}
             <div className="flex items-center gap-3">
               <img
-                src={getOptimizedAvatarUrl(post.authorAvatar, 60, 60)}
+                src={getOptimizedAvatarUrl(post.authorAvatar, 40, 60)}
                 alt={post.authorName}
                 width={40}
                 height={40}
+                loading="lazy"
                 decoding="async"
                 className="w-10 h-10 rounded-full object-cover border-2 border-rose-400 shadow-2xs"
               />
@@ -648,11 +649,12 @@ export default function ArticleDetailView({
                   {post.coAuthors.map((co) => (
                     <img
                       key={co.id}
-                      src={getOptimizedAvatarUrl(co.avatar, 60, 60)}
+                      src={getOptimizedAvatarUrl(co.avatar, 28, 60)}
                       alt={co.name}
                       title={`${co.name} (${co.title || 'Co-Author'})`}
                       width={28}
                       height={28}
+                      loading="lazy"
                       decoding="async"
                       className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-900 object-cover"
                     />
@@ -687,12 +689,13 @@ export default function ArticleDetailView({
       {/* FEATURED IMAGE (LCP OPTIMIZED - ZERO CLS) */}
       <div className="w-full aspect-[16/9] max-h-[480px] rounded-3xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800">
         <img
-          src={optimizeUnsplashUrl(post.featuredImage, 700, 55)}
-          srcSet={getUnsplashSrcSet(post.featuredImage, [400, 700], 55)}
-          sizes="(max-width: 1024px) 100vw, 700px"
+          src={getOptimizedImageUrl(post.featuredImage, { width: 1200, quality: 55 })}
+          srcSet={getResponsiveSrcSet(post.featuredImage, [400, 750, 1200], 55)}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px"
           alt={post.title}
-          width={700}
-          height={394}
+          width={1200}
+          height={675}
+          loading="eager"
           fetchPriority="high"
           decoding="async"
           className="w-full h-full object-cover"
@@ -921,6 +924,7 @@ export default function ArticleDetailView({
               alt={post.authorName}
               width={80}
               height={80}
+              loading="lazy"
               decoding="async"
               className="w-20 h-20 rounded-2xl object-cover border-2 border-rose-400 shadow-md shrink-0"
             />
@@ -996,10 +1000,11 @@ export default function ArticleDetailView({
                   className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-start gap-3.5 shadow-2xs"
                 >
                   <img
-                    src={getOptimizedAvatarUrl(co.avatar, 60, 60)}
+                    src={getOptimizedAvatarUrl(co.avatar, 48, 60)}
                     alt={co.name}
                     width={48}
                     height={48}
+                    loading="lazy"
                     decoding="async"
                     className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
                   />

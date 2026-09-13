@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { marked } from 'marked';
 import { applyAutoLinks, calculateReadTime, preprocessMarkdownLineBreaks, renderResponsiveVideoEmbeds } from '../lib/autolink';
-import { sanitizeAndOptimizeImageUrl, sanitizeMarkdownImageUrls } from '../lib/imageUtils';
+import { sanitizeAndOptimizeImageUrl, sanitizeMarkdownImageUrls, getOptimizedImageUrl, getOptimizedAvatarUrl } from '../lib/imageUtils';
 import { parseAndRenderReferences } from '../lib/referenceParser';
 import { AutoLink, User, PostRevision, UserRole, PostStatus } from '../types';
 import SeoAuditWidget from './SeoAuditWidget';
@@ -3840,6 +3840,10 @@ export default function RichPostEditor({
                     <img
                       src={featuredImage}
                       alt={title}
+                      width={800}
+                      height={320}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full max-h-80 object-cover rounded-2xl"
                     />
                   )}
@@ -3982,6 +3986,10 @@ export default function RichPostEditor({
                   <img
                     src={featuredImage}
                     alt="Preview"
+                    width={400}
+                    height={128}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-32 object-cover rounded-xl border border-slate-200 dark:border-slate-800"
                   />
                   <button
@@ -4193,8 +4201,12 @@ export default function RichPostEditor({
                             className="rounded border-slate-300 text-rose-600 focus:ring-rose-500"
                           />
                           <img
-                            src={w.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}
+                            src={getOptimizedAvatarUrl(w.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb', 24, 60)}
                             alt={w.name}
+                            width={24}
+                            height={24}
+                            loading="lazy"
+                            decoding="async"
                             className="w-6 h-6 rounded-full object-cover"
                           />
                           <div className="truncate">
@@ -4686,8 +4698,11 @@ export default function RichPostEditor({
                       <img
                         src={imageUrl}
                         alt="Uploaded WebP"
-                        className="w-full h-36 object-cover rounded-xl"
+                        width={400}
+                        height={144}
                         loading="lazy"
+                        decoding="async"
+                        className="w-full h-36 object-cover rounded-xl"
                       />
                     </div>
 
@@ -4800,7 +4815,15 @@ export default function RichPostEditor({
                         imageUrl === preset.url ? 'border-rose-500 ring-2 ring-rose-200' : 'border-transparent hover:border-slate-300'
                       }`}
                     >
-                      <img src={preset.url} alt={preset.label} className="w-full h-20 object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <img
+                        src={getOptimizedImageUrl(preset.url, { width: 200, height: 80, quality: 55 })}
+                        alt={preset.label}
+                        width={200}
+                        height={80}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-20 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-1.5">
                         <span className="text-[10px] font-bold text-white block truncate">{preset.label}</span>
                       </div>
@@ -4874,7 +4897,15 @@ export default function RichPostEditor({
                 {imageUrl && (
                   <div>
                     <span className="text-[10px] font-bold text-slate-500 block mb-1">Pratinjau Gambar:</span>
-                    <img src={imageUrl} alt="Preview" className="w-full h-28 object-cover rounded-xl border" />
+                    <img
+                      src={imageUrl}
+                      alt="Preview"
+                      width={400}
+                      height={112}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-28 object-cover rounded-xl border"
+                    />
                   </div>
                 )}
 

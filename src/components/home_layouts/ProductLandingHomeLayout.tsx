@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { ShoppingBag, Star, CheckCircle2, ShieldCheck, Zap, ArrowRight, HelpCircle, ChevronDown, BookOpen, Gift, Truck } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
-import { optimizeUnsplashUrl } from '../../lib/imageUtils';
+import { getOptimizedImageUrl, getResponsiveSrcSet } from '../../lib/imageUtils';
 
 interface LayoutProps {
   posts: Post[];
@@ -114,10 +114,13 @@ export default function ProductLandingHomeLayout({ posts, onSelectPost, siteConf
           <div className="lg:col-span-5 relative text-center">
             <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white/30 bg-white/10 backdrop-blur-md p-4">
               <img
-                src="https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&h=450&fit=crop&q=80"
+                src={getOptimizedImageUrl("https://images.unsplash.com/photo-1544717305-2782549b5136", { width: 600, quality: 60 })}
+                srcSet={getResponsiveSrcSet("https://images.unsplash.com/photo-1544717305-2782549b5136", [400, 600, 800], 60)}
+                sizes="(max-width: 640px) 100vw, 500px"
                 alt="Product Mockup"
                 width={600}
                 height={450}
+                loading="eager"
                 fetchPriority="high"
                 decoding="async"
                 className="w-full h-64 sm:h-72 rounded-2xl object-cover"
@@ -316,8 +319,14 @@ export default function ProductLandingHomeLayout({ posts, onSelectPost, siteConf
             >
               <div className="aspect-[16/9] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
-                  src={optimizeUnsplashUrl(post.featuredImage, 400, 50)}
+                  src={getOptimizedImageUrl(post.featuredImage, { width: 400, quality: 55 })}
+                  srcSet={getResponsiveSrcSet(post.featuredImage, [400, 750], 55)}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                   alt={post.title}
+                  width={400}
+                  height={225}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                 />
               </div>

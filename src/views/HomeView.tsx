@@ -242,10 +242,13 @@ export default function HomeView({
         title={metaTitle}
         description={metaDesc}
         ogImage={ogImage}
-        canonicalUrl={typeof window !== 'undefined' ? window.location.href : 'https://parenting.my.id/'}
+        canonicalUrl={typeof window !== 'undefined' ? window.location.href : (siteConfig?.site_url || '/')}
+        type="website"
+        siteName={siteConfig?.site_name || 'Website'}
+        siteLogo={siteConfig?.site_logo_url || siteConfig?.site_logo_icon || ''}
         articleData={{
           type: 'website',
-          siteName: siteConfig?.site_name || 'Parenting.my.id',
+          siteName: siteConfig?.site_name || 'Website',
           locale: 'id_ID',
         }}
       />

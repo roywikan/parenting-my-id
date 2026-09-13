@@ -253,8 +253,12 @@ const CommentItem: React.FC<{
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <img
-            src={comment.user_avatar ? getOptimizedAvatarUrl(comment.user_avatar, 80) : `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user_name || 'U')}`}
+            src={comment.user_avatar ? getOptimizedAvatarUrl(comment.user_avatar, 40, 50) : `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user_name || 'U')}&size=80`}
             alt={comment.user_name}
+            width={32}
+            height={32}
+            loading="lazy"
+            decoding="async"
             className="w-8 h-8 rounded-full object-cover border border-slate-200"
           />
           <div>

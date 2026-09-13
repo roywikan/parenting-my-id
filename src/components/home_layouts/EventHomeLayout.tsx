@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Calendar, MapPin, Clock, Users, Ticket, ArrowRight, Video, CheckCircle2, ShieldCheck, Sparkles, BookOpen } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
-import { optimizeUnsplashUrl, getOptimizedAvatarUrl } from '../../lib/imageUtils';
+import { getOptimizedImageUrl, getResponsiveSrcSet, getOptimizedAvatarUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
   posts: Post[];
@@ -196,8 +196,12 @@ export default function EventHomeLayout({ posts, onSelectPost, siteConfig }: Lay
             >
               <div className="flex items-center gap-4">
                 <img
-                  src={sp.avatar}
+                  src={getOptimizedAvatarUrl(sp.avatar, 64, 60)}
                   alt={sp.name}
+                  width={64}
+                  height={64}
+                  loading="lazy"
+                  decoding="async"
                   className="w-16 h-16 rounded-2xl object-cover border-2 border-rose-500 shrink-0"
                 />
                 <div>
@@ -386,8 +390,14 @@ export default function EventHomeLayout({ posts, onSelectPost, siteConfig }: Lay
             >
               <div className="aspect-[16/9] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
-                  src={optimizeUnsplashUrl(post.featuredImage, 400, 50)}
+                  src={getOptimizedImageUrl(post.featuredImage, { width: 400, quality: 55 })}
+                  srcSet={getResponsiveSrcSet(post.featuredImage, [400, 750], 55)}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                   alt={post.title}
+                  width={400}
+                  height={225}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                 />
               </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, ShieldAlert, Award, Star, HelpCircle, ThumbsUp, Sparkles, Check, AlertTriangle } from 'lucide-react';
 import { BattleCardWidgetData } from '../types';
+import { getOptimizedImageUrl, getResponsiveSrcSet } from '../lib/imageUtils';
 
 interface InteractiveBattleCardProps {
   config: BattleCardWidgetData;
@@ -131,8 +132,14 @@ export default function InteractiveBattleCard({ config }: InteractiveBattleCardP
                   </div>
                   {optionA.image && (
                     <img
-                      src={optionA.image}
+                      src={getOptimizedImageUrl(optionA.image, { width: 400, quality: 60 })}
+                      srcSet={getResponsiveSrcSet(optionA.image, [300, 500], 60)}
+                      sizes="(max-width: 640px) 100vw, 350px"
                       alt={optionA.name}
+                      width={350}
+                      height={140}
+                      loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                       className="w-full h-32 object-cover rounded-xl mb-3.5"
                     />
@@ -172,8 +179,14 @@ export default function InteractiveBattleCard({ config }: InteractiveBattleCardP
                   </div>
                   {optionB.image && (
                     <img
-                      src={optionB.image}
+                      src={getOptimizedImageUrl(optionB.image, { width: 400, quality: 60 })}
+                      srcSet={getResponsiveSrcSet(optionB.image, [300, 500], 60)}
+                      sizes="(max-width: 640px) 100vw, 350px"
                       alt={optionB.name}
+                      width={350}
+                      height={140}
+                      loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                       className="w-full h-32 object-cover rounded-xl mb-3.5"
                     />
