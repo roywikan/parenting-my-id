@@ -144,6 +144,7 @@ export interface SiteConfig {
   metric3_end_val?: number;
   metric3_duration?: number;
   metric3_unit?: string;
+  reference_heading_label?: string;
   
   // AdSense & Strategic Ad Placements
   enable_adsense?: boolean;

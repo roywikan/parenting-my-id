@@ -191,12 +191,12 @@ function escapeHtml(str: string): string {
  *
  * Robust against marked GFM autolink issues (e.g. trailing `%5D` and `]</a>`).
  */
-export function parseAndRenderReferences(rawHtml: string): string {
+export function parseAndRenderReferences(rawHtml: string, headingLabel?: string): string {
   const refs: ParsedReference[] = [];
   let refIndex = 1;
 
   // Replace tags inline with superscript footnotes.
-  // Note: (?:<\/a>)? handles case where marked GFM autolink placed </a> after the closing bracket.
+  // Note: (?:<\/a>)? handles case where marked GFM autolink placed <a> after the closing bracket.
   const regex = /\[(?:ref|referensi|jurnal):\s*([\s\S]*?)\](?:<\/a>)?/gi;
 
   let parsedHtml = rawHtml.replace(regex, (_match, refContent) => {
@@ -213,8 +213,10 @@ export function parseAndRenderReferences(rawHtml: string): string {
     return parsedHtml;
   }
 
+  const finalHeadingLabel = headingLabel || 'Referensi';
+
   // Generate reference list (Bibliography)
-  const refListHtml = `<div class="mt-12 pt-6 border-t border-slate-200 dark:border-slate-800" id="daftar-referensi"><h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3"><span class="text-rose-600">📚</span> Referensi Ilmiah &amp; Jurnal</h3><ol class="space-y-2 text-xs text-slate-600 dark:text-slate-400 list-decimal pl-5">${refs.map((ref) => {
+  const refListHtml = `<div class="mt-12 pt-6 border-t border-slate-200 dark:border-slate-800" id="daftar-referensi"><h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3"><span class="text-rose-600">📚</span> ${escapeHtml(finalHeadingLabel)}</h3><ol class="space-y-2 text-xs text-slate-600 dark:text-slate-400 list-decimal pl-5">${refs.map((ref) => {
     const escapedCitation = escapeHtml(ref.citationText);
     const hasUrl = Boolean(ref.url);
     const escapedUrl = ref.url ? escapeHtml(ref.url) : '';
