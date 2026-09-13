@@ -79,15 +79,15 @@ export default function DefaultHomeLayout({
     <div className="space-y-10">
       {/* HERO BANNER SECTION */}
       {showHero && (
-        <section className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-500/15 relative overflow-hidden min-h-[180px] sm:min-h-[220px] md:min-h-[240px] flex items-center">
+        <section className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-500/15 relative overflow-hidden min-h-[350px] sm:min-h-[280px] md:min-h-[240px] flex items-center">
           <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 w-full">
             <div className="space-y-3 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-rose-100 border border-white/20">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-rose-100 border border-white/20 h-7 min-h-[28px]">
                 <Zap className="w-3.5 h-3.5 text-amber-300 fill-current" />
                 <span>{siteConfig?.tech_badge_hero || 'Cloudflare D1 Edge Architecture'}</span>
               </div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight min-h-[2rem] sm:min-h-[3rem]">
                 {heroTitle}
               </h1>
               <p className="text-rose-100 text-sm sm:text-base leading-relaxed">
