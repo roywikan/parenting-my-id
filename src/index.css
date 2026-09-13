@@ -152,3 +152,19 @@ html {
   }
 }
 
+/* ZERO-CLS CLIPPING FOR ABSOLUTE DECORATIVE BLUR ELEMENTS */
+.absolute.blur-2xl,
+.absolute.blur-3xl,
+.absolute[class*="blur-"] {
+  pointer-events: none !important;
+  user-select: none !important;
+  overflow: hidden !important;
+  contain: strict !important; /* Forces browser to treat this completely independently from layout */
+}
+
+/* Ensure parents of absolute decorative nodes have clipping context */
+section.relative,
+div.relative {
+  overflow: hidden;
+}
+

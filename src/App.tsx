@@ -116,7 +116,7 @@ export default function App() {
 
           if (fontsToLoad.length > 0) {
             const fontParams = fontsToLoad.map(f => `family=${encodeURIComponent(f)}:wght@400;500;700;800;900`).join('&');
-            const fontUrl = `https://fonts.googleapis.com/css2?${fontParams}&display=swap`;
+            const fontUrl = `https://fonts.googleapis.com/css2?${fontParams}&display=optional`;
             
             let linkEl = document.getElementById('dynamic-google-fonts') as HTMLLinkElement | null;
             if (!linkEl) {

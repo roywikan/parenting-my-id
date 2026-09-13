@@ -254,35 +254,49 @@ export default function ArticleDetailView({
     };
 
     // 1. Scroll listener: triggers at vertical midpoint (>= 40% scroll) OR when user scrolls upward after reading
+    let isTicking = false;
     const handleScroll = () => {
       if (hasTriggeredRef.current) return;
-      const currentScrollY = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (!isTicking) {
+        window.requestAnimationFrame(() => {
+          if (hasTriggeredRef.current) {
+            isTicking = false;
+            return;
+          }
+          const currentScrollY = window.scrollY;
+          const docHeight = document.documentElement.scrollHeight - window.innerHeight;
 
-      // Check vertical midpoint based on overall scroll progress
-      if (docHeight > 0 && currentScrollY / docHeight >= 0.4) {
-        recordView();
-        return;
-      }
+          // Check vertical midpoint based on overall scroll progress
+          if (docHeight > 0 && currentScrollY / docHeight >= 0.4) {
+            recordView();
+            isTicking = false;
+            return;
+          }
 
-      // Check vertical midpoint based on article container element
-      if (articleContainerRef.current) {
-        const rect = articleContainerRef.current.getBoundingClientRect();
-        const articleMid = rect.top + currentScrollY + (rect.height * 0.45);
-        const viewportMarker = currentScrollY + (window.innerHeight * 0.65);
-        if (viewportMarker >= articleMid) {
-          recordView();
-          return;
-        }
-      }
+          // Check vertical midpoint based on article container element
+          if (articleContainerRef.current) {
+            const rect = articleContainerRef.current.getBoundingClientRect();
+            const articleMid = rect.top + currentScrollY + (rect.height * 0.45);
+            const viewportMarker = currentScrollY + (window.innerHeight * 0.65);
+            if (viewportMarker >= articleMid) {
+              recordView();
+              isTicking = false;
+              return;
+            }
+          }
 
-      // Upward scroll detection ("menggeser layar ke atas")
-      // Triggered when user has scrolled down into the article (> 300px), and then scrolls upward (> 60px)
-      if (currentScrollY > maxScrollYRef.current) {
-        maxScrollYRef.current = currentScrollY;
-      } else if (maxScrollYRef.current > 300 && (maxScrollYRef.current - currentScrollY) > 60) {
-        recordView();
-        return;
+          // Upward scroll detection ("menggeser layar ke atas")
+          // Triggered when user has scrolled down into the article (> 300px), and then scrolls upward (> 60px)
+          if (currentScrollY > maxScrollYRef.current) {
+            maxScrollYRef.current = currentScrollY;
+          } else if (maxScrollYRef.current > 300 && (maxScrollYRef.current - currentScrollY) > 60) {
+            recordView();
+            isTicking = false;
+            return;
+          }
+          isTicking = false;
+        });
+        isTicking = true;
       }
     };
 
