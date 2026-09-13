@@ -31,10 +31,10 @@ export default function Breadcrumbs({ items, siteUrl = 'https://parenting.my.id'
           itemType="https://schema.org/ListItem"
           className="flex items-center gap-1.5"
         >
+          <link itemProp="item" href={siteUrl} />
           <button
             onClick={items[0]?.onClick}
             className="flex items-center gap-1 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
-            itemProp="item"
           >
             <Home className="w-3.5 h-3.5" />
             <span itemProp="name">Beranda</span>
@@ -44,6 +44,10 @@ export default function Breadcrumbs({ items, siteUrl = 'https://parenting.my.id'
 
         {items.map((item, idx) => {
           const position = idx + 2;
+          const itemUrl = item.active
+            ? (typeof window !== 'undefined' ? window.location.href : `${siteUrl}/baca`)
+            : `${siteUrl}/?kategori=${encodeURIComponent(item.label)}`;
+
           return (
             <li
               key={idx}
@@ -53,6 +57,7 @@ export default function Breadcrumbs({ items, siteUrl = 'https://parenting.my.id'
               className="flex items-center gap-1.5"
             >
               <ChevronRight className="w-3 h-3 text-slate-400 dark:text-slate-600 shrink-0" />
+              <link itemProp="item" href={itemUrl} />
               {item.active ? (
                 <span
                   itemProp="name"
@@ -64,7 +69,6 @@ export default function Breadcrumbs({ items, siteUrl = 'https://parenting.my.id'
               ) : (
                 <button
                   onClick={item.onClick}
-                  itemProp="item"
                   className="hover:text-rose-600 dark:hover:text-rose-400 transition-colors truncate max-w-[150px]"
                 >
                   <span itemProp="name">{item.label}</span>
