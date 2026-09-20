@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Award, BookOpen, Calendar, CheckCircle2, MessageCircle, Sparkles, Star, ArrowRight, ShieldCheck, Mail } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
+import HeroAffiliateWidgetSlot from '../HeroAffiliateWidgetSlot';
 import { getOptimizedImageUrl, getResponsiveSrcSet, getOptimizedAvatarUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -105,14 +106,23 @@ export default function PersonalBrandingHomeLayout({ posts, onSelectPost, siteCo
               </a>
             </div>
 
-            {/* PERFORMANCE METRICS BOX */}
+            {/* PERFORMANCE METRICS BOX OR AFFILIATE WIDGET */}
             <div className="pt-2">
-              <HeroPerformanceBox
-                siteConfig={siteConfig}
-                containerClassName="gap-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl shadow-sm text-center"
-                valueClassName="text-xl font-black text-rose-600 dark:text-rose-400"
-                labelClassName="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase"
-              />
+              {siteConfig?.hero_affiliate_widget_enable ? (
+                <HeroAffiliateWidgetSlot
+                  code={siteConfig?.hero_affiliate_widget_code}
+                  enabled={siteConfig?.hero_affiliate_widget_enable}
+                  position={siteConfig?.hero_affiliate_widget_position || 'bottom'}
+                  themeContext="card"
+                />
+              ) : (
+                <HeroPerformanceBox
+                  siteConfig={siteConfig}
+                  containerClassName="gap-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl shadow-sm text-center"
+                  valueClassName="text-xl font-black text-rose-600 dark:text-rose-400"
+                  labelClassName="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase"
+                />
+              )}
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { ShoppingBag, Star, CheckCircle2, ShieldCheck, Zap, ArrowRight, HelpCircle, ChevronDown, BookOpen, Gift, Truck } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
+import HeroAffiliateWidgetSlot from '../HeroAffiliateWidgetSlot';
 import { getOptimizedImageUrl, getResponsiveSrcSet } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -105,9 +106,18 @@ export default function ProductLandingHomeLayout({ posts, onSelectPost, siteConf
               </span>
             </div>
 
-            {/* PERFORMANCE METRICS BOX */}
+            {/* PERFORMANCE METRICS BOX OR AFFILIATE WIDGET */}
             <div className="pt-2">
-              <HeroPerformanceBox siteConfig={siteConfig} />
+              {siteConfig?.hero_affiliate_widget_enable ? (
+                <HeroAffiliateWidgetSlot
+                  code={siteConfig?.hero_affiliate_widget_code}
+                  enabled={siteConfig?.hero_affiliate_widget_enable}
+                  position={siteConfig?.hero_affiliate_widget_position || 'bottom'}
+                  themeContext="hero"
+                />
+              ) : (
+                <HeroPerformanceBox siteConfig={siteConfig} />
+              )}
             </div>
           </div>
 

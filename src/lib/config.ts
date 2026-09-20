@@ -36,6 +36,13 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   hero_subtitle: 'Temukan artikel, tips nutrisi, dan edukasi tumbuh kembang anak untuk orang tua modern.',
   hero_cta_text: 'Jelajahi Artikel',
   hero_cta_link: '#artikel-terbaru',
+  hero_affiliate_widget_enable: false,
+  hero_affiliate_widget_position: 'right',
+  hero_affiliate_widget_code: `<!-- Contoh Widget Affiliate Travelpayouts / Booking.com / GetYourGuide / Wego / Trip.com -->
+<div id="tp-hero-search" style="text-align: center; padding: 10px; color: #fff;">
+  <p style="font-size: 13px; font-weight: bold; margin-bottom: 8px;">✈️ Cari & Bandingkan Tiket Pesawat & Hotel</p>
+  <!-- Tempelkan kode script asinkron dari dashboard affiliate Anda di sini -->
+</div>`,
   posts_per_page: 9,
   enable_featured_post: true,
   pagination_type: 'load_more',

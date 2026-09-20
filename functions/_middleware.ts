@@ -1,9 +1,22 @@
+import { ensureD1Bootstrap } from './_d1_bootstrap';
+
 interface Env {
+  DB?: any;
   [key: string]: any;
 }
 
 export const onRequest: PagesFunction<Env> = async (context) => {
-  const { request, next } = context;
+  const { request, next, env } = context;
+
+  // Auto-bootstrap Cloudflare D1 tables, columns, indexes, and initial seeds on first access
+  if (env?.DB) {
+    try {
+      await ensureD1Bootstrap(env.DB);
+    } catch (dbErr) {
+      console.error('D1 Auto-Bootstrap error in middleware:', dbErr);
+    }
+  }
+
   const url = new URL(request.url);
   const hostname = url.hostname.toLowerCase();
   const pathname = url.pathname;

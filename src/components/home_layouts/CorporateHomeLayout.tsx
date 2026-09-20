@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Building2, ShieldCheck, Users2, BarChart3, ArrowRight, CheckCircle2, Mail, Phone, Globe, BookOpen } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
+import HeroAffiliateWidgetSlot from '../HeroAffiliateWidgetSlot';
 import { getOptimizedImageUrl, getResponsiveSrcSet } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -59,9 +60,18 @@ export default function CorporateHomeLayout({ posts, onSelectPost, siteConfig }:
               </a>
             </div>
 
-            {/* PERFORMANCE METRICS BOX */}
+            {/* PERFORMANCE METRICS BOX / AFFILIATE WIDGET */}
             <div className="pt-2">
-              <HeroPerformanceBox siteConfig={siteConfig} />
+              {siteConfig?.hero_affiliate_widget_enable ? (
+                <HeroAffiliateWidgetSlot
+                  code={siteConfig?.hero_affiliate_widget_code}
+                  enabled={siteConfig?.hero_affiliate_widget_enable}
+                  position={siteConfig?.hero_affiliate_widget_position || 'right'}
+                  themeContext="hero"
+                />
+              ) : (
+                <HeroPerformanceBox siteConfig={siteConfig} />
+              )}
             </div>
           </div>
 

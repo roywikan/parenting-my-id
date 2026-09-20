@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Heart, Target, Users, ArrowRight, CheckCircle2, ShieldCheck, Share2, Sparkles, MessageCircle, AlertCircle } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
+import HeroAffiliateWidgetSlot from '../HeroAffiliateWidgetSlot';
 import { getOptimizedImageUrl, getResponsiveSrcSet } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -89,8 +90,17 @@ export default function CampaignHomeLayout({ posts, onSelectPost, siteConfig }: 
               </div>
             </div>
 
-            {/* PERFORMANCE METRICS BOX */}
-            <HeroPerformanceBox siteConfig={siteConfig} />
+            {/* PERFORMANCE METRICS BOX OR AFFILIATE WIDGET */}
+            {siteConfig?.hero_affiliate_widget_enable ? (
+              <HeroAffiliateWidgetSlot
+                code={siteConfig?.hero_affiliate_widget_code}
+                enabled={siteConfig?.hero_affiliate_widget_enable}
+                position={siteConfig?.hero_affiliate_widget_position || 'bottom'}
+                themeContext="hero"
+              />
+            ) : (
+              <HeroPerformanceBox siteConfig={siteConfig} />
+            )}
           </div>
 
           {/* INTERACTIVE DONATION / PETITION BOX */}

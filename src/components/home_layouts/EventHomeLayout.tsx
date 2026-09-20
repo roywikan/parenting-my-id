@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Calendar, MapPin, Clock, Users, Ticket, ArrowRight, Video, CheckCircle2, ShieldCheck, Sparkles, BookOpen } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
+import HeroAffiliateWidgetSlot from '../HeroAffiliateWidgetSlot';
 import { getOptimizedImageUrl, getResponsiveSrcSet, getOptimizedAvatarUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -171,9 +172,28 @@ export default function EventHomeLayout({ posts, onSelectPost, siteConfig }: Lay
               </a>
             </div>
 
-            {/* PERFORMANCE METRICS BOX */}
-            <HeroPerformanceBox siteConfig={siteConfig} />
+            {/* PERFORMANCE METRICS BOX OR AFFILIATE WIDGET */}
+            {siteConfig?.hero_affiliate_widget_enable && siteConfig?.hero_affiliate_widget_position === 'right' ? (
+              <HeroAffiliateWidgetSlot
+                code={siteConfig?.hero_affiliate_widget_code}
+                enabled={siteConfig?.hero_affiliate_widget_enable}
+                position="right"
+                themeContext="hero"
+              />
+            ) : (
+              <HeroPerformanceBox siteConfig={siteConfig} />
+            )}
           </div>
+
+          {/* AFFILIATE WIDGET (BOTTOM POSITION) */}
+          {siteConfig?.hero_affiliate_widget_enable && siteConfig?.hero_affiliate_widget_position === 'bottom' && (
+            <HeroAffiliateWidgetSlot
+              code={siteConfig?.hero_affiliate_widget_code}
+              enabled={siteConfig?.hero_affiliate_widget_enable}
+              position="bottom"
+              themeContext="hero"
+            />
+          )}
         </div>
       </section>
 

@@ -413,6 +413,9 @@ export default function AdminPortal({
   const [cfgHeaderBadgeText, setCfgHeaderBadgeText] = useState(siteConfig?.header_badge_text || 'Cloudflare D1 Edge Engine');
   const [cfgShowHeaderBadge, setCfgShowHeaderBadge] = useState<boolean>(siteConfig?.show_header_badge ?? siteConfig?.show_edge_badge ?? true);
   const [cfgHeroBadgeText, setCfgHeroBadgeText] = useState(siteConfig?.hero_badge_text || 'Portal Nomor 1');
+  const [cfgHeroAffiliateWidgetEnable, setCfgHeroAffiliateWidgetEnable] = useState<boolean>(siteConfig?.hero_affiliate_widget_enable ?? false);
+  const [cfgHeroAffiliateWidgetPosition, setCfgHeroAffiliateWidgetPosition] = useState<'right' | 'bottom'>(siteConfig?.hero_affiliate_widget_position || 'right');
+  const [cfgHeroAffiliateWidgetCode, setCfgHeroAffiliateWidgetCode] = useState<string>(siteConfig?.hero_affiliate_widget_code ?? DEFAULT_SITE_CONFIG.hero_affiliate_widget_code ?? '');
   const [cfgAutolinkTickerLabel, setCfgAutolinkTickerLabel] = useState(siteConfig?.autolink_ticker_label || 'Trending:');
   const [cfgFooterAutolinkLabel, setCfgFooterAutolinkLabel] = useState(siteConfig?.footer_autolink_label || 'Tautan Populer');
   const [cfgReferenceHeadingLabel, setCfgReferenceHeadingLabel] = useState(siteConfig?.reference_heading_label || 'Referensi');
@@ -815,6 +818,9 @@ export default function AdminPortal({
       setCfgHeroSubtitle(siteConfig.hero_subtitle ?? DEFAULT_SITE_CONFIG.hero_subtitle ?? '');
       setCfgHeroCtaText(siteConfig.hero_cta_text ?? DEFAULT_SITE_CONFIG.hero_cta_text ?? '');
       setCfgHeroCtaLink(siteConfig.hero_cta_link ?? DEFAULT_SITE_CONFIG.hero_cta_link ?? '');
+      setCfgHeroAffiliateWidgetEnable(siteConfig.hero_affiliate_widget_enable ?? false);
+      setCfgHeroAffiliateWidgetPosition(siteConfig.hero_affiliate_widget_position || 'right');
+      setCfgHeroAffiliateWidgetCode(siteConfig.hero_affiliate_widget_code ?? DEFAULT_SITE_CONFIG.hero_affiliate_widget_code ?? '');
 
       setCfgShowPerformanceBox(siteConfig.show_performance_box ?? true);
       setCfgMetric1Show((siteConfig.metric_1_show ?? siteConfig.metric1_show) !== false);
@@ -1059,6 +1065,9 @@ export default function AdminPortal({
         hero_subtitle: cfgHeroSubtitle,
         hero_cta_text: cfgHeroCtaText,
         hero_cta_link: cfgHeroCtaLink,
+        hero_affiliate_widget_enable: cfgHeroAffiliateWidgetEnable,
+        hero_affiliate_widget_position: cfgHeroAffiliateWidgetPosition,
+        hero_affiliate_widget_code: cfgHeroAffiliateWidgetCode,
         show_performance_box: cfgShowPerformanceBox,
         metric_1_show: cfgMetric1Show,
         metric_2_show: cfgMetric2Show,
@@ -1489,6 +1498,9 @@ export default function AdminPortal({
         hero_subtitle: cfgHeroSubtitle,
         hero_cta_text: cfgHeroCtaText,
         hero_cta_link: cfgHeroCtaLink,
+        hero_affiliate_widget_enable: cfgHeroAffiliateWidgetEnable,
+        hero_affiliate_widget_position: cfgHeroAffiliateWidgetPosition,
+        hero_affiliate_widget_code: cfgHeroAffiliateWidgetCode,
         tech_badge_hero: cfgTechBadgeHero,
         tech_badge_pages: cfgTechBadgePages,
         tech_badge_database: cfgTechBadgeDatabase,
@@ -7360,6 +7372,108 @@ export default function AdminPortal({
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* SUB-BAGIAN: HERO AFFILIATE WIDGET */}
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="hero_affiliate_widget_enable"
+                      checked={cfgHeroAffiliateWidgetEnable}
+                      onChange={(e) => setCfgHeroAffiliateWidgetEnable(e.target.checked)}
+                      className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500"
+                    />
+                    <div>
+                      <label htmlFor="hero_affiliate_widget_enable" className="text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer">
+                        Aktifkan Hero Affiliate Widget (hero_affiliate_widget_enable)
+                      </label>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Pasang search box / widget pemesanan tiket, hotel, dan tur langsung di dalam kotak Hero Banner
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 self-start sm:self-auto">
+                    Travelpayouts • Booking • GYG • Trip • Wego
+                  </span>
+                </div>
+
+                {cfgHeroAffiliateWidgetEnable && (
+                  <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in fade-in duration-200">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Pilihan Posisi Widget di Hero (hero_affiliate_widget_position)
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                          cfgHeroAffiliateWidgetPosition === 'right'
+                            ? 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-400 dark:border-rose-600 text-rose-950 dark:text-rose-200 shadow-xs'
+                            : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}>
+                          <input
+                            type="radio"
+                            name="hero_widget_position"
+                            value="right"
+                            checked={cfgHeroAffiliateWidgetPosition === 'right'}
+                            onChange={() => setCfgHeroAffiliateWidgetPosition('right')}
+                            className="w-4 h-4 text-rose-600 mt-0.5"
+                          />
+                          <div>
+                            <span className="text-xs font-bold block">Gantikan Performance Box (Kanan)</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 leading-normal">
+                              Widget diletakkan di sisi kanan sejajar dengan judul & tombol hero. Ideal untuk widget kotak/vertikal 300x250 px.
+                            </span>
+                          </div>
+                        </label>
+
+                        <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                          cfgHeroAffiliateWidgetPosition === 'bottom'
+                            ? 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-400 dark:border-rose-600 text-rose-950 dark:text-rose-200 shadow-xs'
+                            : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}>
+                          <input
+                            type="radio"
+                            name="hero_widget_position"
+                            value="bottom"
+                            checked={cfgHeroAffiliateWidgetPosition === 'bottom'}
+                            onChange={() => setCfgHeroAffiliateWidgetPosition('bottom')}
+                            className="w-4 h-4 text-rose-600 mt-0.5"
+                          />
+                          <div>
+                            <span className="text-xs font-bold block">Di Bawah Subtitle Hero (Bawah)</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 leading-normal">
+                              Widget diletakkan melebar di bawah judul & subtitle hero. Ideal untuk form pencarian horizontal bar.
+                            </span>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          Kode HTML / Script Snippet Widget (hero_affiliate_widget_code)
+                        </label>
+                        <span className="text-[10px] text-slate-400 font-mono">HTML + &lt;script&gt; / &lt;iframe&gt; / &lt;ins&gt;</span>
+                      </div>
+                      <textarea
+                        value={cfgHeroAffiliateWidgetCode}
+                        onChange={(e) => setCfgHeroAffiliateWidgetCode(e.target.value)}
+                        rows={7}
+                        placeholder={`<!-- Contoh Snippet Travelpayouts / Booking / Wego / Trip.com -->\n<div id="travelpayouts-search-widget">\n  <script async src="https://tp.media/content?currency=idr&promo_id=7879&shmarker=..." charset="utf-8"></script>\n</div>`}
+                        className="w-full font-mono text-xs p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500"
+                      />
+                      <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-slate-500 dark:text-slate-400">
+                        <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                          ✓ Asynchronous Client Executed
+                        </span>
+                        <span>• Mendukung Tag &lt;script&gt;, &lt;ins&gt;, dan atribut data-gyg-*</span>
+                        <span>• Kompatibel Vite/Cloudflare Pages</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

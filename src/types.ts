@@ -101,6 +101,9 @@ export interface SiteConfig {
   hero_subtitle: string;
   hero_cta_text: string;
   hero_cta_link: string;
+  hero_affiliate_widget_enable?: boolean;
+  hero_affiliate_widget_position?: 'right' | 'bottom';
+  hero_affiliate_widget_code?: string;
 
   posts_per_page: number;
   enable_featured_post: boolean;

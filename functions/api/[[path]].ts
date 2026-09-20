@@ -1,3 +1,5 @@
+import { ensureD1Bootstrap, bootstrapD1Database, getLastBootstrapReport } from '../_d1_bootstrap';
+
 interface Env {
   DB?: any;
   JWT_SECRET?: string;
@@ -170,6 +172,16 @@ const resolveGitHubBranch = (v?: string) => {
 
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
+
+  // Auto-bootstrap Cloudflare D1 tables, columns, indexes, and initial seeds on first access
+  if (env?.DB) {
+    try {
+      await ensureD1Bootstrap(env.DB);
+    } catch (eBootstrap) {
+      console.error('Auto-bootstrap D1 error in API [[path]]:', eBootstrap);
+    }
+  }
+
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
@@ -2378,6 +2390,52 @@ Sitemap: ${siteUrl}/sitemap.xml
               ON CONFLICT(key) DO UPDATE SET value = excluded.value
             `).bind(key, strVal).run();
           }
+
+          // Auto-sync Hero Affiliate Widget Slot to dedicated table & columns
+          if (safeConfigObj.hero_affiliate_widget_enable !== undefined || safeConfigObj.hero_affiliate_widget_position !== undefined || safeConfigObj.hero_affiliate_widget_code !== undefined) {
+            try {
+              const isEnabled = (safeConfigObj.hero_affiliate_widget_enable === true || safeConfigObj.hero_affiliate_widget_enable === 'true' || safeConfigObj.hero_affiliate_widget_enable === 1) ? 1 : 0;
+              const pos = safeConfigObj.hero_affiliate_widget_position === 'bottom' ? 'bottom' : 'right';
+              const code = typeof safeConfigObj.hero_affiliate_widget_code === 'string' ? safeConfigObj.hero_affiliate_widget_code : '';
+
+              await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS hero_affiliate_widgets (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  title TEXT DEFAULT 'Hero Affiliate Widget Slot',
+                  provider TEXT DEFAULT 'custom',
+                  snippet_code TEXT NOT NULL,
+                  position TEXT DEFAULT 'right' CHECK(position IN ('right', 'bottom')),
+                  is_enabled INTEGER DEFAULT 0,
+                  target_pages TEXT DEFAULT 'home',
+                  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+              `).run();
+
+              await env.DB.prepare(`
+                INSERT INTO hero_affiliate_widgets (id, title, snippet_code, position, is_enabled, updated_at)
+                VALUES (1, 'Hero Affiliate Banner Slot', ?, ?, ?, datetime('now'))
+                ON CONFLICT(id) DO UPDATE SET
+                  snippet_code = excluded.snippet_code,
+                  position = excluded.position,
+                  is_enabled = excluded.is_enabled,
+                  updated_at = datetime('now')
+              `).bind(code, pos, isEnabled).run();
+
+              try {
+                await env.DB.prepare(`
+                  UPDATE site_config SET
+                    hero_affiliate_widget_enable = ?,
+                    hero_affiliate_widget_position = ?,
+                    hero_affiliate_widget_code = ?,
+                    updated_at = datetime('now')
+                  WHERE id = 1
+                `).bind(isEnabled, pos, code).run();
+              } catch {}
+            } catch (eHeroSync: any) {
+              console.error('Error auto-syncing hero_affiliate_widgets in D1:', eHeroSync);
+            }
+          }
         } catch (e: any) {
           console.error('Error saving site configs to D1:', e);
         }
@@ -4558,6 +4616,199 @@ BEGIN TRANSACTION;
       } catch (err: any) {
         console.error('Error generating database dump:', err);
         return jsonResponse({ error: 'Gagal membuat dump database: ' + err.message }, 500);
+      }
+    }
+
+    // Hero Affiliate Widget Slot endpoints
+    if (path === '/api/hero-affiliate-widget' && method === 'GET') {
+      const defaultSnippet = `<!-- Contoh Widget Affiliate Travelpayouts / Booking.com / GetYourGuide / Wego / Trip.com -->
+<div id="tp-hero-search" style="text-align: center; padding: 10px; color: #fff;">
+  <p style="font-size: 13px; font-weight: bold; margin-bottom: 8px;">✈️ Cari & Bandingkan Tiket Pesawat & Hotel</p>
+  <!-- Tempelkan kode script asinkron dari dashboard affiliate Anda di sini -->
+</div>`;
+
+      if (env.DB) {
+        try {
+          const row: any = await env.DB.prepare('SELECT * FROM hero_affiliate_widgets WHERE id = 1 LIMIT 1').first();
+          if (row) {
+            return jsonResponse({
+              success: true,
+              id: row.id,
+              title: row.title || 'Hero Affiliate Widget Slot',
+              provider: row.provider || 'custom',
+              snippet_code: row.snippet_code || defaultSnippet,
+              position: row.position === 'bottom' ? 'bottom' : 'right',
+              is_enabled: Boolean(row.is_enabled),
+              target_pages: row.target_pages || 'home',
+              updated_at: row.updated_at
+            }, 200, { 'Cache-Control': 'public, max-age=60' });
+          }
+
+          const enableCfg: any = await env.DB.prepare("SELECT value FROM configs WHERE key = 'hero_affiliate_widget_enable'").first();
+          const posCfg: any = await env.DB.prepare("SELECT value FROM configs WHERE key = 'hero_affiliate_widget_position'").first();
+          const codeCfg: any = await env.DB.prepare("SELECT value FROM configs WHERE key = 'hero_affiliate_widget_code'").first();
+
+          if (enableCfg || posCfg || codeCfg) {
+            const isEnabled = enableCfg ? (enableCfg.value === 'true' || enableCfg.value === '1' || enableCfg.value === true) : false;
+            const position = (posCfg && posCfg.value === 'bottom') ? 'bottom' : 'right';
+            const snippet = (codeCfg && codeCfg.value) ? codeCfg.value : defaultSnippet;
+            return jsonResponse({
+              success: true,
+              id: 1,
+              title: 'Hero Affiliate Widget Slot',
+              provider: 'generic',
+              snippet_code: snippet,
+              position,
+              is_enabled: isEnabled,
+              target_pages: 'home'
+            }, 200, { 'Cache-Control': 'public, max-age=60' });
+          }
+        } catch (e: any) {
+          console.error('Error fetching hero-affiliate-widget from D1:', e);
+        }
+      }
+
+      return jsonResponse({
+        success: true,
+        id: 1,
+        title: 'Hero Affiliate Widget Slot',
+        provider: 'generic',
+        snippet_code: defaultSnippet,
+        position: 'right',
+        is_enabled: false,
+        target_pages: 'home'
+      }, 200, { 'Cache-Control': 'public, max-age=60' });
+    }
+
+    if (path === '/api/hero-affiliate-widget' && method === 'POST') {
+      const auth = await authenticateRequest(['admin']);
+      if (auth.errorResponse) return auth.errorResponse;
+
+      const body = await request.json() as Record<string, any>;
+      if (!body || typeof body !== 'object') {
+        return jsonResponse({ error: 'Payload tidak valid.' }, 400);
+      }
+
+      const position = body.position === 'bottom' ? 'bottom' : 'right';
+      const isEnabled = (body.is_enabled === true || body.is_enabled === 'true' || body.is_enabled === 1 || body.hero_affiliate_widget_enable === true) ? 1 : 0;
+      const snippetCode = typeof body.snippet_code === 'string' ? body.snippet_code : (typeof body.hero_affiliate_widget_code === 'string' ? body.hero_affiliate_widget_code : '');
+      const title = body.title ? String(body.title).trim() : 'Hero Affiliate Banner Slot';
+      const provider = body.provider ? String(body.provider).trim() : 'custom';
+
+      if (env.DB) {
+        try {
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS hero_affiliate_widgets (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              title TEXT DEFAULT 'Hero Affiliate Widget Slot',
+              provider TEXT DEFAULT 'custom',
+              snippet_code TEXT NOT NULL,
+              position TEXT DEFAULT 'right' CHECK(position IN ('right', 'bottom')),
+              is_enabled INTEGER DEFAULT 0,
+              target_pages TEXT DEFAULT 'home',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+          `).run();
+
+          await env.DB.prepare(`
+            INSERT INTO hero_affiliate_widgets (id, title, provider, snippet_code, position, is_enabled, updated_at)
+            VALUES (1, ?, ?, ?, ?, ?, datetime('now'))
+            ON CONFLICT(id) DO UPDATE SET
+              title = excluded.title,
+              provider = excluded.provider,
+              snippet_code = excluded.snippet_code,
+              position = excluded.position,
+              is_enabled = excluded.is_enabled,
+              updated_at = datetime('now')
+          `).bind(title, provider, snippetCode, position, isEnabled).run();
+
+          await env.DB.prepare(`
+            INSERT INTO configs (key, value, updated_at) VALUES ('hero_affiliate_widget_enable', ?, datetime('now'))
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
+          `).bind(isEnabled ? 'true' : 'false').run();
+
+          await env.DB.prepare(`
+            INSERT INTO configs (key, value, updated_at) VALUES ('hero_affiliate_widget_position', ?, datetime('now'))
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
+          `).bind(position).run();
+
+          await env.DB.prepare(`
+            INSERT INTO configs (key, value, updated_at) VALUES ('hero_affiliate_widget_code', ?, datetime('now'))
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
+          `).bind(snippetCode).run();
+
+          try {
+            await env.DB.prepare(`
+              UPDATE site_config SET
+                hero_affiliate_widget_enable = ?,
+                hero_affiliate_widget_position = ?,
+                hero_affiliate_widget_code = ?,
+                updated_at = datetime('now')
+              WHERE id = 1
+            `).bind(isEnabled, position, snippetCode).run();
+          } catch {}
+
+          return jsonResponse({
+            success: true,
+            message: 'Hero Affiliate Widget berhasil diperbarui di D1!',
+            widget: {
+              id: 1,
+              title,
+              provider,
+              snippet_code: snippetCode,
+              position,
+              is_enabled: Boolean(isEnabled)
+            }
+          });
+        } catch (e: any) {
+          return jsonResponse({ error: 'Gagal memperbarui hero_affiliate_widgets: ' + e.message }, 500);
+        }
+      }
+
+      return jsonResponse({
+        success: true,
+        message: 'Disimpan secara virtual (Database D1 tidak terpasang)',
+        widget: {
+          id: 1,
+          title,
+          provider,
+          snippet_code: snippetCode,
+          position,
+          is_enabled: Boolean(isEnabled)
+        }
+      });
+    }
+
+    // 4. GET /api/database/bootstrap (Check bootstrap status & report)
+    if (path === '/api/database/bootstrap' && method === 'GET') {
+      const auth = await authenticateRequest(['admin']);
+      if (auth.errorResponse) return auth.errorResponse;
+
+      const report = getLastBootstrapReport();
+      return jsonResponse({
+        success: true,
+        report: report || {
+          message: 'Worker siap. Auto-bootstrap aktif dan akan memverifikasi database secara otomatis.',
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    // 5. POST /api/database/bootstrap (Manually trigger / re-verify auto-bootstrap)
+    if (path === '/api/database/bootstrap' && method === 'POST') {
+      const auth = await authenticateRequest(['admin']);
+      if (auth.errorResponse) return auth.errorResponse;
+
+      if (env.DB) {
+        const report = await bootstrapD1Database(env.DB, true);
+        return jsonResponse(report, report.success ? 200 : 500);
+      } else {
+        return jsonResponse({
+          success: false,
+          message: 'Cloudflare D1 database binding tidak ditemukan pada environment.',
+          timestamp: new Date().toISOString(),
+        }, 400);
       }
     }
 

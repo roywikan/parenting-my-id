@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Search, BookOpen, HelpCircle, FileText, ChevronRight, Sparkles, FolderOpen, Tag, ArrowRight } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
+import HeroAffiliateWidgetSlot from '../HeroAffiliateWidgetSlot';
 import { optimizeUnsplashUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -69,9 +70,18 @@ export default function KnowledgeBaseHomeLayout({ posts, onSelectPost, siteConfi
           />
         </div>
 
-        {/* PERFORMANCE METRICS BOX */}
-        <div className="pt-2 max-w-xl mx-auto">
-          <HeroPerformanceBox siteConfig={siteConfig} />
+        {/* PERFORMANCE METRICS BOX OR AFFILIATE WIDGET */}
+        <div className="pt-2 max-w-xl mx-auto w-full">
+          {siteConfig?.hero_affiliate_widget_enable ? (
+            <HeroAffiliateWidgetSlot
+              code={siteConfig?.hero_affiliate_widget_code}
+              enabled={siteConfig?.hero_affiliate_widget_enable}
+              position={siteConfig?.hero_affiliate_widget_position || 'bottom'}
+              themeContext="hero"
+            />
+          ) : (
+            <HeroPerformanceBox siteConfig={siteConfig} />
+          )}
         </div>
       </section>
 

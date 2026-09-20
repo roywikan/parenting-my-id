@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Database, Download, Copy, Check, RefreshCw, FileCode, 
   Table, Layers, CheckSquare, Square, Terminal, 
-  FileText, ShieldCheck, AlertCircle, Info, Sparkles, ExternalLink
+  FileText, ShieldCheck, AlertCircle, Info, Sparkles, ExternalLink,
+  Zap, CheckCircle2, Cpu, Wrench
 } from 'lucide-react';
 import { DatabaseTableInfo, SiteConfig } from '../types';
 import { getAuthHeaders } from '../lib/auth';
@@ -12,8 +13,45 @@ interface DatabaseBackupManagerProps {
 }
 
 export default function DatabaseBackupManager({ siteConfig }: DatabaseBackupManagerProps) {
-  const [subTab, setSubTab] = useState<'dump' | 'schema_only' | 'queries' | 'static_files'>('dump');
+  const [subTab, setSubTab] = useState<'dump' | 'schema_only' | 'queries' | 'static_files' | 'auto_bootstrap'>('dump');
   
+  // Auto-bootstrap D1 states
+  const [isBootstrapping, setIsBootstrapping] = useState(false);
+  const [bootstrapReport, setBootstrapReport] = useState<{
+    success: boolean;
+    durationMs?: number;
+    tablesChecked?: string[];
+    tablesCreated?: string[];
+    columnsAdded?: { table: string; column: string }[];
+    indexesCreated?: string[];
+    seedsApplied?: string[];
+    warnings?: string[];
+    message: string;
+    timestamp?: string;
+  } | null>(null);
+
+  const handleRunBootstrap = async () => {
+    setIsBootstrapping(true);
+    try {
+      const res = await fetch('/api/database/bootstrap', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
+      setBootstrapReport(data);
+      if (data.success) {
+        fetchTables();
+      }
+    } catch (err: any) {
+      setBootstrapReport({
+        success: false,
+        message: 'Gagal menjalankan auto-bootstrap: ' + err.message,
+      });
+    } finally {
+      setIsBootstrapping(false);
+    }
+  };
+
   // Static files regeneration state
   const [isRegeneratingStatic, setIsRegeneratingStatic] = useState(false);
   const [staticRegenResult, setStaticRegenResult] = useState<{ success: boolean; message: string; filesUpdated?: string[] } | null>(null);
@@ -326,6 +364,18 @@ export default function DatabaseBackupManager({ siteConfig }: DatabaseBackupMana
         >
           <RefreshCw className="w-4 h-4" />
           <span>Regenerasi Berkas Publik (Sitemap, RSS, LLMs)</span>
+        </button>
+
+        <button
+          onClick={() => setSubTab('auto_bootstrap')}
+          className={`px-4 py-2 text-xs font-bold rounded-t-xl transition-colors flex items-center gap-2 shrink-0 ${
+            subTab === 'auto_bootstrap'
+              ? 'bg-rose-600 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Zap className="w-4 h-4 text-amber-300" />
+          <span>Auto-Bootstrap &amp; Sinkronisasi D1</span>
         </button>
       </div>
 
@@ -855,6 +905,163 @@ export default function DatabaseBackupManager({ siteConfig }: DatabaseBackupMana
                 )}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* SUBTAB 5: AUTO-BOOTSTRAP & SELF-HEALING D1 DATABASE */}
+      {subTab === 'auto_bootstrap' && (
+        <div className="space-y-6">
+          <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white border border-slate-700/80 shadow-lg space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-white">
+                    Auto-Bootstrap &amp; Self-Healing Database D1
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    SSOT: schema.sql
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 max-w-3xl leading-relaxed pt-1">
+                  Mesin auto-bootstrap otomatis memastikan seluruh 14 tabel database, setiap kolom yang dibutuhkan,
+                  indeks pencarian, serta data inisial default selalu lengkap di Cloudflare D1. Sistem berjalan otomatis
+                  pada setiap request (via Worker Middleware) dan dapat juga dipicu secara manual di sini.
+                </p>
+              </div>
+
+              <button
+                onClick={handleRunBootstrap}
+                disabled={isBootstrapping}
+                className="px-5 py-3 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 disabled:opacity-50 shrink-0 font-semibold cursor-pointer"
+              >
+                <RefreshCw className={`w-4 h-4 ${isBootstrapping ? 'animate-spin' : ''}`} />
+                <span>{isBootstrapping ? 'Memverifikasi Skema D1...' : '⚡ Jalankan Auto-Bootstrap Sekarang'}</span>
+              </button>
+            </div>
+
+            {/* Bootstrap Features Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                <div className="text-amber-400 font-bold text-xs flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>14 Tabel Lengkap</span>
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Mengecek dan mengeksekusi <code>CREATE TABLE IF NOT EXISTS</code> untuk seluruh entitas sistem.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                <div className="text-amber-400 font-bold text-xs flex items-center gap-1.5">
+                  <Wrench className="w-4 h-4 text-cyan-400" />
+                  <span>Migrasi Kolom Otomatis</span>
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Memeriksa <code>PRAGMA table_info</code> dan menambahkan kolom baru via <code>ALTER TABLE ADD COLUMN</code> jika belum ada.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                <div className="text-amber-400 font-bold text-xs flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                  <span>Auto-Heal Akun Admin</span>
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Memastikan kredensial admin dan konfigurasi sistem default terisi otomatis jika database baru di-deploy.
+                </p>
+              </div>
+            </div>
+
+            {/* Bootstrap Report Results Box */}
+            {bootstrapReport && (
+              <div className={`p-4 rounded-xl border text-xs space-y-3 transition-all ${
+                bootstrapReport.success 
+                  ? 'bg-emerald-950/40 border-emerald-800 text-emerald-200' 
+                  : 'bg-rose-950/40 border-rose-800 text-rose-200'
+              }`}>
+                <div className="flex items-center justify-between font-bold">
+                  <div className="flex items-center gap-2">
+                    {bootstrapReport.success ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-rose-400" />
+                    )}
+                    <span className="text-sm">{bootstrapReport.message}</span>
+                  </div>
+                  {bootstrapReport.durationMs !== undefined && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-black/40 text-emerald-300 border border-emerald-500/20">
+                      Waktu eksekusi: {bootstrapReport.durationMs}ms
+                    </span>
+                  )}
+                </div>
+
+                {bootstrapReport.tablesChecked && (
+                  <div className="space-y-1 pt-1 border-t border-white/10">
+                    <div className="text-[11px] text-slate-400 font-semibold">Tabel yang Diperiksa &amp; Aktif:</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {bootstrapReport.tablesChecked.map((t) => (
+                        <span key={t} className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-white/10 text-slate-200">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {bootstrapReport.columnsAdded && bootstrapReport.columnsAdded.length > 0 && (
+                  <div className="p-3 rounded-lg bg-indigo-900/40 border border-indigo-700/60 text-indigo-200 space-y-1">
+                    <div className="font-bold text-[11px]">Kolom Baru yang Otomatis Ditambahkan:</div>
+                    <ul className="list-disc pl-4 space-y-0.5 text-[10px] font-mono">
+                      {bootstrapReport.columnsAdded.map((c, i) => (
+                        <li key={i}>{c.table}.{c.column}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {bootstrapReport.seedsApplied && bootstrapReport.seedsApplied.length > 0 && (
+                  <div className="text-[11px] text-emerald-300 font-mono">
+                    Seeds: {bootstrapReport.seedsApplied.join(' • ')}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* DDL Reference and Clean Install Guide */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 text-xs">
+            <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-bold text-sm">
+              <FileCode className="w-4 h-4 text-rose-500" />
+              <span>Daftar 14 Tabel yang Dikelola oleh schema.sql (SSOT)</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[
+                { name: 'posts', desc: 'Artikel, markdown content, meta SEO, revision history' },
+                { name: 'users', desc: 'Akun admin, editor, writer, dan password hashes' },
+                { name: 'configs', desc: 'Konfigurasi key-value runtime dan Turnstile' },
+                { name: 'categories', desc: 'Taksonomi kategori dan slug' },
+                { name: 'comments', desc: 'Komentar artikel native dan Cusdis integration' },
+                { name: 'site_config', desc: 'Pengaturan visual, tema, dan widget affiliate' },
+                { name: 'hero_affiliate_widgets', desc: 'Hero Affiliate Widget Slot (snippet code, posisi switch right/bottom, status enable)' },
+                { name: 'autolinks', desc: 'Aturan internal auto-linking engine' },
+                { name: 'products', desc: 'Katalog produk digital dan payment gateway' },
+                { name: 'product_orders', desc: 'Pesanan dan data transaksi buyer' },
+                { name: 'chat_leads', desc: 'Pesan leads WhatsApp multi-operator' },
+                { name: 'surat_pembaca', desc: 'Opini publik kiriman pembaca' },
+                { name: 'iklan_baris', desc: 'Iklan baris komersial cetak Kompas' },
+                { name: 'login_attempts', desc: 'Pengamanan IP Anti-Brute Force' },
+                { name: '_cf_KV', desc: 'Penyimpanan cache key-value internal D1' },
+              ].map((item) => (
+                <div key={item.name} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1">
+                  <div className="font-mono font-bold text-rose-600 dark:text-rose-400">{item.name}</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">{item.desc}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

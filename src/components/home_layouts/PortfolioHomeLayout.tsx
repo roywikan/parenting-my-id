@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Sparkles, Eye, ArrowRight, ExternalLink, Award, CheckCircle2, BookOpen } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
+import HeroAffiliateWidgetSlot from '../HeroAffiliateWidgetSlot';
 import { getOptimizedImageUrl, getResponsiveSrcSet } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -85,14 +86,23 @@ export default function PortfolioHomeLayout({ posts, onSelectPost, siteConfig }:
           </div>
         </div>
 
-        {/* PERFORMANCE METRICS BOX */}
-        <div className="pt-2 max-w-lg mx-auto">
-          <HeroPerformanceBox
-            siteConfig={siteConfig}
-            containerClassName="gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm text-center"
-            valueClassName="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400"
-            labelClassName="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase"
-          />
+        {/* PERFORMANCE METRICS BOX OR AFFILIATE WIDGET */}
+        <div className="pt-2 max-w-lg mx-auto w-full">
+          {siteConfig?.hero_affiliate_widget_enable ? (
+            <HeroAffiliateWidgetSlot
+              code={siteConfig?.hero_affiliate_widget_code}
+              enabled={siteConfig?.hero_affiliate_widget_enable}
+              position={siteConfig?.hero_affiliate_widget_position || 'bottom'}
+              themeContext="card"
+            />
+          ) : (
+            <HeroPerformanceBox
+              siteConfig={siteConfig}
+              containerClassName="gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm text-center"
+              valueClassName="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400"
+              labelClassName="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase"
+            />
+          )}
         </div>
       </section>
 

@@ -3,6 +3,7 @@ import { Post, AutoLink, SiteConfig, Product } from '../../types';
 import { Search, Clock, Eye, Sparkles, ArrowRight, BookOpen, Zap, ShoppingBag, Tag } from 'lucide-react';
 import AdSlot from '../AdSlot';
 import HeroPerformanceBox from '../HeroPerformanceBox';
+import HeroAffiliateWidgetSlot from '../HeroAffiliateWidgetSlot';
 import { getOptimizedImageUrl, getResponsiveSrcSet, getOptimizedAvatarUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -88,33 +89,54 @@ export default function DefaultHomeLayout({
       {showHero && (
         <section className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-500/15 relative overflow-hidden min-h-[350px] sm:min-h-[280px] md:min-h-[240px] flex items-center">
           <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 w-full">
-            <div className="space-y-3 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-rose-100 border border-white/20 h-7 min-h-[28px]">
-                <Zap className="w-3.5 h-3.5 text-amber-300 fill-current" />
-                <span>{siteConfig?.tech_badge_hero || 'Cloudflare D1 Edge Architecture'}</span>
-              </div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight min-h-[2rem] sm:min-h-[3rem]">
-                {heroTitle}
-              </h1>
-              <p className="text-rose-100 text-sm sm:text-base leading-relaxed">
-                {heroSubtitle}
-              </p>
-              {heroCtaText && (
-                <div className="pt-2">
-                  <a
-                    href={heroCtaLink}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-rose-900 font-black text-xs shadow-lg hover:bg-rose-50 transition-transform hover:scale-105"
-                  >
-                    <span>{heroCtaText}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </a>
+          <div className="relative z-10 flex flex-col w-full gap-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 w-full">
+              <div className="space-y-3 max-w-2xl flex-1">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-rose-100 border border-white/20 h-7 min-h-[28px]">
+                  <Zap className="w-3.5 h-3.5 text-amber-300 fill-current" />
+                  <span>{siteConfig?.tech_badge_hero || 'Cloudflare D1 Edge Architecture'}</span>
                 </div>
+                <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight min-h-[2rem] sm:min-h-[3rem]">
+                  {heroTitle}
+                </h1>
+                <p className="text-rose-100 text-sm sm:text-base leading-relaxed">
+                  {heroSubtitle}
+                </p>
+                {heroCtaText && (
+                  <div className="pt-2">
+                    <a
+                      href={heroCtaLink}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-rose-900 font-black text-xs shadow-lg hover:bg-rose-50 transition-transform hover:scale-105"
+                    >
+                      <span>{heroCtaText}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* SISI KANAN HERO: WIDGET (JIKA POSISI RIGHT) ATAU PERFORMANCE METRICS BOX */}
+              {siteConfig?.hero_affiliate_widget_enable && siteConfig?.hero_affiliate_widget_position === 'right' ? (
+                <HeroAffiliateWidgetSlot
+                  code={siteConfig?.hero_affiliate_widget_code}
+                  enabled={siteConfig?.hero_affiliate_widget_enable}
+                  position="right"
+                  themeContext="hero"
+                />
+              ) : (
+                <HeroPerformanceBox siteConfig={siteConfig} />
               )}
             </div>
 
-            {/* PERFORMANCE METRICS BOX */}
-            <HeroPerformanceBox siteConfig={siteConfig} />
+            {/* SISI BAWAH HERO: WIDGET (JIKA POSISI BOTTOM) */}
+            {siteConfig?.hero_affiliate_widget_enable && siteConfig?.hero_affiliate_widget_position === 'bottom' && (
+              <HeroAffiliateWidgetSlot
+                code={siteConfig?.hero_affiliate_widget_code}
+                enabled={siteConfig?.hero_affiliate_widget_enable}
+                position="bottom"
+                themeContext="hero"
+              />
+            )}
           </div>
         </section>
       )}

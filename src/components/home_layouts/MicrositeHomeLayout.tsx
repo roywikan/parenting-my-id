@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Post, SiteConfig } from '../../types';
 import { Share2, Check, BookOpen, MessageCircle, Download, ExternalLink, Headphones, ShoppingBag, Sparkles, Heart } from 'lucide-react';
 import HeroPerformanceBox from '../HeroPerformanceBox';
+import HeroAffiliateWidgetSlot from '../HeroAffiliateWidgetSlot';
 import { getOptimizedImageUrl, getResponsiveSrcSet, getOptimizedAvatarUrl } from '../../lib/imageUtils';
 
 interface LayoutProps {
@@ -109,14 +110,23 @@ export default function MicrositeHomeLayout({ posts, onSelectPost, siteConfig }:
           </button>
         </div>
 
-        {/* PERFORMANCE METRICS BOX */}
-        <div className="pt-2">
-          <HeroPerformanceBox
-            siteConfig={siteConfig}
-            containerClassName="gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 text-center w-full"
-            valueClassName="text-xl font-black text-rose-600 dark:text-rose-400"
-            labelClassName="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-semibold"
-          />
+        {/* PERFORMANCE METRICS BOX OR AFFILIATE WIDGET */}
+        <div className="pt-2 w-full">
+          {siteConfig?.hero_affiliate_widget_enable ? (
+            <HeroAffiliateWidgetSlot
+              code={siteConfig?.hero_affiliate_widget_code}
+              enabled={siteConfig?.hero_affiliate_widget_enable}
+              position={siteConfig?.hero_affiliate_widget_position || 'bottom'}
+              themeContext="card"
+            />
+          ) : (
+            <HeroPerformanceBox
+              siteConfig={siteConfig}
+              containerClassName="gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 text-center w-full"
+              valueClassName="text-xl font-black text-rose-600 dark:text-rose-400"
+              labelClassName="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-semibold"
+            />
+          )}
         </div>
       </section>
 
