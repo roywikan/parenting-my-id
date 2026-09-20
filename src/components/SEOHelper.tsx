@@ -51,55 +51,62 @@ export default function SEOHelper({
     // 1. Document Title
     document.title = title;
 
-    // Helper function to set or update meta tags
-    const updateMeta = (selector: string, content: string) => {
-      let el = document.querySelector(selector);
-      if (!el) {
-        el = document.createElement('meta');
-        if (selector.startsWith('meta[name=')) {
-          const name = selector.match(/name="([^"]+)"/)?.[1];
-          if (name) el.setAttribute('name', name);
-        } else if (selector.startsWith('meta[property=')) {
-          const prop = selector.match(/property="([^"]+)"/)?.[1];
-          if (prop) el.setAttribute('property', prop);
+    // Helper function to set or update meta tags and eliminate stale duplicates
+    const updateMeta = (attrName: 'name' | 'property', attrValue: string, content: string) => {
+      const selector = `meta[${attrName}="${attrValue}"]`;
+      const els = Array.from(document.querySelectorAll(selector));
+      if (els.length > 0) {
+        els[0].setAttribute('content', content || '');
+        for (let i = 1; i < els.length; i++) {
+          els[i].remove();
         }
+      } else {
+        const el = document.createElement('meta');
+        el.setAttribute(attrName, attrValue);
+        el.setAttribute('content', content || '');
         document.head.appendChild(el);
       }
-      el.setAttribute('content', content);
     };
 
-    // 2. Standard Meta Tags
-    updateMeta('meta[name="description"]', description);
-    updateMeta('meta[name="keywords"]', keywords.join(', '));
-    updateMeta('meta[name="author"]', authorName);
+    const toAbsoluteUrl = (url: string) => {
+      if (!url) return '';
+      if (url.startsWith('http://') || url.startsWith('https://')) return url;
+      return `${currentOrigin}${url.startsWith('/') ? '' : '/'}${url}`;
+    };
 
     const optimizedOgImage = optimizeUnsplashUrl(finalImage, 1200, 75, 'webp', 630);
+    const absoluteOgImage = toAbsoluteUrl(optimizedOgImage);
+
+    // 2. Standard Meta Tags
+    updateMeta('name', 'description', description);
+    updateMeta('name', 'keywords', keywords.join(', '));
+    updateMeta('name', 'author', authorName);
 
     // 3. OpenGraph Meta Tags
-    updateMeta('meta[property="og:title"]', title);
-    updateMeta('meta[property="og:description"]', description);
-    updateMeta('meta[property="og:image"]', optimizedOgImage);
-    updateMeta('meta[property="og:type"]', type);
-    updateMeta('meta[property="og:site_name"]', siteName);
-    updateMeta('meta[property="og:url"]', canonicalUrl);
-    updateMeta('meta[property="og:locale"]', 'id_ID');
+    updateMeta('property', 'og:title', title);
+    updateMeta('property', 'og:description', description);
+    updateMeta('property', 'og:image', absoluteOgImage);
+    updateMeta('property', 'og:type', type);
+    updateMeta('property', 'og:site_name', siteName);
+    updateMeta('property', 'og:url', effectiveCanonicalUrl);
+    updateMeta('property', 'og:locale', 'id_ID');
 
     if (datePublished) {
-      updateMeta('meta[property="article:published_time"]', datePublished);
+      updateMeta('property', 'article:published_time', datePublished);
     }
     if (dateModified || datePublished) {
-      updateMeta('meta[property="article:modified_time"]', dateModified || datePublished || '');
+      updateMeta('property', 'article:modified_time', dateModified || datePublished || '');
     }
-    updateMeta('meta[property="article:section"]', category);
+    updateMeta('property', 'article:section', category);
     if (keywords.length > 0) {
-      updateMeta('meta[property="article:tag"]', keywords.join(', '));
+      updateMeta('property', 'article:tag', keywords.join(', '));
     }
 
     // 4. Twitter Card Meta Tags
-    updateMeta('meta[name="twitter:card"]', 'summary_large_image');
-    updateMeta('meta[name="twitter:title"]', title);
-    updateMeta('meta[name="twitter:description"]', description);
-    updateMeta('meta[name="twitter:image"]', optimizedOgImage);
+    updateMeta('name', 'twitter:card', 'summary_large_image');
+    updateMeta('name', 'twitter:title', title);
+    updateMeta('name', 'twitter:description', description);
+    updateMeta('name', 'twitter:image', absoluteOgImage);
 
     // 5. Canonical Link & Alternate Hreflang & LCP Image Preload Tags
     let canonicalEl = document.querySelector('link[rel="canonical"]');

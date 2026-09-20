@@ -1,11 +1,13 @@
 import React from 'react';
-import { User, Post } from '../types';
+import { User, Post, SiteConfig } from '../types';
 import { BookOpen, Globe, Instagram, Linkedin, ArrowLeft, GraduationCap, Award, Calendar } from 'lucide-react';
+import SEOHelper from '../components/SEOHelper';
 
 interface AuthorViewProps {
   username: string;
   users: User[];
   posts: Post[];
+  siteConfig?: SiteConfig | any;
   onSelectPost: (slug: string) => void;
   onBack: () => void;
 }
@@ -26,15 +28,23 @@ export default function AuthorView({
   username,
   users,
   posts,
+  siteConfig,
   onSelectPost,
   onBack,
 }: AuthorViewProps) {
   // Find the user matching the sanitized username slug
   const author = users.find((u) => userToUsername(u) === username.toLowerCase().trim());
+  const defaultSiteName = siteConfig?.site_name || 'Website';
 
   if (!author) {
     return (
       <div className="max-w-md mx-auto text-center py-20 px-4 space-y-6">
+        <SEOHelper
+          title={`Penulis Tidak Ditemukan | ${defaultSiteName}`}
+          description={`Profil penulis dengan username @${username} tidak ditemukan.`}
+          canonicalUrl={typeof window !== 'undefined' ? window.location.href : `/author/${username}`}
+          siteName={defaultSiteName}
+        />
         <div className="w-16 h-16 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
           <GraduationCap size={32} />
         </div>
@@ -61,6 +71,16 @@ export default function AuthorView({
 
   return (
     <div className="max-w-6xl mx-auto py-6 sm:py-10 space-y-12">
+      <SEOHelper
+        title={`Profil Penulis: ${author.name} | ${defaultSiteName}`}
+        description={author.bio || `Profil dan artikel karya ${author.name} (${author.title || 'Penulis'}) di ${defaultSiteName}.`}
+        image={author.avatar}
+        canonicalUrl={typeof window !== 'undefined' ? window.location.href : `/author/${username}`}
+        type="profile"
+        authorName={author.name}
+        authorRole={author.title || 'Penulis & Kontributor'}
+        siteName={defaultSiteName}
+      />
       {/* Back Button */}
       <button
         onClick={onBack}

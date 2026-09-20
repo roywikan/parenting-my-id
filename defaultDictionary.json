@@ -1,0 +1,842 @@
+[
+  {
+    "key": "SITE_NAME",
+    "value": "Parenting .my.id",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Nama merek atau judul utama website/portal."
+  },
+  {
+    "key": "SITE_TAGLINE",
+    "value": "Edukasi & Pengasuhan Anak Modern",
+    "maxLen": 60,
+    "flag": "M",
+    "description": "Slogan ringkas atau positioning situs yang muncul di samping nama situs."
+  },
+  {
+    "key": "SITE_DOMAIN",
+    "value": "parenting.my.id",
+    "maxLen": 60,
+    "flag": "M",
+    "description": "Nama domain aktif situs tanpa protokol https://"
+  },
+  {
+    "key": "SITE_URL",
+    "value": "https://parenting.my.id",
+    "maxLen": 100,
+    "flag": "M",
+    "description": "URL absolut lengkap website dengan protokol https://"
+  },
+  {
+    "key": "SITE_DESCRIPTION",
+    "value": "Portal informasi dan panduan pengasuhan anak modern.",
+    "maxLen": 160,
+    "flag": "M",
+    "description": "Deskripsi umum situs untuk meta search engine dan crawler."
+  },
+  {
+    "key": "SITE_LOGO_ICON",
+    "value": "Heart",
+    "maxLen": 30,
+    "flag": "U",
+    "description": "Nama icon Lucide untuk logo situs (Heart, BookOpen, Shield, Feather, Sparkles, dll)."
+  },
+  {
+    "key": "SITE_FAVICON_URL",
+    "value": "/favicon.ico",
+    "maxLen": 100,
+    "flag": "D",
+    "description": "Lokasi berkas favicon situs (tetap /favicon.ico secara teknis)."
+  },
+  {
+    "key": "SEO_META_TITLE",
+    "value": "",
+    "maxLen": 60,
+    "flag": "U",
+    "description": "Judul kustom tag <title> halaman depan. Kosongkan jika ingin auto dari SITE_NAME - SITE_TAGLINE."
+  },
+  {
+    "key": "SEO_META_DESCRIPTION",
+    "value": "",
+    "maxLen": 160,
+    "flag": "U",
+    "description": "Deskripsi kustom tag meta description. Kosongkan jika ingin memakai SITE_DESCRIPTION."
+  },
+  {
+    "key": "SEO_DEFAULT_OG_IMAGE",
+    "value": "https://images.unsplash.com/photo-1544717305-2782549b5136?w=1200&h=630",
+    "maxLen": 255,
+    "flag": "U",
+    "description": "URL gambar default OpenGraph / Twitter Card untuk pratinjau media sosial (rasio 1200x630)."
+  },
+  {
+    "key": "HERO_BADGE_TEXT",
+    "value": "Portal Nomor 1",
+    "maxLen": 35,
+    "flag": "M",
+    "description": "Lencana teks kecil di atas judul utama hero section."
+  },
+  {
+    "key": "HERO_TITLE",
+    "value": "Panduan Pengasuhan dan Tumbuh Kembang Anak",
+    "maxLen": 70,
+    "flag": "M",
+    "description": "Judul besar headline utama banner hero di beranda."
+  },
+  {
+    "key": "HERO_SUBTITLE",
+    "value": "Temukan artikel, tips nutrisi, dan edukasi tumbuh kembang anak.",
+    "maxLen": 150,
+    "flag": "M",
+    "description": "Kalimat penjelas sub-headline di bawah judul hero."
+  },
+  {
+    "key": "HERO_CTA_TEXT",
+    "value": "Baca",
+    "maxLen": 25,
+    "flag": "M",
+    "description": "Teks tombol aksi (Call to Action) pada hero section."
+  },
+  {
+    "key": "HERO_CTA_LINK",
+    "value": "#artikel-terbaru",
+    "maxLen": 60,
+    "flag": "D",
+    "description": "Anchor link target navigasi saat tombol CTA hero diklik."
+  },
+  {
+    "key": "TECH_BADGE_HERO",
+    "value": "Media Psikologi Populer",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Badge fitur 1 di area hero dan footer."
+  },
+  {
+    "key": "TECH_BADGE_PAGES",
+    "value": "Media Parenting Aman & Nyaman",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Badge fitur 2 di area hero dan footer."
+  },
+  {
+    "key": "TECH_BADGE_DATABASE",
+    "value": "Catatan Bunda & Ayah",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Badge fitur 3 di area hero dan footer."
+  },
+  {
+    "key": "TECH_BADGE_STORAGE",
+    "value": "Pustaka Informasi Keluarga",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Badge fitur 4 di area hero dan footer."
+  },
+  {
+    "key": "NAV_CATEGORY_1_LABEL",
+    "value": "Pola Asuh",
+    "maxLen": 25,
+    "flag": "M",
+    "description": "Label kategori navigasi 1 di menu header, hamburger, dan footer."
+  },
+  {
+    "key": "NAV_CATEGORY_1_SLUG",
+    "value": "pola-asuh",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Slug URL kategori 1 (tanpa awalan garis miring /)."
+  },
+  {
+    "key": "NAV_CATEGORY_2_LABEL",
+    "value": "Tumbuh Kembang",
+    "maxLen": 25,
+    "flag": "M",
+    "description": "Label kategori navigasi 2 di menu header, hamburger, dan footer."
+  },
+  {
+    "key": "NAV_CATEGORY_2_SLUG",
+    "value": "tumbuh-kembang",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Slug URL kategori 2 (tanpa awalan garis miring /)."
+  },
+  {
+    "key": "NAV_CATEGORY_3_LABEL",
+    "value": "Kesehatan & Gizi",
+    "maxLen": 25,
+    "flag": "M",
+    "description": "Label kategori navigasi 3 di menu header, hamburger, dan footer."
+  },
+  {
+    "key": "NAV_CATEGORY_3_SLUG",
+    "value": "kesehatan-gizi",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Slug URL kategori 3 (tanpa awalan garis miring /)."
+  },
+  {
+    "key": "NAV_CATEGORY_4_LABEL",
+    "value": "Balita",
+    "maxLen": 25,
+    "flag": "M",
+    "description": "Label kategori navigasi 4 di menu header, hamburger, dan footer."
+  },
+  {
+    "key": "NAV_CATEGORY_4_SLUG",
+    "value": "balita",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Slug URL kategori 4 (tanpa awalan garis miring /)."
+  },
+  {
+    "key": "PRODUCTS_NAV_LABEL",
+    "value": "Produk",
+    "maxLen": 20,
+    "flag": "U",
+    "description": "Label menu navigasi katalog produk/layanan (contoh: Produk, Jasa, Katalog, Kelas)."
+  },
+  {
+    "key": "AUTOLINK_TICKER_LABEL",
+    "value": "Trending:",
+    "maxLen": 25,
+    "flag": "U",
+    "description": "Label awalan ticker kata kunci berjalan."
+  },
+  {
+    "key": "FOOTER_AUTOLINK_LABEL",
+    "value": "Mengapa menulis di sini?",
+    "maxLen": 35,
+    "flag": "U",
+    "description": "Label heading tautan internal autolink di footer."
+  },
+  {
+    "key": "REFERENCE_HEADING_LABEL",
+    "value": "Referensi",
+    "maxLen": 25,
+    "flag": "U",
+    "description": "Judul seksi daftar pustaka atau referensi ilmiah di bawah artikel."
+  },
+  {
+    "key": "FOOTER_ABOUT_TEXT",
+    "value": "Parenting.my.id menghadirkan bacaan berkualitas seputar dunia pengasuhan anak.",
+    "maxLen": 180,
+    "flag": "M",
+    "description": "Ringkasan profil situs pada kolom informasi footer."
+  },
+  {
+    "key": "FOOTER_COPYRIGHT_TEXT",
+    "value": "© 2026 Parenting.my.id. Hak Cipta Dilindungi.",
+    "maxLen": 80,
+    "flag": "M",
+    "description": "Teks hak cipta legal di kaki halaman web."
+  },
+  {
+    "key": "FOOTER_BADGE_1",
+    "value": "Aman & Terpercaya",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Lencana kepercayaan footer 1."
+  },
+  {
+    "key": "FOOTER_BADGE_2",
+    "value": "Diperbarui Rutin",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Lencana kepercayaan footer 2."
+  },
+  {
+    "key": "FOOTER_BADGE_3",
+    "value": "100% Gratis",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Lencana kepercayaan footer 3."
+  },
+  {
+    "key": "CLASSIFIED_MASTHEAD_TITLE",
+    "value": "WARNA-WARTO PARENTING",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Judul masthead koran retro untuk modul Iklan Baris."
+  },
+  {
+    "key": "CLASSIFIED_MASTHEAD_SUBTITLE",
+    "value": "LEMBARAN IKLAN BARIS, PENGUMUMAN & WARTA KELUARGA",
+    "maxLen": 80,
+    "flag": "M",
+    "description": "Sub-judul masthead modul warta iklan baris."
+  },
+  {
+    "key": "CLASSIFIED_PRICE_TAG",
+    "value": "HARGA ECERAN RP 500,-",
+    "maxLen": 30,
+    "flag": "U",
+    "description": "Label harga cetak lembaran klasik iklan baris."
+  },
+  {
+    "key": "CLASSIFIED_PHONE",
+    "value": "(021) 7654321",
+    "maxLen": 25,
+    "flag": "U",
+    "description": "Nomor telepon redaksi iklan baris."
+  },
+  {
+    "key": "CLASSIFIED_CATEGORIES",
+    "value": "Aksesoris, Aplikasi, Asuransi, Bimbel, Buku, Daycare, Jasa, Kebersihan, Kehamilan, Keluarga, Kesehatan, Keuangan, Klinik, Konsultasi, Kursus, Les Privat, Lifestyle, Lowongan Kerja, Mainan, Mencari Kerja, Menyusui, Nutrisi Gizi, Obat, Pakaian, Pasca Kelahiran, Pendidikan, Pengasuh, Peralatan, Perawatan, Perlengkapan, Sekolah, Sepatu, Seminar, Training, Transport, Wisata, Pola Asuh, Balita, Psikologi Ibu, Tumbuh Kembang, Umum",
+    "maxLen": 500,
+    "flag": "M",
+    "description": "Daftar kategori iklan baris dipisahkan dengan koma."
+  },
+  {
+    "key": "CLASSIFIED_NOTICE",
+    "value": "Iklan baris gratis : Tautan URL akan otomatis dikonversi menjadi teks biasa. Jika ingin menggunakan URL dan gambar iklan, hubungi redaksi/editor untuk tarif iklan baris berbayar.",
+    "maxLen": 220,
+    "flag": "U",
+    "description": "Pemberitahuan aturan dan ketentuan pemasangan iklan baris."
+  },
+  {
+    "key": "KB_BADGE_TEXT",
+    "value": "Pusat Panduan Terpadu",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Lencana kecil pada seksi Knowledge Base / Pusat Bantuan."
+  },
+  {
+    "key": "KB_TITLE",
+    "value": "Ensiklopedia & Pusat Pengetahuan Pengasuhan Anak",
+    "maxLen": 65,
+    "flag": "M",
+    "description": "Judul utama halaman pusat pengetahuan dan ensiklopedia."
+  },
+  {
+    "key": "KB_SUBTITLE",
+    "value": "Temukan jawaban medis dan psikologis terpercaya untuk setiap tahap tumbuh kembang buah hati.",
+    "maxLen": 140,
+    "flag": "M",
+    "description": "Sub-judul pengantar pusat pengetahuan / FAQ."
+  },
+  {
+    "key": "KB_SEARCH_PLACEHOLDER",
+    "value": "Cari panduan (contoh: MPASI 6 bulan, demam anak, tantrum)...",
+    "maxLen": 65,
+    "flag": "M",
+    "description": "Teks placeholder pada kolom pencarian knowledge base."
+  },
+  {
+    "key": "DOCTOR_NAME",
+    "value": "dr. Siti Rahma, Sp.A(K), M.Kes",
+    "maxLen": 45,
+    "flag": "M",
+    "description": "Nama figur pakar, dokter, atau konsultan utama situs."
+  },
+  {
+    "key": "DOCTOR_TITLE",
+    "value": "Dokter Spesialis Anak & Konsultan Nutrisi Pediatrik",
+    "maxLen": 60,
+    "flag": "M",
+    "description": "Jabatan profesional atau bidang keahlian pakar."
+  },
+  {
+    "key": "DOCTOR_BADGE_TEXT",
+    "value": "Pakar & Praktisi Terpercaya",
+    "maxLen": 35,
+    "flag": "M",
+    "description": "Lencana reputasi di samping nama pakar."
+  },
+  {
+    "key": "DOCTOR_BIO",
+    "value": "Berpengalaman lebih dari 15 tahun mendampingi ribuan orang tua dalam mengoptimalkan 1000 Hari Pertama Kehidupan (HPK) dan penanganan masalah makan anak.",
+    "maxLen": 200,
+    "flag": "M",
+    "description": "Biografi ringkas rekam jejak pengalaman pakar."
+  },
+  {
+    "key": "DOCTOR_EXPERIENCE_YEARS",
+    "value": "15+ Tahun Pengalaman",
+    "maxLen": 30,
+    "flag": "U",
+    "description": "Label durasi jam terbang atau pengalaman kerja pakar."
+  },
+  {
+    "key": "CORPORATE_BADGE_TEXT",
+    "value": "Solusi Korporasi & Institusi Edukasi",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Lencana seksi penawaran B2B / Kemitraan Korporasi."
+  },
+  {
+    "key": "CORPORATE_TITLE",
+    "value": "Meningkatkan Produktivitas Karyawan Melalui Dukungan Pengasuhan Terpercaya",
+    "maxLen": 80,
+    "flag": "M",
+    "description": "Judul headline proposal kemitraan korporasi / B2B."
+  },
+  {
+    "key": "CORPORATE_SUBTITLE",
+    "value": "Kami bermitra dengan perusahaan terdepan untuk menyediakan program Employee Assistance Parenting (EAP), konsultasi daycare in-house, dan lokakarya kesehatan anak bagi karyawan.",
+    "maxLen": 200,
+    "flag": "M",
+    "description": "Deskripsi program layanan B2B bagi perusahaan atau institusi mitra."
+  },
+  {
+    "key": "CORPORATE_CTA_PROPOSAL",
+    "value": "Unduh Proposal & Rate Card B2B",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Teks tombol aksi unduh proposal B2B."
+  },
+  {
+    "key": "CORPORATE_CTA_CONSULT",
+    "value": "Jadwalkan Konsultasi Korporasi",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Teks tombol aksi konsultasi korporasi."
+  },
+  {
+    "key": "CORPORATE_STAT1_VAL",
+    "value": "98.4%",
+    "maxLen": 15,
+    "flag": "U",
+    "description": "Angka metrik statistik korporasi 1."
+  },
+  {
+    "key": "CORPORATE_STAT1_LBL",
+    "value": "Kepuasan Klien B2B",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Label metrik statistik korporasi 1."
+  },
+  {
+    "key": "CORPORATE_STAT2_VAL",
+    "value": "45%",
+    "maxLen": 15,
+    "flag": "U",
+    "description": "Angka metrik statistik korporasi 2."
+  },
+  {
+    "key": "CORPORATE_STAT2_LBL",
+    "value": "Penurunan Absenteeism",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Label metrik statistik korporasi 2."
+  },
+  {
+    "key": "CORPORATE_STAT3_VAL",
+    "value": "12.000+",
+    "maxLen": 15,
+    "flag": "U",
+    "description": "Angka metrik statistik korporasi 3."
+  },
+  {
+    "key": "CORPORATE_STAT3_LBL",
+    "value": "Karyawan Terbantu",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Label metrik statistik korporasi 3."
+  },
+  {
+    "key": "PRODUCTS_HERO_BADGE",
+    "value": "🛍️ Katalog Produk & Paket Eksklusif",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Lencana banner katalog produk."
+  },
+  {
+    "key": "PRODUCTS_HERO_TITLE",
+    "value": "Miliki Produk & Paket Pilihan Berkualitas",
+    "maxLen": 65,
+    "flag": "M",
+    "description": "Judul headline katalog penawaran produk atau jasa."
+  },
+  {
+    "key": "PRODUCTS_HERO_SUBTITLE",
+    "value": "Temukan berbagai koleksi produk, paket, dan penawaran terbaik. Didukung pembayaran instan QRIS/Bank dan koordinasi pengiriman aman via WhatsApp.",
+    "maxLen": 160,
+    "flag": "M",
+    "description": "Subjudul penjelasan katalog belanja penawaran."
+  },
+  {
+    "key": "PRODUCTS_EMPTY_TITLE",
+    "value": "Belum Ada Produk Jualan",
+    "maxLen": 45,
+    "flag": "M",
+    "description": "Judul saat katalog produk belum memiliki item."
+  },
+  {
+    "key": "PRODUCTS_EMPTY_SUBTITLE",
+    "value": "Katalog produk belum diunggah. Silakan masuk sebagai administrator untuk menambahkan item pertama Anda.",
+    "maxLen": 120,
+    "flag": "M",
+    "description": "Sub-judul saat etalase produk kosong."
+  },
+  {
+    "key": "PRODUCT_SAMPLE_BADGE",
+    "value": "Best Seller • Rekomendasi Dokter",
+    "maxLen": 35,
+    "flag": "M",
+    "description": "Lencana highlight produk unggulan."
+  },
+  {
+    "key": "PRODUCT_SAMPLE_TITLE",
+    "value": "Paket Lengkap MPASI Cerdas & Stimulasi Sensori Balita",
+    "maxLen": 65,
+    "flag": "M",
+    "description": "Nama sampel paket produk/jasa yang dijual."
+  },
+  {
+    "key": "PRODUCT_SAMPLE_SUBTITLE",
+    "value": "Solusi praktis anti-GTM lengkap dengan buku resep 1000 hari pertama, kartu sensorik motorik, dan konsultasi gizi.",
+    "maxLen": 140,
+    "flag": "M",
+    "description": "Keterangan isi paket sampel produk/jasa."
+  },
+  {
+    "key": "PRODUCT_SAMPLE_PRICE",
+    "value": "Rp 189.000",
+    "maxLen": 25,
+    "flag": "U",
+    "description": "Harga diskon/jual produk sampel."
+  },
+  {
+    "key": "PRODUCT_SAMPLE_ORIGINAL_PRICE",
+    "value": "Rp 299.000",
+    "maxLen": 25,
+    "flag": "U",
+    "description": "Harga coret produk sampel sebelum diskon."
+  },
+  {
+    "key": "PRODUCT_SAMPLE_DISCOUNT_TAG",
+    "value": "HEMAT 37%",
+    "maxLen": 20,
+    "flag": "U",
+    "description": "Tag persen diskon produk sampel."
+  },
+  {
+    "key": "PRODUCT_SAMPLE_CTA",
+    "value": "Pesan Paket Sekarang via WhatsApp",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Tombol pemesanan via WhatsApp."
+  },
+  {
+    "key": "EVENT_BADGE_TEXT",
+    "value": "Summit Nasional Parenting 2026",
+    "maxLen": 35,
+    "flag": "M",
+    "description": "Lencana agenda acara atau konferensi."
+  },
+  {
+    "key": "EVENT_DATE_LOCATION",
+    "value": "16-18 Oktober 2026 • Grand Ballroom Jakarta & Live Streaming",
+    "maxLen": 60,
+    "flag": "M",
+    "description": "Waktu dan lokasi perhelatan event / webinar."
+  },
+  {
+    "key": "EVENT_TITLE",
+    "value": "Konferensi Nasional Pola Asuh & Tumbuh Kembang Anak Indonesia 2026",
+    "maxLen": 75,
+    "flag": "M",
+    "description": "Judul acara / seminar nasional."
+  },
+  {
+    "key": "EVENT_SUBTITLE",
+    "value": "Forum edukasi parenting terbesar yang menghadirkan dokter spesialis anak, psikolog perkembangan, dan praktisi pendidikan.",
+    "maxLen": 160,
+    "flag": "M",
+    "description": "Ringkasan agenda forum konferensi."
+  },
+  {
+    "key": "EVENT_CTA_TEXT",
+    "value": "Daftar & Pesan Tiket",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Tombol pendaftaran tiket acara."
+  },
+  {
+    "key": "CAMPAIGN_BADGE_TEXT",
+    "value": "Aksi Sosial Nasional",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Lencana kampanye sosial atau kepedulian."
+  },
+  {
+    "key": "CAMPAIGN_TITLE",
+    "value": "Gerakan Bersama Bebas Stunting: Lindungi 1000 Hari Pertama Anak",
+    "maxLen": 75,
+    "flag": "M",
+    "description": "Judul gerakan sosial atau program donasi."
+  },
+  {
+    "key": "CAMPAIGN_SUBTITLE",
+    "value": "Bantu 50.000 balita di pelosok negeri mendapatkan asupan protein hewani dan suplemen mikronutrien penting.",
+    "maxLen": 160,
+    "flag": "M",
+    "description": "Subjudul tujuan bantuan kampanye sosial."
+  },
+  {
+    "key": "MICROSITE_TITLE",
+    "value": "Parenting.my.id Official Hub",
+    "maxLen": 50,
+    "flag": "M",
+    "description": "Judul profil tautan microsite (link in bio)."
+  },
+  {
+    "key": "MICROSITE_BIO",
+    "value": "Pusat informasi, konsultasi dokter anak, panduan MPASI, dan komunitas orang tua cerdas di Indonesia.",
+    "maxLen": 150,
+    "flag": "M",
+    "description": "Bio profil singkat microsite link-in-bio."
+  },
+  {
+    "key": "MICROSITE_WA_LABEL",
+    "value": "Konsultasi Privat Parenting (WhatsApp)",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Label tombol WhatsApp utama di microsite."
+  },
+  {
+    "key": "PORTFOLIO_BADGE_TEXT",
+    "value": "Rekam Jejak & Publikasi",
+    "maxLen": 35,
+    "flag": "M",
+    "description": "Lencana seksi portofolio karya atau riset."
+  },
+  {
+    "key": "PORTFOLIO_TITLE",
+    "value": "Portofolio Riset, Kurikulum & Program Edukasi",
+    "maxLen": 65,
+    "flag": "M",
+    "description": "Judul seksi portofolio hasil riset / karya."
+  },
+  {
+    "key": "PORTFOLIO_SUBTITLE",
+    "value": "Dokumentasi hasil karya ilmiah, program pendampingan keluarga, dan modul nutrisi yang telah kami kembangkan.",
+    "maxLen": 160,
+    "flag": "M",
+    "description": "Keterangan pengantar seksi portofolio."
+  },
+  {
+    "key": "PORTFOLIO_STAT1_LBL",
+    "value": "Modul & E-Book Terbit",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Label capaian portofolio 1."
+  },
+  {
+    "key": "PORTFOLIO_STAT2_LBL",
+    "value": "Riset Klinis Tumbuh Kembang",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Label capaian portofolio 2."
+  },
+  {
+    "key": "PORTFOLIO_STAT3_LBL",
+    "value": "Keluarga Terbantu",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Label capaian portofolio 3."
+  },
+  {
+    "key": "HABIT_SIMULATOR_TITLE",
+    "value": "Simulasi Kebiasaan Positif",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Judul modul interaktif simulator kebiasaan harian."
+  },
+  {
+    "key": "HABIT_SIMULATOR_SUBTITLE",
+    "value": "Ukur kebiasaan pengasuhan anak sehari-hari",
+    "maxLen": 80,
+    "flag": "M",
+    "description": "Sub-judul modul interaktif simulator kebiasaan."
+  },
+  {
+    "key": "QUIZ_BUILDER_TITLE",
+    "value": "Kuis Edukasi & Psikologi Anak",
+    "maxLen": 45,
+    "flag": "M",
+    "description": "Judul modul kuis interaktif edukatif."
+  },
+  {
+    "key": "SURAT_PEMBACA_TITLE",
+    "value": "Kanal Surat Pembaca",
+    "maxLen": 40,
+    "flag": "U",
+    "description": "Judul halaman wacana dan surat kiriman pembaca."
+  },
+  {
+    "key": "SURAT_PEMBACA_SUBTITLE",
+    "value": "Wadah aspirasi, opini, kritik membangun, dan saran pembaca.",
+    "maxLen": 130,
+    "flag": "U",
+    "description": "Subjudul penjelasan tujuan kanal surat pembaca."
+  },
+  {
+    "key": "IKLAN_BARIS_TITLE",
+    "value": "Iklan Baris Gratis",
+    "maxLen": 40,
+    "flag": "U",
+    "description": "Judul halaman publikasi iklan baris umum."
+  },
+  {
+    "key": "IKLAN_BARIS_SUBTITLE",
+    "value": "Pasang dan temukan warta iklan baris produk, jasa, dan informasi.",
+    "maxLen": 130,
+    "flag": "U",
+    "description": "Deskripsi pengantar halaman warta iklan baris."
+  },
+  {
+    "key": "ADMIN_LOGIN_TITLE",
+    "value": "Portal Admin Parenting.my.id",
+    "maxLen": 40,
+    "flag": "M",
+    "description": "Judul halaman login admin CMS."
+  },
+  {
+    "key": "ADMIN_LOGIN_SUBTITLE",
+    "value": "Sistem Otentikasi Cloudflare D1",
+    "maxLen": 60,
+    "flag": "D",
+    "description": "Subjudul teknis otentikasi admin CMS."
+  },
+  {
+    "key": "ADMIN_LOGIN_BTN_TEXT",
+    "value": "Masuk Portal CMS",
+    "maxLen": 30,
+    "flag": "D",
+    "description": "Label tombol masuk login admin CMS."
+  },
+  {
+    "key": "WHATSAPP_DEFAULT_MESSAGE",
+    "value": "Halo Redaksi, saya ingin bertanya seputar...",
+    "maxLen": 100,
+    "flag": "M",
+    "description": "Pesan sapaan pembuka default tombol WhatsApp floating."
+  },
+  {
+    "key": "SAMPLE_POST_1_TITLE",
+    "value": "Panduan Lengkap Pola Asuh Demokratis Anak Masa Kini",
+    "maxLen": 80,
+    "flag": "M",
+    "description": "Judul artikel sampel 1 untuk database awal."
+  },
+  {
+    "key": "SAMPLE_POST_1_EXCERPT",
+    "value": "Pelajari pola asuh demokratis yang memprioritaskan komunikasi dua arah dan empati untuk membangun karakter anak mandiri.",
+    "maxLen": 160,
+    "flag": "M",
+    "description": "Kutipan ringkasan artikel sampel 1."
+  },
+  {
+    "key": "SAMPLE_POST_1_CATEGORY",
+    "value": "Pola Asuh",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Kategori artikel sampel 1."
+  },
+  {
+    "key": "SAMPLE_POST_1_TAGS",
+    "value": "pola-asuh, parenting, psikologi-anak, kemandirian",
+    "maxLen": 80,
+    "flag": "M",
+    "description": "Daftar tag artikel sampel 1 dipisahkan koma."
+  },
+  {
+    "key": "SAMPLE_POST_2_TITLE",
+    "value": "5 Aktivitas Sensory Play Seru untuk Melatih Motorik Balita",
+    "maxLen": 80,
+    "flag": "M",
+    "description": "Judul artikel sampel 2 untuk database awal."
+  },
+  {
+    "key": "SAMPLE_POST_2_EXCERPT",
+    "value": "Stimulasi indra anak sejak dini melalui ragam permainan sensori sederhana di rumah yang terbukti mengasah motorik halus dan kasar.",
+    "maxLen": 160,
+    "flag": "M",
+    "description": "Kutipan ringkasan artikel sampel 2."
+  },
+  {
+    "key": "SAMPLE_POST_2_CATEGORY",
+    "value": "Tumbuh Kembang",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Kategori artikel sampel 2."
+  },
+  {
+    "key": "SAMPLE_POST_2_TAGS",
+    "value": "sensory-play, tumbuh-kembang, balita, motorik",
+    "maxLen": 80,
+    "flag": "M",
+    "description": "Daftar tag artikel sampel 2 dipisahkan koma."
+  },
+  {
+    "key": "SAMPLE_POST_3_TITLE",
+    "value": "Mengenal Nutrisi Esensial & Bahaya Stunting Sejak 1000 HPK",
+    "maxLen": 80,
+    "flag": "M",
+    "description": "Judul artikel sampel 3 untuk database awal."
+  },
+  {
+    "key": "SAMPLE_POST_3_EXCERPT",
+    "value": "Pentingnya asupan protein hewani, zat besi, dan mikronutrien penting untuk mencegah gagal tumbuh kembang pada balita.",
+    "maxLen": 160,
+    "flag": "M",
+    "description": "Kutipan ringkasan artikel sampel 3."
+  },
+  {
+    "key": "SAMPLE_POST_3_CATEGORY",
+    "value": "Kesehatan & Gizi",
+    "maxLen": 30,
+    "flag": "M",
+    "description": "Kategori artikel sampel 3."
+  },
+  {
+    "key": "SAMPLE_POST_3_TAGS",
+    "value": "stunting, gizi-anak, 1000-hpk, nutrisi",
+    "maxLen": 80,
+    "flag": "M",
+    "description": "Daftar tag artikel sampel 3 dipisahkan koma."
+  },
+  {
+    "key": "TURNSTILE_SITE_KEY",
+    "value": "0x4AAAAAAE8nGvnUYOz8qCjM",
+    "maxLen": 100,
+    "flag": "D",
+    "description": "Kunci publik Cloudflare Turnstile anti-bot (tetap atau sesuaikan dengan env)."
+  },
+  {
+    "key": "CUSDIS_HOST",
+    "value": "https://cusdis.com",
+    "maxLen": 100,
+    "flag": "D",
+    "description": "Host backend layanan komentar Cusdis."
+  },
+  {
+    "key": "PAGINATION_TYPE",
+    "value": "load_more",
+    "maxLen": 20,
+    "flag": "D",
+    "description": "Tipe pagination daftar artikel (load_more atau numbers)."
+  },
+  {
+    "key": "COMMENT_ENGINE_MODE",
+    "value": "native",
+    "maxLen": 20,
+    "flag": "D",
+    "description": "Mesin komentar aktif (native atau cusdis)."
+  },
+  {
+    "key": "POSTS_PER_PAGE",
+    "value": "9",
+    "maxLen": 5,
+    "flag": "D",
+    "description": "Jumlah artikel per batch pagination."
+  },
+  {
+    "key": "ADMIN_URL_SUFFIX",
+    "value": "9999",
+    "maxLen": 20,
+    "flag": "D",
+    "description": "Suffix path URL rahasia login admin (/admin-[suffix])."
+  }
+]

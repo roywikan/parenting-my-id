@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
+import SEOHelper from './SEOHelper';
 import { 
   ShoppingBag, 
   Phone, 
@@ -291,8 +292,28 @@ export default function InteractiveProductSale({ isAdmin = false, currentUser, a
   const emptyTitle = siteConfig?.products_empty_title || `Belum Ada ${prodNavLabel}`;
   const emptySubtitle = siteConfig?.products_empty_subtitle || `Katalog ${prodNavLabel.toLowerCase()} belum diunggah. Silakan masuk sebagai administrator untuk menambahkan item ${prodNavLabel.toLowerCase()} pertama Anda.`;
 
+  const defaultSiteName = siteConfig?.site_name || 'Website';
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-1">
+      {selectedProduct ? (
+        <SEOHelper
+          title={`${selectedProduct.title} | ${defaultSiteName}`}
+          description={selectedProduct.description || `Beli ${selectedProduct.title} secara mudah dan aman di ${defaultSiteName}.`}
+          image={selectedProduct.imageUrl}
+          canonicalUrl={typeof window !== 'undefined' ? window.location.href : `/produk/${selectedProduct.slug}`}
+          type="product"
+          siteName={defaultSiteName}
+        />
+      ) : (
+        <SEOHelper
+          title={`${heroTitle} | ${defaultSiteName}`}
+          description={heroSubtitle || `Temukan koleksi ${prodNavLabel.toLowerCase()} terbaik di ${defaultSiteName}.`}
+          canonicalUrl={typeof window !== 'undefined' ? window.location.href : '/produk'}
+          type="website"
+          siteName={defaultSiteName}
+        />
+      )}
       {/* HEADER HERO */}
       <div className="bg-gradient-to-br from-slate-900 via-rose-950/80 to-slate-900 text-white rounded-3xl p-8 md:p-12 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="space-y-4 max-w-xl z-10 text-center md:text-left">

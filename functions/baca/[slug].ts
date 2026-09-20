@@ -1286,7 +1286,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const seoHeadTags = `
     <title>${escapeHtml(pageTitle)}</title>
     <meta name="description" content="${escapeHtml(pageDesc)}" />
-    <meta name="keywords" content="${escapeHtml(post.tags || 'parenting, anak, gizi')}" />
+    ${post.tags ? `<meta name="keywords" content="${escapeHtml(post.tags)}" />` : ''}
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
     <link rel="canonical" href="${canonicalUrl}" />
@@ -1322,7 +1322,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     .replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '')
     .replace(/<meta[^>]*name="description"[^>]*>/gi, '')
     .replace(/<meta[^>]*property="og:[^>]*>/gi, '')
-    .replace(/<meta[^>]*name="twitter:[^>]*>/gi, '');
+    .replace(/<meta[^>]*name="twitter:[^>]*>/gi, '')
+    .replace(/<link[^>]*rel="canonical"[^>]*>/gi, '');
 
   // Replace <title> and inject SEO tags into <head>
   if (finalHtml.includes('<title>')) {

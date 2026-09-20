@@ -69,17 +69,17 @@ export default function HomeView({
         : `Artikel Tag #${displayTagName} - ${defaultSiteName}`)
     : (isFilteredCategory
         ? `Artikel Kategori ${activeCategory} - ${defaultSiteName}`
-        : siteConfig?.seo_meta_title || defaultSiteName);
+        : siteConfig?.seo_meta_title || (siteConfig?.site_name ? `${siteConfig.site_name} - ${siteConfig.site_tagline || 'Informasi & Wawasan'}` : defaultSiteName));
 
   const metaDesc = isTagPage
     ? (isAllTagsPage
-        ? `Temukan seluruh indeks tag topik dan pembahasan lengkap seputar pengasuhan anak, nutrisi, MPASI, stunting, dan balita.`
-        : `Kumpulan artikel edukatif, tips, dan panduan terbaik yang ditandai dengan tag #${displayTagName} untuk orang tua modern Indonesia.`)
+        ? `Temukan seluruh indeks tag topik dan pembahasan artikel lengkap di ${defaultSiteName}.`
+        : `Kumpulan artikel edukatif, tips, dan panduan terbaik yang ditandai dengan tag #${displayTagName} di ${defaultSiteName}.`)
     : (isFilteredCategory
         ? (categorySpecificDesc 
-            ? `${categorySpecificDesc} Temukan kumpulan artikel, tips, dan panduan ${activeCategory.toLowerCase()} terbaik untuk orang tua modern.`
-            : `Kumpulan artikel edukasi dan panduan seputar ${activeCategory} untuk orang tua modern di Indonesia.`)
-        : siteConfig?.seo_meta_description || 'Portal artikel parenting modern, panduan pola asuh, nutrisi balita, dan pencegahan stunting. Cepat, akurat, dan terpercaya.');
+            ? `${categorySpecificDesc} Temukan kumpulan artikel, tips, dan panduan ${activeCategory.toLowerCase()} pilihan di ${defaultSiteName}.`
+            : `Kumpulan artikel edukasi dan panduan pilihan seputar ${activeCategory} di ${defaultSiteName}.`)
+        : siteConfig?.seo_meta_description || siteConfig?.site_description || `Portal informasi dan artikel terpercaya di ${defaultSiteName}.`);
   const ogImage = siteConfig?.seo_default_og_image || 'https://images.unsplash.com/photo-1572044162444-ad60f128bdea?q=15&w=400&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
   const publishedPosts = useMemo(() => {

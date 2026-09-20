@@ -823,6 +823,7 @@ export default function App() {
               username={activeAuthorUsername}
               users={users}
               posts={publishedPosts}
+              siteConfig={effectiveConfig}
               onSelectPost={(slug) => handleNavigate('article', slug)}
               onBack={() => handleNavigate('home')}
             />

@@ -87,7 +87,6 @@
   "enable_interactive_timeline": true,
   "cusdis_app_id": "",
   "cusdis_host": "https://cusdis.com",
-  "turnstile_site_key": "0x4AAAAAAE8nGvnUYOz8qCjM",
   "site_tagline": "Edukasi & Pengasuhan Anak Modern",
   "site_description": "Portal informasi dan panduan pengasuhan anak modern.",
   "site_logo_url": "",
@@ -126,13 +125,13 @@
     },
     {
       "label": "Balita",
-      "url": "/balita"
+      "url": "/kategori/balita"
     }
   ],
   "enable_search_bar": true,
   "enable_theme_toggle": true,
-  "seo_meta_title": "Parenting.my.id - Edukasi & Pengasuhan Anak",
-  "seo_meta_description": "Portal informasi & panduan pengasuhan anak modern.",
+  "seo_meta_title": "",
+  "seo_meta_description": "",
   "seo_default_og_image": "https://images.unsplash.com/photo-1544717305-2782549b5136?w=1200&h=630",
   "show_hero_section": true,
   "hero_title": "Panduan Pengasuhan dan Tumbuh Kembang Anak",
@@ -175,7 +174,6 @@
   "enable_featured_post": true,
   "pagination_type": "load_more",
   "comment_engine_mode": "native",
-  "enable_comment_turnstile": true,
   "history_min_time_minutes": 3,
   "history_min_char_diff": 25,
   "show_sidebar": true,
@@ -232,7 +230,7 @@
     },
     {
       "label": "Balita",
-      "url": "/balita"
+      "url": "/kategori/balita"
     }
   ],
   "admin_login_title": "Portal Admin Parenting.my.id",

@@ -375,7 +375,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     .replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '')
     .replace(/<meta[^>]*name="description"[^>]*>/gi, '')
     .replace(/<meta[^>]*property="og:[^>]*>/gi, '')
-    .replace(/<meta[^>]*name="twitter:[^>]*>/gi, '');
+    .replace(/<meta[^>]*name="twitter:[^>]*>/gi, '')
+    .replace(/<link[^>]*rel="canonical"[^>]*>/gi, '');
 
   // 5. Build Unified Head SEO HTML Injection
   const websiteSchema = {

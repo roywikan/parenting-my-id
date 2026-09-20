@@ -81,7 +81,17 @@ function getResponsiveSrcSet(
     .join(', ');
 }
 
-function injectSiteConfigToHtml(htmlTemplate: string): string {
+function escapeHtml(str: any): string {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getSafeSiteConfig(): any {
   let config: any = {};
   try {
     const configPath = path.join(process.cwd(), 'public', 'site_config.json');
@@ -91,44 +101,241 @@ function injectSiteConfigToHtml(htmlTemplate: string): string {
   } catch (err) {
     // fallback
   }
+  return config;
+}
+
+function renderPageHtml(
+  req: express.Request,
+  pageData: {
+    title: string;
+    description: string;
+    canonicalPath?: string;
+    ogImage?: string;
+    ogType?: string;
+    schemaJson?: any;
+    preRenderedBody?: string;
+    preloadImage?: {
+      src: string;
+      srcSet?: string;
+    };
+    initialData?: any;
+  }
+): string {
+  const siteUrl = getBaseUrl(req);
+  const config = getSafeSiteConfig();
+  const siteName = config.site_name || 'Blog Engine';
+  const defaultOgImage = config.seo_default_og_image || `${siteUrl}/og-image.jpg`;
+
+  let htmlFilePath = path.join(process.cwd(), 'dist', 'index.html');
+  if (!fs.existsSync(htmlFilePath)) {
+    htmlFilePath = path.join(process.cwd(), 'index.html');
+  }
+  let html = fs.readFileSync(htmlFilePath, 'utf-8');
+
+  // Strip all existing / default meta and SEO tags to prevent duplicate or generic tags
+  html = html
+    .replace(/<title>[\s\S]*?<\/title>/gi, '')
+    .replace(/<meta[^>]*name="description"[^>]*>/gi, '')
+    .replace(/<meta[^>]*property="og:[^>]*>/gi, '')
+    .replace(/<meta[^>]*name="twitter:[^>]*>/gi, '')
+    .replace(/<link[^>]*rel="canonical"[^>]*>/gi, '')
+    .replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '')
+    .replace(/<!--\s*SEO_INJECTION_POINT\s*-->/gi, '');
+
+  const pageTitle = pageData.title;
+  const pageDesc = pageData.description;
+  const canonicalUrl = pageData.canonicalPath 
+    ? (pageData.canonicalPath.startsWith('http') ? pageData.canonicalPath : `${siteUrl}${pageData.canonicalPath.startsWith('/') ? '' : '/'}${pageData.canonicalPath}`)
+    : `${siteUrl}${req.path}`;
+  const ogImage = pageData.ogImage ? (pageData.ogImage.startsWith('http') ? pageData.ogImage : `${siteUrl}${pageData.ogImage.startsWith('/') ? '' : '/'}${pageData.ogImage}`) : defaultOgImage;
+  const ogType = pageData.ogType || 'website';
+
+  let preloadTag = '';
+  if (pageData.preloadImage) {
+    preloadTag = `<link rel="preload" as="image" href="${escapeHtml(pageData.preloadImage.src)}" ${pageData.preloadImage.srcSet ? `imagesrcset="${escapeHtml(pageData.preloadImage.srcSet)}" imagesizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px"` : ''} fetchpriority="high" />`;
+  }
+
+  let jsonLdTags = '';
+  if (pageData.schemaJson) {
+    if (Array.isArray(pageData.schemaJson)) {
+      jsonLdTags = pageData.schemaJson.map((s, idx) => `<script type="application/ld+json" id="schema-${idx}">${JSON.stringify(s)}</script>`).join('\n');
+    } else {
+      jsonLdTags = `<script type="application/ld+json" id="schema-page">${JSON.stringify(pageData.schemaJson)}</script>`;
+    }
+  }
+
+  const ssrData = pageData.initialData || { siteConfig: config };
+  const ssrDataJson = JSON.stringify(ssrData).replace(/</g, '\\u003c');
+  const ssrScript = `<script id="__SSR_DATA__">window.__INITIAL_DATA__ = ${ssrDataJson};</script>`;
+
+  const seoBlock = `
+    <title>${escapeHtml(pageTitle)}</title>
+    <meta name="description" content="${escapeHtml(pageDesc)}" />
+    <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+    ${preloadTag}
+    <meta property="og:site_name" content="${escapeHtml(siteName)}" />
+    <meta property="og:title" content="${escapeHtml(pageTitle)}" />
+    <meta property="og:description" content="${escapeHtml(pageDesc)}" />
+    <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
+    <meta property="og:type" content="${escapeHtml(ogType)}" />
+    <meta property="og:image" content="${escapeHtml(ogImage)}" />
+    <meta property="og:locale" content="id_ID" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(pageTitle)}" />
+    <meta name="twitter:description" content="${escapeHtml(pageDesc)}" />
+    <meta name="twitter:image" content="${escapeHtml(ogImage)}" />
+    ${jsonLdTags}
+    ${ssrScript}
+  `;
+
+  if (html.includes('</head>')) {
+    html = html.replace('</head>', `${seoBlock}\n  </head>`);
+  } else {
+    html = `${seoBlock}\n${html}`;
+  }
+
+  if (pageData.preRenderedBody) {
+    html = html.replace(/<div\s+id="root"><\/div>/i, `<div id="root">${pageData.preRenderedBody}</div>`);
+  }
+
+  return html;
+}
+
+function renderDynamicSpaHtml(htmlTemplate: string, req?: express.Request): string {
+  const rawUrl = req ? (req.originalUrl || req.url || req.path || '/') : '/';
+  const url = rawUrl.split('?')[0] || '/';
+  const siteUrl = req ? getBaseUrl(req) : 'https://parenting.my.id';
+  const config = getSafeSiteConfig();
 
   const siteName = config.site_name || 'Blog Engine';
-  const siteDescription = config.site_description || 'Portal berita & informasi terpercaya.';
-  const techBadgeHero = config.tech_badge_hero || 'Cloudflare D1 Edge Architecture';
-  const headerBadgeText = config.header_badge_text || 'Cloudflare D1 Edge Engine';
+  const siteTagline = config.site_tagline || 'Informasi & Wawasan Terpercaya';
+  const defaultOgImage = config.seo_default_og_image || `${siteUrl}/og-image.jpg`;
 
-  let html = htmlTemplate;
+  let title = config.seo_meta_title || `${siteName} - ${siteTagline}`;
+  let description = config.seo_meta_description || config.site_description || 'Portal publikasi berita, artikel, dan wawasan modern.';
+  let ogImage = defaultOgImage;
+  let ogType = 'website';
+  let canonicalPath = url;
 
-  // Replace hardcoded title tag
-  html = html.replace(/<title>.*?<\/title>/i, `<title>${siteName}</title>`);
-  
-  // Replace description meta tag
-  html = html.replace(/<meta\s+name="description"\s+content=".*?"\s*\/?>/i, `<meta name="description" content="${siteDescription}" />`);
-  
-  // Replace OpenGraph title
-  html = html.replace(/<meta\s+property="og:title"\s+content=".*?"\s*\/?>/i, `<meta property="og:title" content="${siteName}" />`);
-  
-  // Replace OpenGraph description
-  html = html.replace(/<meta\s+property="og:description"\s+content=".*?"\s*\/?>/i, `<meta property="og:description" content="${siteDescription}" />`);
+  if (url === '/' || url === '') {
+    title = config.seo_meta_title || `${siteName} - ${siteTagline}`;
+    description = config.seo_meta_description || config.site_description || 'Portal publikasi berita, artikel, dan wawasan modern.';
+  } else if (url.startsWith('/baca/')) {
+    const slug = url.replace('/baca/', '').split('/')[0].split('?')[0];
+    const post = (typeof mockPosts !== 'undefined' && Array.isArray(mockPosts)) ? mockPosts.find((p: any) => p.slug === slug) : null;
+    if (post) {
+      title = `${post.metaTitle || post.title} | ${siteName}`;
+      description = post.metaDescription || post.excerpt || post.title;
+      ogImage = post.featuredImage || defaultOgImage;
+      ogType = 'article';
+    }
+  } else if (url.startsWith('/kategori/')) {
+    const catSlug = url.replace('/kategori/', '').split('/')[0].split('?')[0];
+    const catName = catSlug.split('-').map((s: string) => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+    title = `Artikel Kategori ${catName} | ${siteName}`;
+    description = `Kumpulan artikel edukasi dan panduan seputar ${catName} di ${siteName}.`;
+  } else if (url.startsWith('/tag/')) {
+    const tagSlug = url.replace('/tag/', '').split('/')[0].split('?')[0];
+    const tagName = tagSlug.split('-').map((s: string) => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+    title = `Artikel Tag #${tagName} | ${siteName}`;
+    description = `Kumpulan artikel dan panduan terkait topik #${tagName} di ${siteName}.`;
+  } else if (url === '/tag') {
+    title = `Daftar Semua Tag & Topik Artikel | ${siteName}`;
+    description = `Indeks seluruh topik dan tag artikel di ${siteName}.`;
+  } else if (url.startsWith('/author/')) {
+    const username = url.replace('/author/', '').split('/')[0].split('?')[0];
+    const author = (typeof mockUsers !== 'undefined' && Array.isArray(mockUsers)) ? mockUsers.find((u: any) => u.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').includes(username.toLowerCase()) || (u.email && u.email.startsWith(username))) : null;
+    if (author) {
+      title = `Profil Penulis: ${author.name} | ${siteName}`;
+      description = author.bio || `Profil dan karya tulis ${author.name} di ${siteName}.`;
+      ogImage = author.avatar || defaultOgImage;
+      ogType = 'profile';
+    } else {
+      title = `Profil Penulis | ${siteName}`;
+    }
+  } else if (url === '/author') {
+    title = `Daftar Penulis & Tim Redaksi | ${siteName}`;
+    description = `Profil tim pakar, redaksi, dan kontributor terverifikasi di ${siteName}.`;
+  } else if (url === '/iklan-baris') {
+    title = `${config.iklan_baris_title || 'Iklan Baris Gratis'} | ${siteName}`;
+    description = config.iklan_baris_subtitle || `Pasang dan temukan warta iklan baris produk, jasa, dan informasi di ${siteName}.`;
+  } else if (url === '/surat-pembaca') {
+    title = `${config.surat_pembaca_title || 'Kanal Surat Pembaca'} | ${siteName}`;
+    description = config.surat_pembaca_subtitle || `Wadah aspirasi, opini, kritik membangun, dan saran pembaca di ${siteName}.`;
+  } else if (url === '/privacy' || url === '/kebijakan-privasi') {
+    title = `Kebijakan Privasi | ${siteName}`;
+    description = `Kebijakan privasi dan perlindungan data pengunjung ${siteName}.`;
+  } else if (url === '/about' || url === '/tentang-kami') {
+    title = `Tentang Kami | ${siteName}`;
+    description = `Profil redaksi, visi, misi, dan latar belakang ${siteName}.`;
+  } else if (url === '/contact' || url === '/hubungi-kami') {
+    title = `Hubungi Kami | ${siteName}`;
+    description = `Kontak resmi, alamat redaksi, dan formulir korespondensi ${siteName}.`;
+  } else if (url === '/terms' || url === '/syarat-ketentuan') {
+    title = `Syarat & Ketentuan | ${siteName}`;
+    description = `Syarat penggunaan layanan dan ketentuan konten di ${siteName}.`;
+  } else if (url === '/disclaimer' || url === '/penafian') {
+    title = `Penafian (Disclaimer) | ${siteName}`;
+    description = `Penafian tanggung jawab konten medis, edukasi, dan informasi di ${siteName}.`;
+  } else if (['/produk', '/paket', '/galeri', '/jualan', '/katalog', '/shop', '/store'].includes(url)) {
+    title = `${config.products_hero_title || 'Katalog Produk & Paket'} | ${siteName}`;
+    description = config.products_hero_subtitle || `Temukan berbagai produk dan penawaran terbaik di ${siteName}.`;
+  }
 
-  // Inject a lightweight semantic SEO/UX skeleton with dynamic wording directly inside <div id="root">
-  // so that both crawlers (Googlebot) and view-source view immediate configured state.
+  // Strip all existing meta and SEO tags
+  let html = htmlTemplate
+    .replace(/<title>[\s\S]*?<\/title>/gi, '')
+    .replace(/<meta[^>]*name="description"[^>]*>/gi, '')
+    .replace(/<meta[^>]*property="og:[^>]*>/gi, '')
+    .replace(/<meta[^>]*name="twitter:[^>]*>/gi, '')
+    .replace(/<link[^>]*rel="canonical"[^>]*>/gi, '')
+    .replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '')
+    .replace(/<!--\s*SEO_INJECTION_POINT\s*-->/gi, '');
+
+  const canonicalUrl = `${siteUrl}${canonicalPath}`;
+  const ssrData = { siteConfig: config };
+  const ssrDataJson = JSON.stringify(ssrData).replace(/</g, '\\u003c');
+  const ssrScript = `<script id="__SSR_DATA__">window.__INITIAL_DATA__ = ${ssrDataJson};</script>`;
+
+  const seoBlock = `
+    <title>${escapeHtml(title)}</title>
+    <meta name="description" content="${escapeHtml(description)}" />
+    <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+    <meta property="og:site_name" content="${escapeHtml(siteName)}" />
+    <meta property="og:title" content="${escapeHtml(title)}" />
+    <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
+    <meta property="og:type" content="${escapeHtml(ogType)}" />
+    <meta property="og:image" content="${escapeHtml(ogImage)}" />
+    <meta property="og:locale" content="id_ID" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(title)}" />
+    <meta name="twitter:description" content="${escapeHtml(description)}" />
+    <meta name="twitter:image" content="${escapeHtml(ogImage)}" />
+    ${ssrScript}
+  `;
+
+  if (html.includes('</head>')) {
+    html = html.replace('</head>', `${seoBlock}\n  </head>`);
+  } else {
+    html = `${seoBlock}\n${html}`;
+  }
+
+  // Lightweight UX skeleton if <div id="root"></div> is empty
   const rootDivRegex = /<div\s+id="root"><\/div>/i;
   if (rootDivRegex.test(html)) {
     const skeleton = `<div id="root">
   <header class="bg-white border-b border-slate-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <span class="font-black text-xl text-slate-900">${siteName}</span>
-        <span class="text-xs bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full font-bold">${headerBadgeText}</span>
+        <span class="font-black text-xl text-slate-900">${escapeHtml(siteName)}</span>
       </div>
     </div>
   </header>
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="text-center max-w-3xl mx-auto mb-16">
-      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800">${techBadgeHero}</span>
-      <h1 class="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight mt-4">${siteName}</h1>
-      <p class="text-lg text-slate-600 mt-6">${siteDescription}</p>
+      <h1 class="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mt-4">${escapeHtml(title)}</h1>
+      <p class="text-lg text-slate-600 mt-6">${escapeHtml(description)}</p>
     </div>
   </main>
 </div>`;
@@ -138,19 +345,16 @@ function injectSiteConfigToHtml(htmlTemplate: string): string {
   return html;
 }
 
-function injectSpaPreload(htmlTemplate: string, posts: any[]): string {
-  // First dynamically update dynamic site branding configuration
-  let html = injectSiteConfigToHtml(htmlTemplate);
+function injectSpaPreload(htmlTemplate: string, posts: any[], req?: express.Request): string {
+  let html = renderDynamicSpaHtml(htmlTemplate, req);
 
-  const featuredPost = posts.find((p) => p.status === 'published' || !p.status);
+  const featuredPost = posts?.find((p: any) => p.status === 'published' || !p.status);
   if (featuredPost && featuredPost.featuredImage) {
     const heroImageSrc = getOptimizedImageUrl(featuredPost.featuredImage, 1200, 55, 'webp');
     const heroSrcSet = getResponsiveSrcSet(featuredPost.featuredImage, [400, 750, 1200], 55);
     const preloadTag = `<link rel="preload" as="image" href="${heroImageSrc}" imagesrcset="${heroSrcSet}" imagesizes="(max-width: 640px) 100vw, (max-width: 1024px) 750px, 1200px" fetchpriority="high" />`;
     
-    // Remove any hardcoded preload as image tag
     html = html.replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '');
-    // Insert new preload tag right before </head>
     html = html.replace(/<\/head>/i, `${preloadTag}\n</head>`);
   }
   return html;
@@ -4139,20 +4343,25 @@ app.get('/baca/:slug', (req, res, next) => {
       ${schemaEvent ? `<script type="application/ld+json">${JSON.stringify(schemaEvent)}</script>` : ''}
     `;
 
-    let htmlFilePath = path.join(process.cwd(), 'dist', 'index.html');
-    if (!fs.existsSync(htmlFilePath)) {
-      htmlFilePath = path.join(process.cwd(), 'index.html');
-    }
-
-    let htmlTemplate = fs.readFileSync(htmlFilePath, 'utf-8');
-    htmlTemplate = htmlTemplate.replace(/<link[^>]*rel="preload"[^>]*as="image"[^>]*>/gi, '');
-    htmlTemplate = htmlTemplate.replace(/<title>.*?<\/title>/i, seoTags);
-    htmlTemplate = htmlTemplate.replace(/<div\s+id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
+    const htmlResponse = renderPageHtml(req, {
+      title: pageTitle,
+      description: pageDesc,
+      canonicalPath: `/baca/${post.slug}`,
+      ogImage: heroImageSrc,
+      ogType: 'article',
+      schemaJson: schemaEvent ? [schemaArticle, schemaEvent] : schemaArticle,
+      preRenderedBody,
+      preloadImage: post.featuredImage ? {
+        src: heroImageSrc,
+        srcSet: heroSrcSet,
+      } : undefined,
+      initialData: { post, siteConfig: getSafeSiteConfig() },
+    });
 
     res.header('Content-Type', 'text/html; charset=utf-8');
     res.header('Vary', 'Accept');
     res.header('Link', `</.well-known/api-catalog>; rel="api-catalog", </.well-known/oauth-protected-resource>; rel="service-desc"; type="application/json", <${canonicalUrl}>; rel="canonical"`);
-    return res.send(htmlTemplate);
+    return res.send(htmlResponse);
   } catch (e) {
     console.error('Error pre-rendering HTML:', e);
     return next();
@@ -4294,19 +4503,17 @@ app.get(['/author', '/author/'], (req, res, next) => {
       <script type="application/ld+json">${JSON.stringify(schemaCollection)}</script>
     `;
 
-    let htmlFilePath = path.join(process.cwd(), 'dist', 'index.html');
-    if (!fs.existsSync(htmlFilePath)) {
-      htmlFilePath = path.join(process.cwd(), 'index.html');
-    }
-
-    let htmlTemplate = fs.readFileSync(htmlFilePath, 'utf-8');
-    htmlTemplate = htmlTemplate.replace(/<!--\s*SEO_INJECTION_POINT\s*-->/i, seoTags);
-    htmlTemplate = htmlTemplate.replace(/<title>.*?<\/title>/i, `<title>${pageTitle}</title>`);
-    htmlTemplate = htmlTemplate.replace(/<div\s+id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
+    const htmlResponse = renderPageHtml(req, {
+      title: pageTitle,
+      description: pageDesc,
+      canonicalPath: '/author',
+      schemaJson: schemaCollection,
+      preRenderedBody,
+    });
 
     res.header('Content-Type', 'text/html; charset=utf-8');
     res.header('Vary', 'Accept');
-    return res.send(htmlTemplate);
+    return res.send(htmlResponse);
   } catch (e) {
     console.error('Error rendering author index:', e);
     return next();
@@ -4466,18 +4673,19 @@ app.get('/author/:username', (req, res, next) => {
       <script type="application/ld+json">${JSON.stringify(schemaProfile)}</script>
     `;
 
-    let htmlFilePath = path.join(process.cwd(), 'dist', 'index.html');
-    if (!fs.existsSync(htmlFilePath)) {
-      htmlFilePath = path.join(process.cwd(), 'index.html');
-    }
-
-    let htmlTemplate = fs.readFileSync(htmlFilePath, 'utf-8');
-    htmlTemplate = htmlTemplate.replace(/<title>.*?<\/title>/i, seoTags);
-    htmlTemplate = htmlTemplate.replace(/<div\s+id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
+    const htmlResponse = renderPageHtml(req, {
+      title: pageTitle,
+      description: pageDesc,
+      canonicalPath: `/author/${req.params.username}`,
+      ogImage: author.avatar || '',
+      ogType: 'profile',
+      schemaJson: schemaProfile,
+      preRenderedBody,
+    });
 
     res.header('Content-Type', 'text/html; charset=utf-8');
     res.header('Vary', 'Accept');
-    return res.send(htmlTemplate);
+    return res.send(htmlResponse);
   } catch (e) {
     console.error('Error pre-rendering Author Page HTML:', e);
     return next();
@@ -4611,30 +4819,17 @@ app.get(['/tag', '/tag/'], (req, res, next) => {
       },
     };
 
-    const seoTags = `
-      <title>${pageTitle}</title>
-      <meta name="description" content="${pageDesc}" />
-      <link rel="canonical" href="${canonicalUrl}" />
-      <meta property="og:title" content="${pageTitle}" />
-      <meta property="og:description" content="${pageDesc}" />
-      <meta property="og:url" content="${canonicalUrl}" />
-      <meta property="og:type" content="website" />
-      <script type="application/ld+json">${JSON.stringify(schemaCollection)}</script>
-    `;
-
-    let htmlFilePath = path.join(process.cwd(), 'dist', 'index.html');
-    if (!fs.existsSync(htmlFilePath)) {
-      htmlFilePath = path.join(process.cwd(), 'index.html');
-    }
-
-    let htmlTemplate = fs.readFileSync(htmlFilePath, 'utf-8');
-    htmlTemplate = htmlTemplate.replace(/<!--\s*SEO_INJECTION_POINT\s*-->/i, seoTags);
-    htmlTemplate = htmlTemplate.replace(/<title>.*?<\/title>/i, `<title>${pageTitle}</title>`);
-    htmlTemplate = htmlTemplate.replace(/<div\s+id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
+    const htmlResponse = renderPageHtml(req, {
+      title: pageTitle,
+      description: pageDesc,
+      canonicalPath: '/tag',
+      schemaJson: schemaCollection,
+      preRenderedBody,
+    });
 
     res.header('Content-Type', 'text/html; charset=utf-8');
     res.header('Vary', 'Accept');
-    return res.send(htmlTemplate);
+    return res.send(htmlResponse);
   } catch (e) {
     console.error('Error rendering tag index:', e);
     return next();
@@ -4782,30 +4977,17 @@ app.get(['/tag/:tag', '/tag/:tag/'], (req, res, next) => {
       })),
     };
 
-    const seoTags = `
-      <title>${pageTitle}</title>
-      <meta name="description" content="${pageDesc}" />
-      <link rel="canonical" href="${canonicalUrl}" />
-      <meta property="og:title" content="${pageTitle}" />
-      <meta property="og:description" content="${pageDesc}" />
-      <meta property="og:url" content="${canonicalUrl}" />
-      <meta property="og:type" content="website" />
-      <meta name="twitter:card" content="summary" />
-      <script type="application/ld+json">${JSON.stringify(schemaCollection)}</script>
-    `;
-
-    let htmlFilePath = path.join(process.cwd(), 'dist', 'index.html');
-    if (!fs.existsSync(htmlFilePath)) {
-      htmlFilePath = path.join(process.cwd(), 'index.html');
-    }
-
-    let htmlTemplate = fs.readFileSync(htmlFilePath, 'utf-8');
-    htmlTemplate = htmlTemplate.replace(/<title>.*?<\/title>/i, seoTags);
-    htmlTemplate = htmlTemplate.replace(/<div\s+id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
+    const htmlResponse = renderPageHtml(req, {
+      title: pageTitle,
+      description: pageDesc,
+      canonicalPath: `/tag/${tag}`,
+      schemaJson: schemaCollection,
+      preRenderedBody,
+    });
 
     res.header('Content-Type', 'text/html; charset=utf-8');
     res.header('Vary', 'Accept');
-    return res.send(htmlTemplate);
+    return res.send(htmlResponse);
   } catch (e) {
     console.error('Error pre-rendering Tag Page HTML:', e);
     return next();
@@ -4937,30 +5119,17 @@ app.get(['/kategori', '/kategori/'], (req, res, next) => {
       },
     };
 
-    const seoTags = `
-      <title>${pageTitle}</title>
-      <meta name="description" content="${pageDesc}" />
-      <link rel="canonical" href="${canonicalUrl}" />
-      <meta property="og:title" content="${pageTitle}" />
-      <meta property="og:description" content="${pageDesc}" />
-      <meta property="og:url" content="${canonicalUrl}" />
-      <meta property="og:type" content="website" />
-      <script type="application/ld+json">${JSON.stringify(schemaCollection)}</script>
-    `;
-
-    let htmlFilePath = path.join(process.cwd(), 'dist', 'index.html');
-    if (!fs.existsSync(htmlFilePath)) {
-      htmlFilePath = path.join(process.cwd(), 'index.html');
-    }
-
-    let htmlTemplate = fs.readFileSync(htmlFilePath, 'utf-8');
-    htmlTemplate = htmlTemplate.replace(/<!--\s*SEO_INJECTION_POINT\s*-->/i, seoTags);
-    htmlTemplate = htmlTemplate.replace(/<title>.*?<\/title>/i, `<title>${pageTitle}</title>`);
-    htmlTemplate = htmlTemplate.replace(/<div\s+id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
+    const htmlResponse = renderPageHtml(req, {
+      title: pageTitle,
+      description: pageDesc,
+      canonicalPath: '/kategori',
+      schemaJson: schemaCollection,
+      preRenderedBody,
+    });
 
     res.header('Content-Type', 'text/html; charset=utf-8');
     res.header('Vary', 'Accept');
-    return res.send(htmlTemplate);
+    return res.send(htmlResponse);
   } catch (e) {
     console.error('Error rendering category index:', e);
     return next();
@@ -5109,30 +5278,17 @@ app.get(['/kategori/:category', '/kategori/:category/'], (req, res, next) => {
       })),
     };
 
-    const seoTags = `
-      <title>${pageTitle}</title>
-      <meta name="description" content="${pageDesc}" />
-      <link rel="canonical" href="${canonicalUrl}" />
-      <meta property="og:title" content="${pageTitle}" />
-      <meta property="og:description" content="${pageDesc}" />
-      <meta property="og:url" content="${canonicalUrl}" />
-      <meta property="og:type" content="website" />
-      <meta name="twitter:card" content="summary" />
-      <script type="application/ld+json">${JSON.stringify(schemaCollection)}</script>
-    `;
-
-    let htmlFilePath = path.join(process.cwd(), 'dist', 'index.html');
-    if (!fs.existsSync(htmlFilePath)) {
-      htmlFilePath = path.join(process.cwd(), 'index.html');
-    }
-
-    let htmlTemplate = fs.readFileSync(htmlFilePath, 'utf-8');
-    htmlTemplate = htmlTemplate.replace(/<title>.*?<\/title>/i, seoTags);
-    htmlTemplate = htmlTemplate.replace(/<div\s+id="root"><\/div>/i, `<div id="root">${preRenderedBody}</div>`);
+    const htmlResponse = renderPageHtml(req, {
+      title: pageTitle,
+      description: pageDesc,
+      canonicalPath: `/kategori/${catSlugLower}`,
+      schemaJson: schemaCollection,
+      preRenderedBody,
+    });
 
     res.header('Content-Type', 'text/html; charset=utf-8');
     res.header('Vary', 'Accept');
-    return res.send(htmlTemplate);
+    return res.send(htmlResponse);
   } catch (e) {
     console.error('Error pre-rendering Category Page HTML:', e);
     return next();
@@ -6305,7 +6461,7 @@ async function startServer() {
       try {
         let template = fs.readFileSync(path.resolve(currentDir, 'index.html'), 'utf-8');
         template = await vite.transformIndexHtml(url, template);
-        template = injectSpaPreload(template, mockPosts);
+        template = injectSpaPreload(template, mockPosts, req);
         res.setHeader('Vary', 'Accept');
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.setHeader('Link', '</.well-known/api-catalog>; rel="api-catalog", </.well-known/oauth-protected-resource>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"');
@@ -6340,7 +6496,7 @@ async function startServer() {
       }
 
       let htmlTemplate = fs.readFileSync(path.join(distPath, 'index.html'), 'utf-8');
-      htmlTemplate = injectSpaPreload(htmlTemplate, mockPosts);
+      htmlTemplate = injectSpaPreload(htmlTemplate, mockPosts, req);
       res.setHeader('Vary', 'Accept');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Link', '</.well-known/api-catalog>; rel="api-catalog", </.well-known/oauth-protected-resource>; rel="service-desc"; type="application/json", </llms.txt>; rel="describedby"; type="text/plain", </feed.xml>; rel="alternate"; type="application/rss+xml"');

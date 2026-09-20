@@ -1,0 +1,151 @@
+# KAMUS DEFAULT VARIABEL WEBSITE (DEFAULT DICTIONARY)
+# Format: KEY | FLAG | MAX_LEN | DEFAULT_VALUE | DESCRIPTION
+# 
+# Petunjuk Flag AI:
+# [M] = Must be rewritten (Wajib disesuaikan dengan topik/niche baru)
+# [D] = Don't be rewritten (Dilarang diubah, pertahankan nilai asli sistem)
+# [U] = Up to you (Bebas disesuaikan AI jika relevan dengan konteks baru)
+# ==============================================================================
+
+SITE_NAME | M | 30 | Parenting .my.id | Nama merek atau judul utama website/portal.
+SITE_TAGLINE | M | 60 | Edukasi & Pengasuhan Anak Modern | Slogan ringkas atau positioning situs yang muncul di samping nama situs.
+SITE_DOMAIN | M | 60 | parenting.my.id | Nama domain aktif situs tanpa protokol https://
+SITE_URL | M | 100 | https://parenting.my.id | URL absolut lengkap website dengan protokol https://
+SITE_DESCRIPTION | M | 160 | Portal informasi dan panduan pengasuhan anak modern. | Deskripsi umum situs untuk meta search engine dan crawler.
+SITE_LOGO_ICON | U | 30 | Heart | Nama icon Lucide untuk logo situs (Heart, BookOpen, Shield, Feather, Sparkles, dll).
+SITE_FAVICON_URL | D | 100 | /favicon.ico | Lokasi berkas favicon situs (tetap /favicon.ico secara teknis).
+
+SEO_META_TITLE | U | 60 |  | Judul kustom tag <title> halaman depan. Kosongkan jika ingin auto dari SITE_NAME - SITE_TAGLINE.
+SEO_META_DESCRIPTION | U | 160 |  | Deskripsi kustom tag meta description. Kosongkan jika ingin memakai SITE_DESCRIPTION.
+SEO_DEFAULT_OG_IMAGE | U | 255 | https://images.unsplash.com/photo-1544717305-2782549b5136?w=1200&h=630 | URL gambar default OpenGraph / Twitter Card untuk pratinjau media sosial (rasio 1200x630).
+
+HERO_BADGE_TEXT | M | 35 | Portal Nomor 1 | Lencana teks kecil di atas judul utama hero section.
+HERO_TITLE | M | 70 | Panduan Pengasuhan dan Tumbuh Kembang Anak | Judul besar headline utama banner hero di beranda.
+HERO_SUBTITLE | M | 150 | Temukan artikel, tips nutrisi, dan edukasi tumbuh kembang anak. | Kalimat penjelas sub-headline di bawah judul hero.
+HERO_CTA_TEXT | M | 25 | Baca | Teks tombol aksi (Call to Action) pada hero section.
+HERO_CTA_LINK | D | 60 | #artikel-terbaru | Anchor link target navigasi saat tombol CTA hero diklik.
+
+TECH_BADGE_HERO | M | 40 | Media Psikologi Populer | Badge fitur 1 di area hero dan footer.
+TECH_BADGE_PAGES | M | 40 | Media Parenting Aman & Nyaman | Badge fitur 2 di area hero dan footer.
+TECH_BADGE_DATABASE | M | 40 | Catatan Bunda & Ayah | Badge fitur 3 di area hero dan footer.
+TECH_BADGE_STORAGE | M | 40 | Pustaka Informasi Keluarga | Badge fitur 4 di area hero dan footer.
+
+NAV_CATEGORY_1_LABEL | M | 25 | Pola Asuh | Label kategori navigasi 1 di menu header, hamburger, dan footer.
+NAV_CATEGORY_1_SLUG | M | 30 | pola-asuh | Slug URL kategori 1 (tanpa awalan garis miring /).
+NAV_CATEGORY_2_LABEL | M | 25 | Tumbuh Kembang | Label kategori navigasi 2 di menu header, hamburger, dan footer.
+NAV_CATEGORY_2_SLUG | M | 30 | tumbuh-kembang | Slug URL kategori 2 (tanpa awalan garis miring /).
+NAV_CATEGORY_3_LABEL | M | 25 | Kesehatan & Gizi | Label kategori navigasi 3 di menu header, hamburger, dan footer.
+NAV_CATEGORY_3_SLUG | M | 30 | kesehatan-gizi | Slug URL kategori 3 (tanpa awalan garis miring /).
+NAV_CATEGORY_4_LABEL | M | 25 | Balita | Label kategori navigasi 4 di menu header, hamburger, dan footer.
+NAV_CATEGORY_4_SLUG | M | 30 | balita | Slug URL kategori 4 (tanpa awalan garis miring /).
+
+PRODUCTS_NAV_LABEL | U | 20 | Produk | Label menu navigasi katalog produk/layanan (contoh: Produk, Jasa, Katalog, Kelas).
+AUTOLINK_TICKER_LABEL | U | 25 | Trending: | Label awalan ticker kata kunci berjalan.
+FOOTER_AUTOLINK_LABEL | U | 35 | Mengapa menulis di sini? | Label heading tautan internal autolink di footer.
+REFERENCE_HEADING_LABEL | U | 25 | Referensi | Judul seksi daftar pustaka atau referensi ilmiah di bawah artikel.
+
+FOOTER_ABOUT_TEXT | M | 180 | Parenting.my.id menghadirkan bacaan berkualitas seputar dunia pengasuhan anak. | Ringkasan profil situs pada kolom informasi footer.
+FOOTER_COPYRIGHT_TEXT | M | 80 | © 2026 Parenting.my.id. Hak Cipta Dilindungi. | Teks hak cipta legal di kaki halaman web.
+FOOTER_BADGE_1 | M | 30 | Aman & Terpercaya | Lencana kepercayaan footer 1.
+FOOTER_BADGE_2 | M | 30 | Diperbarui Rutin | Lencana kepercayaan footer 2.
+FOOTER_BADGE_3 | M | 30 | 100% Gratis | Lencana kepercayaan footer 3.
+
+CLASSIFIED_MASTHEAD_TITLE | M | 40 | WARNA-WARTO PARENTING | Judul masthead koran retro untuk modul Iklan Baris.
+CLASSIFIED_MASTHEAD_SUBTITLE | M | 80 | LEMBARAN IKLAN BARIS, PENGUMUMAN & WARTA KELUARGA | Sub-judul masthead modul warta iklan baris.
+CLASSIFIED_PRICE_TAG | U | 30 | HARGA ECERAN RP 500,- | Label harga cetak lembaran klasik iklan baris.
+CLASSIFIED_PHONE | U | 25 | (021) 7654321 | Nomor telepon redaksi iklan baris.
+CLASSIFIED_CATEGORIES | M | 500 | Aksesoris, Aplikasi, Asuransi, Bimbel, Buku, Daycare, Jasa, Kebersihan, Kehamilan, Keluarga, Kesehatan, Keuangan, Klinik, Konsultasi, Kursus, Les Privat, Lifestyle, Lowongan Kerja, Mainan, Mencari Kerja, Menyusui, Nutrisi Gizi, Obat, Pakaian, Pasca Kelahiran, Pendidikan, Pengasuh, Peralatan, Perawatan, Perlengkapan, Sekolah, Sepatu, Seminar, Training, Transport, Wisata, Pola Asuh, Balita, Psikologi Ibu, Tumbuh Kembang, Umum | Daftar kategori iklan baris dipisahkan dengan koma.
+CLASSIFIED_NOTICE | U | 220 | Iklan baris gratis : Tautan URL akan otomatis dikonversi menjadi teks biasa. Jika ingin menggunakan URL dan gambar iklan, hubungi redaksi/editor untuk tarif iklan baris berbayar. | Pemberitahuan aturan dan ketentuan pemasangan iklan baris.
+
+KB_BADGE_TEXT | M | 30 | Pusat Panduan Terpadu | Lencana kecil pada seksi Knowledge Base / Pusat Bantuan.
+KB_TITLE | M | 65 | Ensiklopedia & Pusat Pengetahuan Pengasuhan Anak | Judul utama halaman pusat pengetahuan dan ensiklopedia.
+KB_SUBTITLE | M | 140 | Temukan jawaban medis dan psikologis terpercaya untuk setiap tahap tumbuh kembang buah hati. | Sub-judul pengantar pusat pengetahuan / FAQ.
+KB_SEARCH_PLACEHOLDER | M | 65 | Cari panduan (contoh: MPASI 6 bulan, demam anak, tantrum)... | Teks placeholder pada kolom pencarian knowledge base.
+
+DOCTOR_NAME | M | 45 | dr. Siti Rahma, Sp.A(K), M.Kes | Nama figur pakar, dokter, atau konsultan utama situs.
+DOCTOR_TITLE | M | 60 | Dokter Spesialis Anak & Konsultan Nutrisi Pediatrik | Jabatan profesional atau bidang keahlian pakar.
+DOCTOR_BADGE_TEXT | M | 35 | Pakar & Praktisi Terpercaya | Lencana reputasi di samping nama pakar.
+DOCTOR_BIO | M | 200 | Berpengalaman lebih dari 15 tahun mendampingi ribuan orang tua dalam mengoptimalkan 1000 Hari Pertama Kehidupan (HPK) dan penanganan masalah makan anak. | Biografi ringkas rekam jejak pengalaman pakar.
+DOCTOR_EXPERIENCE_YEARS | U | 30 | 15+ Tahun Pengalaman | Label durasi jam terbang atau pengalaman kerja pakar.
+
+CORPORATE_BADGE_TEXT | M | 40 | Solusi Korporasi & Institusi Edukasi | Lencana seksi penawaran B2B / Kemitraan Korporasi.
+CORPORATE_TITLE | M | 80 | Meningkatkan Produktivitas Karyawan Melalui Dukungan Pengasuhan Terpercaya | Judul headline proposal kemitraan korporasi / B2B.
+CORPORATE_SUBTITLE | M | 200 | Kami bermitra dengan perusahaan terdepan untuk menyediakan program Employee Assistance Parenting (EAP), konsultasi daycare in-house, dan lokakarya kesehatan anak bagi karyawan. | Deskripsi program layanan B2B bagi perusahaan atau institusi mitra.
+CORPORATE_CTA_PROPOSAL | M | 40 | Unduh Proposal & Rate Card B2B | Teks tombol aksi unduh proposal B2B.
+CORPORATE_CTA_CONSULT | M | 40 | Jadwalkan Konsultasi Korporasi | Teks tombol aksi konsultasi korporasi.
+CORPORATE_STAT1_VAL | U | 15 | 98.4% | Angka metrik statistik korporasi 1.
+CORPORATE_STAT1_LBL | M | 30 | Kepuasan Klien B2B | Label metrik statistik korporasi 1.
+CORPORATE_STAT2_VAL | U | 15 | 45% | Angka metrik statistik korporasi 2.
+CORPORATE_STAT2_LBL | M | 30 | Penurunan Absenteeism | Label metrik statistik korporasi 2.
+CORPORATE_STAT3_VAL | U | 15 | 12.000+ | Angka metrik statistik korporasi 3.
+CORPORATE_STAT3_LBL | M | 30 | Karyawan Terbantu | Label metrik statistik korporasi 3.
+
+PRODUCTS_HERO_BADGE | M | 40 | 🛍️ Katalog Produk & Paket Eksklusif | Lencana banner katalog produk.
+PRODUCTS_HERO_TITLE | M | 65 | Miliki Produk & Paket Pilihan Berkualitas | Judul headline katalog penawaran produk atau jasa.
+PRODUCTS_HERO_SUBTITLE | M | 160 | Temukan berbagai koleksi produk, paket, dan penawaran terbaik. Didukung pembayaran instan QRIS/Bank dan koordinasi pengiriman aman via WhatsApp. | Subjudul penjelasan katalog belanja penawaran.
+PRODUCTS_EMPTY_TITLE | M | 45 | Belum Ada Produk Jualan | Judul saat katalog produk belum memiliki item.
+PRODUCTS_EMPTY_SUBTITLE | M | 120 | Katalog produk belum diunggah. Silakan masuk sebagai administrator untuk menambahkan item pertama Anda. | Sub-judul saat etalase produk kosong.
+PRODUCT_SAMPLE_BADGE | M | 35 | Best Seller • Rekomendasi Dokter | Lencana highlight produk unggulan.
+PRODUCT_SAMPLE_TITLE | M | 65 | Paket Lengkap MPASI Cerdas & Stimulasi Sensori Balita | Nama sampel paket produk/jasa yang dijual.
+PRODUCT_SAMPLE_SUBTITLE | M | 140 | Solusi praktis anti-GTM lengkap dengan buku resep 1000 hari pertama, kartu sensorik motorik, dan konsultasi gizi. | Keterangan isi paket sampel produk/jasa.
+PRODUCT_SAMPLE_PRICE | U | 25 | Rp 189.000 | Harga diskon/jual produk sampel.
+PRODUCT_SAMPLE_ORIGINAL_PRICE | U | 25 | Rp 299.000 | Harga coret produk sampel sebelum diskon.
+PRODUCT_SAMPLE_DISCOUNT_TAG | U | 20 | HEMAT 37% | Tag persen diskon produk sampel.
+PRODUCT_SAMPLE_CTA | M | 40 | Pesan Paket Sekarang via WhatsApp | Tombol pemesanan via WhatsApp.
+
+EVENT_BADGE_TEXT | M | 35 | Summit Nasional Parenting 2026 | Lencana agenda acara atau konferensi.
+EVENT_DATE_LOCATION | M | 60 | 16-18 Oktober 2026 • Grand Ballroom Jakarta & Live Streaming | Waktu dan lokasi perhelatan event / webinar.
+EVENT_TITLE | M | 75 | Konferensi Nasional Pola Asuh & Tumbuh Kembang Anak Indonesia 2026 | Judul acara / seminar nasional.
+EVENT_SUBTITLE | M | 160 | Forum edukasi parenting terbesar yang menghadirkan dokter spesialis anak, psikolog perkembangan, dan praktisi pendidikan. | Ringkasan agenda forum konferensi.
+EVENT_CTA_TEXT | M | 30 | Daftar & Pesan Tiket | Tombol pendaftaran tiket acara.
+
+CAMPAIGN_BADGE_TEXT | M | 30 | Aksi Sosial Nasional | Lencana kampanye sosial atau kepedulian.
+CAMPAIGN_TITLE | M | 75 | Gerakan Bersama Bebas Stunting: Lindungi 1000 Hari Pertama Anak | Judul gerakan sosial atau program donasi.
+CAMPAIGN_SUBTITLE | M | 160 | Bantu 50.000 balita di pelosok negeri mendapatkan asupan protein hewani dan suplemen mikronutrien penting. | Subjudul tujuan bantuan kampanye sosial.
+
+MICROSITE_TITLE | M | 50 | Parenting.my.id Official Hub | Judul profil tautan microsite (link in bio).
+MICROSITE_BIO | M | 150 | Pusat informasi, konsultasi dokter anak, panduan MPASI, dan komunitas orang tua cerdas di Indonesia. | Bio profil singkat microsite link-in-bio.
+MICROSITE_WA_LABEL | M | 40 | Konsultasi Privat Parenting (WhatsApp) | Label tombol WhatsApp utama di microsite.
+
+PORTFOLIO_BADGE_TEXT | M | 35 | Rekam Jejak & Publikasi | Lencana seksi portofolio karya atau riset.
+PORTFOLIO_TITLE | M | 65 | Portofolio Riset, Kurikulum & Program Edukasi | Judul seksi portofolio hasil riset / karya.
+PORTFOLIO_SUBTITLE | M | 160 | Dokumentasi hasil karya ilmiah, program pendampingan keluarga, dan modul nutrisi yang telah kami kembangkan. | Keterangan pengantar seksi portofolio.
+PORTFOLIO_STAT1_LBL | M | 30 | Modul & E-Book Terbit | Label capaian portofolio 1.
+PORTFOLIO_STAT2_LBL | M | 30 | Riset Klinis Tumbuh Kembang | Label capaian portofolio 2.
+PORTFOLIO_STAT3_LBL | M | 30 | Keluarga Terbantu | Label capaian portofolio 3.
+
+HABIT_SIMULATOR_TITLE | M | 40 | Simulasi Kebiasaan Positif | Judul modul interaktif simulator kebiasaan harian.
+HABIT_SIMULATOR_SUBTITLE | M | 80 | Ukur kebiasaan pengasuhan anak sehari-hari | Sub-judul modul interaktif simulator kebiasaan.
+QUIZ_BUILDER_TITLE | M | 45 | Kuis Edukasi & Psikologi Anak | Judul modul kuis interaktif edukatif.
+
+SURAT_PEMBACA_TITLE | U | 40 | Kanal Surat Pembaca | Judul halaman wacana dan surat kiriman pembaca.
+SURAT_PEMBACA_SUBTITLE | U | 130 | Wadah aspirasi, opini, kritik membangun, dan saran pembaca. | Subjudul penjelasan tujuan kanal surat pembaca.
+IKLAN_BARIS_TITLE | U | 40 | Iklan Baris Gratis | Judul halaman publikasi iklan baris umum.
+IKLAN_BARIS_SUBTITLE | U | 130 | Pasang dan temukan warta iklan baris produk, jasa, dan informasi. | Deskripsi pengantar halaman warta iklan baris.
+
+ADMIN_LOGIN_TITLE | M | 40 | Portal Admin Parenting.my.id | Judul halaman login admin CMS.
+ADMIN_LOGIN_SUBTITLE | D | 60 | Sistem Otentikasi Cloudflare D1 | Subjudul teknis otentikasi admin CMS.
+ADMIN_LOGIN_BTN_TEXT | D | 30 | Masuk Portal CMS | Label tombol masuk login admin CMS.
+WHATSAPP_DEFAULT_MESSAGE | M | 100 | Halo Redaksi, saya ingin bertanya seputar... | Pesan sapaan pembuka default tombol WhatsApp floating.
+
+SAMPLE_POST_1_TITLE | M | 80 | Panduan Lengkap Pola Asuh Demokratis Anak Masa Kini | Judul artikel sampel 1 untuk database awal.
+SAMPLE_POST_1_EXCERPT | M | 160 | Pelajari pola asuh demokratis yang memprioritaskan komunikasi dua arah dan empati untuk membangun karakter anak mandiri. | Kutipan ringkasan artikel sampel 1.
+SAMPLE_POST_1_CATEGORY | M | 30 | Pola Asuh | Kategori artikel sampel 1.
+SAMPLE_POST_1_TAGS | M | 80 | pola-asuh, parenting, psikologi-anak, kemandirian | Daftar tag artikel sampel 1 dipisahkan koma.
+
+SAMPLE_POST_2_TITLE | M | 80 | 5 Aktivitas Sensory Play Seru untuk Melatih Motorik Balita | Judul artikel sampel 2 untuk database awal.
+SAMPLE_POST_2_EXCERPT | M | 160 | Stimulasi indra anak sejak dini melalui ragam permainan sensori sederhana di rumah yang terbukti mengasah motorik halus dan kasar. | Kutipan ringkasan artikel sampel 2.
+SAMPLE_POST_2_CATEGORY | M | 30 | Tumbuh Kembang | Kategori artikel sampel 2.
+SAMPLE_POST_2_TAGS | M | 80 | sensory-play, tumbuh-kembang, balita, motorik | Daftar tag artikel sampel 2 dipisahkan koma.
+
+SAMPLE_POST_3_TITLE | M | 80 | Mengenal Nutrisi Esensial & Bahaya Stunting Sejak 1000 HPK | Judul artikel sampel 3 untuk database awal.
+SAMPLE_POST_3_EXCERPT | M | 160 | Pentingnya asupan protein hewani, zat besi, dan mikronutrien penting untuk mencegah gagal tumbuh kembang pada balita. | Kutipan ringkasan artikel sampel 3.
+SAMPLE_POST_3_CATEGORY | M | 30 | Kesehatan & Gizi | Kategori artikel sampel 3.
+SAMPLE_POST_3_TAGS | M | 80 | stunting, gizi-anak, 1000-hpk, nutrisi | Daftar tag artikel sampel 3 dipisahkan koma.
+
+TURNSTILE_SITE_KEY | D | 100 | 0x4AAAAAAE8nGvnUYOz8qCjM | Kunci publik Cloudflare Turnstile anti-bot (tetap atau sesuaikan dengan env).
+CUSDIS_HOST | D | 100 | https://cusdis.com | Host backend layanan komentar Cusdis.
+PAGINATION_TYPE | D | 20 | load_more | Tipe pagination daftar artikel (load_more atau numbers).
+COMMENT_ENGINE_MODE | D | 20 | native | Mesin komentar aktif (native atau cusdis).
+POSTS_PER_PAGE | D | 5 | 9 | Jumlah artikel per batch pagination.
+ADMIN_URL_SUFFIX | D | 20 | 9999 | Suffix path URL rahasia login admin (/admin-[suffix]).
